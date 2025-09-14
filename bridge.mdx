@@ -1,0 +1,128 @@
+---
+title: 'Bridge'
+description: 'Comprehensive guide to working with Bridges in Unpod'
+icon: 'link'
+---
+
+# Bridge Configuration
+
+Bridges are the core routing components in the Unpod platform that connect different systems and services.
+
+## Creating a Bridge
+
+### Basic Bridge Configuration
+
+```yaml
+# bridge-config.yaml
+name: "customer-support-bridge"
+type: "direct"
+enabled: true
+provider: "twilio"
+settings:
+  account_sid: "${TWILIO_ACCOUNT_SID}"
+  auth_token: "${TWILIO_AUTH_TOKEN}"
+rules:
+  - pattern: "^support"
+    target: "support-agent-1"
+  - pattern: "^sales"
+    target: "sales-team"
+```
+
+### Bridge Types
+
+1. **Direct Bridge**
+   - Simple point-to-point connection
+   - Minimal configuration required
+   - Best for basic routing needs
+
+2. **Multi-point Bridge**
+   - Connects multiple endpoints
+   - Supports complex routing rules
+   - Ideal for team distribution
+
+3. **Transform Bridge**
+   - Modifies messages in transit
+   - Supports custom transformations
+   - Useful for protocol conversion
+
+## Bridge Configuration Options
+
+| Parameter    | Type     | Required | Description                          |
+|--------------|----------|----------|--------------------------------------|
+| `name`       | string   | Yes      | Unique identifier for the bridge     |
+| `type`       | enum     | Yes      | Type of bridge (direct, multi, transform) |
+| `enabled`    | boolean  | No       | Whether the bridge is active         |
+| `settings`   | object   | Yes      | Provider-specific settings           |
+| `rules`      | array    | No       | Routing rules for the bridge         |
+
+## Managing Bridges
+
+### Creating a Bridge via API
+
+```javascript
+// Example: Create a new bridge
+const response = await fetch('https://api.unpod.com/v1/bridges', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    name: 'customer-support',
+    type: 'direct',
+    provider: 'twilio',
+    settings: {
+      account_sid: 'YOUR_ACCOUNT_SID',
+      auth_token: 'YOUR_AUTH_TOKEN'
+    }
+  })
+});
+```
+
+### Monitoring Bridge Health
+
+```bash
+# Check bridge status
+curl -X GET \
+  'https://api.unpod.com/v1/bridges/customer-support/health' \
+  -H 'Authorization: Bearer YOUR_API_KEY'
+```
+
+## Best Practices
+
+1. **Naming Conventions**
+   - Use kebab-case for bridge names
+   - Include environment prefixes (e.g., `prod-`, `staging-`)
+   
+2. **Error Handling**
+   - Implement retry logic for failed operations
+   - Set up alerts for critical failures
+   
+3. **Security**
+   - Use environment variables for sensitive data
+   - Regularly rotate API keys and tokens
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Connection Failures**
+   - Verify API credentials
+   - Check network connectivity
+   - Confirm provider service status
+
+2. **Message Routing**
+   - Review routing rules for conflicts
+   - Check pattern matching logic
+   - Verify target endpoints are reachable
+
+3. **Performance Issues**
+   - Monitor message queue depth
+   - Check system resource usage
+   - Review rate limiting settings
+
+## Next Steps
+
+- Learn about [Agents](/agent)
+- Explore [Advanced Routing](/advanced-routing)
+- Check [API Reference](/api-reference)

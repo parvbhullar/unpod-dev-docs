@@ -1,0 +1,220 @@
+---
+title: 'Agent'
+description: 'Guide to working with Agents in Unpod'
+icon: 'user-cog'
+---
+
+# Agents in Unpod
+
+Agents are specialized components that handle specific tasks within the Unpod ecosystem, enabling intelligent message processing and automation.
+
+## Agent Types
+
+### 1. Routing Agent
+
+Routes messages based on predefined rules and conditions.
+
+```javascript
+// Example: Basic routing agent
+const routingAgent = {
+  name: 'support-router',
+  type: 'routing',
+  rules: [
+    {
+      condition: (message) => message.body.includes('billing'),
+      target: 'billing-team'
+    },
+    {
+      condition: (message) => message.body.includes('technical'),
+      target: 'tech-support'
+    },
+    {
+      condition: () => true, // Default case
+      target: 'general-support'
+    }
+  ]
+};
+```
+
+### 2. Processing Agent
+
+Transforms or enriches messages as they pass through the system.
+
+```python
+# Example: Processing agent in Python
+class SentimentAnalyzer(Agent):
+    def __init__(self):
+        super().__init__(name="sentiment-analyzer")
+        self.model = load_sentiment_model()
+    
+    async def process(self, message):
+        sentiment = self.model.analyze(message.body)
+        message.metadata['sentiment'] = {
+            'score': sentiment.score,
+            'label': sentiment.label
+        }
+        return message
+```
+
+### 3. Monitoring Agent
+
+Tracks system health, metrics, and alerts.
+
+```yaml
+# monitoring-agent-config.yaml
+name: "system-monitor"
+type: "monitoring"
+checks:
+  - type: "latency"
+    threshold: "500ms"
+    action: "alert"
+  - type: "error-rate"
+    threshold: "5%"
+    action: "escalate"
+alerts:
+  email: "devops@example.com"
+  slack: "#alerts"
+```
+
+## Creating a Custom Agent
+
+1. **Define Agent Class**
+   ```javascript
+   // my-custom-agent.js
+   const { BaseAgent } = require('@unpod/agent-sdk');
+
+   class MyCustomAgent extends BaseAgent {
+     constructor(config) {
+       super(config);
+       this.name = config.name || 'my-custom-agent';
+     }
+
+     async process(message) {
+       // Custom processing logic here
+       this.logger.info(`Processing message: ${message.id}`);
+       
+       // Example: Add processing timestamp
+       message.metadata.processedAt = new Date().toISOString();
+       
+       return message;
+     }
+   }
+
+   module.exports = MyCustomAgent;
+   ```
+
+2. **Configuration**
+   ```yaml
+   # config/agents.yaml
+   myAgent:
+     module: "./my-custom-agent"
+     config:
+       setting1: "value1"
+       setting2: "value2"
+   ```
+
+## Agent Lifecycle
+
+1. **Initialization**
+   ```javascript
+   const agent = new MyCustomAgent(config);
+   await agent.initialize();
+   ```
+
+2. **Processing**
+   ```javascript
+   // Process a single message
+   const result = await agent.process(message);
+   
+   // Or process a stream
+   for await (const message of messageStream) {
+     await agent.process(message);
+   }
+   ```
+
+3. **Shutdown**
+   ```javascript
+   await agent.shutdown();
+   ```
+
+## Best Practices
+
+### Error Handling
+```javascript
+class SafeAgent extends BaseAgent {
+  async process(message) {
+    try {
+      // Processing logic
+      return await this.performOperation(message);
+    } catch (error) {
+      this.logger.error(`Error processing message ${message.id}:`, error);
+      // Optionally: Retry, dead-letter queue, etc.
+      throw error;
+    }
+  }
+}
+```
+
+### Performance Considerations
+- Use async/await for I/O operations
+- Implement batching for better throughput
+- Monitor memory usage for long-running agents
+
+## Monitoring and Metrics
+
+```bash
+# Get agent status
+curl -X GET \
+  'https://api.unpod.com/v1/agents/agent-name/status' \
+  -H 'Authorization: Bearer YOUR_API_KEY'
+
+# Get agent metrics
+curl -X GET \
+  'https://api.unpod.com/v1/agents/agent-name/metrics' \
+  -H 'Authorization: Bearer YOUR_API_KEY'
+```
+
+## Common Patterns
+
+### 1. Request-Reply Pattern
+```javascript
+class EchoAgent extends BaseAgent {
+  async process(message) {
+    if (message.type === 'request') {
+      return {
+        ...message,
+        type: 'response',
+        body: `Echo: ${message.body}`,
+        metadata: {
+          ...message.metadata,
+          processedAt: new Date().toISOString()
+        }
+      };
+    }
+    return message;
+  }
+}
+```
+
+### 2. Filtering Pattern
+```javascript
+class SpamFilterAgent extends BaseAgent {
+  constructor(config) {
+    super(config);
+    this.blockedTerms = config.blockedTerms || [];
+  }
+
+  async process(message) {
+    const isSpam = this.blockedTerms.some(term => 
+      message.body.toLowerCase().includes(term.toLowerCase())
+    );
+    
+    return isSpam ? null : message; // Filter out spam
+  }
+}
+```
+
+## Next Steps
+- Explore [Bridge Configuration](/bridge)
+- Learn about [Advanced Routing](/advanced-routing)
+- Check [API Reference](/api-reference)

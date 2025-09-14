@@ -17,8 +17,17 @@
             "group": "Getting started",
             "pages": [
               "index",
+              "introduction",
               "quickstart",
               "development"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts",
+              "bridge",
+              "agent"
             ]
           },
           {
