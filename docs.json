@@ -20,28 +20,15 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": [
-              "introduction",
-              "quickstart",
-              "concepts"
-            ]
+            "pages": ["introduction", "quickstart", "concepts"]
           },
           {
             "group": "Core Components",
-            "pages": [
-              "bridge",
-              "agent",
-              "number",
-              "provider"
-            ]
+            "pages": ["bridge", "agent", "number", "provider"]
           },
           {
             "group": "Guides",
-            "pages": [
-              "guides/integration",
-              "guides/authentication",
-              "guides/webhooks"
-            ]
+            "pages": ["guides/integration", "guides/authentication", "guides/webhooks"]
           }
         ]
       },
@@ -50,34 +37,26 @@
         "groups": [
           {
             "group": "Overview",
-            "pages": [
-              "api/overview",
-              "api/authentication",
-              "api/rate-limiting"
-            ]
+            "pages": ["api/overview", "api/authentication", "api/rate-limiting"]
           },
           {
             "group": "Endpoints",
-            "pages": [
-              "api/numbers",
-              "api/calls",
-              "api/messages",
-              "api/webhooks"
-            ]
+            "pages": ["api/numbers", "api/calls", "api/messages", "api/webhooks"]
           },
           {
             "group": "SDKs",
-            "pages": [
-              "sdk/javascript",
-              "sdk/python",
-              "sdk/java"
-            ]
+            "pages": ["sdk/javascript", "sdk/python", "sdk/java"]
           }
         ]
       }
     ],
     "global": {
       "anchors": [
+        {
+          "anchor": "YouTube",
+          "href": "https://www.youtube.com/@unpodai",
+          "icon": "youtube"
+        },
         {
           "anchor": "GitHub",
           "href": "https://github.com/parvbhullar",
