@@ -3,9 +3,9 @@
   "theme": "mint",
   "name": "Unpod Dev",
   "colors": {
-    "primary": "#2563EB",
-    "light": "#3B82F6",
-    "dark": "#1D4ED8"
+    "primary": "#796cff",
+    "light": "#9a90ff",
+    "dark": "#5a4fff"
   },
   "favicon": "/favicon.svg",
   "logo": {
