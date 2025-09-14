@@ -127,19 +127,10 @@
     }
   },
   "footer": {
-    "socials": [
-      {
-        "type": "github",
-        "link": "https://github.com/unpod"
-      },
-      {
-        "type": "twitter",
-        "link": "https://twitter.com/unpod"
-      },
-      {
-        "type": "discord",
-        "link": "https://discord.gg/unpod"
-      }
-    ]
+    "socials": {
+      "github": "https://github.com/parvbhullar",
+      "twitter": "https://twitter.com/unpod",
+      "discord": "https://discord.gg/7kQ4ewNSHZ"
+    }
   }
 }
