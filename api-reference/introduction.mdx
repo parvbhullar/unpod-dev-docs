@@ -1,23 +1,80 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: 'API Reference'
+description: 'Complete reference for the Unpod API endpoints and resources'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+# Unpod API Reference
 
-## Welcome
+Welcome to the Unpod API reference documentation. This document provides detailed information about our REST API, including available endpoints, request/response formats, and code examples.
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+## Base URL
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
+All API requests should be made to one of the following base URLs:
+
+- **Production**: `https://api.unpod.dev/v1`
+- **Sandbox**: `https://sandbox.api.unpod.dev/v1`
+
+## Authentication
+
+Unpod uses API keys for authentication. Include your API key in the `Authorization` header:
+
+```
+Authorization: Bearer YOUR_API_KEY
+```
+
+[Get your API key](https://app.unpod.dev/settings/api-keys)
+
+## Rate Limiting
+
+API requests are subject to rate limiting:
+
+- **Standard Rate Limit**: 100 requests per minute per API key
+- **Burst Limit**: 10 requests per second
+
+## Response Format
+
+All API responses are in JSON format and include standard HTTP status codes.
+
+## Error Handling
+
+Errors return a JSON object with an `error` field containing details:
+
+```json
+{
+  "error": {
+    "code": "invalid_request",
+    "message": "The request was invalid.",
+    "details": {
+      "field": "phone_number",
+      "reason": "invalid_format"
+    }
+  }
+}
+```
+
+## API Endpoints
+
+Explore the available API endpoints using the navigation menu. The API is organized into the following sections:
+
+- **Authentication**: Manage API keys and authentication
+- **Numbers**: Search, purchase, and manage phone numbers
+- **Calls**: Make and manage phone calls
+- **Messages**: Send and track SMS/MMS messages
+- **Webhooks**: Configure and manage webhook endpoints
+
+## SDKs
+
+For easier integration, we provide official SDKs in multiple programming languages:
+
+- [JavaScript SDK](/sdk/javascript)
+- [Python SDK](/sdk/python)
+- [Java SDK](/sdk/java)
+
+## Getting Started
+
+1. [Get your API key](https://app.unpod.dev/settings/api-keys)
+2. Try our [Quickstart Guide](/quickstart)
+3. Explore the API endpoints in the sidebar
 </Card>
 
 ## Authentication

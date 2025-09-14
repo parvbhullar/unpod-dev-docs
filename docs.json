@@ -29,6 +29,10 @@
           {
             "group": "Guides",
             "pages": ["guides/integration", "guides/authentication", "guides/webhooks"]
+          },
+          {
+            "group": "API Reference",
+            "pages": ["api-reference/introduction"]
           }
         ]
       },
@@ -37,10 +41,14 @@
         "groups": [
           {
             "group": "Overview",
+            "pages": ["api-reference/introduction"]
+          },
+          {
+            "group": "API Endpoints",
             "pages": ["api/overview", "api/authentication", "api/rate-limiting"]
           },
           {
-            "group": "Endpoints",
+            "group": "Resources",
             "pages": ["api/numbers", "api/calls", "api/messages", "api/webhooks"]
           },
           {

@@ -1,21 +1,50 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
+    "title": "Unpod API",
+    "description": "API documentation for Unpod's telephony and messaging services",
+    "contact": {
+      "name": "Unpod Support",
+      "email": "support@unpod.dev",
+      "url": "https://unpod.dev/support"
     },
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://api.unpod.dev/v1",
+      "description": "Production server"
+    },
+    {
+      "url": "https://sandbox.api.unpod.dev/v1",
+      "description": "Sandbox server for testing"
     }
   ],
   "security": [
     {
       "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Endpoints for API authentication"
+    },
+    {
+      "name": "Numbers",
+      "description": "Manage phone numbers in your account"
+    },
+    {
+      "name": "Calls",
+      "description": "Make and manage phone calls"
+    },
+    {
+      "name": "Messages",
+      "description": "Send and manage SMS/MMS messages"
+    },
+    {
+      "name": "Webhooks",
+      "description": "Manage webhook configurations"
     }
   ],
   "paths": {
