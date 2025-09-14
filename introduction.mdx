@@ -1,50 +1,68 @@
 ---
 title: 'Introduction'
-description: 'Overview of the Unpod platform and its core components'
-icon: 'book'
+description: 'Get started with Unpod - The all-in-one communication platform for developers'
+icon: 'message-circle'
 ---
 
-# Introduction to Unpod
+# Welcome to Unpod
 
-Unpod is a powerful platform designed to streamline communication and data flow between different systems and services. This documentation will guide you through the core concepts and components of the Unpod ecosystem.
+Unpod is a modern communication platform that helps developers build, scale, and manage voice and messaging applications with ease. Our API-first approach allows you to integrate powerful communication features into your applications in minutes.
 
-## Key Features
+## Why Choose Unpod?
 
-- **Seamless Integration**: Connect various services and systems effortlessly
-- **Scalable Architecture**: Built to handle growing data and user demands
-- **Secure Communication**: Enterprise-grade security for all data transfers
-- **Extensible Platform**: Easily add new features and integrations
+- **Developer First**: Built by developers, for developers
+- **Global Reach**: Connect with users worldwide through multiple channels
+- **Reliable Infrastructure**: 99.99% uptime with automatic failover
+- **Simple Pricing**: Pay-as-you-go with no hidden fees
+- **Enterprise Grade**: Security and compliance you can trust
 
-## Core Components
+## Core Concepts
 
-1. **Number**: The fundamental unit of identification in the Unpod system
-2. **Provider**: Services that offer communication capabilities
-3. **Bridge**: The central component that connects different systems
-4. **Agents**: Specialized components that handle specific tasks
+1. **Numbers**: Virtual phone numbers for voice and SMS
+2. **Providers**: Connect to carriers and services worldwide
+3. **Bridges**: Route calls and messages between services
+4. **Agents**: Programmable components for custom logic
 
-## Getting Started
+## Quick Start
 
-To begin using Unpod, you'll need to set up the following:
+1. **Sign Up** for a free Unpod account at [app.unpod.dev](https://app.unpod.dev)
+2. **Get API Credentials** from your dashboard
+3. **Install the SDK**
 
-1. Create an account on the Unpod platform
-2. Configure your first bridge
-3. Set up your agents
-4. Start routing communications
+```bash
+# Using npm
+npm install @unpod/sdk
+
+# Or using Yarn
+yarn add @unpod/sdk
+```
+
+4. **Send your first message**
 
 ```javascript
-// Example: Basic bridge configuration
-const bridgeConfig = {
-  name: "MyFirstBridge",
-  provider: "twilio",
-  settings: {
-    accountSid: "your_account_sid",
-    authToken: "your_auth_token"
-  }
-};
+import { Unpod } from '@unpod/sdk';
+
+const client = new Unpod({
+  apiKey: 'your-api-key',
+  environment: 'sandbox' // or 'production'
+});
+
+// Send an SMS
+await client.messages.create({
+  to: '+1234567890',
+  from: '+1987654321',
+  body: 'Hello from Unpod!'
+});
 ```
 
 ## Next Steps
 
-- Learn about [Concepts](/concepts)
-- Set up your first [Bridge](/bridge)
-- Configure [Agents](/agent) for your workflow
+- Explore our [API Reference](/api/overview)
+- Learn about [Core Components](/concepts)
+- Check out our [Guides](/guides/integration)
+
+## Need Help?
+
+- Join our [Discord community](https://discord.gg/unpod)
+- Check our [API Status](https://status.unpod.dev)
+- Contact [support@unpod.dev](mailto:support@unpod.dev)
