@@ -1,0 +1,229 @@
+# Numbers API
+
+The Numbers API allows you to manage phone numbers in your Unpod account, including searching for available numbers, purchasing numbers, and configuring number settings.
+
+## List All Numbers
+
+Retrieve a list of all phone numbers in your account.
+
+```http
+GET /v1/numbers
+```
+
+### Query Parameters
+
+| Parameter  | Type    | Required | Description                                    |
+|------------|---------|----------|------------------------------------------------|
+| page_size  | integer | No       | Number of results per page (default: 20, max: 100) |
+| page_token | string  | No       | Token for pagination                           |
+| contains   | string  | No       | Filter numbers containing this sequence        |
+| region     | string  | No       | Filter by region (e.g., "US", "GB")           |
+| type       | string  | No       | Filter by number type ("local", "tollfree")   |
+
+### Response
+
+```json
+{
+  "numbers": [
+    {
+      "sid": "PN1234567890abcdef1234567890abcdef",
+      "phone_number": "+14155551234",
+      "friendly_name": "Sales Line",
+      "region": "US",
+      "type": "local",
+      "capabilities": {
+        "voice": true,
+        "sms": true,
+        "mms": true
+      },
+      "date_created": "2023-01-01T00:00:00Z",
+      "date_updated": "2023-01-01T00:00:00Z"
+    }
+  ],
+  "meta": {
+    "page_size": 20,
+    "next_page_token": "abc123",
+    "has_more": true
+  }
+}
+```
+
+## Search for Available Numbers
+
+Search for available phone numbers that can be purchased.
+
+```http
+GET /v1/available_numbers
+```
+
+### Query Parameters
+
+| Parameter  | Type    | Required | Description                                    |
+|------------|---------|----------|------------------------------------------------|
+| country    | string  | Yes      | Two-letter ISO country code (e.g., "US")      |
+| type       | string  | No       | Number type ("local" or "tollfree")           |
+| contains   | string  | No       | Filter numbers containing this sequence        |
+| area_code  | string  | No       | Filter by area code (US/CA only)               |
+| limit      | integer | No       | Maximum number of results (default: 20, max: 100) |
+
+### Response
+
+```json
+{
+  "available_numbers": [
+    {
+      "phone_number": "+14155551234",
+      "friendly_name": "(415) 555-1234",
+      "region": "US-CA",
+      "type": "local",
+      "capabilities": {
+        "voice": true,
+        "sms": true,
+        "mms": true
+      },
+      "monthly_price": "1.00",
+      "setup_price": "3.00"
+    }
+  ]
+}
+```
+
+## Purchase a Phone Number
+
+Purchase a specific available phone number.
+
+```http
+POST /v1/numbers
+```
+
+### Request Body
+
+```json
+{
+  "phone_number": "+14155551234",
+  "friendly_name": "Sales Line",
+  "voice_url": "https://your-app.com/voice",
+  "sms_url": "https://your-app.com/sms",
+  "status_callback": "https://your-app.com/status"
+}
+```
+
+### Response
+
+```json
+{
+  "sid": "PN1234567890abcdef1234567890abcdef",
+  "phone_number": "+14155551234",
+  "friendly_name": "Sales Line",
+  "region": "US",
+  "type": "local",
+  "capabilities": {
+    "voice": true,
+    "sms": true,
+    "mms": true
+  },
+  "voice_url": "https://your-app.com/voice",
+  "sms_url": "https://your-app.com/sms",
+  "status_callback": "https://your-app.com/status",
+  "date_created": "2023-01-01T00:00:00Z",
+  "date_updated": "2023-01-01T00:00:00Z"
+}
+```
+
+## Update a Phone Number
+
+Update the configuration for a specific phone number.
+
+```http
+POST /v1/numbers/{sid}
+```
+
+### Request Body
+
+```json
+{
+  "friendly_name": "Updated Name",
+  "voice_url": "https://your-app.com/new-voice",
+  "sms_url": "https://your-app.com/new-sms",
+  "status": "active"
+}
+```
+
+### Response
+
+```json
+{
+  "sid": "PN1234567890abcdef1234567890abcdef",
+  "phone_number": "+14155551234",
+  "friendly_name": "Updated Name",
+  "voice_url": "https://your-app.com/new-voice",
+  "sms_url": "https://your-app.com/new-sms",
+  "status": "active",
+  "date_updated": "2023-01-02T12:00:00Z"
+}
+```
+
+## Delete a Phone Number
+
+Release a phone number from your account.
+
+```http
+DELETE /v1/numbers/{sid}
+```
+
+### Response
+
+```http
+HTTP/1.1 204 No Content
+```
+
+## Error Responses
+
+| Status Code | Error Code           | Description                              |
+|-------------|----------------------|------------------------------------------|
+| 400         | invalid_phone_number | The provided phone number is invalid     |
+| 403         | number_limit_reached | You've reached your number limit         |
+| 404         | not_found            | The requested number was not found       |
+| 409         | number_in_use        | The number is already in use             |
+
+## Webhooks
+
+Number-related webhook events:
+
+- `number.added`: A new number was added to your account
+- `number.updated`: A number's configuration was updated
+- `number.removed`: A number was removed from your account
+
+## Code Examples
+
+### List Numbers (Node.js)
+
+```javascript
+const numbers = await unpod.numbers.list({
+  region: 'US',
+  type: 'local',
+  pageSize: 10
+});
+
+console.log('Your numbers:', numbers);
+```
+
+### Purchase a Number (Python)
+
+```python
+number = unpod.numbers.create(
+    phone_number='+14155551234',
+    friendly_name='Sales Line',
+    voice_url='https://your-app.com/voice',
+    sms_url='https://your-app.com/sms'
+)
+
+print(f"Purchased number: {number.phone_number}")
+```
+
+## Best Practices
+
+1. **Number Pooling**: Use number pooling to efficiently manage multiple numbers
+2. **Error Handling**: Always handle rate limiting and transient errors
+3. **Webhooks**: Set up webhooks to receive real-time updates about your numbers
+4. **Cleanup**: Regularly review and release unused numbers to avoid unnecessary costs

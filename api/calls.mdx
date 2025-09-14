@@ -1,0 +1,278 @@
+# Calls API
+
+The Calls API allows you to make and manage phone calls programmatically. This documentation covers all available endpoints for call management.
+
+## Make a Call
+
+Initiate a new outbound call.
+
+```http
+POST /v1/calls
+```
+
+### Request Body
+
+| Parameter           | Type    | Required | Description                                                                 |
+|---------------------|---------|----------|-----------------------------------------------------------------------------|
+| to                  | string  | Yes      | The phone number or SIP address to call                                    |
+| from                | string  | Yes      | Your Unpod phone number or SIP address                                     |
+| answer_url          | string  | Yes      | URL to fetch TwiML when the call is answered                               |
+| answer_method       | string  | No       | HTTP method for answer_url (default: "POST")                              |
+| timeout             | integer | No       | Seconds to wait for answer (default: 60, max: 300)                         |
+| record              | boolean | No       | Whether to record the call (default: false)                                |
+| recording_channels  | string  | No       | "mono" or "dual" (default: "mono")                                      |
+| recording_status_callback | string | No | URL for recording status updates                                      |
+| status_callback     | string  | No       | URL for call status updates                                                |
+| status_events       | array   | No       | List of status changes to receive (e.g., ["initiated", "answered"])        |
+| machine_detection   | string  | No       | "Enable" or "DetectMessageEnd" for answering machine detection            |
+| machine_detection_timeout | integer | No | Max seconds to wait for machine detection (default: 30)            |
+| send_digits         | string  | No       | DTMF tones to play when the call is answered                                |
+| sip_auth_username   | string  | No       | Username for SIP authentication                                            |
+| sip_auth_password   | string  | No       | Password for SIP authentication                                            |
+
+### Example Request
+
+```http
+POST /v1/calls
+Content-Type: application/json
+
+{
+  "to": "+14155551234",
+  "from": "+14155556789",
+  "answer_url": "https://your-app.com/answer",
+  "status_callback": "https://your-app.com/status",
+  "record": true,
+  "timeout": 45
+}
+```
+
+### Response
+
+```json
+{
+  "sid": "CA1234567890abcdef1234567890abcdef",
+  "status": "queued",
+  "direction": "outbound-api",
+  "from": "+14155556789",
+  "to": "+14155551234",
+  "start_time": null,
+  "price": null,
+  "price_unit": "USD",
+  "duration": null,
+  "date_created": "2023-06-15T12:00:00Z",
+  "date_updated": "2023-06-15T12:00:00Z"
+}
+```
+
+## Get Call Details
+
+Retrieve information about a specific call.
+
+```http
+GET /v1/calls/{sid}
+```
+
+### Response
+
+```json
+{
+  "sid": "CA1234567890abcdef1234567890abcdef",
+  "status": "completed",
+  "direction": "outbound-api",
+  "from": "+14155556789",
+  "to": "+14155551234",
+  "start_time": "2023-06-15T12:00:05Z",
+  "end_time": "2023-06-15T12:01:30Z",
+  "duration": "85",
+  "price": "0.0125",
+  "price_unit": "USD",
+  "answered_by": "human",
+  "forwarded_from": null,
+  "caller_name": null,
+  "recording_sid": "RE1234567890abcdef1234567890abcdef",
+  "date_created": "2023-06-15T12:00:00Z",
+  "date_updated": "2023-06-15T12:01:30Z"
+}
+```
+
+## List Calls
+
+Retrieve a list of calls. Results are paginated and can be filtered.
+
+```http
+GET /v1/calls
+```
+
+### Query Parameters
+
+| Parameter  | Type    | Required | Description                                    |
+|------------|---------|----------|------------------------------------------------|
+| to         | string  | No       | Filter by recipient's number                   |
+| from       | string  | No       | Filter by caller's number                      |
+| status     | string  | No       | Filter by call status (queued, ringing, in-progress, completed, etc.) |
+| start_time | string  | No       | Filter calls that started on or after this ISO 8601 timestamp |
+| end_time   | string  | No       | Filter calls that started before this ISO 8601 timestamp |
+| page_size  | integer | No       | Number of results per page (default: 20, max: 100) |
+| page_token | string  | No       | Token for pagination                           |
+
+### Response
+
+```json
+{
+  "calls": [
+    {
+      "sid": "CA1234567890abcdef1234567890abcdef",
+      "status": "completed",
+      "direction": "outbound-api",
+      "from": "+14155556789",
+      "to": "+14155551234",
+      "start_time": "2023-06-15T12:00:05Z",
+      "end_time": "2023-06-15T12:01:30Z",
+      "duration": "85",
+      "price": "0.0125",
+      "price_unit": "USD"
+    }
+  ],
+  "meta": {
+    "page_size": 20,
+    "next_page_token": "abc123",
+    "has_more": true
+  }
+}
+```
+
+## Update a Call
+
+Modify an in-progress call.
+
+```http
+POST /v1/calls/{sid}
+```
+
+### Request Body
+
+| Parameter     | Type    | Required | Description                                 |
+|---------------|---------|----------|---------------------------------------------|
+| status        | string  | No       | Either "completed" to end the call or "canceled" to cancel a queued or ringing call |
+| url           | string  | No       | New TwiML URL to fetch for the call         |
+| method        | string  | No       | HTTP method to use when requesting the URL  |
+| status_callback | string | No       | New status callback URL                     |
+
+### Example: End a Call
+
+```http
+POST /v1/calls/CA1234567890abcdef1234567890abcdef
+Content-Type: application/json
+
+{
+  "status": "completed"
+}
+```
+
+### Response
+
+```json
+{
+  "sid": "CA1234567890abcdef1234567890abcdef",
+  "status": "completed",
+  "date_updated": "2023-06-15T12:02:00Z"
+}
+```
+
+## Get Call Recordings
+
+Retrieve recordings for a specific call.
+
+```http
+GET /v1/calls/{call_sid}/recordings
+```
+
+### Response
+
+```json
+{
+  "recordings": [
+    {
+      "sid": "RE1234567890abcdef1234567890abcdef",
+      "call_sid": "CA1234567890abcdef1234567890abcdef",
+      "status": "completed",
+      "source": "DialVerb",
+      "channels": 1,
+      "duration": "85",
+      "price": "0.0025",
+      "price_unit": "USD",
+      "media_url": "https://api.unpod.dev/v1/Recordings/RE1234567890abcdef1234567890abcdef/Media",
+      "date_created": "2023-06-15T12:00:10Z",
+      "date_updated": "2023-06-15T12:01:35Z"
+    }
+  ]
+}
+```
+
+## Error Responses
+
+| Status Code | Error Code           | Description                              |
+|-------------|----------------------|------------------------------------------|
+| 400         | invalid_parameters   | Missing or invalid parameters            |
+| 403         | unauthorized         | Invalid credentials or permissions       |
+| 404         | not_found            | Call not found                           |
+| 409         | call_already_ended   | Call has already ended                   |
+| 429         | too_many_requests    | Rate limit exceeded                      |
+
+## Webhooks
+
+Call-related webhook events:
+
+- `call.initiated`: A new call was initiated
+- `call.ringing`: The call is ringing
+- `call.answered`: The call was answered
+- `call.completed`: The call ended
+- `call.failed`: The call failed
+- `recording.completed`: Call recording is available
+- `recording.failed`: Recording failed
+
+## Code Examples
+
+### Make a Call (Node.js)
+
+```javascript
+const call = await unpod.calls.create({
+  to: '+14155551234',
+  from: '+14155556789',
+  answerUrl: 'https://your-app.com/answer',
+  statusCallback: 'https://your-app.com/status',
+  record: true,
+  timeout: 45
+});
+
+console.log(`Call SID: ${call.sid}`);
+```
+
+### List Recent Calls (Python)
+
+```python
+from datetime import datetime, timedelta
+
+# Get calls from the last 24 hours
+end_time = datetime.utcnow()
+start_time = end_time - timedelta(days=1)
+
+calls = unpod.calls.list(
+    start_time=start_time.isoformat() + 'Z',
+    end_time=end_time.isoformat() + 'Z',
+    status='completed',
+    page_size=10
+)
+
+for call in calls:
+    print(f"Call to {call.to}: {call.duration} seconds")
+```
+
+## Best Practices
+
+1. **Error Handling**: Always handle potential errors and timeouts
+2. **Webhooks**: Use webhooks for real-time call status updates
+3. **Retry Logic**: Implement retry logic for transient failures
+4. **Caller ID**: Register your Caller ID to improve answer rates
+5. **Monitoring**: Monitor call quality and success rates
+6. **Cost Control**: Set spending limits and monitor usage

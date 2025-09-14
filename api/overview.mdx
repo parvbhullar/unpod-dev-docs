@@ -1,0 +1,60 @@
+# API Overview
+
+Welcome to the Unpod API documentation. Our API provides programmatic access to Unpod's telephony and messaging services.
+
+## Base URL
+
+All API endpoints are relative to the base URL:
+
+```
+https://api.unpod.dev/v1
+```
+
+## Authentication
+
+All API requests must be authenticated using an API key. Include your API key in the `Authorization` header:
+
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+## Rate Limiting
+
+API requests are subject to rate limiting:
+- 100 requests per minute per API key
+- 10,000 requests per day per API key
+
+## Response Format
+
+All API responses are in JSON format and include standard HTTP status codes.
+
+## Error Handling
+
+Errors return a JSON object with an `error` field containing details:
+
+```json
+{
+  "error": {
+    "code": "invalid_request",
+    "message": "The request was invalid.",
+    "details": {
+      "field": "phone_number",
+      "reason": "invalid_format"
+    }
+  }
+}
+```
+
+## SDKs
+
+For easier integration, we provide official SDKs in multiple programming languages:
+
+- [JavaScript SDK](/sdk/javascript)
+- [Python SDK](/sdk/python)
+- [Java SDK](/sdk/java)
+
+## Getting Started
+
+1. [Get your API key](https://app.unpod.dev/settings/api-keys)
+2. Try our [Quickstart Guide](/quickstart)
+3. Explore the API endpoints in the sidebar

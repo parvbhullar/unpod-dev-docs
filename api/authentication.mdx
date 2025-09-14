@@ -1,0 +1,69 @@
+# Authentication
+
+All API requests to Unpod must be authenticated using an API key. This document explains how to authenticate your requests.
+
+## API Keys
+
+### Obtaining an API Key
+
+1. Log in to your Unpod account at [https://app.unpod.dev](https://app.unpod.dev)
+2. Navigate to **Settings** > **API Keys**
+3. Click **Generate New API Key**
+4. Copy the generated key (it will only be shown once)
+
+### Using Your API Key
+
+Include your API key in the `Authorization` header of each request:
+
+```http
+GET /v1/numbers HTTP/1.1
+Host: api.unpod.dev
+Authorization: Bearer YOUR_API_KEY
+```
+
+## Authentication Methods
+
+### Bearer Token (Recommended)
+
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+### Query Parameter (Alternative)
+
+```http
+GET /v1/numbers?api_key=YOUR_API_KEY
+```
+
+## Security Best Practices
+
+- 🔒 **Never expose your API key** in client-side code or public repositories
+- 🔑 Use environment variables to store API keys
+- 🔄 Rotate your API keys regularly
+- 🚫 Revoke compromised keys immediately
+
+## Scopes and Permissions
+
+API keys can be scoped to specific permissions:
+
+- `read` - Read-only access
+- `write` - Read and write access
+- `admin` - Full access (including account management)
+
+## Rate Limiting
+
+Authentication is subject to rate limiting:
+- 100 requests per minute per IP address for unauthenticated requests
+- 1,000 requests per minute per API key for authenticated requests
+
+## Troubleshooting
+
+### Common Issues
+
+- **401 Unauthorized**: Invalid or missing API key
+- **403 Forbidden**: Insufficient permissions
+- **429 Too Many Requests**: Rate limit exceeded
+
+### Getting Help
+
+If you're having trouble with authentication, contact our support team at support@unpod.dev.

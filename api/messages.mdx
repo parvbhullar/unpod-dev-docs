@@ -1,0 +1,225 @@
+# Messages API
+
+The Messages API allows you to send and manage SMS and MMS messages programmatically.
+
+## Send a Message
+
+Send a new SMS or MMS message.
+
+```http
+POST /v1/messages
+```
+
+### Request Body
+
+| Parameter           | Type    | Required | Description                                                                 |
+|---------------------|---------|----------|-----------------------------------------------------------------------------|
+| to                  | string  | Yes      | The destination phone number or SIP address                                |
+| from                | string  | Yes      | Your Unpod phone number or alphanumeric sender ID                         |
+| body                | string  | No*      | The message body (required if media_urls is not provided)                  |
+| media_urls          | array   | No*      | Array of media URLs for MMS (required if body is not provided)             |
+| status_callback     | string  | No       | URL for message status updates                                             |
+| status_events       | array   | No       | List of status changes to receive (e.g., ["queued", "sent", "delivered"]) |
+| validity_period     | integer | No       | Time in seconds that the message is valid (default: 14400, max: 172800)    |
+| smart_encoding      | boolean | No       | Whether to enable smart encoding (default: true)                           |
+| shorten_urls        | boolean | No       | Whether to shorten URLs in the message (default: false)                    |
+| schedule_time       | string  | No       | ISO 8601 timestamp for scheduled sending                                   |
+| max_price           | string  | No       | Maximum price to pay for the message                                       |
+| provide_feedback    | boolean | No       | Whether to request delivery feedback (default: false)                      |
+
+### Example: Send SMS
+
+```http
+POST /v1/messages
+Content-Type: application/json
+
+{
+  "to": "+14155551234",
+  "from": "+14155556789",
+  "body": "Hello from Unpod! This is a test message.",
+  "status_callback": "https://your-app.com/status"
+}
+```
+
+### Example: Send MMS
+
+```http
+POST /v1/messages
+Content-Type: application/json
+
+{
+  "to": "+14155551234",
+  "from": "+14155556789",
+  "body": "Check out this image!",
+  "media_urls": ["https://example.com/image.jpg"],
+  "status_callback": "https://your-app.com/status"
+}
+```
+
+### Response
+
+```json
+{
+  "sid": "SM1234567890abcdef1234567890abcdef",
+  "status": "queued",
+  "direction": "outbound-api",
+  "from": "+14155556789",
+  "to": "+14155551234",
+  "body": "Hello from Unpod! This is a test message.",
+  "num_segments": "1",
+  "price": null,
+  "price_unit": "USD",
+  "date_created": "2023-06-15T12:00:00Z",
+  "date_updated": "2023-06-15T12:00:00Z",
+  "date_sent": null
+}
+```
+
+## Get Message Details
+
+Retrieve information about a specific message.
+
+```http
+GET /v1/messages/{sid}
+```
+
+### Response
+
+```json
+{
+  "sid": "SM1234567890abcdef1234567890abcdef",
+  "status": "delivered",
+  "direction": "outbound-api",
+  "from": "+14155556789",
+  "to": "+14155551234",
+  "body": "Hello from Unpod! This is a test message.",
+  "num_segments": "1",
+  "price": "0.0075",
+  "price_unit": "USD",
+  "error_code": null,
+  "error_message": null,
+  "date_created": "2023-06-15T12:00:00Z",
+  "date_updated": "2023-06-15T12:00:01Z",
+  "date_sent": "2023-06-15T12:00:01Z"
+}
+```
+
+## List Messages
+
+Retrieve a list of messages. Results are paginated and can be filtered.
+
+```http
+GET /v1/messages
+```
+
+### Query Parameters
+
+| Parameter  | Type    | Required | Description                                    |
+|------------|---------|----------|------------------------------------------------|
+| to         | string  | No       | Filter by recipient's number                   |
+| from       | string  | No       | Filter by sender's number                      |
+| status     | string  | No       | Filter by message status (queued, sent, delivered, failed) |
+| date_sent  | string  | No       | Filter by ISO 8601 date (e.g., 2023-06-15)     |
+| date_sent_after | string | No | Filter messages sent after this ISO 8601 timestamp |
+| date_sent_before | string | No | Filter messages sent before this ISO 8601 timestamp |
+| page_size  | integer | No       | Number of results per page (default: 20, max: 100) |
+| page_token | string  | No       | Token for pagination                           |
+
+### Response
+
+```json
+{
+  "messages": [
+    {
+      "sid": "SM1234567890abcdef1234567890abcdef",
+      "status": "delivered",
+      "direction": "outbound-api",
+      "from": "+14155556789",
+      "to": "+14155551234",
+      "body": "Hello from Unpod!",
+      "num_segments": "1",
+      "price": "0.0075",
+      "price_unit": "USD",
+      "date_sent": "2023-06-15T12:00:01Z"
+    }
+  ],
+  "meta": {
+    "page_size": 20,
+    "next_page_token": "abc123",
+    "has_more": true
+  }
+}
+```
+
+## Delete a Message
+
+Delete a specific message (if it hasn't been sent yet).
+
+```http
+DELETE /v1/messages/{sid}
+```
+
+### Response
+
+```http
+HTTP/1.1 204 No Content
+```
+
+## Error Responses
+
+| Status Code | Error Code           | Description                              |
+|-------------|----------------------|------------------------------------------|
+| 400         | invalid_parameters   | Missing or invalid parameters            |
+| 403         | unauthorized         | Invalid credentials or permissions       |
+| 403         | from_number_required | From number is required for this action  |
+| 404         | not_found            | Message not found                        |
+| 429         | too_many_requests    | Rate limit exceeded                      |
+
+## Webhooks
+
+Message-related webhook events:
+
+- `message.queued`: Message is queued for delivery
+- `message.sent`: Message was sent to the carrier
+- `message.delivered`: Message was delivered to the recipient
+- `message.failed`: Message delivery failed
+
+## Code Examples
+
+### Send SMS (Node.js)
+
+```javascript
+const message = await unpod.messages.create({
+  to: '+14155551234',
+  from: '+14155556789',
+  body: 'Hello from Unpod!',
+  statusCallback: 'https://your-app.com/status'
+});
+
+console.log(`Message SID: ${message.sid}`);
+```
+
+### Send MMS (Python)
+
+```python
+message = unpod.messages.create(
+    to="+14155551234",
+    from_="+14155556789",
+    body="Check out this image!",
+    media_urls=["https://example.com/image.jpg"],
+    status_callback="https://your-app.com/status"
+)
+
+print(f"Message SID: {message.sid}")
+```
+
+## Best Practices
+
+1. **Error Handling**: Always handle potential errors and timeouts
+2. **Webhooks**: Use webhooks for real-time message status updates
+3. **Retry Logic**: Implement retry logic for transient failures
+4. **Message Length**: Be aware of SMS character limits (160 characters for GSM, 70 for Unicode)
+5. **Opt-Out**: Include opt-out instructions in your messages
+6. **Scheduling**: Use the `schedule_time` parameter for time-sensitive messages
+7. **Testing**: Test with different carriers and message types before sending at scale
+8. **Compliance**: Follow carrier guidelines and local regulations for messaging

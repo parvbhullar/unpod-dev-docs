@@ -1,0 +1,61 @@
+---
+title: 'Provider'
+description: 'Learn how to work with communication providers in Unpod'
+icon: 'server'
+---
+
+# Communication Providers
+
+Providers in Unpod represent telecommunication carriers and services that handle your voice and messaging traffic.
+
+## Supported Providers
+
+Unpod supports a wide range of providers including:
+
+- **Carriers**: AT&T, Verizon, T-Mobile, etc.
+- **SIP Providers**: Twilio, Plivo, Bandwidth, etc.
+- **Messaging Services**: WhatsApp, Facebook Messenger, etc.
+
+## Adding a Provider
+
+### Via Dashboard
+1. Go to the Providers section in your Unpod dashboard
+2. Click "Add Provider"
+3. Select the provider type
+4. Enter the required credentials
+5. Save and verify the connection
+
+### Via API
+
+```javascript
+// Example: Add a new SIP provider
+const provider = await unpod.providers.create({
+  name: 'My SIP Provider',
+  type: 'sip',
+  credentials: {
+    username: 'your_username',
+    password: 'your_password',
+    sipUri: 'sip:provider.example.com'
+  }
+});
+```
+
+## Configuration
+
+### SIP Configuration
+- SIP URI and credentials
+- Codec preferences
+- DTMF settings
+- Caller ID settings
+
+### Messaging Configuration
+- Webhook URLs
+- Rate limiting
+- Delivery receipts
+
+## Best Practices
+
+- Always test new providers in a staging environment first
+- Set up failover providers for critical communications
+- Monitor provider performance and switch if needed
+- Keep credentials secure and rotate them regularly
