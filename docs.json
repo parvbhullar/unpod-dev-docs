@@ -9,8 +9,8 @@
   },
   "favicon": "/favicon.svg",
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg",
+    "light": "/logo/dark.svg",
+    "dark": "/logo/light.svg",
     "href": "https://unpod.dev"
   },
   "navigation": {
@@ -79,11 +79,6 @@
     "global": {
       "anchors": [
         {
-          "anchor": "API Status",
-          "href": "https://status.unpod.dev",
-          "icon": "signal"
-        },
-        {
           "anchor": "GitHub",
           "href": "https://github.com/parvbhullar",
           "icon": "github"
@@ -92,11 +87,6 @@
           "anchor": "Discord",
           "href": "https://discord.gg/7kQ4ewNSHZ",
           "icon": "message-circle"
-        },
-        {
-          "anchor": "Changelog",
-          "href": "https://unpod.dev/changelog",
-          "icon": "list"
         }
       ]
     }
@@ -110,14 +100,6 @@
       {
         "label": "API Reference",
         "href": "https://docs.unpod.dev/api/overview"
-      },
-      {
-        "label": "Pricing",
-        "href": "https://unpod.dev/pricing"
-      },
-      {
-        "label": "Blog",
-        "href": "https://unpod.dev/blog"
       }
     ],
     "primary": {
@@ -129,7 +111,8 @@
   "footer": {
     "socials": {
       "github": "https://github.com/parvbhullar",
-      "twitter": "https://twitter.com/unpod",
+      "twitter": "https://x.com/unpod_ai",
+      "youtube": "https://www.youtube.com/@unpodai",
       "discord": "https://discord.gg/7kQ4ewNSHZ"
     }
   }
