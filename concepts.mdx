@@ -10,12 +10,15 @@ This section covers the fundamental concepts that form the foundation of the Unp
 
 ## Number
 
-Numbers in Unpod are unique identifiers that represent communication endpoints. They serve as the primary way to route messages and calls within the system.
+Numbers are the virtual entry points in your Unpod system. With them, you can instantly give your business a local or global identity while managing all inbound and outbound calls in one place.
 
 ### Key Features
 - **Global Uniqueness**: Each number is globally unique
 - **Multi-protocol Support**: Works across different communication protocols
 - **Metadata Support**: Attach custom metadata for advanced routing
+
+Numbers are what make your AI voice agents reachable from anywhere in the world.
+
 
 ```javascript
 // Example: Number object
@@ -31,16 +34,19 @@ Numbers in Unpod are unique identifiers that represent communication endpoints. 
 
 ## Provider
 
-Providers are external services that offer communication capabilities like SMS, voice, or other messaging protocols.
+Providers act as the carriers and gateways that move calls outside Unpod. You can use Unpod’s own SIP trunking for simplicity or connect third-party carriers for more control.
 
 ### Common Providers
 - **Twilio**: For SMS and voice communications
 - **Plivo**: Alternative communication platform
 - **Custom**: Build your own provider integration
 
+Providers ensure that when your voice agent speaks, the world can hear it.
+
+
 ## Bridge
 
-Bridges connect different systems and services, enabling seamless data flow between them.
+Bridges are the control hubs that decide what happens to every call. They connect your numbers, providers, and agents — making sure conversations reach the right place at the right time.
 
 ### Bridge Types
 1. **Direct Bridge**: Point-to-point connection
@@ -49,12 +55,14 @@ Bridges connect different systems and services, enabling seamless data flow betw
 
 ## Agents
 
-Agents are specialized components that handle specific tasks within the Unpod ecosystem.
+Agents are where intelligence meets telephony. They are programmable AI units that handle conversations, learn from data, and connect with your systems.
 
 ### Agent Types
 - **Routing Agent**: Directs messages based on rules
 - **Processing Agent**: Transforms or enriches messages
 - **Monitoring Agent**: Tracks system health and metrics
+
+Agents transform your communication lines into smart, conversational experiences.
 
 ## Data Flow
 
