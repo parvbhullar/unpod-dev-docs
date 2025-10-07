@@ -1,66 +1,60 @@
 ---
-title: 'Core Concepts'
-description: 'Understanding the fundamental building blocks of Unpod'
-icon: 'puzzle'
+title: "Core Components"
 ---
 
-# Core Concepts
+# Core Components
 
-This section covers the fundamental concepts that form the foundation of the Unpod platform.
+Unpod is built around four essential building blocks — **Numbers, Providers, Bridges, and Agents**.  
+Each plays a distinct role, and together they form a complete communication and AI automation framework.
 
-## Number
+## Numbers
 
-Numbers are the virtual entry points in your Unpod system. With them, you can instantly give your business a local or global identity while managing all inbound and outbound calls in one place.
+**Numbers** are the virtual entry points into your Unpod ecosystem. They give your business a local or global identity and allow you to manage all inbound and outbound calls from a single dashboard.
 
-### Key Features
-- **Global Uniqueness**: Each number is globally unique
-- **Multi-protocol Support**: Works across different communication protocols
-- **Metadata Support**: Attach custom metadata for advanced routing
+With Numbers, you can:
 
-Numbers are what make your AI voice agents reachable from anywhere in the world.
+- Acquire local or international numbers to expand your reach  
+- Route customer calls directly into AI or workflow-based systems  
+- Stay compliant with regional KYC and telecom regulations  
 
+Numbers make your AI voice agents reachable from anywhere in the world.
 
-```javascript
-// Example: Number object
-{
-  "id": "num_1234567890",
-  "number": "+14155552671",
-  "type": "toll-free",
-  "provider": "twilio",
-  "capabilities": ["sms", "voice"],
-  "created_at": "2023-01-01T00:00:00Z"
-}
-```
+## Providers
 
-## Provider
+**Providers** are the carriers and gateways that move calls and messages beyond Unpod. You can use **Unpod’s built-in SIP trunking** or connect **third-party SIP or telecom providers** for added flexibility and control.
 
-Providers act as the carriers and gateways that move calls outside Unpod. You can use Unpod’s own SIP trunking for simplicity or connect third-party carriers for more control.
+Providers let you:
 
-### Common Providers
-- **Twilio**: For SMS and voice communications
-- **Plivo**: Alternative communication platform
-- **Custom**: Build your own provider integration
+- Configure SIP URIs, routing, and authentication details  
+- Connect multiple providers for redundancy or cost optimization  
+- Adjust codecs, regions, and routing policies per use case  
 
-Providers ensure that when your voice agent speaks, the world can hear it.
+Providers ensure that when your AI agents speak — your customers can hear them, anywhere.
 
+## Bridges
 
-## Bridge
+**Bridges** are the control hubs that decide what happens to every call or message. They connect **Numbers, Providers, and Agents**, making sure conversations reach the right place at the right time.
 
-Bridges are the control hubs that decide what happens to every call. They connect your numbers, providers, and agents — making sure conversations reach the right place at the right time.
+Bridges help you:
 
-### Bridge Types
-1. **Direct Bridge**: Point-to-point connection
-2. **Multi-point Bridge**: Connects multiple endpoints
-3. **Transform Bridge**: Modifies data in transit
+- Define call flows and routing logic  
+- Attach one or more numbers and select which provider handles them  
+- Integrate with AI platforms or PBX systems for intelligent call handling  
+- Maintain compliance through centralized document management  
+
+Think of Bridges as the **traffic controllers** of your communication system.
 
 ## Agents
 
-Agents are where intelligence meets telephony. They are programmable AI units that handle conversations, learn from data, and connect with your systems.
+**Agents** are where intelligence meets telephony. They are programmable AI units that handle conversations, learn from data, and connect with your systems.
 
-### Agent Types
-- **Routing Agent**: Directs messages based on rules
-- **Processing Agent**: Transforms or enriches messages
-- **Monitoring Agent**: Tracks system health and metrics
+Agents allow you to:
+
+- Define their tone, behavior, and goals using prompts  
+- Connect to CRMs, knowledge bases, or APIs for smarter responses  
+- Choose speech recognition and synthesis providers  
+- Assign phone numbers so customers can call agents directly  
+- Manage retries, callbacks, and scheduling for real-world reliability  
 
 Agents transform your communication lines into smart, conversational experiences.
 
@@ -78,9 +72,3 @@ graph LR
     E --> F[Endpoint]
 ```
 
-## Best Practices
-
-1. **Naming Conventions**: Use clear, descriptive names for all components
-2. **Error Handling**: Implement comprehensive error handling
-3. **Monitoring**: Set up alerts for critical operations
-4. **Documentation**: Keep documentation up-to-date
