@@ -1,14 +1,14 @@
 ---
 title: 'Introduction'
-description: 'Get started with Unpod - The all-in-one communication platform for developers'
+description: 'Get started with Unpod - The all-in-one communication platform for developers.'
 icon: 'message-circle'
 ---
 
-# Welcome to Unpod
+## Welcome to Unpod
 
 Unpod is a modern communication platform that helps developers build, scale, and manage voice and messaging applications with ease. Our API-first approach allows you to integrate powerful communication features into your applications in minutes.
 
-It is a full-spectrum communication platform that lets you send messages, make and receive voice calls, and automate conversations — all over the internet. Rather than using traditional phone lines, everything happens via virtual numbers, telecom providers, bridges, and AI agents. It also connects with tools and channels you already use, like WhatsApp, email, CRMs, and ERPs.
+It is a full-spectrum communication platform that lets you send messages, make and receive voice calls, and automate conversations - all over the internet. Rather than using traditional phone lines, everything happens via virtual numbers, telecom providers, bridges, and AI agents. It also connects with tools and channels you already use, like WhatsApp, email, CRMs, and ERPs.
 
 ## With Unpod’s SIP + Communications suite, you can:
 
@@ -21,7 +21,7 @@ It is a full-spectrum communication platform that lets you send messages, make a
 Think of Unpod like **building blocks for communication**:  
 Start with a number, select which provider or channel handles traffic, link them through a bridge, and optionally add an AI agent to automate or assist conversations.  
 
-Unpod is flexible — you can run it simply (just number + provider), or leverage advanced flows and omni-channel communication where voice, SMS, WhatsApp, and email all come together, guided by AI.
+Unpod is flexible - you can run it simply (just number + provider), or leverage advanced flows and omni-channel communication where voice, SMS, WhatsApp, and email all come together, guided by AI.
 ## Why Choose Unpod?
 
 - **Developer First**: Built by developers, for developers
@@ -36,38 +36,6 @@ Unpod is flexible — you can run it simply (just number + provider), or leverag
 2. **Providers**: Connect to carriers and services worldwide
 3. **Bridges**: Route calls and messages between services
 4. **Agents**: Programmable components for custom logic
-
-## Quick Start
-
-1. **Sign Up** for a free Unpod account at [app.unpod.dev](https://app.unpod.dev)
-2. **Get API Credentials** from your dashboard
-3. **Install the SDK**
-
-```bash
-# Using npm
-npm install @unpod/sdk
-
-# Or using Yarn
-yarn add @unpod/sdk
-```
-
-4. **Send your first message**
-
-```javascript
-import { Unpod } from '@unpod/sdk';
-
-const client = new Unpod({
-  apiKey: 'your-api-key',
-  environment: 'sandbox' // or 'production'
-});
-
-// Send an SMS
-await client.messages.create({
-  to: '+1234567890',
-  from: '+1987654321',
-  body: 'Hello from Unpod!'
-});
-```
 
 ## Next Steps
 
