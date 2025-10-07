@@ -1,72 +1,72 @@
 ---
-title: 'Agent'
-description: 'Guide to working with Agents in Unpod'
+title: 'Agents'
+description: 'Create and manage AI-powered voice and chat agents in Unpod'
 icon: 'user-cog'
 ---
 
-# Agents
+# Agents  
+_The heart of Unpod — shaping every conversation._
 
-The heart of Unpod - shaping every conversation. 
+## Overview  
 
-## Overview 
-
-Unpod Agents are AI-powered assistants that handle calls, chats, and tasks. 
-
-With an Agent, you can decide:  
+Unpod **Agents** are AI-powered assistants that handle calls, chats, and workflows.  
+With an Agent, you control:  
 - How it interacts with users  
 - What knowledge it accesses  
-- How it communicates over the phone  
+- How it communicates over phone or web  
 
-In this quickstart, you will learn to:  
+In this quickstart, you’ll learn how to:  
 1. Create your first Agent  
-2. Set up its behavior, voice, and knowledge  
+2. Configure its behavior, voice, and knowledge  
 3. Assign numbers and make your first call  
 
+---
+
 ## Prerequisites  
+
 - Access to **AI Studio** in Unpod  
-- **Admin or Editor** role permissions  
-- FAQs, Knowledge base documents, and Handover number  
+- **Admin** or **Editor** role  
+- _(Optional)_ Logo, FAQs, Knowledge Base, and Handover Number  
+
+---
 
 ## Create a New Agent  
 
 1. Open **AI Studio** from the menu and click **New Agent**.  
-
-2. Fill in Agent details:  
+2. Fill in the following details:  
    - **Name** (e.g., `Sales Assistant`)  
-   - **Description** (e.g., `Handles inquiries, schedules meetings`)  
+   - **Description** (e.g., `Handles inquiries and schedules meetings`)  
    - **Visibility** (Public or Shared)  
    - **Tags** (e.g., Sales, Support, Product)  
    - _(Optional)_ Upload a logo  
-
-3. Click **Save** to proceed to model configuration.  
-
+3. Click **Save** to move to model configuration.  
 ---
 
 ## Configure the AI Model  
 
-1. Set the **greeting message** and define the Agent’s personality.  
-2. Provide **system instructions** to guide behavior and fallback actions.  
+1. Set a **greeting message** and define your Agent’s **personality**.  
+2. Add **system instructions** to guide tone, fallback behavior, and flow.  
 3. **Connect a Knowledge Base**:  
-   - Upload documents, FAQs, or other content.  
-   - Ensures the Agent has accurate information beyond the initial script.  
-4. Choose your **AI provider and model** (e.g., OpenAI, Groq, Anthropic).  
-5. Set the **creativity level**.  
+   - Upload FAQs, documents, or help articles.  
+   - Ensures the Agent responds accurately even beyond its script.  
+4. Choose an **AI provider and model** (e.g., Unpod.AI, OpenAI, Groq, Anthropic).  
+5. Adjust **creativity and response style**.  
 
 ---
 
 ## Configure Voice & Telephony  
 
-1. Select **voice style, tone, and audio quality**.  
-2. Choose **speech-to-text (STT)** and **text-to-speech (TTS)** providers.  
-3. Assign a **virtual phone number** so users can call the Agent.  
-4. Save all settings.  
+1. Choose **voice style, tone, and quality**.  
+2. Select **Speech-to-Text (STT)** and **Text-to-Speech (TTS)** providers.  
+3. Assign a **virtual number or SIP trunk** to make the Agent callable.  
+4. Save your configuration.  
 
 ---
 
 ## Set Advanced Options  
 
 - Enable **auto-retries** for failed calls and define fallback numbers.  
-- Set **allowed call hours and days** to comply with operational rules.  
+- Configure **operational hours and days** for compliance and availability.  
 
 ---
 
@@ -74,17 +74,17 @@ In this quickstart, you will learn to:
 
 1. Review all settings.  
 2. Click **Publish**.  
-3. Your Agent is now live and ready to interact with users via phone or web.  
+3. Your Agent is now live and ready to handle calls or chats.  
 
 ---
 
 ## Result  
 
-Your Agent can:  
-- Greet and interact naturally with customers  
-- Access the Knowledge Base for accurate responses  
-- Handle calls, chats, and emails intelligently  
-- Integrate with telephony and workflows  
+Once live, your Agent can:  
+- Greet and converse naturally with customers  
+- Access Knowledge Bases for accurate information  
+- Manage calls, chats, and emails intelligently  
+- Integrate with telephony and external workflows  
 
 ---
 
@@ -92,216 +92,5 @@ Your Agent can:
 
 - Add tools to extend functionality  
 - Optimize speech and voice settings  
-- Expand and update the Knowledge Base regularly  
-- Scale with multiple Agents using the dashboard
-
-## Agent Types
-
-### 1. Routing Agent
-
-Routes messages based on predefined rules and conditions.
-
-```javascript
-// Example: Basic routing agent
-const routingAgent = {
-  name: 'support-router',
-  type: 'routing',
-  rules: [
-    {
-      condition: (message) => message.body.includes('billing'),
-      target: 'billing-team'
-    },
-    {
-      condition: (message) => message.body.includes('technical'),
-      target: 'tech-support'
-    },
-    {
-      condition: () => true, // Default case
-      target: 'general-support'
-    }
-  ]
-};
-```
-
-### 2. Processing Agent
-
-Transforms or enriches messages as they pass through the system.
-
-```python
-# Example: Processing agent in Python
-class SentimentAnalyzer(Agent):
-    def __init__(self):
-        super().__init__(name="sentiment-analyzer")
-        self.model = load_sentiment_model()
-    
-    async def process(self, message):
-        sentiment = self.model.analyze(message.body)
-        message.metadata['sentiment'] = {
-            'score': sentiment.score,
-            'label': sentiment.label
-        }
-        return message
-```
-
-### 3. Monitoring Agent
-
-Tracks system health, metrics, and alerts.
-
-```yaml
-# monitoring-agent-config.yaml
-name: "system-monitor"
-type: "monitoring"
-checks:
-  - type: "latency"
-    threshold: "500ms"
-    action: "alert"
-  - type: "error-rate"
-    threshold: "5%"
-    action: "escalate"
-alerts:
-  email: "devops@example.com"
-  slack: "#alerts"
-```
-
-## Creating a Custom Agent
-
-1. **Define Agent Class**
-   ```javascript
-   // my-custom-agent.js
-   const { BaseAgent } = require('@unpod/agent-sdk');
-
-   class MyCustomAgent extends BaseAgent {
-     constructor(config) {
-       super(config);
-       this.name = config.name || 'my-custom-agent';
-     }
-
-     async process(message) {
-       // Custom processing logic here
-       this.logger.info(`Processing message: ${message.id}`);
-       
-       // Example: Add processing timestamp
-       message.metadata.processedAt = new Date().toISOString();
-       
-       return message;
-     }
-   }
-
-   module.exports = MyCustomAgent;
-   ```
-
-2. **Configuration**
-   ```yaml
-   # config/agents.yaml
-   myAgent:
-     module: "./my-custom-agent"
-     config:
-       setting1: "value1"
-       setting2: "value2"
-   ```
-
-## Agent Lifecycle
-
-1. **Initialization**
-   ```javascript
-   const agent = new MyCustomAgent(config);
-   await agent.initialize();
-   ```
-
-2. **Processing**
-   ```javascript
-   // Process a single message
-   const result = await agent.process(message);
-   
-   // Or process a stream
-   for await (const message of messageStream) {
-     await agent.process(message);
-   }
-   ```
-
-3. **Shutdown**
-   ```javascript
-   await agent.shutdown();
-   ```
-
-## Best Practices
-
-### Error Handling
-```javascript
-class SafeAgent extends BaseAgent {
-  async process(message) {
-    try {
-      // Processing logic
-      return await this.performOperation(message);
-    } catch (error) {
-      this.logger.error(`Error processing message ${message.id}:`, error);
-      // Optionally: Retry, dead-letter queue, etc.
-      throw error;
-    }
-  }
-}
-```
-
-### Performance Considerations
-- Use async/await for I/O operations
-- Implement batching for better throughput
-- Monitor memory usage for long-running agents
-
-## Monitoring and Metrics
-
-```bash
-# Get agent status
-curl -X GET \
-  'https://api.unpod.com/v1/agents/agent-name/status' \
-  -H 'Authorization: Bearer YOUR_API_KEY'
-
-# Get agent metrics
-curl -X GET \
-  'https://api.unpod.com/v1/agents/agent-name/metrics' \
-  -H 'Authorization: Bearer YOUR_API_KEY'
-```
-
-## Common Patterns
-
-### 1. Request-Reply Pattern
-```javascript
-class EchoAgent extends BaseAgent {
-  async process(message) {
-    if (message.type === 'request') {
-      return {
-        ...message,
-        type: 'response',
-        body: `Echo: ${message.body}`,
-        metadata: {
-          ...message.metadata,
-          processedAt: new Date().toISOString()
-        }
-      };
-    }
-    return message;
-  }
-}
-```
-
-### 2. Filtering Pattern
-```javascript
-class SpamFilterAgent extends BaseAgent {
-  constructor(config) {
-    super(config);
-    this.blockedTerms = config.blockedTerms || [];
-  }
-
-  async process(message) {
-    const isSpam = this.blockedTerms.some(term => 
-      message.body.toLowerCase().includes(term.toLowerCase())
-    );
-    
-    return isSpam ? null : message; // Filter out spam
-  }
-}
-```
-
-## Next Steps
-- Explore [Bridge Configuration](/bridge)
-- Learn about [Advanced Routing](/advanced-routing)
-- Check [API Reference](/api-reference)
+- Expand and update your Knowledge Base  
+- Scale with multiple Agents from your dashboard  
