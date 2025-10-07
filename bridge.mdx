@@ -1,249 +1,77 @@
 ---
-title: 'Bridge'
-description: 'Comprehensive guide to working with Bridges in Unpod'
-icon: 'link'
+title: "Bridges"
 ---
-# BRIDGES  
-Making sure every call finds its way home.
 
-## Overview  
-A **Voice Bridge** links your phone numbers and AI providers so calls can move smoothly through **Unpod**.
+# Bridges  
+_Making sure every call finds its way home._
 
-With it, you can:  
-- Connect customers to your AI agents, PBX, or external systems.  
+## Overview
 
-In this quickstart, you’ll:  
+A **Voice Bridge** in Unpod connects your **phone numbers**, **providers**, and **AI agents**, allowing calls to move smoothly across your communication network.  
+With Bridges, you can route customers to AI agents, PBX systems, or external applications — all through a single, unified flow.
+
+In this quickstart, you’ll learn how to:
 1. Create a Voice Bridge  
-2. Attach a phone number  
-3. Connect to a Voice AI provider  
-4. Activate the bridge for live calls  
+2. Attach a Phone Number  
+3. Connect a Voice AI Provider  
+4. Activate the Bridge for Live Calls  
 
-## Prerequisites  
-- An **Unpod account**  
-- At least **one phone number** or **SIP trunk**  
-- Credentials for a **Voice AI provider**:  
-  - Unpod.AI  
-  - Vapi  
-  - LiveKit  
-  - Daily  
-  - WebSocket  
+---
 
-## Create a Voice Bridge  
+## Prerequisites
 
-1. Log in to the **Unpod Dashboard**.  
-2. From the left menu, click **Voice Bridges**.  
-3. Select **➕ New Bridge**.  
-4. Give your bridge a name (e.g., `Support Bridge`) and, if needed, add a short description.  
-5. Click **Save**.  
+Before you begin, make sure you have:
+- An active **Unpod account**  
+- At least one **phone number or SIP trunk**  
+- Credentials for a **Voice AI provider** (Unpod.AI, Vapi, LiveKit, Daily, or WebSocket)  
 
-## Add a Phone Number 
+---
+
+## Create a Voice Bridge
+
+1. Log in to your **Unpod Dashboard**.  
+2. From the left navigation menu, select **Voice Bridges**.  
+3. Click **➕ New Bridge**.  
+4. Enter a **name** for your bridge (e.g., “Support Bridge”) and an optional **description**.  
+5. Click **Save** to create the bridge.  
+
+---
+
+## Add a Phone Number <Badge variant="info">We can add video</Badge>
 
 1. Open your new bridge.  
 2. Under **Telephony Configuration**, click **Select Number**.  
-3. Choose a virtual number you’ve provisioned, or add a new **SIP trunk**.  
-4. The number will now be linked to the bridge.
+3. Choose a **virtual number** you’ve provisioned, or add a **new SIP trunk**.  
+4. The selected number will now be linked to your bridge.  
 
-## Connect a Voice AI Provider 
+---
+
+## Connect a Voice AI Provider <Badge variant="info">We can add video</Badge>
 
 1. In the bridge settings, go to **Voice AI Providers**.  
-2. Choose the provider you want (**Unpod.AI**, **Vapi**, **LiveKit**, etc.).  
-3. Enter the details required (API key, SIP URI, or WebSocket URL).  
-4. Click **Save** to confirm your configuration.  
+2. Choose a provider (e.g., **Unpod.AI**, **Vapi**, **LiveKit**, etc.).  
+3. Enter the necessary credentials — such as **API key**, **SIP URI**, or **WebSocket URL**.  
+4. Click **Save** to confirm your setup.  
 
-## Activate the Bridge _(We can add video)_  
+---
 
-1. If you’re using **Indian numbers**, upload your **KYC documents** for compliance.  
-2. Review all configurations.  
+## Activate the Bridge <Badge variant="info">We can add video</Badge>
+
+1. If using **Indian numbers**, upload your **KYC documents** to stay compliant.  
+2. Review all your configurations.  
 3. Click **Publish** (top-right).  
-4. Your bridge is now live and ready to handle calls.  
 
-Voice Bridges enable businesses to:
-
-- Provision regional phone numbers  
-- Configure SIP trunks for inbound/outbound calls  
-- Integrate with Voice AI infrastructure (LiveKit, Daily, Vapi, WebSocket, Unpod.AI)  
-- Ensure regulatory compliance (KYC)  
-
-This allows companies to manage calls at scale while staying compliant with Indian telecom regulations.
+Your bridge is now live and ready to handle real-time calls.  
 
 ---
-
-## Key Capabilities
-
-### Provision Numbers
-- Rent regional virtual numbers from Unpod  
-- Add your own SIP trunk to start making and receiving calls  
-
-### Voice AI Integration
-- Connect to Voice AI providers such as LiveKit, Daily, Vapi, WebSocket, and Unpod.AI  
-- Supports low latency and high reliability for AI-driven conversations  
-
-### KYC Compliance
-- Upload required documents  
-- Complete KYC as per Indian telecom regulations to activate numbers  
-
----
-
-## How to Create a Voice Bridge in Unpod
-
-A Voice Bridge connects your AI agent or PBX system with a phone number or SIP trunk, enabling calls to flow through Unpod.
-
-### Steps to Create a Bridge
-
-1. **Go to Voice Bridges**  
-   - From the left menu, click on **Voice Bridges** (telephone icon)  
-   - You’ll see a list of your existing bridges  
-
-2. **Create a New Bridge**  
-   - Click the ➕ button at the top-right of the Voice Bridges panel  
-   - Enter a name for your bridge (e.g., *Sales Bridge* or *Support Line*)  
-
-3. **Add a Description (Optional)**  
-   - In the description box, note the purpose of the bridge (e.g., *For inbound customer support calls*)  
-
-4. **Configure Telephony**  
-   - Under **Telephony Configuration**, click **Select Available Number**  
-   - Choose an Unpod virtual number  
-   - The number will appear under **Selected Numbers**  
-   - If it shows as *Not Linked*, click **Configure** to finish linking  
-
-5. **Configure a Voice AI Provider**  
-   - In the **Select Voice AI Providers** panel, scroll down to **Configure More**  
-   - Pick the provider you want to connect (e.g., Vapi, Unpod.AI, LiveKit)  
-   - Click **Configure** → a form will open asking for details like:  
-     - API Key / Auth Token  
-     - Endpoint / SIP URI / WebSocket URL  
-     - Provider-specific settings (codecs, region, etc.)  
-   - Enter the required details and save  
-   - Once saved, the provider will now appear in your list of available providers  
-
-6. **Select Your Provider**  
-   - After configuring, go back to **Select Voice AI Providers**  
-   - Choose your newly configured provider and click **Select**  
-   - The provider is now linked to your Bridge  
-
-7. **Integration & Documents (Optional)**  
-   - Upload required documents under the **Documents** tab if needed for compliance  
-
-8. **Publish the Bridge**  
-   - Once your setup is done, click **Publish** (top-right corner)  
-   - Your bridge is now active and ready to handle calls  
-
-## Creating a Bridge
-
-### Basic Bridge Configuration
-
-```yaml
-# bridge-config.yaml
-name: "customer-support-bridge"
-type: "direct"
-enabled: true
-provider: "twilio"
-settings:
-  account_sid: "${TWILIO_ACCOUNT_SID}"
-  auth_token: "${TWILIO_AUTH_TOKEN}"
-rules:
-  - pattern: "^support"
-    target: "support-agent-1"
-  - pattern: "^sales"
-    target: "sales-team"
-```
-
-### Bridge Types
-
-1. **Direct Bridge**
-   - Simple point-to-point connection
-   - Minimal configuration required
-   - Best for basic routing needs
-
-2. **Multi-point Bridge**
-   - Connects multiple endpoints
-   - Supports complex routing rules
-   - Ideal for team distribution
-
-3. **Transform Bridge**
-   - Modifies messages in transit
-   - Supports custom transformations
-   - Useful for protocol conversion
-
-## Bridge Configuration Options
-
-| Parameter    | Type     | Required | Description                          |
-|--------------|----------|----------|--------------------------------------|
-| `name`       | string   | Yes      | Unique identifier for the bridge     |
-| `type`       | enum     | Yes      | Type of bridge (direct, multi, transform) |
-| `enabled`    | boolean  | No       | Whether the bridge is active         |
-| `settings`   | object   | Yes      | Provider-specific settings           |
-| `rules`      | array    | No       | Routing rules for the bridge         |
-
-## Managing Bridges
-
-### Creating a Bridge via API
-
-```javascript
-// Example: Create a new bridge
-const response = await fetch('https://api.unpod.com/v1/bridges', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer YOUR_API_KEY'
-  },
-  body: JSON.stringify({
-    name: 'customer-support',
-    type: 'direct',
-    provider: 'twilio',
-    settings: {
-      account_sid: 'YOUR_ACCOUNT_SID',
-      auth_token: 'YOUR_AUTH_TOKEN'
-    }
-  })
-});
-```
-
-### Monitoring Bridge Health
-
-```bash
-# Check bridge status
-curl -X GET \
-  'https://api.unpod.com/v1/bridges/customer-support/health' \
-  -H 'Authorization: Bearer YOUR_API_KEY'
-```
-
-## Best Practices
-
-1. **Naming Conventions**
-   - Use kebab-case for bridge names
-   - Include environment prefixes (e.g., `prod-`, `staging-`)
-   
-2. **Error Handling**
-   - Implement retry logic for failed operations
-   - Set up alerts for critical failures
-   
-3. **Security**
-   - Use environment variables for sensitive data
-   - Regularly rotate API keys and tokens
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Connection Failures**
-   - Verify API credentials
-   - Check network connectivity
-   - Confirm provider service status
-
-2. **Message Routing**
-   - Review routing rules for conflicts
-   - Check pattern matching logic
-   - Verify target endpoints are reachable
-
-3. **Performance Issues**
-   - Monitor message queue depth
-   - Check system resource usage
-   - Review rate limiting settings
 
 ## Next Steps
 
-- Learn about [Agents](/agent)
-- Explore [Advanced Routing](/advanced-routing)
-- Check [API Reference](/api-reference)
+- Add more **numbers** for different regions  
+- Configure **multiple providers** for redundancy or cost optimization  
+- Link the bridge with your **AI agents** for end-to-end call automation  
+- Keep your **compliance documents** up to date  
+
+---
+
+> Bridges are the control center of Unpod — ensuring that every conversation finds its destination, no matter where it starts.
