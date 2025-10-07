@@ -1,46 +1,73 @@
 ---
-title: 'Number'
-description: 'Learn how to work with phone numbers in Unpod'
+title: 'Numbers'
+description: 'Rent and manage virtual phone numbers in Unpod'
 icon: 'phone'
 ---
 
-# Phone Numbers
+# Numbers  
+_Your communication identity in every region._
 
-Phone numbers are a core component of the Unpod platform, allowing you to send and receive calls and messages.
+## Overview  
 
-## Features
+**Numbers** in Unpod are virtual phone lines that let your business make and receive calls or messages anywhere in the world — without traditional telecom setups.  
+Each number can connect to **providers**, **bridges**, and **agents**, creating flexible and intelligent communication flows.  
 
-- **Virtual Numbers**: Get local, toll-free, and international numbers
-- **Call Forwarding**: Route calls to any destination
-- **SMS/MMS**: Send and receive text and media messages
-- **Number Pooling**: Manage multiple numbers efficiently
+In this quickstart, you’ll learn how to:  
+1. Rent or import virtual numbers  
+2. Link numbers to bridges and providers  
+3. Configure regional settings and compliance  
 
-## Getting Started
+---
 
-### Purchasing a Number
+## Prerequisites  
 
-You can purchase a new number through the Unpod dashboard or API:
+- A verified **Unpod account**  
+- Completed **KYC documents** (for India and other regulated regions)  
+- _(Optional)_ SIP credentials if connecting your own telecom provider  
 
-```javascript
-// Example: Purchase a new number
-const number = await unpod.numbers.create({
-  type: 'local',
-  areaCode: '415',
-  country: 'US'
-});
-```
+---
 
-### Configuring a Number
+## Rent a Virtual Number  
 
-After purchasing, configure your number's behavior:
+1. Log in to the **Unpod Dashboard**.  
+2. Go to **Numbers** → **➕ Add Number**.  
+3. Choose your **country** and **capability type** (Voice, SMS, or Both).  
+4. Click **Search** to view available numbers.  
+5. Select a number and click **Rent**.  
+6. Complete **KYC** if required.  
 
-- Set up call forwarding
-- Configure SMS webhooks
-- Enable voicemail
-- Set business hours
+Your number is now active and can be linked to a bridge or agent.  
+---
 
-## Best Practices
+## Add Your Own Number or SIP Trunk  
 
-- Purchase numbers in areas where your customers are located
-- Set up number porting for existing business numbers
-- Monitor usage and scale numbers as needed
+If you already have telecom providers, you can bring your own numbers:  
+
+1. In the **Numbers** section, click **Connect Existing Number**.  
+2. Provide your **SIP URI**, **authentication details**, and **region**.  
+3. Verify connectivity with a quick test call.  
+
+Once verified, your number will appear in the dashboard like any Unpod-rented number.  
+
+---
+
+## Assign Numbers to Bridges or Agents  
+
+1. Open the **Bridge** or **Agent** you want to assign the number to.  
+2. Under **Telephony Configuration**, click **Select Number**.  
+3. Choose your desired number.  
+4. Save and publish the configuration.  
+
+The number is now live and ready to handle inbound or outbound calls.  
+
+---
+
+## Manage Compliance  
+
+Unpod ensures full compliance with regional telecom regulations.  
+- Upload **KYC** and **proof of address** where required.  
+- Track your verification status under **Documents**.  
+- Stay compliant for uninterrupted service.  
+
+---
+

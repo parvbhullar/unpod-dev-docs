@@ -1,61 +1,57 @@
 ---
-title: 'Provider'
-description: 'Learn how to work with communication providers in Unpod'
+title: 'Providers'
+description: 'Connect telecom and SIP providers to Unpod'
 icon: 'server'
 ---
 
-# Communication Providers
+# Providers  
+_Your link to the outside world._
 
-Providers in Unpod represent telecommunication carriers and services that handle your voice and messaging traffic.
+## Overview  
 
-## Supported Providers
+**Providers** are the carriers and gateways that move your voice and messaging traffic outside Unpod.  
+You can use **Unpod’s built-in SIP trunking** for simplicity or connect your own telecom partners for flexibility and cost control.  
 
-Unpod supports a wide range of providers including:
+In this guide, you’ll learn how to:  
+1. Add a new provider connection  
+2. Configure SIP settings and authentication  
+3. Route calls through multiple providers  
 
-- **Carriers**: AT&T, Verizon, T-Mobile, etc.
-- **SIP Providers**: Twilio, Plivo, Bandwidth, etc.
-- **Messaging Services**: WhatsApp, Facebook Messenger, etc.
+---
 
-## Adding a Provider
+## Prerequisites  
 
-### Via Dashboard
-1. Go to the Providers section in your Unpod dashboard
-2. Click "Add Provider"
-3. Select the provider type
-4. Enter the required credentials
-5. Save and verify the connection
+- A verified **Unpod account**  
+- At least one **phone number**  
+- **Provider credentials** (SIP URI, username, password, or API key)  
 
-### Via API
+---
 
-```javascript
-// Example: Add a new SIP provider
-const provider = await unpod.providers.create({
-  name: 'My SIP Provider',
-  type: 'sip',
-  credentials: {
-    username: 'your_username',
-    password: 'your_password',
-    sipUri: 'sip:provider.example.com'
-  }
-});
-```
+## Add a New Provider  
 
-## Configuration
+1. In your **Unpod Dashboard**, go to **Providers** → **➕ Add Provider**.  
+2. Select your provider type:  
+   - **SIP** (e.g., Tata, Airtel, Twilio, Vonage)  
+   - **Messaging API** (e.g., WhatsApp Business, Nexmo)  
+3. Enter your credentials:  
+   - **SIP URI or WebSocket URL**  
+   - **Username / Password** (if applicable)  
+   - **Region or Data Center**  
+4. Click **Save** to register your provider.  
 
-### SIP Configuration
-- SIP URI and credentials
-- Codec preferences
-- DTMF settings
-- Caller ID settings
+Your provider connection is now live.  
 
-### Messaging Configuration
-- Webhook URLs
-- Rate limiting
-- Delivery receipts
+---
 
-## Best Practices
+## Connect Providers to Bridges  
 
-- Always test new providers in a staging environment first
-- Set up failover providers for critical communications
-- Monitor provider performance and switch if needed
-- Keep credentials secure and rotate them regularly
+To make your provider handle actual traffic:  
+
+1. Open your **Bridge**.  
+2. Go to **Provider Configuration**.  
+3. Select one or more providers to attach.  
+4. Save and publish.  
+
+Your bridge will now route calls using the selected provider(s).  
+
+
