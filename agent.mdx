@@ -1,96 +1,167 @@
----
-title: 'Agents'
-description: 'Create and manage AI-powered voice and chat agents in Unpod'
-icon: 'user-cog'
+# Agents  
+The heart of Unpod – shaping every conversation.  
+
 ---
 
-# Agents  
-_The heart of Unpod — shaping every conversation._
+## Getting Started  
+
+Unpod Agents are AI-powered assistants that handle calls, chats, and tasks. With an agent, you can decide:  
+- How it interacts with users  
+- What knowledge it accesses  
+- How it communicates over the phone  
+
+---
 
 ## Overview  
 
-Unpod **Agents** are AI-powered assistants that handle calls, chats, and workflows.  
-With an Agent, you control:  
-- How it interacts with users  
-- What knowledge it accesses  
-- How it communicates over phone or web  
+Create a voice agent with a simple prompt, attach it to your phone number, and make your first call.  
 
-In this quickstart, you’ll learn how to:  
-1. Create your first Agent  
-2. Configure its behavior, voice, and knowledge  
-3. Assign numbers and make your first call  
+### Steps to Create Your First Agent  
 
----
+1. **Login to the dashboard** with your credentials.  
+   - Click on **AI Studio** from the left panel.  
 
-## Prerequisites  
+2. Since you don’t have any agent yet, the page will appear blank.  
+   - Click on the ➕ symbol to create your first agent.  
 
-- Access to **AI Studio** in Unpod  
-- **Admin** or **Editor** role  
-- _(Optional)_ Logo, FAQs, Knowledge Base, and Handover Number  
+3. You’ll be redirected to the **Agent Creation Page**.  
 
----
+4. **Name your agent** according to your product or organization.  
 
-## Create a New Agent  
+5. Fill in the agent details:  
+   - **Description** (mandatory)  
+   - **Classification** (choose from dropdown)  
+   - **Visibility**: Public (accessible by anyone) or Shared (restricted access)  
 
-1. Open **AI Studio** from the menu and click **New Agent**.  
-2. Fill in the following details:  
-   - **Name** (e.g., `Sales Assistant`)  
-   - **Description** (e.g., `Handles inquiries and schedules meetings`)  
-   - **Visibility** (Public or Shared)  
-   - **Tags** (e.g., Sales, Support, Product)  
-   - _(Optional)_ Upload a logo  
-3. Click **Save** to move to model configuration.  
----
+6. Click **Save** to create the agent.  
 
-## Configure the AI Model  
+7. Your agent now appears in the left panel of the dashboard.  
 
-1. Set a **greeting message** and define your Agent’s **personality**.  
-2. Add **system instructions** to guide tone, fallback behavior, and flow.  
-3. **Connect a Knowledge Base**:  
-   - Upload FAQs, documents, or help articles.  
-   - Ensures the Agent responds accurately even beyond its script.  
-4. Choose an **AI provider and model** (e.g., Unpod.AI, OpenAI, Groq, Anthropic).  
-5. Adjust **creativity and response style**.  
+8. Choose whether it’s a **Chat Agent** or a **Voice Agent** and fill in the additional details.  
+
+Once complete, proceed to the following parts: **Model, Voice Profile, Advanced, and Analysis**.  
 
 ---
 
-## Configure Voice & Telephony  
+## Model  
 
-1. Choose **voice style, tone, and quality**.  
-2. Select **Speech-to-Text (STT)** and **Text-to-Speech (TTS)** providers.  
-3. Assign a **virtual number or SIP trunk** to make the Agent callable.  
-4. Save your configuration.  
+A "model" defines how the AI behaves during conversations.  
+
+### Steps  
+
+1. **Persona**  
+   - Add a **Greeting Message** (how the agent starts the conversation).  
+   - Define the **System Prompt** (overall AI behavior).  
+
+2. **Objectives (Optional)**  
+   - Add specific questions or topics the AI should handle.  
+
+3. **Knowledge Base (Optional)**  
+   - Create a knowledge base for FAQs or documents.  
+   - **Visibility Options:**  
+     - Everyone  
+     - Shared (specific users)  
+     - Private (only you)  
+
+   Steps to create:  
+   - Go to **Knowledge Base** in the dashboard.  
+   - Click **Add** → Fill in Name, Type, Description, Visibility.  
+   - Add Schema Fields.  
+   - Upload the file with your FAQs or product details.  
+   - Save.  
+
+4. **Model Selection**  
+   - Choose **AI Provider** (OpenAI, Google, Azure, etc.)  
+   - Choose **AI Model** (gpt-3.5-turbo, gpt-4o, etc.)  
+
+5. **Temperature**  
+   - Controls creativity vs. consistency.  
+   - Recommended: **0.5**.  
+
+6. **Max Tokens**  
+   - Maximum tokens per response.  
+   - Recommended: **250**.  
+
+7. Save and continue to **Voice Profile**.  
 
 ---
 
-## Set Advanced Options  
+## Voice Profile  
 
-- Enable **auto-retries** for failed calls and define fallback numbers.  
-- Configure **operational hours and days** for compliance and availability.  
+A voice profile defines how your AI sounds during conversations.  
+
+### Steps  
+
+1. **Select Voice Profile** from available options.  
+
+2. Choose **Agent Quality**:  
+   - Good Quality (basic, AI-like)  
+   - High Quality (natural, human-like)  
+
+3. Configure **Transcriber**:  
+   - Provider  
+   - Model  
+   - Language  
+
+4. Configure **Voice Settings**:  
+   - Provider  
+   - Model  
+   - Synthesized Voice  
+
+5. Add **Telephony Number** to attach to the Voice Agent.  
+
+6. (Optional) Add **Config Key + Config Value**.  
+
+7. Save and continue to **Advanced**.  
 
 ---
 
-## Publish Your Agent  
+## Advanced  
 
-1. Review all settings.  
-2. Click **Publish**.  
-3. Your Agent is now live and ready to handle calls or chats.  
+Set up automation features for your agent.  
+
+### Tabs  
+
+1. **Auto Reachout**  
+   - Enable Follow-up  
+   - Enable Callback  
+   - Handover Number (for human transfer)  
+   - Define Calling Hours  
+
+2. **Stop Speaking Plan**  
+   - Number of words before agent stops  
+   - Voice seconds allowed  
+   - Back-off seconds before resuming  
+
+Save and continue to **Analysis**.  
 
 ---
 
-## Result  
+## Analysis  
 
-Once live, your Agent can:  
-- Greet and converse naturally with customers  
-- Access Knowledge Bases for accurate information  
-- Manage calls, chats, and emails intelligently  
-- Integrate with telephony and external workflows  
+Helps you measure agent performance.  
+
+### Tabs  
+
+1. **Summary**  
+   - Provide a summarization prompt.  
+   - Output stored in `calls.analysis.summary`.  
+
+2. **Success Evaluation**  
+   - Use a Rubric or Success Evaluation Prompt.  
+
+3. **Structured Data**  
+   - Extract structured data from conversations.  
+   - Define Schema or Structured Data Prompt.  
+
+Save your settings.  
 
 ---
 
-## Next Steps  
+## Publishing  
 
-- Add tools to extend functionality  
-- Optimize speech and voice settings  
-- Expand and update your Knowledge Base  
-- Scale with multiple Agents from your dashboard  
+Once all sections are complete:  
+- Click **Publish** (top right corner).  
+- Your agent is now ready to use.  
+
+---
