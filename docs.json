@@ -20,11 +20,11 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": ["introduction", "quickstart", "concepts"]
+            "pages": ["introduction", "concepts"]
           },
           {
             "group": "Core Components",
-            "pages": ["bridge", "agent", "number", "provider"]
+            "pages": ["telephony", "agent", "number", "provider"]
           },
           {
             "group": "Guides",
