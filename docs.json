@@ -25,43 +25,8 @@
           {
             "group": "Core Components",
             "pages": ["telephony", "agent", "number", "provider"]
-          },
-          {
-            "_comment_guides_disabled": {
-              "group": "Guides",
-              "pages": ["guides/integration", "guides/authentication", "guides/webhooks"]
-            }
-          },
-          {
-            "_comment_api_reference_disabled": {
-              "group": "API Reference",
-              "pages": ["api-reference/introduction"]
-            }
           }
         ]
-      },
-      {
-        "_comment_api_reference_tab_disabled": {
-          "tab": "API Reference",
-          "groups": [
-            {
-              "group": "Overview",
-              "pages": ["api-reference/introduction"]
-            },
-            {
-              "group": "API Endpoints",
-              "pages": ["api/overview", "api/authentication", "api/rate-limiting"]
-            },
-            {
-              "group": "Resources",
-              "pages": ["api/numbers", "api/calls", "api/messages", "api/webhooks"]
-            },
-            {
-              "group": "SDKs",
-              "pages": ["sdk/javascript", "sdk/python", "sdk/java"]
-            }
-          ]
-        }
       }
     ],
     "global": {
@@ -89,12 +54,6 @@
       {
         "label": "Documentation",
         "href": "https://docs.unpod.dev/"
-      },
-      {
-        "_comment_api_reference_link_disabled": {
-          "label": "API Reference",
-          "href": "https://docs.unpod.dev/api/overview"
-        }
       }
     ],
     "primary": {
