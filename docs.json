@@ -28,11 +28,17 @@
         "tab": "Product Guides",
         "groups": [
           {
-            "group": "Product Guides",
+            "group": "Telephony",
             "pages": [
               "telephony",
               "numbers",
-              "provider",
+              {
+                "group": "Provider",
+                "pages": [
+                  "provider/livekit",
+                  "provider/vapi"
+                ]
+              },
               "agents"
             ]
           }
