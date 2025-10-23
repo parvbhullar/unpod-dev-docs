@@ -28,7 +28,6 @@
         "tab": "Product Guides",
         "groups": [
           {
-            "group": "Telephony",
             "pages": [
               "telephony",
               "numbers",
