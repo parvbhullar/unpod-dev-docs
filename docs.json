@@ -28,23 +28,13 @@
         "tab": "Product Guides",
         "groups": [
           {
-            "group": "Telephony",
+            "group": "Product Guides",
             "pages": [
-              "telephony", 
-              "telephony/numbers",
-              {
-                "group": "SIP Trunking",
-                "pages": [
-                  "telephony/sip-trunking/livekit",
-                  "telephony/sip-trunking/vapi"
-                ]
-              },
-              "telephony/agents"
+              "telephony",
+              "numbers",
+              "provider",
+              "agents"
             ]
-          },
-          {
-            "group": "Other Product Guides",
-            "pages": ["provider"]
           }
         ]
       }
