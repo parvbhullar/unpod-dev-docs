@@ -32,8 +32,13 @@
             "pages": [
               "telephony",
               "numbers",
-              "provider-livekit",
-              "provider-vapi",
+              {
+                "group": "Provider",
+                "pages": [
+                  "provider/livekit",
+                  "provider/vapi"
+                ]
+              },
               "agents"
             ]
           }
