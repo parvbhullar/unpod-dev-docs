@@ -32,7 +32,7 @@
             "pages": [
               "telephony",
               "numbers",
-              "provider"
+              "provider",
               "agents"
             ]
           }
