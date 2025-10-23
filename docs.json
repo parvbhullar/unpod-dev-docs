@@ -1,3 +1,6 @@
+existing json 
+
+
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
@@ -28,6 +31,7 @@
         "tab": "Product Guides",
         "groups": [
           {
+            "group": "Product Guides",
             "pages": [
               "telephony",
               "numbers",
