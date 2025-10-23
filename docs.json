@@ -1,6 +1,3 @@
-existing json 
-
-
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
@@ -35,13 +32,8 @@ existing json
             "pages": [
               "telephony",
               "numbers",
-              {
-                "group": "Provider",
-                "pages": [
-                  "provider/livekit",
-                  "provider/vapi"
-                ]
-              },
+              "provider-livekit",
+              "provider-vapi",
               "agents"
             ]
           }
