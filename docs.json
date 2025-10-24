@@ -34,13 +34,9 @@
               "numbers",
               "provider",
               "agents",
-              {
-                "page": "test",
-                "pages": [
-                  "test/test1",
-                  "test/test2"
-                ]
-              }
+              "test",
+              "test/test1",
+              "test/test2"
             ]
           }
         ]
