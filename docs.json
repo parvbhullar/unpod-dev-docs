@@ -33,14 +33,14 @@
               "telephony",
               "numbers",
               "provider",
-              "agents"
-            ]
-          },
-          {
-            "group": "Test",
-            "pages": [
-              "test/test1",
-              "test/test2"
+              "agents",
+              {
+                "page": "test",
+                "pages": [
+                  "test/test1",
+                  "test/test2"
+                ]
+              }
             ]
           }
         ]
