@@ -35,6 +35,7 @@
               "provider",
               "agents",
               "test",
+              "test/index",
               "test/test1",
               "test/test2"
             ]
