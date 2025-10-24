@@ -35,6 +35,13 @@
               "provider",
               "agents"
             ]
+          },
+          {
+            "group": "Test",
+            "pages": [
+              "test/test1",
+              "test/test2"
+            ]
           }
         ]
       }
