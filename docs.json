@@ -32,14 +32,7 @@
             "pages": [
               "telephony",
               "numbers",
-              {
-                "group": "Provider",
-                "pages": [
-                  "provider/overview",
-                  "provider/livekit",
-                  "provider/vapi"
-                ]
-              },
+              "provider",
               "agents"
             ]
           }
@@ -88,3 +81,4 @@
     }
   }
 }
+

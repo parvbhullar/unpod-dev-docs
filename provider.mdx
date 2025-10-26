@@ -1,0 +1,129 @@
+---
+title: 'Providers'
+description: 'Connect telecom and SIP providers to Unpod.'
+icon: 'server'
+---
+
+## SIP Trunking: Powering Seamless Global Connections
+
+**SIP trunking** replaces traditional phone lines with a **virtual connection over the internet**, enabling calls through broadband. It connects your internal phone system (PBX/VoIP) to a SIP provider, which routes calls to the regular network—making it **simpler and more cost-effective**.
+
+---
+
+## Supported SIP Providers
+
+Unpod supports multiple providers for inbound and outbound calls:
+
+- **LiveKit** – Real-time audio/video calls using virtual members.  
+- **Vapi** – Cloud telephony API for programmatic calls.  
+- **Daily** – Multi-party voice/video with web integrations.  
+- **Twilio** – Global programmable voice for any device.  
+
+---
+
+## Setup Process
+
+After selecting your number, configure it with a provider. Currently, Unpod supports **LiveKit** and **Vapi**.
+
+---
+
+### Configure Number with LiveKit
+
+1. After adding a number to a Bridge, click **Configure** to activate SIP trunking.  
+
+<img src="./images/TelephonyLivekitStep1.png" alt="Telephony LiveKit Step 1" />
+
+2. Select **LiveKit** from the provider list.  
+
+<img src="./images/TelephonyLivekitStep2.png" alt="Telephony LiveKit Step 2" />
+
+3. Click **Configure** next to LiveKit.  
+
+<img src="./images/TelephonyLivekitStep3.png" alt="Telephony LiveKit Step 3" />
+
+4. Fill in the required details from your LiveKit dashboard:  
+   - **Name** – Any identifier (product/org name).  
+   - **API Key** – Secure access key from LiveKit.  
+   - **API Secret** – Password-like credential for API access.  
+   - **Base URL** – Main API web address.  
+   - **SIP URL** – VoIP identifier (e.g., `sip:username@domain.com`).  
+
+<img src="./images/TelephonyLivekitStep4.png" alt="Telephony LiveKit Step 4" />
+
+5. Click **Verify and Configure**.  
+
+<img src="./images/TelephonyLivekitStep5.png" alt="Telephony LiveKit Step 5" />
+
+6. Under Active Providers, select **Demo (LiveKit)** to link it to your number.  
+
+<img src="./images/TelephonyLivekitStep6.png" alt="Telephony LiveKit Step 6" />
+
+7. Your SIP trunk is now active.  
+
+<img src="./images/TelephonyLivekitStep7.png" alt="Telephony LiveKit Step 7" />
+
+8. Go to **Settings** to configure the trunk.  
+
+<img src="./images/TelephonyLivekitStep8.png" alt="Telephony LiveKit Step 8" />
+
+9. Fill in:  
+   - **Concurrency Channels** – Number of parallel interactions.  
+   - **Enter Agent** – Name of your LiveKit agent.  
+
+<img src="./images/TelephonyLivekitStep9.png" alt="Telephony LiveKit Step 9" />
+
+10. Your SIP trunk and number are ready for inbound/outbound calls.
+
+---
+
+### Configure Number with Vapi
+
+1. After adding a number to a Bridge, click **Configure**.  
+
+<img src="./images/TelephonyVapiStep1.png" alt="Telephony Vapi Step 1" />
+
+2. Select **Vapi** from the provider list.  
+
+3. Click **Configure** next to Vapi.  
+
+<img src="./images/TelephonyVapiStep3.png" alt="Telephony Vapi Step 3" />
+
+4. Fill in the required details from your Vapi dashboard:  
+   - **Name** – Any identifier (product/org name).  
+   - **API Key** – Secure access key from Vapi.  
+
+<img src="./images/TelephonyVapiStep4.png" alt="Telephony Vapi Step 4" />
+
+5. Click **Verify and Configure**.  
+
+<img src="./images/TelephonyVapiStep5.png" alt="Telephony Vapi Step 5" />
+
+6. Under Active Providers, select **Demo (Vapi)**.  
+
+<img src="./images/TelephonyVapiStep6.png" alt="Telephony Vapi Step 6" />
+
+7. Your SIP trunk is now active.  
+
+<img src="./images/TelephonyVapiStep7.png" alt="Telephony Vapi Step 7" />
+
+8. Go to **Settings** to configure the trunk.  
+
+<img src="./images/TelephonyVapiStep8.png" alt="Telephony Vapi Step 8" />
+
+9. Fill in:  
+   - **Concurrency Channels** – Number of parallel interactions.  
+   - **Enter Agent** – Name of your Vapi agent.  
+
+<img src="./images/TelephonyVapiStep9.png" alt="Telephony Vapi Step 9" />
+
+10. Your SIP trunk and number are ready for inbound/outbound calls.
+ 
+
+---
+
+## Final Step: Publish
+
+After configuring all required numbers, click the **Publish** button at the top of the dashboard.  
+Your setup is now live and ready to use! 🚀
+
+
