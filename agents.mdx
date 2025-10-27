@@ -60,8 +60,11 @@ After selecting the type, fill in the remaining details in the next steps.
 ---
 ## Model
 
-A **model** typically refers to a customizable AI agent or system designed for specialized tasks such as handling conversations, automating support, or performing workflow actions. 
-Here, you define how your AI starts and manages conversations using the system prompt.
+A "model" refers to a customizable AI agent or system designed to perform specific tasks—such as managing conversations, automating support, or executing workflow actions.
+
+In this section, you can define how your AI agent interacts with users—from the moment it initiates a conversation to the way it understands and resolves customer queries. You can also include the system prompt, which acts as the agent’s guiding framework—shaping its tone, behavior, and decision-making process throughout each interaction.
+
+Essentially, this is where you outline your AI’s personality, purpose, and process—how it greets, assists, and delivers solutions seamlessly.
 
 <img src="./images/AgentModel.png" alt="Agent Model" />
 
@@ -79,7 +82,7 @@ If you want your AI to focus on specific questions or topics, define them here. 
 
 If FAQs are too large to include in the System Prompt, create a Knowledge Base and link it to your Voice Agent.
 
-#### How to Create a Knowledge Base
+#### How to Create a Knowledge Base?
 
 1. On the dashboard, click on **Knowledge Base** from the left corner. 
 
@@ -134,33 +137,34 @@ Preferred value: **250**
 ### Step 7  
 After completing all details, click **Save** and move to **Voice Profile**.
 
-<img src="./images/AgentModelStep7.png" alt="Agent Model Step 7" />
-
 ---
 ## Voice Profile
 
-A voice profile defines how your AI or virtual assistant sounds — tone, accent, emotion, etc. It helps maintain a natural, consistent speaking style that matches your brand.
+A voice profile is a collection of settings that determine how an AI or virtual assistant sounds during conversations. It defines attributes such as voice gender, accent, tone, speed, and emotional style—helping shape the overall personality of the assistant.
+
+By customizing these elements, businesses can create a natural, consistent, and brand-aligned voice that enhances user engagement. Voice profiles make automated calls and chat interactions feel more human, relatable, and personalized for every listener.
 
 ### Step 1  
 Click **Select** to choose a Voice Profile from the given options. 
 
 <img src="./images/AgentVPStep1-1.png" alt="Agent VP Step 1-1" />
+
 <img src="./images/AgentVPStep1-2.png" alt="Agent VP Step 1-2" />
 
 Once selected, related fields auto-fill based on your choice.
 
 ### Step 2 — Quality  
 Choose between:
-- **Good Quality Agent** — Slight AI tone, cost-effective  
-- **High Quality Agent** — Natural, human-like voice
+- **Good Quality Agent** — Slight AI tone, cost-effective.
+- **High Quality Agent** — Natural, human-like voice.
 
 <img src="./images/AgentVPStep2.png" alt="Agent VP Step 2" />
 
 ### Step 3 — Transcriber  
 Set up:
-- **Transcription Provider:** Converts speech to text  
-- **Transcription Model:** Processes transcription  
-- **Language for Transcription:** Sets speech recognition language
+- **Transcription Provider:** Converts speech to text. 
+- **Transcription Model:** Processes transcription.  
+- **Language for Transcription:** Sets speech recognition language.
 
 <img src="./images/AgentVPStep3.png" alt="Agent VP Step 3" />
 
@@ -189,23 +193,32 @@ Click **Save** and move to the **Advanced** tab.
 ---
 ## Advanced
 
-Advanced settings allow you to automate calls — enabling your Voice AI Agent to call at a scheduled time.
+The **Advanced** feature allows you to automate outgoing calls using your Voice AI agent. Once configured, your AI can automatically call the provided number at a scheduled time—making outreach seamless and efficient.
 
-### Step 1 — Auto Reachout  
-Set the following parameters:
-- **Enable Follow-up**  
-- **Enable Callback**  
-- **Handover Number**  
-- **Calling Hours**
+### Step 1 – Auto Reachout Tab
+
+The **“Auto Reachout”** tab includes the following parameters for setup:
+
+- **Enable Follow-up:** Automatically schedules a follow-up call with the user when needed.  
+- **Enable Callback:** Allows the assistant to initiate a callback if the previous call was missed or disconnected.  
+- **Handover Number:** Specifies the number where calls will be transferred if a human handover is triggered.  
+- **Calling Hours:** Defines the time window during which automatic calls can be made. You can set flexible scheduling rules based on your preferred time slots.
+
+This feature ensures your AI agent manages outreach efficiently—following up, reconnecting, and handing over calls whenever required, without manual intervention.
+
 
 <img src="./images/AgentAdvancedStep1-1.png" alt="Agent Advanced Step 1-1" />
+
 <img src="./images/AgentAdvancedStep1-2.png" alt="Agent Advanced Step 1-2" />
 
-### Step 2 — Stop Speaking Plan  
-Configure:
-- **Number of Words**  
-- **Voice Seconds**  
-- **Back Off Seconds**
+### Step 2 – Stop Speaking Plan
+
+The **“Stop Speaking Plan”** tab controls how your assistant manages interruptions during a call. It includes the following settings:
+
+- **Number of Words:** The number of words a customer must speak before the assistant stops talking.  
+- **Voice Seconds:** The time (in seconds) a customer can speak before the assistant pauses.  
+- **Back Off Seconds:** The delay (in seconds) before the assistant resumes speaking after an interruption.
+
 
 <img src="./images/AgentAdvancedStep2-1.png" alt="Agent Advanced Step 2-1" />
 
@@ -216,28 +229,27 @@ Click **Save** and move to **Analysis**.
 ---
 ## Analysis
 
-Used to analyze the success and performance of call logs.
+The **Analysis** tab helps you evaluate and understand the success of your call logs. It includes the following sections:
 
-### Step 1 — Summary  
-Define the **Summary Prompt** for calls.  
-Output is stored in `calls.analysis.summary` and visible in the Calls Log page.
+
+### Step 1 – Summary  
+Use this to define the prompt for summarizing calls. The generated summary is stored in `calls.analysis.summary` and can also be viewed on the **Calls Log** page.
 
 <img src="./images/AgentAnalysisStep1.png" alt="Agent Analysis Step 1" />
 
-### Step 2 — Success Evaluation  
-Evaluate call success using **Rubric** and **Success Evaluation Prompt**.  
-If both are used, they combine into unified evaluation instructions.
+### Step 2 – Success Evaluation  
+Assess whether a call was successful. You can use the **Rubric** alone or combine it with a **Success Evaluation Prompt**. If both are provided, they are merged into a single instruction set for accurate evaluation.
 
 <img src="./images/AgentAnalysisStep2.png" alt="Agent Analysis Step 2" />
 
-### Step 3 — Structured Data  
-Extract structured data from call conversations using **Data Schema** or **Structured Data Prompt**.
+### Step 3 – Structured Data  
+Extract structured data from call conversations. You can use a **Data Schema** alone or together with a **Structured Data Prompt**. When both are provided, they are combined into cohesive extraction instructions.
 
 <img src="./images/AgentAnalysisStep3-1.png" alt="Agent Analysis Step 3-1" />
 
-After filling all details, click **Save**.
+After completing all fields, click **Save** to store your settings.  
 
-Finally, click the **Publish** button at the top-right corner to make your agent live.
+Finally, click **Publish** in the top-right corner to make your agent live.
 
 <img src="./images/AgentAnalysisStep3-2.png" alt="Agent Analysis Step 3-2" />
 
