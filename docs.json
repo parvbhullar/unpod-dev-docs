@@ -79,6 +79,9 @@
       "youtube": "https://www.youtube.com/@unpodai",
       "discord": "https://discord.gg/7kQ4ewNSHZ"
     }
+  },
+   "redirects": {
+    "/": "/introduction"
   }
 }
 
