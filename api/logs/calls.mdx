@@ -107,9 +107,9 @@ Headers:
 
 ## Code Examples
 
-### Fetch Call Logs (Node.js)
+<CodeGroup>
 
-```javascript
+```javascript Node.js
 const axios = require('axios');
 
 const fetchCallLogs = async () => {
@@ -137,9 +137,7 @@ const fetchCallLogs = async () => {
 fetchCallLogs();
 ```
 
-### Fetch Call Logs (Python)
-
-```python
+```python Python
 import requests
 from datetime import datetime, timedelta
 
@@ -170,25 +168,37 @@ def fetch_call_logs():
 fetch_call_logs()
 ```
 
-### Fetch Call Logs (cURL)
-
-```bash
+```bash cURL
 curl -X GET "https://api.unpod.dev/api/v2/platform/call-logs/?page=1&page_size=20&call_type=outbound&call_status=completed" \
   -H "Org-Handle: your-organization-handle" \
   -H "Authorization: JWT your-jwt-token"
 ```
 
+</CodeGroup>
+
 ## Pagination
 
 The API uses cursor-based pagination. Use the `next` and `previous` URLs from the response to navigate between pages:
 
-```javascript
+<CodeGroup>
+
+```javascript Node.js
 // Fetch next page
 const nextPage = await axios.get(response.data.next);
 
 // Fetch previous page
 const previousPage = await axios.get(response.data.previous);
 ```
+
+```python Python
+# Fetch next page
+next_page = requests.get(data['next'])
+
+# Fetch previous page
+previous_page = requests.get(data['previous'])
+```
+
+</CodeGroup>
 
 ## Filtering Best Practices
 

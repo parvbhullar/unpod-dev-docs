@@ -47,22 +47,21 @@
           {
             "group": "Execution",
             "pages": [
-              "runs",
-              "tasks"
+              "api/execution/runs",
+              "api/execution/tasks"
             ]
           },
           {
             "group": "Telephony",
             "pages": [
-              "numbers",
-              "bridges",
-              "logs"
+              "api/telephony/numbers",
+              "api/telephony/bridges"
             ]
           },
           {
             "group": "Logs",
             "pages": [
-              "calls"
+              "api/logs/calls"
             ]
           }
         ]
