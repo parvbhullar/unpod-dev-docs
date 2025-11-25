@@ -109,7 +109,10 @@
       "discord": "https://discord.gg/7kQ4ewNSHZ"
     }
   },
-  "redirects": {
-    "/": "/introduction"
-  }
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/introduction"
+    }
+  ]
 }
