@@ -113,7 +113,7 @@ Headers:
 const axios = require('axios');
 
 const fetchCallLogs = async () => {
-  const response = await axios.get('https://api.unpod.dev/api/v2/platform/call-logs/', {
+  const response = await axios.get('https://unpod.dev/api/v2/platform/call-logs/', {
     headers: {
       'Org-Handle': 'your-organization-handle',
       'Authorization': 'JWT your-jwt-token'
@@ -142,7 +142,7 @@ import requests
 from datetime import datetime, timedelta
 
 def fetch_call_logs():
-    url = 'https://api.unpod.dev/api/v2/platform/call-logs/'
+    url = 'https://unpod.dev/api/v2/platform/call-logs/'
 
     headers = {
         'Org-Handle': 'your-organization-handle',
@@ -169,7 +169,7 @@ fetch_call_logs()
 ```
 
 ```bash cURL
-curl -X GET "https://api.unpod.dev/api/v2/platform/call-logs/?page=1&page_size=20&call_type=outbound&call_status=completed" \
+curl -X GET "https://unpod.dev/api/v2/platform/call-logs/?page=1&page_size=20&call_type=outbound&call_status=completed" \
   -H "Org-Handle: your-organization-handle" \
   -H "Authorization: JWT your-jwt-token"
 ```
