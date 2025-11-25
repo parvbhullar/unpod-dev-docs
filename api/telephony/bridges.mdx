@@ -1,22 +1,689 @@
 # Bridges API
 
-The Bridges API allows you to manage telephony bridges for connecting multiple call participants.
+The Bridges API allows you to manage telephony bridges for connecting multiple call participants. Bridges are used for call routing, conferencing, and managing telephony channels.
 
-## Coming Soon
+## Get Telephony Bridges
 
-This documentation is under development. Check back soon for detailed API endpoints and examples.
+Retrieve a list of all telephony bridges in the system, including their IDs, status, type, and associated channels for monitoring and call-routing management.
 
-## Overview
+```http
+GET /api/v2/platform/telephony/bridges/
+```
 
-The Bridges API will provide endpoints to:
+### Headers
 
-- Create and configure call bridges
-- Add participants to bridges
-- Remove participants from bridges
-- List active bridges
-- Get bridge details and status
-- Configure bridge audio settings
-- Record bridge sessions
-- Monitor bridge quality metrics
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Org-Handle    | string | Yes      | Organization domain handle      |
+| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+| Product-ID    | string | Yes      | Product identifier              |
 
-For questions or early access, please contact our support team.
+### Example Request
+
+```http
+GET /api/v2/platform/telephony/bridges/
+Headers:
+  Org-Handle: your-org-handle
+  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Product-ID: your-product-id
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 5,
+  "status_code": 200,
+  "message": "Success",
+  "data": [
+    {
+      "id": 276,
+      "name": "Ananya",
+      "description": "",
+      "status": "ACTIVE",
+      "documents_status": "pending",
+      "slug": "ananya-vyvufb9d",
+      "numbers": [
+        {
+          "id": 719,
+          "number_id": 33,
+          "number": "+919240904638",
+          "state": "ASSIGNED",
+          "active": true,
+          "channels_count": 1,
+          "provider_details": null,
+          "provider_credential": {
+            "id": 140,
+            "name": "parv",
+            "provider": 6,
+            "provider_details": {
+              "id": 6,
+              "name": "Vapi",
+              "type": "VOICE_INFRA",
+              "model_type": null,
+              "url": "https://vapi.ai/",
+              "description": "Build, test, and deploy advanced voice AI agents",
+              "icon": "https://ik.imagekit.io/bethere/unpod/channels/vapi.png",
+              "form_slug": "vapi-configure-form"
+            },
+            "hub": 22,
+            "meta_json": {},
+            "active": true,
+            "api_key": "2b1fb0c3-872f-4545-99b5-d8d52cc59722",
+            "api_secret": null,
+            "base_url": null,
+            "sip_url": null,
+            "is_valid": true
+          },
+          "status": "active",
+          "connectivity_type": "voice_infra_provider",
+          "agent_id": null,
+          "config_json": {}
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field            | Type    | Description                                    |
+|------------------|---------|------------------------------------------------|
+| count            | integer | Total number of bridges                        |
+| status_code      | integer | HTTP status code                               |
+| message          | string  | Response message                               |
+| data             | array   | Array of bridge objects                        |
+| id               | integer | Bridge unique identifier                       |
+| name             | string  | Bridge name                                    |
+| description      | string  | Bridge description                             |
+| status           | string  | Bridge status: `ACTIVE`, `DRAFT`, `INACTIVE`   |
+| documents_status | string  | Document verification status                   |
+| slug             | string  | Unique bridge slug identifier                  |
+| numbers          | array   | Array of assigned phone numbers                |
+
+### Number Object Fields
+
+| Field               | Type    | Description                              |
+|---------------------|---------|------------------------------------------|
+| id                  | integer | Number assignment ID                     |
+| number_id           | integer | Phone number ID                          |
+| number              | string  | Phone number in E.164 format             |
+| state               | string  | Number state: `ASSIGNED`, `AVAILABLE`    |
+| active              | boolean | Whether the number is active             |
+| channels_count      | integer | Number of channels                       |
+| provider_credential | object  | Provider credential details              |
+| status              | string  | Number status                            |
+| connectivity_type   | string  | Type of connectivity                     |
+| agent_id            | string  | Associated agent ID (if any)             |
+| config_json         | object  | Additional configuration                 |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "message": "Invalid request parameters",
+  "error": "Detailed error description"
+}
+```
+
+---
+
+## Create Telephony Bridge
+
+Create a new telephony bridge with the specified configuration for use in call routing or conferencing.
+
+```http
+POST /api/v2/platform/telephony/bridges/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Org-Handle    | string | Yes      | Organization domain handle      |
+| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+| Product-ID    | string | Yes      | Product identifier              |
+
+### Request Body
+
+| Field       | Type   | Required | Description                    |
+|-------------|--------|----------|--------------------------------|
+| name        | string | Yes      | Bridge name                    |
+| description | string | No       | Bridge description             |
+| region      | string | No       | Region code (e.g., `IN`, `US`) |
+
+### Example Request
+
+```http
+POST /api/v2/platform/telephony/bridges/
+Headers:
+  Org-Handle: your-org-handle
+  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Product-ID: your-product-id
+  Content-Type: application/json
+
+Body:
+{
+  "name": "Harshita Bajpai",
+  "description": "A new voice bridge",
+  "region": "IN"
+}
+```
+
+### Success Response (201)
+
+```json
+{
+  "status_code": 201,
+  "message": "Bridge created successfully.",
+  "data": {
+    "id": 356,
+    "name": "Harshita Bajpai",
+    "description": "A new voice bridge",
+    "status": "DRAFT",
+    "documents_status": "pending",
+    "slug": "harshita-bajpai-zz5ivczc",
+    "numbers": [],
+    "hub": 22,
+    "region": "IN",
+    "organization": {
+      "logo": "https://ik.imagekit.io/bethere/unpod/organization/UNPOD_LOGO_AI_ICON.png",
+      "account_type": "investor",
+      "seeking": ["marketplace"],
+      "tags": ["finance", "retail"],
+      "org_id": 22,
+      "created": "2023-05-06T10:49:24.027999Z",
+      "modified": "2024-12-27T17:57:51.943145Z",
+      "name": "Unpod TV",
+      "token": "YVZH7Z99GVRIKV7H7D9V",
+      "domain": "recalll.co",
+      "domain_handle": "recalll.co",
+      "is_private_domain": true,
+      "privacy_type": "public",
+      "color": "#99B0AF",
+      "org_type": "free",
+      "status": "active"
+    }
+  }
+}
+```
+
+### Response Fields
+
+| Field            | Type    | Description                                  |
+|------------------|---------|----------------------------------------------|
+| status_code      | integer | HTTP status code                             |
+| message          | string  | Response message                             |
+| data             | object  | Created bridge details                       |
+| id               | integer | Bridge unique identifier                     |
+| name             | string  | Bridge name                                  |
+| description      | string  | Bridge description                           |
+| status           | string  | Bridge status (initially `DRAFT`)            |
+| documents_status | string  | Document verification status                 |
+| slug             | string  | Unique bridge slug identifier                |
+| numbers          | array   | Assigned numbers (empty on creation)         |
+| hub              | integer | Hub identifier                               |
+| region           | string  | Region code                                  |
+| organization     | object  | Organization details                         |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "message": "Invalid request parameters",
+  "error": "Detailed error description"
+}
+```
+
+---
+
+## Update Telephony Bridge
+
+Update an existing telephony bridge's configuration or status without replacing the entire resource.
+
+```http
+PATCH /api/v2/platform/telephony/bridges/{slug}/
+```
+
+### Path Parameters
+
+| Name | Type   | Required | Description                |
+|------|--------|----------|----------------------------|
+| slug | string | Yes      | Unique bridge slug         |
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+
+### Request Body
+
+| Field       | Type   | Required | Description                              |
+|-------------|--------|----------|------------------------------------------|
+| name        | string | No       | Updated bridge name                      |
+| description | string | No       | Updated bridge description               |
+| status      | string | No       | Updated status: `ACTIVE`, `DRAFT`, etc.  |
+
+### Example Request
+
+```http
+PATCH /api/v2/platform/telephony/bridges/harshita-bajpai-zz5ivczc/
+Headers:
+  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Content-Type: application/json
+
+Body:
+{
+  "name": "Sanyam Sharma"
+}
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Bridge updated successfully.",
+  "data": {
+    "id": 356,
+    "name": "Sanyam Sharma",
+    "description": "A new voice bridge",
+    "status": "DRAFT",
+    "documents_status": "pending",
+    "slug": "harshita-bajpai-zz5ivczc",
+    "numbers": [],
+    "hub": 22,
+    "region": "IN",
+    "organization": {
+      "logo": "https://ik.imagekit.io/bethere/unpod/organization/UNPOD_LOGO_AI_ICON.png",
+      "account_type": "investor",
+      "seeking": ["marketplace"],
+      "tags": ["finance", "retail"],
+      "org_id": 22,
+      "created": "2023-05-06T10:49:24.027999Z",
+      "modified": "2024-12-27T17:57:51.943145Z",
+      "name": "Unpod TV",
+      "token": "YVZH7Z99GVRIKV7H7D9V",
+      "domain": "recalll.co",
+      "domain_handle": "recalll.co",
+      "is_private_domain": true,
+      "privacy_type": "public",
+      "color": "#99B0AF",
+      "org_type": "free",
+      "status": "active"
+    }
+  }
+}
+```
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "message": "Invalid request parameters",
+  "error": "Detailed error description"
+}
+```
+
+---
+
+## Delete Telephony Bridge
+
+Remove an existing telephony bridge from the system, freeing its associated resources.
+
+```http
+DELETE /api/v2/platform/telephony/bridges/{slug}/
+```
+
+### Path Parameters
+
+| Name | Type   | Required | Description                |
+|------|--------|----------|----------------------------|
+| slug | string | Yes      | Unique bridge slug         |
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+
+### Example Request
+
+```http
+DELETE /api/v2/platform/telephony/bridges/harshita-bajpai-zz5ivczc/
+Headers:
+  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Bridge deleted successfully.",
+  "data": {}
+}
+```
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "message": "Invalid request parameters",
+  "error": "Detailed error description"
+}
+```
+
+---
+
+## Assign Numbers to Bridge
+
+Assign one or more telephony numbers to a specified telephony bridge for routing or conferencing use.
+
+```http
+POST /api/v2/platform/telephony/bridges/{slug}/numbers/
+```
+
+### Path Parameters
+
+| Name | Type   | Required | Description                |
+|------|--------|----------|----------------------------|
+| slug | string | Yes      | Unique bridge slug         |
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+
+### Request Body
+
+| Field     | Type    | Required | Description                        |
+|-----------|---------|----------|------------------------------------|
+| number_id | integer | Yes      | ID of the number to assign         |
+
+### Example Request
+
+```http
+POST /api/v2/platform/telephony/bridges/ananya-vyvufb9d/numbers/
+Headers:
+  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Content-Type: application/json
+
+Body:
+{
+  "number_id": 25
+}
+```
+
+### Success Response (201)
+
+```json
+{
+  "status_code": 201,
+  "message": "Number assigned to bridge successfully.",
+  "data": {
+    "id": 799,
+    "number": 25,
+    "number_id": 25,
+    "bridge": 276,
+    "bridge_id": 276,
+    "channels_count": 1,
+    "provider_credential": {
+      "id": 1,
+      "name": "Twilio Support",
+      "provider": 3,
+      "provider_details": {
+        "id": 3,
+        "name": "Twilio",
+        "type": "TELEPHONY",
+        "model_type": null,
+        "url": "https://www.twilio.com",
+        "description": "Twilio is your all in one solution channel",
+        "icon": "https://ik.imagekit.io/techblog/channels/twilio.png"
+      },
+      "hub": 22,
+      "meta_json": [
+        {
+          "meta_key": "key",
+          "meta_value": "mklsfjodfdo"
+        }
+      ],
+      "active": true,
+      "api_key": "dsds154154s5f4s54fs5",
+      "api_secret": "sfs1f5s4f5s4fs4f",
+      "base_url": null,
+      "sip_url": "",
+      "is_valid": null
+    },
+    "status": "active",
+    "connectivity_type": null,
+    "agent_id": null,
+    "config_json": {}
+  }
+}
+```
+
+### Response Fields
+
+| Field               | Type    | Description                              |
+|---------------------|---------|------------------------------------------|
+| status_code         | integer | HTTP status code                         |
+| message             | string  | Response message                         |
+| data                | object  | Assigned number details                  |
+| id                  | integer | Assignment ID                            |
+| number              | integer | Number reference                         |
+| number_id           | integer | Phone number ID                          |
+| bridge              | integer | Bridge reference                         |
+| bridge_id           | integer | Bridge ID                                |
+| channels_count      | integer | Number of channels                       |
+| provider_credential | object  | Provider credential details              |
+| status              | string  | Assignment status                        |
+| connectivity_type   | string  | Type of connectivity                     |
+| agent_id            | string  | Associated agent ID                      |
+| config_json         | object  | Additional configuration                 |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "message": "Invalid request parameters",
+  "error": "Detailed error description"
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Request completed successfully         |
+| 201         | Created - Resource created successfully          |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing JWT token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Bridge or number not found           |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Org-Handle': 'your-org-handle',
+  'Authorization': 'JWT your-jwt-token',
+  'Product-ID': 'your-product-id',
+  'Content-Type': 'application/json'
+};
+
+// Get all bridges
+const getBridges = async () => {
+  const response = await axios.get(
+    'https://unpod.dev/api/v2/platform/telephony/bridges/',
+    { headers }
+  );
+  console.log(`Total bridges: ${response.data.count}`);
+  return response.data.data;
+};
+
+// Create a new bridge
+const createBridge = async (name, description, region = 'IN') => {
+  const response = await axios.post(
+    'https://unpod.dev/api/v2/platform/telephony/bridges/',
+    { name, description, region },
+    { headers }
+  );
+  console.log(`Bridge created: ${response.data.data.slug}`);
+  return response.data.data;
+};
+
+// Update a bridge
+const updateBridge = async (slug, updates) => {
+  const response = await axios.patch(
+    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/`,
+    updates,
+    { headers }
+  );
+  console.log(`Bridge updated: ${response.data.data.name}`);
+  return response.data.data;
+};
+
+// Delete a bridge
+const deleteBridge = async (slug) => {
+  const response = await axios.delete(
+    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/`,
+    { headers }
+  );
+  console.log('Bridge deleted successfully');
+  return response.data;
+};
+
+// Assign number to bridge
+const assignNumber = async (slug, numberId) => {
+  const response = await axios.post(
+    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/numbers/`,
+    { number_id: numberId },
+    { headers }
+  );
+  console.log(`Number assigned: ${response.data.data.number_id}`);
+  return response.data.data;
+};
+
+// Example usage
+getBridges();
+```
+
+```python Python
+import requests
+
+headers = {
+    'Org-Handle': 'your-org-handle',
+    'Authorization': 'JWT your-jwt-token',
+    'Product-ID': 'your-product-id',
+    'Content-Type': 'application/json'
+}
+
+BASE_URL = 'https://unpod.dev/api/v2/platform/telephony/bridges'
+
+def get_bridges():
+    """Get all telephony bridges"""
+    response = requests.get(f'{BASE_URL}/', headers=headers)
+    data = response.json()
+    print(f"Total bridges: {data['count']}")
+    return data['data']
+
+def create_bridge(name: str, description: str = '', region: str = 'IN'):
+    """Create a new telephony bridge"""
+    payload = {
+        'name': name,
+        'description': description,
+        'region': region
+    }
+    response = requests.post(f'{BASE_URL}/', headers=headers, json=payload)
+    data = response.json()
+    print(f"Bridge created: {data['data']['slug']}")
+    return data['data']
+
+def update_bridge(slug: str, updates: dict):
+    """Update an existing bridge"""
+    response = requests.patch(f'{BASE_URL}/{slug}/', headers=headers, json=updates)
+    data = response.json()
+    print(f"Bridge updated: {data['data']['name']}")
+    return data['data']
+
+def delete_bridge(slug: str):
+    """Delete a bridge"""
+    response = requests.delete(f'{BASE_URL}/{slug}/', headers=headers)
+    print('Bridge deleted successfully')
+    return response.json()
+
+def assign_number(slug: str, number_id: int):
+    """Assign a number to a bridge"""
+    payload = {'number_id': number_id}
+    response = requests.post(f'{BASE_URL}/{slug}/numbers/', headers=headers, json=payload)
+    data = response.json()
+    print(f"Number assigned: {data['data']['number_id']}")
+    return data['data']
+
+# Example usage
+get_bridges()
+```
+
+```bash cURL
+# Get all bridges
+curl -X GET "https://unpod.dev/api/v2/platform/telephony/bridges/" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Authorization: JWT your-jwt-token" \
+  -H "Product-ID: your-product-id"
+
+# Create a new bridge
+curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Authorization: JWT your-jwt-token" \
+  -H "Product-ID: your-product-id" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Bridge",
+    "description": "A new voice bridge",
+    "region": "IN"
+  }'
+
+# Update a bridge
+curl -X PATCH "https://unpod.dev/api/v2/platform/telephony/bridges/my-bridge-abc123/" \
+  -H "Authorization: JWT your-jwt-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Bridge Name"
+  }'
+
+# Delete a bridge
+curl -X DELETE "https://unpod.dev/api/v2/platform/telephony/bridges/my-bridge-abc123/" \
+  -H "Authorization: JWT your-jwt-token"
+
+# Assign number to bridge
+curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/my-bridge-abc123/numbers/" \
+  -H "Authorization: JWT your-jwt-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "number_id": 25
+  }'
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Bridge Naming**: Use descriptive names for bridges to easily identify their purpose
+2. **Status Management**: Keep bridges in `DRAFT` status until fully configured
+3. **Number Assignment**: Verify number availability before assigning to a bridge
+4. **Error Handling**: Always handle potential errors and implement retry logic
+5. **Cleanup**: Delete unused bridges to free up resources
+6. **Security**: Keep JWT tokens secure and rotate them regularly
+7. **Monitoring**: Monitor bridge status and call quality metrics
+8. **Region Selection**: Choose appropriate regions for optimal call quality

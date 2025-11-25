@@ -1,21 +1,620 @@
 # Tasks API
 
-The Tasks API allows you to create, manage, and monitor individual tasks within your execution runs.
+The Tasks API allows you to create, manage, and monitor individual tasks within your execution runs. Tasks represent individual units of work assigned to agents/pilots.
 
-## Coming Soon
+## Get Tasks by Agent Handle
 
-This documentation is under development. Check back soon for detailed API endpoints and examples.
+Fetch all tasks assigned to a specific agent/pilot using their handle. This returns full task metadata including user info, input payloads, attachments, and execution details.
 
-## Overview
+```http
+GET /api/v2/platform/agents/{handle}/tasks/
+```
 
-The Tasks API will provide endpoints to:
+### Path Parameters
 
-- Create and schedule tasks
-- Retrieve task details and status
-- List all tasks with filtering
-- Update task configuration
-- Cancel or retry failed tasks
-- Get task execution history
-- Monitor task performance metrics
+| Name   | Type   | Required | Description                              |
+|--------|--------|----------|------------------------------------------|
+| handle | string | Yes      | Unique handle/identifier of the agent    |
 
-For questions or early access, please contact our support team.
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+| Content-Type  | string | Yes      | `application/json`              |
+
+### Example Request
+
+```http
+GET /api/v2/platform/agents/sales-agent-v1/tasks/
+Headers:
+  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Content-Type: application/json
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 1,
+  "status_code": 200,
+  "message": "Tasks Fetched Successfully",
+  "data": [
+    {
+      "_id": "example123456789",
+      "space_id": "999",
+      "thread_id": null,
+      "user": "101",
+      "user_org_id": "501",
+      "user_info": {
+        "id": "101",
+        "email": "demo.user@example.com",
+        "full_name": "Demo User",
+        "user_token": "DEMO123TOKEN456"
+      },
+      "created": "2025-01-10T10:20:30.000000",
+      "modified": "2025-01-10T10:25:30.000000",
+      "task_id": "TASK123456789",
+      "run_id": "RUN123456789",
+      "collection_ref": "collection_data_DEMO123456",
+      "task": {
+        "objective": "call"
+      },
+      "input": {
+        "name": "John Doe",
+        "about": "Software Developer",
+        "email": "john.doe@example.com",
+        "address": "New Delhi",
+        "occupation": "Developer",
+        "company_name": "TechCorp",
+        "contact_number": "9876543210",
+        "created": "2025-01-01T12:00:00.000000",
+        "context": "Policy Number 123456789, Amount Rupees ten thousand, Due Date 10th March 2025"
+      },
+      "output": {},
+      "attachments": [],
+      "assignee": "sales-agent-v1",
+      "status": "pending",
+      "execution_type": "call",
+      "ref_id": "doc-123456"
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field           | Type    | Description                                      |
+|-----------------|---------|--------------------------------------------------|
+| count           | integer | Total number of tasks                            |
+| status_code     | integer | HTTP status code                                 |
+| message         | string  | Response message                                 |
+| data            | array   | Array of task objects                            |
+| _id             | string  | Internal task document ID                        |
+| space_id        | string  | Space identifier                                 |
+| thread_id       | string  | Thread identifier (null if not applicable)       |
+| user            | string  | User ID who created the task                     |
+| user_org_id     | string  | Organization ID of the user                      |
+| user_info       | object  | User details (id, email, full_name, token)       |
+| created         | string  | Task creation timestamp (ISO 8601)               |
+| modified        | string  | Last modified timestamp (ISO 8601)               |
+| task_id         | string  | Unique task identifier                           |
+| run_id          | string  | Parent run identifier                            |
+| collection_ref  | string  | Reference to the data collection                 |
+| task            | object  | Task definition with objective                   |
+| input           | object  | Input data for the task (contact details, etc.)  |
+| output          | object  | Task output (empty if pending)                   |
+| attachments     | array   | List of attachments                              |
+| assignee        | string  | Agent handle assigned to the task                |
+| status          | string  | Task status: `pending`, `running`, `completed`, `failed` |
+| execution_type  | string  | Type of execution: `call`, `email`, etc.         |
+| ref_id          | string  | Reference ID linking to input data               |
+
+### Error Responses
+
+**206 — Tasks fetch failed**
+```json
+{
+  "message": "Error fetching tasks",
+  "errors": "Detailed error description"
+}
+```
+
+**404 — Agent not found**
+```json
+{
+  "message": "Agent not found"
+}
+```
+
+---
+
+## Get Tasks by Space Token
+
+Fetch all tasks for a specific space using the space_token. Supports pagination with page and query parameters for efficient data retrieval.
+
+```http
+GET /api/v2/platform/spaces/{space_token}/tasks/
+```
+
+### Path Parameters
+
+| Name        | Type   | Required | Description                            |
+|-------------|--------|----------|----------------------------------------|
+| space_token | string | Yes      | Public token identifying the workspace |
+
+### Query Parameters
+
+| Name      | Type    | Required | Description                          |
+|-----------|---------|----------|--------------------------------------|
+| page      | integer | No       | Page number (default: 1)             |
+| page_size | integer | No       | Number of tasks per page (default: 20) |
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+| Content-Type  | string | Yes      | `application/json`              |
+
+### Example Request
+
+```http
+GET /api/v2/platform/spaces/space_abc123xyz/tasks/?page=1&page_size=20
+Headers:
+  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Content-Type: application/json
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 2,
+  "status_code": 200,
+  "message": "Tasks Fetched Successfully",
+  "data": [
+    {
+      "_id": "space_task_id_001",
+      "space_id": "999",
+      "thread_id": null,
+      "user": "456",
+      "user_org_id": "789",
+      "user_info": {
+        "id": "456",
+        "email": "sales.manager@company.com",
+        "full_name": "Sarah Johnson",
+        "user_token": "SPACE_TOKEN_ABC123"
+      },
+      "created": "2025-01-15T14:30:00.000000",
+      "modified": "2025-01-15T14:35:00.000000",
+      "task_id": "TASK_SPACE_456789",
+      "run_id": "RUN_SPACE_987654",
+      "collection_ref": "collection_data_SPACE123456",
+      "task": {
+        "objective": "Follow up with potential clients for product demo"
+      },
+      "input": {
+        "name": "Rajesh Kumar",
+        "contact_number": "+919988776655",
+        "email": "rajesh.kumar@techstart.in",
+        "address": "Bangalore, Karnataka, India",
+        "occupation": "CTO",
+        "company_name": "TechStart Solutions",
+        "context": "Interested in AI automation tools for their startup. Budget: 50K-1L, Timeline: Q1 2025"
+      },
+      "output": {
+        "call_id": "019aa6a9-809f-7ddb-b110-7a16167cb632",
+        "customer": "Rajesh Kumar",
+        "contact_number": "+919988776655",
+        "call_end_reason": "customer-ended-call",
+        "recording_url": "https://store.unpod.ai/media/private/high-call-recordings/...",
+        "transcript": [
+          {
+            "role": "user",
+            "content": "And reason for calling",
+            "user_id": "unknown",
+            "timestamp": ""
+          },
+          {
+            "role": "assistant",
+            "content": "Hello?",
+            "user_id": null,
+            "timestamp": ""
+          }
+        ],
+        "start_time": "2025-11-21 13:45:20",
+        "end_time": "2025-11-21 13:46:36",
+        "assistant_number": "+919949883072",
+        "call_summary": "AI representative called regarding inquiry about their premium project...",
+        "duration": 76.769,
+        "cost": 0.139,
+        "post_call_data": {
+          "classification": {
+            "labels": ["Interested"],
+            "summary": "The agent called to discuss a premium project. The user expressed interest."
+          },
+          "summary": {
+            "status": "Call Back",
+            "summary": "The call involved an introduction and inquiry...",
+            "name": "N/A",
+            "contact": "N/A",
+            "callback_datetime": "N/A",
+            "hours_from_now": "N/A"
+          },
+          "success_evaluator": "{\"score\": 5, \"reason\": \"...\"}",
+          "call_back": null,
+          "follow_up": null,
+          "structured_data": "{\"customer_name\": null, ...}",
+          "webhook_data": null,
+          "call_evaluation": []
+        },
+        "metadata": {
+          "cost": 0.139,
+          "type": "outboundPhoneCall",
+          "usage": {}
+        }
+      },
+      "attachments": [],
+      "assignee": "sales-bot-v3",
+      "status": "completed",
+      "execution_type": "call",
+      "ref_id": "lead_doc_456789"
+    },
+    {
+      "_id": "space_task_id_002",
+      "space_id": "999",
+      "thread_id": null,
+      "user": "456",
+      "user_org_id": "789",
+      "user_info": {
+        "id": "456",
+        "email": "sales.manager@company.com",
+        "full_name": "Sarah Johnson",
+        "user_token": "SPACE_TOKEN_ABC123"
+      },
+      "created": "2025-01-15T13:20:00.000000",
+      "modified": "2025-01-15T13:20:00.000000",
+      "task_id": "TASK_SPACE_456790",
+      "run_id": "RUN_SPACE_987655",
+      "collection_ref": "collection_data_SPACE123456",
+      "task": {
+        "objective": "Payment reminder for invoice #INV-2025-001"
+      },
+      "input": {
+        "name": "Priya Sharma",
+        "contact_number": "+919876543210",
+        "email": "priya.sharma@business.com",
+        "address": "Mumbai, Maharashtra",
+        "occupation": "Finance Manager",
+        "company_name": "Global Enterprises Ltd",
+        "context": "Pending invoice INV-2025-001 amount Rs. 45,000, due date 20th Jan 2025"
+      },
+      "output": {},
+      "attachments": [],
+      "assignee": "payment-bot-v1",
+      "status": "pending",
+      "execution_type": "call",
+      "ref_id": "invoice_doc_001"
+    }
+  ]
+}
+```
+
+### Error Response (206 — Tasks fetch failed)
+
+```json
+{
+  "message": "Error fetching tasks",
+  "errors": "Detailed error description"
+}
+```
+
+---
+
+## Create a Task in a Space
+
+Create a new task inside a given space using the space's public token. You can assign the task to a pilot/agent, attach multiple documents, provide additional context, and optionally schedule the execution.
+
+```http
+POST /api/v2/platform/spaces/{space_token}/tasks/
+```
+
+### Path Parameters
+
+| Name        | Type   | Required | Description                                      |
+|-------------|--------|----------|--------------------------------------------------|
+| space_token | string | Yes      | Public token of the space where task is created  |
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+| Content-Type  | string | Yes      | `application/json`              |
+
+### Request Body
+
+| Field     | Type   | Required | Description                                           |
+|-----------|--------|----------|-------------------------------------------------------|
+| pilot     | string | Yes      | Agent/pilot handle to assign the task                 |
+| documents | array  | Yes      | Array of document objects with contact/task details   |
+| context   | string | No       | Additional context or instructions for the task       |
+| schedule  | object | No       | Scheduling configuration (`type`: `now` or `later`)   |
+
+### Document Object Fields
+
+| Field            | Type   | Description                              |
+|------------------|--------|------------------------------------------|
+| name             | string | Contact name                             |
+| email            | string | Contact email address                    |
+| number           | string | Primary contact number                   |
+| contact_number   | string | Contact phone number                     |
+| alternate_number | string | Alternate phone number                   |
+| context          | string | Task-specific context                    |
+| labels           | array  | Array of labels/tags                     |
+| title            | string | Document title                           |
+| description      | string | Document description                     |
+| document_id      | string | Unique document identifier               |
+| created          | string | Document creation timestamp (ISO 8601)   |
+
+### Example Request
+
+```http
+POST /api/v2/platform/spaces/space_abc123xyz/tasks/
+Headers:
+  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Content-Type: application/json
+
+Body:
+{
+  "pilot": "space-agent-f1o3qjm1y7q1avvuynv4vprb1",
+  "documents": [
+    {
+      "name": "Xyz",
+      "time": "null",
+      "email": "xyz@domain.com",
+      "number": "1234567890",
+      "context": "trial",
+      "multi_select": "multi",
+      "contact_number": "1234567890",
+      "alternate_number": "9876543210",
+      "created": "2025-10-30T05:44:56",
+      "labels": ["Interested"],
+      "title": "Document Title",
+      "description": "Description text",
+      "document_id": "6902fb5840a736e125e80ebc"
+    }
+  ],
+  "context": "Call the lead and discuss the project requirements.",
+  "schedule": {
+    "type": "now"
+  }
+}
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Task Created Successfully",
+  "data": {
+    "run_id": "Rf36292fceaa211ef8e2a91681c5ad3ab",
+    "space_id": "321",
+    "status": "pending",
+    "created": "2025-11-17T10:30:00.000000",
+    "_id": "67aeecb2851179ff81e48f64"
+  }
+}
+```
+
+### Response Fields
+
+| Field      | Type   | Description                           |
+|------------|--------|---------------------------------------|
+| status_code| integer| HTTP status code                      |
+| message    | string | Response message                      |
+| data       | object | Created task details                  |
+| run_id     | string | Generated run identifier              |
+| space_id   | string | Space identifier                      |
+| status     | string | Task status (initially `pending`)     |
+| created    | string | Task creation timestamp (ISO 8601)    |
+| _id        | string | Internal task document ID             |
+
+### Error Response (206 — Validation / Creation Failed)
+
+```json
+{
+  "message": "Task creation failed",
+  "errors": "Detailed error description"
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Request completed successfully         |
+| 206         | Partial Content - Business logic error occurred  |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing JWT token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Agent or Space not found             |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+// Get tasks by agent handle
+const fetchTasksByAgent = async (agentHandle) => {
+  const response = await axios.get(
+    `https://unpod.dev/api/v2/platform/agents/${agentHandle}/tasks/`,
+    {
+      headers: {
+        'Authorization': 'JWT your-jwt-token',
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  console.log(`Total tasks: ${response.data.count}`);
+  response.data.data.forEach(task => {
+    console.log(`Task ${task.task_id}: ${task.status} - ${task.input.name}`);
+  });
+};
+
+// Get tasks by space token
+const fetchTasksBySpace = async (spaceToken, page = 1, pageSize = 20) => {
+  const response = await axios.get(
+    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/tasks/`,
+    {
+      headers: {
+        'Authorization': 'JWT your-jwt-token',
+        'Content-Type': 'application/json'
+      },
+      params: { page, page_size: pageSize }
+    }
+  );
+
+  console.log(`Total tasks: ${response.data.count}`);
+  return response.data.data;
+};
+
+// Create a new task
+const createTask = async (spaceToken, pilotHandle, documents, context) => {
+  const response = await axios.post(
+    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/tasks/`,
+    {
+      pilot: pilotHandle,
+      documents: documents,
+      context: context,
+      schedule: { type: 'now' }
+    },
+    {
+      headers: {
+        'Authorization': 'JWT your-jwt-token',
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  console.log(`Task created: ${response.data.data.run_id}`);
+  return response.data.data;
+};
+
+// Example usage
+fetchTasksByAgent('sales-agent-v1');
+```
+
+```python Python
+import requests
+
+def fetch_tasks_by_agent(agent_handle: str):
+    """Get tasks by agent handle"""
+    url = f'https://unpod.dev/api/v2/platform/agents/{agent_handle}/tasks/'
+
+    headers = {
+        'Authorization': 'JWT your-jwt-token',
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.get(url, headers=headers)
+    data = response.json()
+
+    print(f"Total tasks: {data['count']}")
+    for task in data['data']:
+        print(f"Task {task['task_id']}: {task['status']} - {task['input']['name']}")
+
+def fetch_tasks_by_space(space_token: str, page: int = 1, page_size: int = 20):
+    """Get tasks by space token"""
+    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/tasks/'
+
+    headers = {
+        'Authorization': 'JWT your-jwt-token',
+        'Content-Type': 'application/json'
+    }
+
+    params = {'page': page, 'page_size': page_size}
+
+    response = requests.get(url, headers=headers, params=params)
+    data = response.json()
+
+    print(f"Total tasks: {data['count']}")
+    return data['data']
+
+def create_task(space_token: str, pilot_handle: str, documents: list, context: str):
+    """Create a new task in a space"""
+    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/tasks/'
+
+    headers = {
+        'Authorization': 'JWT your-jwt-token',
+        'Content-Type': 'application/json'
+    }
+
+    payload = {
+        'pilot': pilot_handle,
+        'documents': documents,
+        'context': context,
+        'schedule': {'type': 'now'}
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    data = response.json()
+
+    print(f"Task created: {data['data']['run_id']}")
+    return data['data']
+
+# Example usage
+fetch_tasks_by_agent('sales-agent-v1')
+```
+
+```bash cURL
+# Get tasks by agent handle
+curl -X GET "https://unpod.dev/api/v2/platform/agents/sales-agent-v1/tasks/" \
+  -H "Authorization: JWT your-jwt-token" \
+  -H "Content-Type: application/json"
+
+# Get tasks by space token with pagination
+curl -X GET "https://unpod.dev/api/v2/platform/spaces/space_abc123xyz/tasks/?page=1&page_size=20" \
+  -H "Authorization: JWT your-jwt-token" \
+  -H "Content-Type: application/json"
+
+# Create a new task
+curl -X POST "https://unpod.dev/api/v2/platform/spaces/space_abc123xyz/tasks/" \
+  -H "Authorization: JWT your-jwt-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pilot": "space-agent-f1o3qjm1y7q1avvuynv4vprb1",
+    "documents": [
+      {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "contact_number": "1234567890",
+        "context": "Sales follow-up",
+        "document_id": "doc123"
+      }
+    ],
+    "context": "Call the lead and discuss requirements.",
+    "schedule": {"type": "now"}
+  }'
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Pagination**: Use pagination parameters for spaces with many tasks to improve performance
+2. **Agent Handle**: Use meaningful and consistent agent handles for better task organization
+3. **Context**: Provide clear context in task creation for better execution outcomes
+4. **Error Handling**: Always handle potential errors and implement retry logic
+5. **Document Structure**: Include all relevant contact information in documents
+6. **Scheduling**: Use `schedule.type: "now"` for immediate execution or configure for later
+7. **Security**: Keep JWT tokens secure and rotate them regularly
+8. **Monitoring**: Track task completion rates and agent performance metrics

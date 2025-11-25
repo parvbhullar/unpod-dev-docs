@@ -1,21 +1,428 @@
 # Numbers API
 
-The Numbers API allows you to manage phone numbers for your telephony operations.
+The Numbers API allows you to manage phone numbers for your telephony operations. You can list, create, and unlink telephony numbers from your system.
 
-## Coming Soon
+## Get Telephony Numbers
 
-This documentation is under development. Check back soon for detailed API endpoints and examples.
+Retrieve a list of all telephony numbers in the system along with their details and current status.
 
-## Overview
+```http
+GET /api/v2/platform/telephony/numbers/
+```
 
-The Numbers API will provide endpoints to:
+### Headers
 
-- Search and purchase available phone numbers
-- List your owned phone numbers
-- Configure number settings and routing
-- Update number capabilities (SMS, Voice, MMS)
-- Release phone numbers
-- Port existing numbers
-- Configure caller ID settings
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | JWT token format: `JWT <token>` |
 
-For questions or early access, please contact our support team.
+### Example Request
+
+```http
+GET /api/v2/platform/telephony/numbers/
+Headers:
+  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Telephony numbers fetched successfully.",
+  "data": [
+    {
+      "id": 35,
+      "number": "+919240904631",
+      "provider_details": {
+        "id": 1,
+        "name": "Airtel",
+        "type": "TELEPHONY",
+        "model_type": null,
+        "url": "https://www.airtel.in",
+        "description": "Airtel india's largest telecom company",
+        "icon": "https://ik.imagekit.io/bethere/unpod/channels/Airtel_logo-01.png"
+      },
+      "state": "NOT_ASSIGNED",
+      "active": true,
+      "owner_type": null,
+      "number_type": null,
+      "association": {},
+      "agent_number": false
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field            | Type    | Description                                      |
+|------------------|---------|--------------------------------------------------|
+| status_code      | integer | HTTP status code                                 |
+| message          | string  | Response message                                 |
+| data             | array   | Array of number objects                          |
+| id               | integer | Number unique identifier                         |
+| number           | string  | Phone number in E.164 format                     |
+| provider_details | object  | Provider information                             |
+| state            | string  | Number state: `NOT_ASSIGNED`, `ASSIGNED`         |
+| active           | boolean | Whether the number is active                     |
+| owner_type       | string  | Type of owner (if assigned)                      |
+| number_type      | string  | Type of number                                   |
+| association      | object  | Association details                              |
+| agent_number     | boolean | Whether this is an agent number                  |
+
+### Provider Details Fields
+
+| Field       | Type   | Description                    |
+|-------------|--------|--------------------------------|
+| id          | integer| Provider unique identifier     |
+| name        | string | Provider name                  |
+| type        | string | Provider type: `TELEPHONY`     |
+| model_type  | string | Model type (if applicable)     |
+| url         | string | Provider website URL           |
+| description | string | Provider description           |
+| icon        | string | Provider icon URL              |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "message": "Invalid request parameters",
+  "error": "Detailed error description"
+}
+```
+
+---
+
+## Create Telephony Number
+
+Create a new telephony number with the specified configuration for use in the system.
+
+```http
+POST /api/v2/platform/telephony/numbers/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+| Content-Type  | string | Yes      | `application/json`              |
+
+### Request Body
+
+| Field        | Type    | Required | Description                              |
+|--------------|---------|----------|------------------------------------------|
+| number       | string  | Yes      | Phone number in E.164 format             |
+| provider_id  | integer | Yes      | Provider ID for the number               |
+| number_type  | string  | No       | Type of number                           |
+| agent_number | boolean | No       | Whether this is an agent number          |
+
+### Example Request
+
+```http
+POST /api/v2/platform/telephony/numbers/
+Headers:
+  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Content-Type: application/json
+
+Body:
+{
+  "number": "+9966890765",
+  "provider_id": 1
+}
+```
+
+### Success Response (201)
+
+```json
+{
+  "status_code": 201,
+  "message": "Success",
+  "data": {
+    "id": 46,
+    "number": "+9966890765",
+    "provider_details": {
+      "id": 1,
+      "name": "Airtel",
+      "type": "TELEPHONY",
+      "model_type": null,
+      "url": "https://www.airtel.in",
+      "description": "Airtel india's largest telecom company",
+      "icon": "https://ik.imagekit.io/bethere/unpod/channels/Airtel_logo-01.png"
+    },
+    "state": "NOT_ASSIGNED",
+    "active": true,
+    "owner_type": null,
+    "number_type": null,
+    "association": {},
+    "agent_number": false
+  }
+}
+```
+
+### Response Fields
+
+| Field            | Type    | Description                              |
+|------------------|---------|------------------------------------------|
+| status_code      | integer | HTTP status code                         |
+| message          | string  | Response message                         |
+| data             | object  | Created number details                   |
+| id               | integer | Number unique identifier                 |
+| number           | string  | Phone number in E.164 format             |
+| provider_details | object  | Provider information                     |
+| state            | string  | Number state (initially `NOT_ASSIGNED`)  |
+| active           | boolean | Whether the number is active             |
+| owner_type       | string  | Type of owner                            |
+| number_type      | string  | Type of number                           |
+| association      | object  | Association details                      |
+| agent_number     | boolean | Whether this is an agent number          |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "message": "Invalid request parameters",
+  "error": "Detailed error description"
+}
+```
+
+---
+
+## Unlink Telephony Number
+
+Detach a telephony number from its assigned resource or service without deleting the number itself. This removes the number from any bridge or agent it was previously assigned to.
+
+```http
+POST /api/v2/platform/telephony/numbers/{number_id}/unlink-provider/
+```
+
+### Path Parameters
+
+| Name      | Type    | Required | Description                    |
+|-----------|---------|----------|--------------------------------|
+| number_id | integer | Yes      | Unique number identifier       |
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+
+### Example Request
+
+```http
+POST /api/v2/platform/telephony/numbers/35/unlink-provider/
+Headers:
+  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Bridge updated successfully.",
+  "data": {
+    "id": 350,
+    "name": "Habuild",
+    "description": "demo",
+    "status": "ACTIVE",
+    "documents_status": "pending",
+    "slug": "habuild-a4kj0puo",
+    "numbers": [],
+    "hub": 22,
+    "region": "IN",
+    "organization": {
+      "logo": "https://ik.imagekit.io/bethere/unpod/organization/UNPOD_LOGO_AI_ICON.png",
+      "account_type": "investor",
+      "seeking": ["marketplace"],
+      "tags": ["finance", "retail"],
+      "org_id": 22,
+      "created": "2023-05-06T10:49:24.027999Z",
+      "modified": "2024-12-27T17:57:51.943145Z",
+      "name": "Unpod TV",
+      "token": "YVZH7Z99GVRIKV7H7D9V",
+      "domain": "recalll.co",
+      "domain_handle": "recalll.co",
+      "is_private_domain": true,
+      "privacy_type": "public",
+      "color": "#99B0AF",
+      "org_type": "free",
+      "status": "active"
+    }
+  }
+}
+```
+
+### Response Fields
+
+| Field            | Type    | Description                                  |
+|------------------|---------|----------------------------------------------|
+| status_code      | integer | HTTP status code                             |
+| message          | string  | Response message                             |
+| data             | object  | Updated bridge details (number removed)      |
+| id               | integer | Bridge unique identifier                     |
+| name             | string  | Bridge name                                  |
+| description      | string  | Bridge description                           |
+| status           | string  | Bridge status                                |
+| documents_status | string  | Document verification status                 |
+| slug             | string  | Unique bridge slug identifier                |
+| numbers          | array   | Array of assigned numbers (empty after unlink)|
+| hub              | integer | Hub identifier                               |
+| region           | string  | Region code                                  |
+| organization     | object  | Organization details                         |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "message": "Invalid request parameters",
+  "error": "Detailed error description"
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Request completed successfully         |
+| 201         | Created - Number created successfully            |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing JWT token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Number not found                     |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'JWT your-jwt-token',
+  'Content-Type': 'application/json'
+};
+
+// Get all telephony numbers
+const getNumbers = async () => {
+  const response = await axios.get(
+    'https://unpod.dev/api/v2/platform/telephony/numbers/',
+    { headers }
+  );
+  console.log(`Total numbers: ${response.data.data.length}`);
+  response.data.data.forEach(num => {
+    console.log(`${num.number} - ${num.state} (${num.provider_details.name})`);
+  });
+  return response.data.data;
+};
+
+// Create a new telephony number
+const createNumber = async (number, providerId) => {
+  const response = await axios.post(
+    'https://unpod.dev/api/v2/platform/telephony/numbers/',
+    { number, provider_id: providerId },
+    { headers }
+  );
+  console.log(`Number created: ${response.data.data.number}`);
+  return response.data.data;
+};
+
+// Unlink a number from its bridge/agent
+const unlinkNumber = async (numberId) => {
+  const response = await axios.post(
+    `https://unpod.dev/api/v2/platform/telephony/numbers/${numberId}/unlink-provider/`,
+    {},
+    { headers }
+  );
+  console.log('Number unlinked successfully');
+  return response.data.data;
+};
+
+// Example usage
+getNumbers();
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'JWT your-jwt-token',
+    'Content-Type': 'application/json'
+}
+
+BASE_URL = 'https://unpod.dev/api/v2/platform/telephony/numbers'
+
+def get_numbers():
+    """Get all telephony numbers"""
+    response = requests.get(f'{BASE_URL}/', headers=headers)
+    data = response.json()
+
+    print(f"Total numbers: {len(data['data'])}")
+    for num in data['data']:
+        print(f"{num['number']} - {num['state']} ({num['provider_details']['name']})")
+
+    return data['data']
+
+def create_number(number: str, provider_id: int):
+    """Create a new telephony number"""
+    payload = {
+        'number': number,
+        'provider_id': provider_id
+    }
+    response = requests.post(f'{BASE_URL}/', headers=headers, json=payload)
+    data = response.json()
+
+    print(f"Number created: {data['data']['number']}")
+    return data['data']
+
+def unlink_number(number_id: int):
+    """Unlink a number from its bridge/agent"""
+    response = requests.post(
+        f'{BASE_URL}/{number_id}/unlink-provider/',
+        headers=headers
+    )
+    data = response.json()
+
+    print('Number unlinked successfully')
+    return data['data']
+
+# Example usage
+get_numbers()
+```
+
+```bash cURL
+# Get all telephony numbers
+curl -X GET "https://unpod.dev/api/v2/platform/telephony/numbers/" \
+  -H "Authorization: JWT your-jwt-token"
+
+# Create a new telephony number
+curl -X POST "https://unpod.dev/api/v2/platform/telephony/numbers/" \
+  -H "Authorization: JWT your-jwt-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "number": "+9966890765",
+    "provider_id": 1
+  }'
+
+# Unlink a number from its bridge/agent
+curl -X POST "https://unpod.dev/api/v2/platform/telephony/numbers/35/unlink-provider/" \
+  -H "Authorization: JWT your-jwt-token"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **E.164 Format**: Always use E.164 format for phone numbers (e.g., `+919240904631`)
+2. **Provider Selection**: Choose the appropriate provider based on your region and requirements
+3. **Number Management**: Regularly audit your numbers and unlink unused ones
+4. **Error Handling**: Always handle potential errors and implement retry logic
+5. **Security**: Keep JWT tokens secure and rotate them regularly
+6. **State Tracking**: Monitor number states (`ASSIGNED`, `NOT_ASSIGNED`) for proper management
+7. **Cleanup**: Unlink numbers before reassigning them to different bridges
+8. **Validation**: Validate phone numbers before creating them in the system
