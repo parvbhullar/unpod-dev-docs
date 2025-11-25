@@ -1,0 +1,208 @@
+# Call Logs API
+
+The Call Logs API allows you to retrieve call history logs for your organization. This endpoint provides comprehensive call details including duration, status, timestamps, and source/destination numbers.
+
+## Get Call Logs
+
+Retrieve the call history logs for the organization. Supports filtering, pagination, and provides details like call duration, status, start/end times, and source/destination numbers.
+
+```http
+GET /api/v2/platform/call-logs/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                          |
+|---------------|--------|----------|--------------------------------------|
+| Org-Handle    | string | Yes      | Organization domain handle           |
+| Authorization | string | Yes      | JWT token format: `JWT <token>`      |
+
+### Query Parameters
+
+| Name        | Type    | Required | Description                                      |
+|-------------|---------|----------|--------------------------------------------------|
+| page        | integer | No       | Page number (default: 1)                         |
+| page_size   | integer | No       | Number of call logs per page (default: 20)       |
+| start_date  | string  | No       | Filter calls starting from this date (ISO format)|
+| end_date    | string  | No       | Filter calls until this date (ISO format)        |
+| call_type   | string  | No       | Filter by call type: `inbound` / `outbound`      |
+| call_status | string  | No       | Filter by status: `completed` / `missed` / `failed` |
+
+### Example Request
+
+```http
+GET /api/v2/platform/call-logs/?page=1&page_size=20&call_type=outbound&call_status=completed
+Headers:
+  Org-Handle: your-organization-handle
+  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 1,
+  "status_code": 200,
+  "message": "Call logs fetched successfully",
+  "data": [
+    {
+      "id": "call_abc123def456",
+      "source_number": "+919876543210",
+      "destination_number": "+911234567890",
+      "call_type": "outbound",
+      "call_status": "completed",
+      "creation_time": "2025-11-18T10:30:00.000Z",
+      "start_time": "2025-11-18T10:30:05.000Z",
+      "end_time": "2025-11-18T10:35:30.000Z",
+      "call_duration": "0:05:25",
+      "end_reason": "customer-ended-call",
+      "bridge": 1
+    }
+  ],
+  "next": "https://domain.com/api/v2/platform/call-logs/?page=2",
+  "previous": null
+}
+```
+
+### Response Fields
+
+| Field              | Type    | Description                                           |
+|--------------------|---------|-------------------------------------------------------|
+| count              | integer | Total number of call logs                             |
+| status_code        | integer | HTTP status code                                      |
+| message            | string  | Response message                                      |
+| data               | array   | Array of call log objects                             |
+| id                 | string  | Unique call identifier                                |
+| source_number      | string  | Originating phone number                              |
+| destination_number | string  | Destination phone number                              |
+| call_type          | string  | Type of call: `inbound` or `outbound`                 |
+| call_status        | string  | Status: `completed`, `missed`, or `failed`            |
+| creation_time      | string  | Call creation timestamp (ISO 8601)                    |
+| start_time         | string  | Call start timestamp (ISO 8601)                       |
+| end_time           | string  | Call end timestamp (ISO 8601)                         |
+| call_duration      | string  | Duration in HH:MM:SS format                           |
+| end_reason         | string  | Reason for call ending                                |
+| bridge             | integer | Bridge identifier                                     |
+| next               | string  | URL for next page of results (null if last page)      |
+| previous           | string  | URL for previous page of results (null if first page) |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "message": "Invalid request parameters",
+  "error": "Detailed error description"
+}
+```
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing JWT token      |
+| 403         | Forbidden - Invalid organization handle          |
+| 404         | Not Found - Resource not found                   |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+### Fetch Call Logs (Node.js)
+
+```javascript
+const axios = require('axios');
+
+const fetchCallLogs = async () => {
+  const response = await axios.get('https://api.unpod.dev/api/v2/platform/call-logs/', {
+    headers: {
+      'Org-Handle': 'your-organization-handle',
+      'Authorization': 'JWT your-jwt-token'
+    },
+    params: {
+      page: 1,
+      page_size: 20,
+      call_type: 'outbound',
+      call_status: 'completed',
+      start_date: '2025-11-01T00:00:00.000Z',
+      end_date: '2025-11-18T23:59:59.000Z'
+    }
+  });
+
+  console.log(`Total calls: ${response.data.count}`);
+  response.data.data.forEach(call => {
+    console.log(`Call ${call.id}: ${call.source_number} -> ${call.destination_number} (${call.call_duration})`);
+  });
+};
+
+fetchCallLogs();
+```
+
+### Fetch Call Logs (Python)
+
+```python
+import requests
+from datetime import datetime, timedelta
+
+def fetch_call_logs():
+    url = 'https://api.unpod.dev/api/v2/platform/call-logs/'
+
+    headers = {
+        'Org-Handle': 'your-organization-handle',
+        'Authorization': 'JWT your-jwt-token'
+    }
+
+    params = {
+        'page': 1,
+        'page_size': 20,
+        'call_type': 'outbound',
+        'call_status': 'completed',
+        'start_date': '2025-11-01T00:00:00.000Z',
+        'end_date': '2025-11-18T23:59:59.000Z'
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+    data = response.json()
+
+    print(f"Total calls: {data['count']}")
+    for call in data['data']:
+        print(f"Call {call['id']}: {call['source_number']} -> {call['destination_number']} ({call['call_duration']})")
+
+fetch_call_logs()
+```
+
+### Fetch Call Logs (cURL)
+
+```bash
+curl -X GET "https://api.unpod.dev/api/v2/platform/call-logs/?page=1&page_size=20&call_type=outbound&call_status=completed" \
+  -H "Org-Handle: your-organization-handle" \
+  -H "Authorization: JWT your-jwt-token"
+```
+
+## Pagination
+
+The API uses cursor-based pagination. Use the `next` and `previous` URLs from the response to navigate between pages:
+
+```javascript
+// Fetch next page
+const nextPage = await axios.get(response.data.next);
+
+// Fetch previous page
+const previousPage = await axios.get(response.data.previous);
+```
+
+## Filtering Best Practices
+
+1. **Date Ranges**: Always specify both `start_date` and `end_date` for better performance
+2. **Page Size**: Use appropriate page sizes (20-100) to balance performance and data retrieval
+3. **Call Type**: Filter by `call_type` to separate inbound and outbound analytics
+4. **Call Status**: Use `call_status` to focus on specific outcomes (completed, missed, failed)
+5. **Pagination**: Implement proper pagination handling for large datasets
+
+## Best Practices
+
+1. **Rate Limiting**: Implement proper rate limiting and retry logic
+2. **Error Handling**: Always handle potential errors and edge cases
+3. **Caching**: Cache call logs data when appropriate to reduce API calls
+4. **Monitoring**: Monitor call patterns and trends for insights
+5. **Security**: Keep JWT tokens secure and rotate them regularly
+6. **Date Filters**: Use date filters to limit data retrieval and improve performance

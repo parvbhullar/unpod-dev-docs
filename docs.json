@@ -20,7 +20,10 @@
         "groups": [
           {
             "group": "Documentation",
-            "pages": ["introduction", "core-components"]
+            "pages": [
+              "introduction",
+              "core-components"
+            ]
           }
         ]
       },
@@ -34,6 +37,32 @@
               "numbers",
               "provider",
               "agents"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Execution",
+            "pages": [
+              "runs",
+              "tasks"
+            ]
+          },
+          {
+            "group": "Telephony",
+            "pages": [
+              "numbers",
+              "bridges",
+              "logs"
+            ]
+          },
+          {
+            "group": "Logs",
+            "pages": [
+              "calls"
             ]
           }
         ]
@@ -80,8 +109,7 @@
       "discord": "https://discord.gg/7kQ4ewNSHZ"
     }
   },
-   "redirects": {
+  "redirects": {
     "/": "/introduction"
   }
 }
-
