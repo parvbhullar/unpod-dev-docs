@@ -1,0 +1,171 @@
+---
+title: 'Authentication'
+description: 'Manage authentication for API access'
+---
+
+## Overview
+
+The Unpod SDK needs an access token to connect to the server successfully.
+
+This token holds the participant's identity, room name, capabilities, and permissions.
+
+Tokens are signed with your API secret to block forgery, and include an expiration time after which the server rejects them.
+
+<Note>
+Expiration time only impacts the initial connection, and not subsequent reconnects.
+</Note>
+
+## Authentication Method
+
+The Unpod API uses **API Key Authentication**:
+
+| Header        | Format          | Example                                        |
+|---------------|-----------------|------------------------------------------------|
+| Authorization | `Token <token>` | `Authorization: Token a1b2c3d4e5f6g7h8i9j0...` |
+
+## How to Get Your API Token
+
+Follow these steps to obtain your API token from the Unpod Dashboard:
+
+1. **Login** to the [Unpod Dashboard](https://unpod.dev/)
+2. After login, you'll be redirected to the **Hub** page
+3. On the **left sidebar**, click on the **Key** icon (Api Keys)
+4. You'll be redirected to the **API Keys** page
+5. Click **Generate New API Key**
+6. Copy and securely store your API token
+
+<Note>
+If you delete an API key, you can always generate a new one from the API Keys page.
+</Note>
+
+## Required Headers
+
+Depending on the endpoint, you may need additional headers:
+
+| Name          | Type   | Required       | Description                  |
+|---------------|--------|----------------|------------------------------|
+| Authorization | string | Yes            | `Token <your-api-token>`     |
+| Org-Handle    | string | Sometimes      | Organization domain handle   |
+| Product-ID    | string | Sometimes      | Product identifier           |
+| Content-Type  | string | For POST/PATCH | `application/json`           |
+
+## Example Request
+
+```http
+GET /api/v2/platform/telephony/bridges/
+Headers:
+  Authorization: Token a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
+  Org-Handle: your-org-handle
+  Product-ID: your-product-id
+```
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle',
+  'Product-ID': 'your-product-id',
+  'Content-Type': 'application/json'
+};
+
+// Make authenticated request
+const getBridges = async () => {
+  const response = await axios.get(
+    'https://unpod.dev/api/v2/platform/telephony/bridges/',
+    { headers }
+  );
+  return response.data;
+};
+
+const getCallLogs = async () => {
+  const response = await axios.get(
+    'https://unpod.dev/api/v2/platform/call-logs/',
+    { headers }
+  );
+  return response.data;
+};
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle',
+    'Product-ID': 'your-product-id',
+    'Content-Type': 'application/json'
+}
+
+def get_bridges():
+    """Get telephony bridges"""
+    response = requests.get(
+        'https://unpod.dev/api/v2/platform/telephony/bridges/',
+        headers=headers
+    )
+    return response.json()
+
+def get_call_logs():
+    """Get call logs"""
+    response = requests.get(
+        'https://unpod.dev/api/v2/platform/call-logs/',
+        headers=headers
+    )
+    return response.json()
+```
+
+```bash cURL
+curl -X GET "https://unpod.dev/api/v2/platform/telephony/bridges/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Product-ID: your-product-id"
+```
+
+</CodeGroup>
+
+## Error Responses
+
+### 401 - Unauthorized
+
+Returned when authentication credentials are missing or invalid.
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+### 403 - Forbidden
+
+Returned when the token is expired or access is denied.
+
+```json
+{
+  "status_code": 403,
+  "message": "Token has expired."
+}
+```
+
+### 400 - Bad Request
+
+Returned when required headers are missing.
+
+```json
+{
+  "status_code": 400,
+  "message": "Org-Handle header is required."
+}
+```
+
+## Best Practices
+
+1. **Secure Storage**: Never expose your API tokens in client-side code or public repositories
+2. **HTTPS Only**: Always use HTTPS for all API requests
+3. **Header Validation**: Always include required headers (Org-Handle, Product-ID) where needed
+4. **Error Handling**: Implement proper error handling for authentication failures
+5. **Rotation**: Rotate API tokens periodically for enhanced security

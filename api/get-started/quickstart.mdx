@@ -1,0 +1,248 @@
+---
+title: 'Quickstart'
+description: 'Get started with Unpod using the Dashboard UI or API'
+---
+
+## Overview
+
+Unpod provides two ways to interact with the platform:
+
+| Method | Description | Best For |
+|--------|-------------|----------|
+| **Dashboard** | Visual interface at [unpod.dev](https://unpod.dev) | Manual setup, configuration, monitoring |
+| **REST API** | Programmatic access | Automation, integrations, custom workflows |
+
+---
+
+## Part 1: Dashboard UI Setup
+
+### Step 1: Get Access
+
+1. Open [https://unpod.dev/](https://unpod.dev/)
+2. Click on **Request a Call Back**
+3. Fill in the required fields and click **Submit**
+4. You will receive login credentials via email
+
+### Step 2: Login to Dashboard
+
+1. Open [https://unpod.dev/](https://unpod.dev/)
+2. Enter your **Email** and **Password**
+3. Click **Login**
+4. You'll be redirected to the main dashboard
+
+### Step 3: Understand Core Components
+
+Unpod has 4 core building blocks:
+
+| Component | Purpose |
+|-----------|---------|
+| **Numbers** | Virtual phone numbers (entry points for calls) |
+| **Providers** | SIP trunking services (LiveKit, Vapi, Twilio) |
+| **Bridges** | Routing hubs that connect Numbers, Providers & Agents |
+| **Agents** | AI voice agents that handle conversations |
+
+### Step 4: Create a Bridge
+
+1. Go to **Telephony** → **Bridges**
+2. Click **Create Bridge**
+3. Enter:
+   - **Name**: Bridge identifier (e.g., "Sales Bridge")
+   - **Description**: Optional details
+   - **Region**: Select region (`IN`, `US`, etc.)
+4. Click **Create**
+
+### Step 5: Add a Number
+
+1. Go to **Telephony** → **Numbers**
+2. Click **Add Number**
+3. Enter phone number in E.164 format (e.g., `+919876543210`)
+4. Select **Provider**
+5. Click **Save**
+
+### Step 6: Configure Provider
+
+1. Go to **Telephony** → **Providers**
+2. Select your provider (LiveKit, Vapi, Twilio)
+3. Click **Configure**
+4. Enter credentials from your provider dashboard:
+   - **Name**: Configuration name
+   - **API Key**: Your provider API key
+   - **API Secret**: Your provider API secret
+   - **Base URL**: Provider base URL (if required)
+   - **SIP URL**: SIP endpoint (if required)
+5. Click **Verify and Configure**
+
+### Step 7: Assign Number to Bridge
+
+1. Go to your **Bridge** → **Settings**
+2. Under **Numbers**, click **Add**
+3. Select the number you created
+4. Select the provider configuration
+5. Configure:
+   - **Concurrency Channels**: Number of parallel calls
+   - **Agent**: Select AI agent (if using)
+6. Click **Save**
+
+### Step 8: Create an Agent (Optional)
+
+1. Go to **Agents**
+2. Click **Create Agent**
+3. Configure:
+   - **Name**: Agent name
+   - **System Prompt**: Define behavior and personality
+   - **Voice**: Select voice provider and voice
+   - **Model**: Select AI model
+4. Click **Save**
+
+### Step 9: Publish
+
+Click **Publish** button at the top of the dashboard to make your configuration live.
+
+<Note>
+Your setup is now ready for inbound and outbound calls!
+</Note>
+
+---
+
+## Part 2: API Setup
+
+### Base URL
+
+```
+https://unpod.dev/
+```
+
+### Authentication
+
+Include this header in all requests:
+
+```http
+Authorization: Token your-api-token
+```
+
+### Required Headers
+
+| Header        | Required       | Description                  |
+|---------------|----------------|------------------------------|
+| Authorization | Yes            | `Token <your-api-token>`     |
+| Org-Handle    | Sometimes      | Organization domain handle   |
+| Product-ID    | Sometimes      | Product identifier           |
+| Content-Type  | For POST/PATCH | `application/json`           |
+
+---
+
+## Available API Endpoints
+
+### Telephony - Bridges
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/telephony/bridges/` | List all bridges |
+| `POST` | `/telephony/bridges/` | Create a new bridge |
+| `GET` | `/telephony/bridges/{slug}/` | Get bridge by slug |
+| `PATCH` | `/telephony/bridges/{slug}/` | Update a bridge |
+| `DELETE` | `/telephony/bridges/{slug}/` | Delete a bridge |
+| `POST` | `/telephony/bridges/{slug}/connect-provider/` | Assign provider to bridge |
+| `POST` | `/telephony/bridges/{slug}/disconnect-provider/` | Remove provider from bridge |
+
+### Telephony - Numbers
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/telephony/numbers/` | List all numbers |
+
+### Telephony - Providers
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/telephony/providers/` | List all providers |
+
+### Provider Configurations
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/telephony/provider-configurations/` | List all configurations |
+| `POST` | `/telephony/provider-configurations/` | Create configuration |
+| `GET` | `/telephony/provider-configurations/{id}/` | Get configuration by ID |
+| `PATCH` | `/telephony/provider-configurations/{id}/` | Update configuration |
+| `DELETE` | `/telephony/provider-configurations/{id}/` | Delete configuration |
+
+### Call Logs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/call-logs/` | Get call history logs |
+
+### Tasks (Agent Tasks)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/agents/{handle}/tasks/` | Get tasks for an agent |
+| `GET` | `/spaces/{space_token}/tasks/` | Get tasks for a space |
+| `POST` | `/spaces/{space_token}/tasks/` | Create a new task |
+
+### Runs (Execution)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/spaces/{space_token}/runs/` | List all runs |
+| `GET` | `/spaces/{space_token}/runs/{run_id}/tasks/` | Get tasks for a run |
+
+---
+
+## Quick API Examples
+
+### List All Bridges
+
+```bash
+curl -X GET "https://unpod.dev/api/v2/platform/telephony/bridges/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Product-ID: your-product-id"
+```
+
+### Create a Bridge
+
+```bash
+curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Bridge",
+    "description": "Production bridge",
+    "region": "IN"
+  }'
+```
+
+### Get Call Logs
+
+```bash
+curl -X GET "https://unpod.dev/api/v2/platform/call-logs/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
+```
+
+### Get Providers
+
+```bash
+curl -X GET "https://unpod.dev/api/v2/platform/telephony/providers/" \
+  -H "Authorization: Token your-api-token"
+```
+
+---
+
+## Next Steps
+
+- [Authentication](/api/get-started/authentication) — Learn about authentication methods
+- [Bridges API](/api/telephony/bridges) — Full bridges documentation
+- [Numbers API](/api/telephony/numbers) — Manage phone numbers
+- [Provider Configurations](/api/provider/configurations) — Configure providers
+
+---
+
+## Need Help?
+
+- [Discord Community](https://discord.gg/7kQ4ewNSHZ)
+- [YouTube Channel](https://www.youtube.com/@unpodai)
+- [GitHub](https://github.com/parvbhullar)

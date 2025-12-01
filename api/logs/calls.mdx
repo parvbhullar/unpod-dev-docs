@@ -15,7 +15,7 @@ GET /api/v2/platform/call-logs/
 | Name          | Type   | Required | Description                          |
 |---------------|--------|----------|--------------------------------------|
 | Org-Handle    | string | Yes      | Organization domain handle           |
-| Authorization | string | Yes      | JWT token format: `JWT <token>`      |
+| Authorization | string | Yes      | API Key format: `Token <token>`      |
 
 ### Query Parameters
 
@@ -34,7 +34,7 @@ GET /api/v2/platform/call-logs/
 GET /api/v2/platform/call-logs/?page=1&page_size=20&call_type=outbound&call_status=completed
 Headers:
   Org-Handle: your-organization-handle
-  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Authorization: Token your-api-token
 ```
 
 ### Success Response (200)
@@ -59,32 +59,33 @@ Headers:
       "bridge": 1
     }
   ],
-  "next": "https://domain.com/api/v2/platform/call-logs/?page=2",
-  "previous": null
 }
 ```
 
 ### Response Fields
 
-| Field              | Type    | Description                                           |
-|--------------------|---------|-------------------------------------------------------|
-| count              | integer | Total number of call logs                             |
-| status_code        | integer | HTTP status code                                      |
-| message            | string  | Response message                                      |
-| data               | array   | Array of call log objects                             |
-| id                 | string  | Unique call identifier                                |
-| source_number      | string  | Originating phone number                              |
-| destination_number | string  | Destination phone number                              |
-| call_type          | string  | Type of call: `inbound` or `outbound`                 |
-| call_status        | string  | Status: `completed`, `missed`, or `failed`            |
-| creation_time      | string  | Call creation timestamp (ISO 8601)                    |
-| start_time         | string  | Call start timestamp (ISO 8601)                       |
-| end_time           | string  | Call end timestamp (ISO 8601)                         |
-| call_duration      | string  | Duration in HH:MM:SS format                           |
-| end_reason         | string  | Reason for call ending                                |
-| bridge             | integer | Bridge identifier                                     |
-| next               | string  | URL for next page of results (null if last page)      |
-| previous           | string  | URL for previous page of results (null if first page) |
+| Field       | Type    | Description                 |
+|-------------|---------|-----------------------------|
+| count       | integer | Total number of call logs   |
+| status_code | integer | HTTP status code            |
+| message     | string  | Response message            |
+| data        | array   | Array of call log objects   |
+
+### Call Log Object Fields
+
+| Field              | Type    | Description                                |
+|--------------------|---------|--------------------------------------------|
+| id                 | string  | Unique call identifier                     |
+| source_number      | string  | Originating phone number                   |
+| destination_number | string  | Destination phone number                   |
+| call_type          | string  | Type of call: `inbound` or `outbound`      |
+| call_status        | string  | Status: `completed`, `missed`, or `failed` |
+| creation_time      | string  | Call creation timestamp (ISO 8601)         |
+| start_time         | string  | Call start timestamp (ISO 8601)            |
+| end_time           | string  | Call end timestamp (ISO 8601)              |
+| call_duration      | string  | Duration in HH:MM:SS format                |
+| end_reason         | string  | Reason for call ending                     |
+| bridge             | integer | Bridge identifier                          |
 
 ### Error Response (400 — Bad Request)
 
@@ -100,7 +101,7 @@ Headers:
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 400         | Bad Request - Invalid parameters provided        |
-| 401         | Unauthorized - Invalid or missing JWT token      |
+| 401         | Unauthorized - Invalid or missing API token      |
 | 403         | Forbidden - Invalid organization handle          |
 | 404         | Not Found - Resource not found                   |
 | 500         | Internal Server Error - Server-side error        |
@@ -116,7 +117,7 @@ const fetchCallLogs = async () => {
   const response = await axios.get('https://unpod.dev/api/v2/platform/call-logs/', {
     headers: {
       'Org-Handle': 'your-organization-handle',
-      'Authorization': 'JWT your-jwt-token'
+      'Authorization': 'Token your-api-token'
     },
     params: {
       page: 1,
@@ -146,7 +147,7 @@ def fetch_call_logs():
 
     headers = {
         'Org-Handle': 'your-organization-handle',
-        'Authorization': 'JWT your-jwt-token'
+        'Authorization': 'Token your-api-token'
     }
 
     params = {
@@ -171,7 +172,7 @@ fetch_call_logs()
 ```bash cURL
 curl -X GET "https://unpod.dev/api/v2/platform/call-logs/?page=1&page_size=20&call_type=outbound&call_status=completed" \
   -H "Org-Handle: your-organization-handle" \
-  -H "Authorization: JWT your-jwt-token"
+  -H "Authorization: Token your-api-token"
 ```
 
 </CodeGroup>
@@ -214,5 +215,5 @@ previous_page = requests.get(data['previous'])
 2. **Error Handling**: Always handle potential errors and edge cases
 3. **Caching**: Cache call logs data when appropriate to reduce API calls
 4. **Monitoring**: Monitor call patterns and trends for insights
-5. **Security**: Keep JWT tokens secure and rotate them regularly
+5. **Security**: Keep API tokens secure and rotate them regularly
 6. **Date Filters**: Use date filters to limit data retrieval and improve performance

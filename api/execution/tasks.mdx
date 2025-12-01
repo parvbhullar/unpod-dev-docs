@@ -1,6 +1,22 @@
 # Tasks API
 
-The Tasks API allows you to create, manage, and monitor individual tasks within your execution runs. Tasks represent individual units of work assigned to agents/pilots.
+The Tasks API allows you to manage and retrieve tasks in your Unpod platform. Tasks represent individual execution units within a run or space.
+
+## How to Get Your Space Token
+
+Follow these steps to obtain your Space Token from the Unpod Dashboard:
+
+1. **Login** to the [Unpod Dashboard](https://unpod.ai/)
+2. On the **left sidebar**, click on the **Conversation** tab
+3. Click on the **Settings** icon
+4. You'll see the **Space Token** option
+5. Click on it to **copy** the Space Token
+
+<Note>
+Each space has a unique token. Make sure you're using the correct space token for your API requests.
+</Note>
+
+---
 
 ## Get Tasks by Agent Handle
 
@@ -12,15 +28,15 @@ GET /api/v2/platform/agents/{handle}/tasks/
 
 ### Path Parameters
 
-| Name   | Type   | Required | Description                              |
-|--------|--------|----------|------------------------------------------|
-| handle | string | Yes      | Unique handle/identifier of the agent    |
+| Name   | Type   | Required | Description                           |
+|--------|--------|----------|---------------------------------------|
+| handle | string | Yes      | Unique handle/identifier of the agent |
 
 ### Headers
 
 | Name          | Type   | Required | Description                     |
 |---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+| Authorization | string | Yes      | API Key format: `Token <token>` |
 | Content-Type  | string | Yes      | `application/json`              |
 
 ### Example Request
@@ -28,7 +44,7 @@ GET /api/v2/platform/agents/{handle}/tasks/
 ```http
 GET /api/v2/platform/agents/sales-agent-v1/tasks/
 Headers:
-  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Authorization: Token your-api-token
   Content-Type: application/json
 ```
 
@@ -84,35 +100,39 @@ Headers:
 
 ### Response Fields
 
-| Field           | Type    | Description                                      |
-|-----------------|---------|--------------------------------------------------|
-| count           | integer | Total number of tasks                            |
-| status_code     | integer | HTTP status code                                 |
-| message         | string  | Response message                                 |
-| data            | array   | Array of task objects                            |
-| _id             | string  | Internal task document ID                        |
-| space_id        | string  | Space identifier                                 |
-| thread_id       | string  | Thread identifier (null if not applicable)       |
-| user            | string  | User ID who created the task                     |
-| user_org_id     | string  | Organization ID of the user                      |
-| user_info       | object  | User details (id, email, full_name, token)       |
-| created         | string  | Task creation timestamp (ISO 8601)               |
-| modified        | string  | Last modified timestamp (ISO 8601)               |
-| task_id         | string  | Unique task identifier                           |
-| run_id          | string  | Parent run identifier                            |
-| collection_ref  | string  | Reference to the data collection                 |
-| task            | object  | Task definition with objective                   |
-| input           | object  | Input data for the task (contact details, etc.)  |
-| output          | object  | Task output (empty if pending)                   |
-| attachments     | array   | List of attachments                              |
-| assignee        | string  | Agent handle assigned to the task                |
-| status          | string  | Task status: `pending`, `running`, `completed`, `failed` |
-| execution_type  | string  | Type of execution: `call`, `email`, etc.         |
-| ref_id          | string  | Reference ID linking to input data               |
+| Field       | Type    | Description           |
+|-------------|---------|-----------------------|
+| count       | integer | Total number of tasks |
+| status_code | integer | HTTP status code      |
+| message     | string  | Response message      |
+| data        | array   | Array of task objects |
 
-### Error Responses
+### Task Object Fields
 
-**206 — Tasks fetch failed**
+| Field          | Type    | Description                                   |
+|----------------|---------|-----------------------------------------------|
+| _id            | string  | Internal task document ID                     |
+| space_id       | string  | Space identifier                              |
+| thread_id      | string  | Thread identifier (null if not applicable)    |
+| user           | string  | User ID who created the task                  |
+| user_org_id    | string  | Organization ID of the user                   |
+| user_info      | object  | User details (id, email, full_name, token)    |
+| created        | string  | Task creation timestamp                       |
+| modified       | string  | Last modified timestamp                       |
+| task_id        | string  | Unique task identifier                        |
+| run_id         | string  | Parent run identifier                         |
+| collection_ref | string  | Reference to the data collection              |
+| task           | object  | Task definition with objective                |
+| input          | object  | Input data for the task                       |
+| output         | object  | Task output (empty if pending)                |
+| attachments    | array   | List of attachments                           |
+| assignee       | string  | Agent handle assigned to the task             |
+| status         | string  | Task status: `pending`, `completed`, `failed` |
+| execution_type | string  | Type of execution: `call`, `email`, etc.      |
+| ref_id         | string  | Reference ID linking to input data            |
+
+### Error Response (206 — Tasks Fetch Failed)
+
 ```json
 {
   "message": "Error fetching tasks",
@@ -120,7 +140,8 @@ Headers:
 }
 ```
 
-**404 — Agent not found**
+### Error Response (404 — Agent Not Found)
+
 ```json
 {
   "message": "Agent not found"
@@ -139,30 +160,30 @@ GET /api/v2/platform/spaces/{space_token}/tasks/
 
 ### Path Parameters
 
-| Name        | Type   | Required | Description                            |
-|-------------|--------|----------|----------------------------------------|
+| Name        | Type   | Required | Description                           |
+|-------------|--------|----------|---------------------------------------|
 | space_token | string | Yes      | Public token identifying the workspace |
 
-### Query Parameters
+### Query Parameters (Optional)
 
-| Name      | Type    | Required | Description                          |
-|-----------|---------|----------|--------------------------------------|
-| page      | integer | No       | Page number (default: 1)             |
-| page_size | integer | No       | Number of tasks per page (default: 20) |
+| Name      | Type | Required | Description                        |
+|-----------|------|----------|------------------------------------|
+| page      | int  | No       | Page number (default = 1)          |
+| page_size | int  | No       | Number of tasks per page (default = 20) |
 
 ### Headers
 
 | Name          | Type   | Required | Description                     |
 |---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+| Authorization | string | Yes      | API Key format: `Token <token>` |
 | Content-Type  | string | Yes      | `application/json`              |
 
 ### Example Request
 
 ```http
-GET /api/v2/platform/spaces/space_abc123xyz/tasks/?page=1&page_size=20
+GET /api/v2/platform/spaces/your-space-token/tasks/?page=1&page_size=20
 Headers:
-  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Authorization: Token your-api-token
   Content-Type: application/json
 ```
 
@@ -205,8 +226,8 @@ Headers:
       },
       "output": {
         "call_id": "019aa6a9-809f-7ddb-b110-7a16167cb632",
-        "customer": "Rajesh Kumar",
-        "contact_number": "+919988776655",
+        "customer": "Cust 1",
+        "contact_number": "70000380188",
         "call_end_reason": "customer-ended-call",
         "recording_url": "https://store.unpod.ai/media/private/high-call-recordings/...",
         "transcript": [
@@ -226,17 +247,17 @@ Headers:
         "start_time": "2025-11-21 13:45:20",
         "end_time": "2025-11-21 13:46:36",
         "assistant_number": "+919949883072",
-        "call_summary": "AI representative called regarding inquiry about their premium project...",
+        "call_summary": "An AI representative called regarding the premium project inquiry...",
         "duration": 76.769,
         "cost": 0.139,
         "post_call_data": {
           "classification": {
             "labels": ["Interested"],
-            "summary": "The agent called to discuss a premium project. The user expressed interest."
+            "summary": "The agent called to discuss the project. The user expressed interest."
           },
           "summary": {
             "status": "Call Back",
-            "summary": "The call involved an introduction and inquiry...",
+            "summary": "The call involved an introduction and inquiry about the project.",
             "name": "N/A",
             "contact": "N/A",
             "callback_datetime": "N/A",
@@ -301,7 +322,59 @@ Headers:
 }
 ```
 
-### Error Response (206 — Tasks fetch failed)
+### Response Fields
+
+| Field       | Type    | Description           |
+|-------------|---------|-----------------------|
+| count       | integer | Total number of tasks |
+| status_code | integer | HTTP status code      |
+| message     | string  | Response message      |
+| data        | array   | Array of task objects |
+
+### Task Object Fields
+
+| Field          | Type    | Description                                   |
+|----------------|---------|-----------------------------------------------|
+| _id            | string  | Internal task document ID                     |
+| space_id       | string  | Space identifier                              |
+| thread_id      | string  | Thread identifier (null if not applicable)    |
+| user           | string  | User ID who created the task                  |
+| user_org_id    | string  | Organization ID of the user                   |
+| user_info      | object  | User details (id, email, full_name, token)    |
+| created        | string  | Task creation timestamp                       |
+| modified       | string  | Last modified timestamp                       |
+| task_id        | string  | Unique task identifier                        |
+| run_id         | string  | Parent run identifier                         |
+| collection_ref | string  | Reference to the data collection              |
+| task           | object  | Task definition with objective                |
+| input          | object  | Input data for the task                       |
+| output         | object  | Task output (empty if pending)                |
+| attachments    | array   | List of attachments                           |
+| assignee       | string  | Agent handle assigned to the task             |
+| status         | string  | Task status: `pending`, `completed`, `failed` |
+| execution_type | string  | Type of execution: `call`, `email`, etc.      |
+| ref_id         | string  | Reference ID linking to input data            |
+
+### Output Object Fields
+
+| Field            | Type   | Description                              |
+|------------------|--------|------------------------------------------|
+| call_id          | string | Unique call identifier                   |
+| customer         | string | Customer name                            |
+| contact_number   | string | Contact phone number                     |
+| call_end_reason  | string | Reason for call ending                   |
+| recording_url    | string | URL to call recording                    |
+| transcript       | array  | Array of conversation messages           |
+| start_time       | string | Call start timestamp                     |
+| end_time         | string | Call end timestamp                       |
+| assistant_number | string | Outbound phone number used               |
+| call_summary     | string | AI-generated summary of the call         |
+| duration         | number | Call duration in seconds                 |
+| cost             | number | Cost of the call in USD                  |
+| post_call_data   | object | Post-call analysis data                  |
+| metadata         | object | Additional metadata (cost, type, usage)  |
+
+### Error Response (206 — Tasks Fetch Failed)
 
 ```json
 {
@@ -322,48 +395,32 @@ POST /api/v2/platform/spaces/{space_token}/tasks/
 
 ### Path Parameters
 
-| Name        | Type   | Required | Description                                      |
-|-------------|--------|----------|--------------------------------------------------|
-| space_token | string | Yes      | Public token of the space where task is created  |
+| Name        | Type   | Required | Description                                    |
+|-------------|--------|----------|------------------------------------------------|
+| space_token | string | Yes      | Public token of the space where task is created |
 
 ### Headers
 
 | Name          | Type   | Required | Description                     |
 |---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+| Authorization | string | Yes      | API Key format: `Token <token>` |
 | Content-Type  | string | Yes      | `application/json`              |
 
 ### Request Body
 
-| Field     | Type   | Required | Description                                           |
-|-----------|--------|----------|-------------------------------------------------------|
-| pilot     | string | Yes      | Agent/pilot handle to assign the task                 |
-| documents | array  | Yes      | Array of document objects with contact/task details   |
-| context   | string | No       | Additional context or instructions for the task       |
-| schedule  | object | No       | Scheduling configuration (`type`: `now` or `later`)   |
-
-### Document Object Fields
-
-| Field            | Type   | Description                              |
-|------------------|--------|------------------------------------------|
-| name             | string | Contact name                             |
-| email            | string | Contact email address                    |
-| number           | string | Primary contact number                   |
-| contact_number   | string | Contact phone number                     |
-| alternate_number | string | Alternate phone number                   |
-| context          | string | Task-specific context                    |
-| labels           | array  | Array of labels/tags                     |
-| title            | string | Document title                           |
-| description      | string | Document description                     |
-| document_id      | string | Unique document identifier               |
-| created          | string | Document creation timestamp (ISO 8601)   |
+| Field     | Type   | Required | Description                                |
+|-----------|--------|----------|--------------------------------------------|
+| pilot     | string | Yes      | Agent/pilot handle to assign the task      |
+| documents | array  | Yes      | Array of document objects with task data   |
+| context   | string | No       | Additional context for the task            |
+| schedule  | object | No       | Schedule configuration (type: "now")       |
 
 ### Example Request
 
 ```http
-POST /api/v2/platform/spaces/space_abc123xyz/tasks/
+POST /api/v2/platform/spaces/your-space-token/tasks/
 Headers:
-  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Authorization: Token your-api-token
   Content-Type: application/json
 
 Body:
@@ -371,14 +428,18 @@ Body:
   "pilot": "space-agent-f1o3qjm1y7q1avvuynv4vprb1",
   "documents": [
     {
-      "name": "Xyz",
-      "time": "null",
-      "email": "xyz@domain.com",
-      "number": "1234567890",
-      "context": "trial",
-      "multi_select": "multi",
+      "name": "John Doe",
+      "time": null,
+      "email": "john@example.com",
       "contact_number": "1234567890",
       "alternate_number": "9876543210",
+      "occupation": "Developer",
+      "company_name": "TechCorp",
+      "address": "123/456 Main Street",
+      "about": "Software Developer",
+      "number": "1234567890",
+      "context": "Follow up call",
+      "multi_select": "multi",
       "created": "2025-10-30T05:44:56",
       "labels": ["Interested"],
       "title": "Document Title",
@@ -392,6 +453,24 @@ Body:
   }
 }
 ```
+
+### Document Object Fields
+
+| Field            | Type   | Required | Description                       |
+|------------------|--------|----------|-----------------------------------|
+| name             | string | Yes      | Contact name                      |
+| email            | string | No       | Contact email                     |
+| contact_number   | string | Yes      | Primary contact number            |
+| alternate_number | string | No       | Alternate contact number          |
+| occupation       | string | No       | Contact's occupation              |
+| company_name     | string | No       | Contact's company                 |
+| address          | string | No       | Contact's address                 |
+| about            | string | No       | About the contact                 |
+| context          | string | No       | Additional context for the call   |
+| labels           | array  | No       | Labels/tags for the document      |
+| title            | string | No       | Document title                    |
+| description      | string | No       | Document description              |
+| document_id      | string | No       | Unique document identifier        |
 
 ### Success Response (200)
 
@@ -411,16 +490,21 @@ Body:
 
 ### Response Fields
 
-| Field      | Type   | Description                           |
-|------------|--------|---------------------------------------|
-| status_code| integer| HTTP status code                      |
-| message    | string | Response message                      |
-| data       | object | Created task details                  |
-| run_id     | string | Generated run identifier              |
-| space_id   | string | Space identifier                      |
-| status     | string | Task status (initially `pending`)     |
-| created    | string | Task creation timestamp (ISO 8601)    |
-| _id        | string | Internal task document ID             |
+| Field       | Type    | Description          |
+|-------------|---------|----------------------|
+| status_code | integer | HTTP status code     |
+| message     | string  | Response message     |
+| data        | object  | Created task details |
+
+### Data Object Fields
+
+| Field    | Type   | Description                       |
+|----------|--------|-----------------------------------|
+| run_id   | string | Created run identifier            |
+| space_id | string | Space identifier                  |
+| status   | string | Task status (initially `pending`) |
+| created  | string | Task creation timestamp           |
+| _id      | string | Internal task document ID         |
 
 ### Error Response (206 — Validation / Creation Failed)
 
@@ -437,10 +521,10 @@ Body:
 
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
-| 200         | Success - Request completed successfully         |
+| 200         | Success - Data fetched/created successfully      |
 | 206         | Partial Content - Business logic error occurred  |
 | 400         | Bad Request - Invalid parameters provided        |
-| 401         | Unauthorized - Invalid or missing JWT token      |
+| 401         | Unauthorized - Invalid or missing API token      |
 | 403         | Forbidden - Access denied to the resource        |
 | 404         | Not Found - Agent or Space not found             |
 | 500         | Internal Server Error - Server-side error        |
@@ -452,156 +536,120 @@ Body:
 ```javascript Node.js
 const axios = require('axios');
 
-// Get tasks by agent handle
-const fetchTasksByAgent = async (agentHandle) => {
-  const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/agents/${agentHandle}/tasks/`,
-    {
-      headers: {
-        'Authorization': 'JWT your-jwt-token',
-        'Content-Type': 'application/json'
-      }
-    }
-  );
-
-  console.log(`Total tasks: ${response.data.count}`);
-  response.data.data.forEach(task => {
-    console.log(`Task ${task.task_id}: ${task.status} - ${task.input.name}`);
-  });
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Content-Type': 'application/json'
 };
 
-// Get tasks by space token
-const fetchTasksBySpace = async (spaceToken, page = 1, pageSize = 20) => {
+// Get tasks by agent handle
+const getTasksByAgent = async (agentHandle) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/tasks/`,
-    {
-      headers: {
-        'Authorization': 'JWT your-jwt-token',
-        'Content-Type': 'application/json'
-      },
-      params: { page, page_size: pageSize }
-    }
+    `https://unpod.dev/api/v2/platform/agents/${agentHandle}/tasks/`,
+    { headers }
   );
-
   console.log(`Total tasks: ${response.data.count}`);
   return response.data.data;
 };
 
-// Create a new task
-const createTask = async (spaceToken, pilotHandle, documents, context) => {
+// Get tasks by space token with pagination
+const getTasksBySpace = async (spaceToken, page = 1, pageSize = 20) => {
+  const response = await axios.get(
+    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/tasks/?page=${page}&page_size=${pageSize}`,
+    { headers }
+  );
+  console.log(`Total tasks: ${response.data.count}`);
+  return response.data.data;
+};
+
+// Create a task in a space
+const createTask = async (spaceToken, pilot, documents, context) => {
   const response = await axios.post(
     `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/tasks/`,
     {
-      pilot: pilotHandle,
-      documents: documents,
-      context: context,
+      pilot,
+      documents,
+      context,
       schedule: { type: 'now' }
     },
-    {
-      headers: {
-        'Authorization': 'JWT your-jwt-token',
-        'Content-Type': 'application/json'
-      }
-    }
+    { headers }
   );
-
   console.log(`Task created: ${response.data.data.run_id}`);
   return response.data.data;
 };
 
 // Example usage
-fetchTasksByAgent('sales-agent-v1');
+getTasksByAgent('sales-agent-v1');
 ```
 
 ```python Python
 import requests
 
-def fetch_tasks_by_agent(agent_handle: str):
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Content-Type': 'application/json'
+}
+
+def get_tasks_by_agent(agent_handle: str):
     """Get tasks by agent handle"""
     url = f'https://unpod.dev/api/v2/platform/agents/{agent_handle}/tasks/'
-
-    headers = {
-        'Authorization': 'JWT your-jwt-token',
-        'Content-Type': 'application/json'
-    }
-
     response = requests.get(url, headers=headers)
     data = response.json()
-
-    print(f"Total tasks: {data['count']}")
-    for task in data['data']:
-        print(f"Task {task['task_id']}: {task['status']} - {task['input']['name']}")
-
-def fetch_tasks_by_space(space_token: str, page: int = 1, page_size: int = 20):
-    """Get tasks by space token"""
-    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/tasks/'
-
-    headers = {
-        'Authorization': 'JWT your-jwt-token',
-        'Content-Type': 'application/json'
-    }
-
-    params = {'page': page, 'page_size': page_size}
-
-    response = requests.get(url, headers=headers, params=params)
-    data = response.json()
-
     print(f"Total tasks: {data['count']}")
     return data['data']
 
-def create_task(space_token: str, pilot_handle: str, documents: list, context: str):
-    """Create a new task in a space"""
+def get_tasks_by_space(space_token: str, page: int = 1, page_size: int = 20):
+    """Get tasks by space token with pagination"""
     url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/tasks/'
+    params = {'page': page, 'page_size': page_size}
+    response = requests.get(url, headers=headers, params=params)
+    data = response.json()
+    print(f"Total tasks: {data['count']}")
+    return data['data']
 
-    headers = {
-        'Authorization': 'JWT your-jwt-token',
-        'Content-Type': 'application/json'
-    }
-
+def create_task(space_token: str, pilot: str, documents: list, context: str):
+    """Create a task in a space"""
+    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/tasks/'
     payload = {
-        'pilot': pilot_handle,
+        'pilot': pilot,
         'documents': documents,
         'context': context,
         'schedule': {'type': 'now'}
     }
-
     response = requests.post(url, headers=headers, json=payload)
     data = response.json()
-
     print(f"Task created: {data['data']['run_id']}")
     return data['data']
 
 # Example usage
-fetch_tasks_by_agent('sales-agent-v1')
+get_tasks_by_agent('sales-agent-v1')
 ```
 
 ```bash cURL
 # Get tasks by agent handle
 curl -X GET "https://unpod.dev/api/v2/platform/agents/sales-agent-v1/tasks/" \
-  -H "Authorization: JWT your-jwt-token" \
+  -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json"
 
 # Get tasks by space token with pagination
-curl -X GET "https://unpod.dev/api/v2/platform/spaces/space_abc123xyz/tasks/?page=1&page_size=20" \
-  -H "Authorization: JWT your-jwt-token" \
+curl -X GET "https://unpod.dev/api/v2/platform/spaces/your-space-token/tasks/?page=1&page_size=20" \
+  -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json"
 
-# Create a new task
-curl -X POST "https://unpod.dev/api/v2/platform/spaces/space_abc123xyz/tasks/" \
-  -H "Authorization: JWT your-jwt-token" \
+# Create a task in a space
+curl -X POST "https://unpod.dev/api/v2/platform/spaces/your-space-token/tasks/" \
+  -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json" \
   -d '{
-    "pilot": "space-agent-f1o3qjm1y7q1avvuynv4vprb1",
+    "pilot": "sales-agent-v1",
     "documents": [
       {
         "name": "John Doe",
-        "email": "john@example.com",
         "contact_number": "1234567890",
-        "context": "Sales follow-up",
-        "document_id": "doc123"
+        "email": "john@example.com",
+        "context": "Follow up call"
       }
     ],
-    "context": "Call the lead and discuss requirements.",
+    "context": "Call the lead and discuss project requirements.",
     "schedule": {"type": "now"}
   }'
 ```
@@ -610,11 +658,8 @@ curl -X POST "https://unpod.dev/api/v2/platform/spaces/space_abc123xyz/tasks/" \
 
 ## Best Practices
 
-1. **Pagination**: Use pagination parameters for spaces with many tasks to improve performance
-2. **Agent Handle**: Use meaningful and consistent agent handles for better task organization
-3. **Context**: Provide clear context in task creation for better execution outcomes
-4. **Error Handling**: Always handle potential errors and implement retry logic
-5. **Document Structure**: Include all relevant contact information in documents
-6. **Scheduling**: Use `schedule.type: "now"` for immediate execution or configure for later
-7. **Security**: Keep JWT tokens secure and rotate them regularly
-8. **Monitoring**: Track task completion rates and agent performance metrics
+1. **Pagination**: Use page and page_size parameters for efficient data retrieval
+2. **Agent Handle**: Ensure you're using the correct agent handle for task assignment
+3. **Document Fields**: Include all required document fields (name, contact_number)
+4. **Error Handling**: Always handle potential errors and edge cases
+5. **Security**: Keep API tokens secure and rotate them regularly

@@ -1,0 +1,141 @@
+# Providers API
+
+The Providers API allows you to fetch information about all configured telephony providers to help identify and manage available calling services.
+
+## Get Telephony Providers
+
+Retrieve a list of all telephony providers in the system along with their details.
+
+```http
+GET /api/v2/platform/telephony/providers/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+
+### Example Request
+
+```http
+GET /api/v2/platform/telephony/providers/
+Headers:
+  Authorization: Token your-api-token
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Voice infra providers fetched successfully.",
+  "data": [
+    {
+      "id": 1,
+      "name": "Provider 1",
+      "description": "Desc 1",
+      "icon": "http://example.com/icon1.png"
+    },
+    {
+      "id": 2,
+      "name": "Provider 2",
+      "description": "Desc 2",
+      "icon": "http://example.com/icon2.png"
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description                          |
+|-------------|---------|--------------------------------------|
+| status_code | integer | HTTP status code                     |
+| message     | string  | Response message                     |
+| data        | array   | Array of provider objects            |
+
+### Provider Object Fields
+
+| Field       | Type    | Description                          |
+|-------------|---------|--------------------------------------|
+| id          | integer | Provider unique identifier           |
+| name        | string  | Provider name                        |
+| description | string  | Provider description                 |
+| icon        | string  | Provider icon URL                    |
+
+### Error Response (401  Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token'
+};
+
+// Get all telephony providers
+const getproviders = async () => {
+  const response = await axios.get(
+    'https://unpod.dev/api/v2/platform/telephony/providers/',
+    { headers }
+  );
+  console.log(`Total providers: ${response.data.data.length}`);
+  response.data.data.forEach(provider => {
+    console.log(`${provider.name} - ${provider.description}`);
+  });
+  return response.data.data;
+};
+
+// Example usage
+getproviders();
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token'
+}
+
+BASE_URL = 'https://unpod.dev/api/v2/platform/telephony/providers'
+
+def get_providers():
+    """Get all telephony providers"""
+    response = requests.get(f'{BASE_URL}/', headers=headers)
+    data = response.json()
+
+    print(f"Total providers: {len(data['data'])}")
+    for provider in data['data']:
+        print(f"{provider['name']} - {provider['description']}")
+
+    return data['data']
+
+# Example usage
+get_providers()
+```
+
+```bash cURL
+# Get all telephony providers
+curl -X GET "https://unpod.dev/api/v2/platform/telephony/providers/" \
+  -H "Authorization: Token your-api-token"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Provider Selection**: Choose the appropriate provider based on your region and requirements
+2. **Error Handling**: Always handle potential errors and implement retry logic
+3. **Security**: Keep API tokens secure and rotate them regularly
+4. **Caching**: Cache provider list locally to reduce API calls

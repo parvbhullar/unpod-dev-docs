@@ -2,9 +2,25 @@
 
 The Runs API allows you to manage and monitor execution runs in your Unpod platform. A run represents a batch execution or group of tasks within a space.
 
+## How to Get Your Space Token
+
+Follow these steps to obtain your Space Token from the Unpod Dashboard:
+
+1. **Login** to the [Unpod Dashboard](https://unpod.ai/)
+2. On the **left sidebar**, click on the **Conversation** tab
+3. Click on the **Settings** icon
+4. You'll see the **Space Token** option
+5. Click on it to **copy** the Space Token
+
+<Note>
+Each space has a unique token. Make sure you're using the correct space token for your API requests.
+</Note>
+
+---
+
 ## Get All Runs in a Space
 
-Retrieve all runs associated with a specific space. This endpoint returns run details including run ID, status, timestamps, and associated user metadata.
+Retrieve all runs associated with a specific space. A run represents a batch execution or group of tasks. This endpoint returns run details including run ID, status, timestamps, and associated user metadata.
 
 ```http
 GET /api/v2/platform/spaces/{space_token}/runs/
@@ -20,7 +36,7 @@ GET /api/v2/platform/spaces/{space_token}/runs/
 
 | Name          | Type   | Required | Description                     |
 |---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+| Authorization | string | Yes      | API Key format: `Token <token>` |
 | Content-Type  | string | Yes      | `application/json`              |
 
 ### Example Request
@@ -28,7 +44,7 @@ GET /api/v2/platform/spaces/{space_token}/runs/
 ```http
 GET /api/v2/platform/spaces/space_abc123xyz/runs/
 Headers:
-  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Authorization: Token your-api-token
   Content-Type: application/json
 ```
 
@@ -36,29 +52,21 @@ Headers:
 
 ```json
 {
-  "count": 1,
+  "count": 1716,
   "status_code": 200,
   "message": "Runs Fetched Successfully",
   "data": [
     {
-      "_id": "abc123def456ghi789jkl0",
-      "space_id": "space987654321",
-      "thread_id": "thread123456789",
-      "user": "user001",
-      "user_org_id": "org56789",
-      "user_info": {
-        "id": "user001",
-        "email": "user@example.com",
-        "full_name": "John Smith",
-        "user_token": "token9876543210abcdef"
-      },
-      "created": "2025-11-18T11:13:58.671Z",
-      "modified": "2025-11-18T11:13:58.671Z",
-      "run_id": "run1234567890abcdef",
-      "batch_count": 1,
-      "collection_ref": "collection_abc123xyz789",
+      "space_id": "346",
+      "user": "38",
+      "thread_id": null,
+      "run_id": "R40fe5eface1511f082ac156368e7acc4",
+      "collection_ref": "collection_data_F1O3QJM1Y7Q1AVVUYNV4VPRB",
+      "run_mode": "dev",
       "status": "completed",
-      "run_mode": "automatic"
+      "batch_count": 1,
+      "created": "2025-11-30T17:51:52",
+      "modified": "2025-11-30T17:51:52"
     }
   ]
 }
@@ -66,25 +74,27 @@ Headers:
 
 ### Response Fields
 
-| Field          | Type    | Description                                |
-|----------------|---------|-------------------------------------------|
-| count          | integer | Total number of runs                       |
-| status_code    | integer | HTTP status code                           |
-| message        | string  | Response message                           |
-| data           | array   | Array of run objects                       |
-| _id            | string  | Internal run document ID                   |
-| space_id       | string  | Space identifier                           |
-| thread_id      | string  | Thread identifier (if applicable)          |
-| user           | string  | User ID who created the run                |
-| user_org_id    | string  | Organization ID of the user                |
-| user_info      | object  | User details (id, email, full_name, token) |
-| created        | string  | Run creation timestamp (ISO 8601)          |
-| modified       | string  | Last modified timestamp (ISO 8601)         |
-| run_id         | string  | Unique run identifier                      |
-| batch_count    | integer | Number of batches in the run               |
-| collection_ref | string  | Reference to the data collection           |
-| status         | string  | Run status: `completed`, `running`, `failed` |
-| run_mode       | string  | Execution mode: `automatic`, `manual`      |
+| Field       | Type    | Description           |
+|-------------|---------|-----------------------|
+| count       | integer | Total number of runs  |
+| status_code | integer | HTTP status code      |
+| message     | string  | Response message      |
+| data        | array   | Array of run objects  |
+
+### Run Object Fields
+
+| Field          | Type    | Description                                   |
+|----------------|---------|-----------------------------------------------|
+| space_id       | string  | Space identifier                              |
+| user           | string  | User ID who created the run                   |
+| thread_id      | string  | Thread identifier (null if not applicable)    |
+| run_id         | string  | Unique run identifier                         |
+| collection_ref | string  | Reference to the data collection              |
+| run_mode       | string  | Execution mode: `dev`, `prod`                 |
+| status         | string  | Run status: `completed`, `running`, `failed`  |
+| batch_count    | integer | Number of batches in the run                  |
+| created        | string  | Run creation timestamp                        |
+| modified       | string  | Last modified timestamp                       |
 
 ### Error Response (206 — Fetch Failed)
 
@@ -107,24 +117,24 @@ GET /api/v2/platform/spaces/{space_token}/runs/{run_id}/tasks/
 
 ### Path Parameters
 
-| Name        | Type   | Required | Description                          |
-|-------------|--------|----------|--------------------------------------|
-| space_token | string | Yes      | Public token of the space            |
-| run_id      | string | Yes      | The run ID whose tasks to retrieve   |
+| Name        | Type   | Required | Description                        |
+|-------------|--------|----------|------------------------------------|
+| space_token | string | Yes      | Public token of the space          |
+| run_id      | string | Yes      | The run ID whose tasks to retrieve |
 
 ### Headers
 
 | Name          | Type   | Required | Description                     |
 |---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | JWT token format: `JWT <token>` |
+| Authorization | string | Yes      | API Key format: `Token <token>` |
 | Content-Type  | string | Yes      | `application/json`              |
 
 ### Example Request
 
 ```http
-GET /api/v2/platform/spaces/space_abc123xyz/runs/run-uuid-789/tasks/
+GET /api/v2/platform/spaces/space_abc123xyz/runs/R40fe5eface1511f082ac156368e7acc4/tasks/
 Headers:
-  Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  Authorization: Token your-api-token
   Content-Type: application/json
 ```
 
@@ -137,92 +147,54 @@ Headers:
   "message": "Tasks Fetched Successfully",
   "data": [
     {
-      "_id": "67abc123def456789",
-      "space_id": "space-uuid-123",
+      "space_id": "346",
       "thread_id": null,
-      "user": "user-123",
-      "user_org_id": null,
+      "user": "261",
+      "user_org_id": "22",
       "user_info": {
-        "id": "user-123",
-        "email": "user@example.com",
+        "id": "261",
+        "email": "abc@domain.com",
         "full_name": "John Doe",
-        "user_token": "ABCD1234EFGH5678"
+        "user_token": "JY60XSSVVPTV5W5A"
       },
-      "created": "2025-11-17T12:00:00.000Z",
-      "modified": "2025-11-17T12:30:00.000Z",
-      "task_id": "task-uuid-456",
-      "run_id": "run-uuid-789",
-      "collection_ref": "collection_data_XYZ123",
+      "run_id": "R0e3294d4cc4211f082ac156368e7acc4",
+      "task_id": "T0e3294d5cc4211f082ac156368e7acc4",
+      "collection_ref": "collection_data_F1O3QJM1Y7Q1AVVUYNV4VPRB",
+      "execution_type": "call",
       "task": {
-        "objective": "Call customer and confirm appointment"
+        "objective": "hey"
       },
       "input": {
-        "contact_name": "Alice Smith",
-        "contact_number": "+1234567890",
-        "email": "alice@example.com",
-        "address": "123 Main St, City",
-        "occupation": "Software Engineer",
-        "content_hash": "abc123hash",
-        "file_sha1": "def456sha",
-        "id": "doc-123"
+        "document_id": "692974344eb028916272c240",
+        "name": "John Doe",
+        "contact_number": "9876688992",
+        "created": "2025-11-28T10:06:44",
+        "token": "F1O3QJM1Y7Q1AVVUYNV4VPRB",
+        "vapi_agent_id": "6a683958-27ab-4ac5-8b0f-52dae3892efe",
+        "number_id": "2d81624a-a0ec-4459-9399-cf71fb21be06",
+        "quality": "high"
       },
       "output": {
-        "call_id": "019aa6a9-809f-7ddb-b110-7a16167cb632",
-        "customer": "Cust 1",
-        "contact_number": "70000380188",
-        "call_end_reason": "customer-ended-call",
-        "recording_url": "https://store.unpod.ai/media/private/high-call-recordings/...",
-        "transcript": [
-          {
-            "role": "user",
-            "content": "And reason for calling",
-            "user_id": "unknown",
-            "timestamp": ""
-          },
-          {
-            "role": "assistant",
-            "content": "Hello?",
-            "user_id": null,
-            "timestamp": ""
-          }
-        ],
-        "start_time": "2025-11-21 13:45:20",
-        "end_time": "2025-11-21 13:46:36",
-        "assistant_number": "+919949883072",
-        "call_summary": "An AI representative called regarding an inquiry...",
-        "duration": 76.769,
-        "cost": 0.139,
-        "post_call_data": {
-          "classification": {
-            "labels": ["Interested"],
-            "summary": "The agent called to discuss a project. The user expressed interest."
-          },
-          "summary": {
-            "status": "Call Back",
-            "summary": "The call involved an introduction and inquiry...",
-            "name": "N/A",
-            "contact": "N/A",
-            "callback_datetime": "N/A",
-            "hours_from_now": "N/A"
-          },
-          "success_evaluator": "{\"score\": 5, \"reason\": \"...\"}",
-          "call_back": null,
-          "follow_up": null,
-          "structured_data": "{\"customer_name\": null, ...}",
-          "webhook_data": null,
-          "call_evaluation": []
-        },
-        "metadata": {
-          "cost": 0.139,
-          "type": "outboundPhoneCall",
-          "usage": {}
+        "id": "call-uuid-001",
+        "assistantId": "assistant-123",
+        "phoneNumberId": "phone-456",
+        "type": "outbound",
+        "startedAt": "2025-11-17T12:05:00.000Z",
+        "endedAt": "2025-11-17T12:10:00.000Z",
+        "transcript": "Agent: Hello, this is calling to confirm...\nCustomer: Yes, confirmed.",
+        "recordingUrl": "https://example.com/recordings/rec123.mp3",
+        "summary": "Customer confirmed the appointment for tomorrow at 2 PM",
+        "createdAt": "2025-11-17T12:05:00.000Z",
+        "updatedAt": "2025-11-17T12:10:00.000Z",
+        "orgId": "org-789",
+        "cost": 0.45,
+        "customer": {
+          "number": "+1234567890",
+          "name": "Alice Smith"
         }
       },
-      "attachments": [],
-      "assignee": "agent-handle-123",
-      "status": "completed",
-      "execution_type": "call",
-      "ref_id": "doc-123"
+      "created": "2025-11-28T10:07:32",
+      "modified": "2025-11-28T12:04:08"
     }
   ]
 }
@@ -230,62 +202,63 @@ Headers:
 
 ### Response Fields
 
-| Field           | Type    | Description                                      |
-|-----------------|---------|--------------------------------------------------|
-| count           | integer | Total number of tasks                            |
-| status_code     | integer | HTTP status code                                 |
-| message         | string  | Response message                                 |
-| data            | array   | Array of task objects                            |
-| _id             | string  | Internal task document ID                        |
-| space_id        | string  | Space identifier                                 |
-| thread_id       | string  | Thread identifier (null if not applicable)       |
-| user            | string  | User ID who created the task                     |
-| user_info       | object  | User details (id, email, full_name, token)       |
-| created         | string  | Task creation timestamp (ISO 8601)               |
-| modified        | string  | Last modified timestamp (ISO 8601)               |
-| task_id         | string  | Unique task identifier                           |
-| run_id          | string  | Parent run identifier                            |
-| collection_ref  | string  | Reference to the data collection                 |
-| task            | object  | Task definition with objective                   |
-| input           | object  | Input data for the task (contact details, etc.)  |
-| output          | object  | Task output including call details, transcript   |
-| attachments     | array   | List of attachments                              |
-| assignee        | string  | Agent handle assigned to the task                |
-| status          | string  | Task status: `completed`, `running`, `failed`    |
-| execution_type  | string  | Type of execution: `call`, `email`, etc.         |
-| ref_id          | string  | Reference ID linking to input data               |
+| Field       | Type    | Description           |
+|-------------|---------|-----------------------|
+| count       | integer | Total number of tasks |
+| status_code | integer | HTTP status code      |
+| message     | string  | Response message      |
+| data        | array   | Array of task objects |
+
+### Task Object Fields
+
+| Field          | Type    | Description                                   |
+|----------------|---------|-----------------------------------------------|
+| space_id       | string  | Space identifier                              |
+| thread_id      | string  | Thread identifier (null if not applicable)    |
+| user           | string  | User ID who created the task                  |
+| user_org_id    | string  | Organization ID of the user                   |
+| user_info      | object  | User details (id, email, full_name, token)    |
+| run_id         | string  | Parent run identifier                         |
+| task_id        | string  | Unique task identifier                        |
+| collection_ref | string  | Reference to the data collection              |
+| execution_type | string  | Type of execution: `call`, `email`, etc.      |
+| task           | object  | Task definition with objective                |
+| input          | object  | Input data for the task                       |
+| output         | object  | Task output including call details            |
+| created        | string  | Task creation timestamp                       |
+| modified       | string  | Last modified timestamp                       |
+
+### Input Object Fields
+
+| Field          | Type   | Description                          |
+|----------------|--------|--------------------------------------|
+| document_id    | string | Document identifier                  |
+| name           | string | Contact name                         |
+| contact_number | string | Contact phone number                 |
+| created        | string | Input creation timestamp             |
+| token          | string | Collection token                     |
+| vapi_agent_id  | string | Vapi agent identifier                |
+| number_id      | string | Number identifier                    |
+| quality        | string | Call quality setting: `high`, `low`  |
 
 ### Output Object Fields
 
-| Field            | Type    | Description                                    |
-|------------------|---------|------------------------------------------------|
-| call_id          | string  | Unique call identifier                         |
-| customer         | string  | Customer name                                  |
-| contact_number   | string  | Contact phone number                           |
-| call_end_reason  | string  | Reason for call ending                         |
-| recording_url    | string  | URL to call recording                          |
-| transcript       | array   | Array of conversation messages                 |
-| start_time       | string  | Call start timestamp                           |
-| end_time         | string  | Call end timestamp                             |
-| assistant_number | string  | Outbound phone number used                     |
-| call_summary     | string  | AI-generated summary of the call               |
-| duration         | number  | Call duration in seconds                       |
-| cost             | number  | Cost of the call in USD                        |
-| post_call_data   | object  | Post-call analysis data                        |
-| metadata         | object  | Additional metadata (cost, type, usage)        |
-
-### Post Call Data Fields
-
-| Field             | Type   | Description                                   |
-|-------------------|--------|-----------------------------------------------|
-| classification    | object | Call classification with labels and summary   |
-| summary           | object | Call summary with status and callback info    |
-| success_evaluator | string | JSON string with score and evaluation reason  |
-| call_back         | object | Callback information (if applicable)          |
-| follow_up         | object | Follow-up details (if applicable)             |
-| structured_data   | string | JSON string with extracted structured data    |
-| webhook_data      | object | Webhook payload data (if configured)          |
-| call_evaluation   | array  | Array of evaluation metrics                   |
+| Field          | Type   | Description                          |
+|----------------|--------|--------------------------------------|
+| id             | string | Unique call identifier               |
+| assistantId    | string | Assistant identifier                 |
+| phoneNumberId  | string | Phone number identifier              |
+| type           | string | Call type: `outbound`, `inbound`     |
+| startedAt      | string | Call start timestamp                 |
+| endedAt        | string | Call end timestamp                   |
+| transcript     | string | Call transcript                      |
+| recordingUrl   | string | URL to call recording                |
+| summary        | string | AI-generated call summary            |
+| createdAt      | string | Record creation timestamp            |
+| updatedAt      | string | Record update timestamp              |
+| orgId          | string | Organization identifier              |
+| cost           | number | Cost of the call in USD              |
+| customer       | object | Customer details (number, name)      |
 
 ### Error Response (206 — Business Logic Error)
 
@@ -305,7 +278,7 @@ Headers:
 | 200         | Success - Data fetched successfully              |
 | 206         | Partial Content - Business logic error occurred  |
 | 400         | Bad Request - Invalid parameters provided        |
-| 401         | Unauthorized - Invalid or missing JWT token      |
+| 401         | Unauthorized - Invalid or missing API token      |
 | 403         | Forbidden - Access denied to the resource        |
 | 404         | Not Found - Space or Run not found               |
 | 500         | Internal Server Error - Server-side error        |
@@ -317,59 +290,57 @@ Headers:
 ```javascript Node.js
 const axios = require('axios');
 
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Content-Type': 'application/json'
+};
+
 // Get all runs in a space
 const fetchRuns = async (spaceToken) => {
   const response = await axios.get(
     `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/runs/`,
-    {
-      headers: {
-        'Authorization': 'JWT your-jwt-token',
-        'Content-Type': 'application/json'
-      }
-    }
+    { headers }
   );
 
   console.log(`Total runs: ${response.data.count}`);
   response.data.data.forEach(run => {
     console.log(`Run ${run.run_id}: ${run.status} (${run.batch_count} batches)`);
   });
+  return response.data.data;
 };
 
 // Get tasks for a specific run
 const fetchRunTasks = async (spaceToken, runId) => {
   const response = await axios.get(
     `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/runs/${runId}/tasks/`,
-    {
-      headers: {
-        'Authorization': 'JWT your-jwt-token',
-        'Content-Type': 'application/json'
-      }
-    }
+    { headers }
   );
 
   console.log(`Total tasks: ${response.data.count}`);
   response.data.data.forEach(task => {
-    console.log(`Task ${task.task_id}: ${task.status}`);
-    if (task.output?.call_summary) {
-      console.log(`  Summary: ${task.output.call_summary}`);
+    console.log(`Task ${task.task_id}: ${task.execution_type}`);
+    if (task.output?.summary) {
+      console.log(`  Summary: ${task.output.summary}`);
     }
   });
+  return response.data.data;
 };
 
-fetchRuns('space_abc123xyz');
+// Example usage
+fetchRuns('your-space-token');
 ```
 
 ```python Python
 import requests
 
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Content-Type': 'application/json'
+}
+
 def fetch_runs(space_token: str):
     """Get all runs in a space"""
     url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/runs/'
-
-    headers = {
-        'Authorization': 'JWT your-jwt-token',
-        'Content-Type': 'application/json'
-    }
 
     response = requests.get(url, headers=headers)
     data = response.json()
@@ -378,36 +349,36 @@ def fetch_runs(space_token: str):
     for run in data['data']:
         print(f"Run {run['run_id']}: {run['status']} ({run['batch_count']} batches)")
 
+    return data['data']
+
 def fetch_run_tasks(space_token: str, run_id: str):
     """Get tasks for a specific run"""
     url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/runs/{run_id}/tasks/'
-
-    headers = {
-        'Authorization': 'JWT your-jwt-token',
-        'Content-Type': 'application/json'
-    }
 
     response = requests.get(url, headers=headers)
     data = response.json()
 
     print(f"Total tasks: {data['count']}")
     for task in data['data']:
-        print(f"Task {task['task_id']}: {task['status']}")
-        if task.get('output', {}).get('call_summary'):
-            print(f"  Summary: {task['output']['call_summary']}")
+        print(f"Task {task['task_id']}: {task['execution_type']}")
+        if task.get('output', {}).get('summary'):
+            print(f"  Summary: {task['output']['summary']}")
 
-fetch_runs('space_abc123xyz')
+    return data['data']
+
+# Example usage
+fetch_runs('your-space-token')
 ```
 
 ```bash cURL
 # Get all runs in a space
-curl -X GET "https://unpod.dev/api/v2/platform/spaces/space_abc123xyz/runs/" \
-  -H "Authorization: JWT your-jwt-token" \
+curl -X GET "https://unpod.dev/api/v2/platform/spaces/your-space-token/runs/" \
+  -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json"
 
 # Get tasks for a specific run
-curl -X GET "https://unpod.dev/api/v2/platform/spaces/space_abc123xyz/runs/run-uuid-789/tasks/" \
-  -H "Authorization: JWT your-jwt-token" \
+curl -X GET "https://unpod.dev/api/v2/platform/spaces/your-space-token/runs/R40fe5eface1511f082ac156368e7acc4/tasks/" \
+  -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json"
 ```
 
@@ -415,9 +386,8 @@ curl -X GET "https://unpod.dev/api/v2/platform/spaces/space_abc123xyz/runs/run-u
 
 ## Best Practices
 
-1. **Pagination**: For spaces with many runs, implement proper pagination handling
-2. **Error Handling**: Always handle potential errors and edge cases
-3. **Caching**: Cache run data when appropriate to reduce API calls
+1. **Space Token**: Always use the correct space token for your API requests
+2. **Pagination**: For spaces with many runs, implement proper pagination handling
+3. **Error Handling**: Always handle potential errors and edge cases
 4. **Filtering**: Use status filters to focus on specific run outcomes
-5. **Security**: Keep JWT tokens secure and rotate them regularly
-6. **Monitoring**: Monitor run completion rates and task success metrics
+5. **Security**: Keep API tokens secure and rotate them regularly

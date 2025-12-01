@@ -1,0 +1,652 @@
+---
+title: 'Configurations'
+description: 'Manage telephony provider configurations'
+---
+
+# Provider Configurations API
+
+The Provider Configurations API allows you to manage telephony provider configurations. You can list, create, retrieve, update, and delete provider configurations for your telephony services.
+
+## Get All Provider Configurations
+
+Fetch information about all configured telephony providers to help identify and manage available calling services.
+
+```http
+GET /api/v2/platform/telephony/providers-configurations/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+
+### Example Request
+
+```http
+GET /api/v2/platform/telephony/providers-configurations/
+Headers:
+  Authorization: Token your-api-token
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Success",
+  "data": [
+    {
+      "id": 1,
+      "name": "Twilio Suport",
+      "provider": 3,
+      "provider_details": {
+        "id": 3,
+        "name": "Twilio",
+        "description": "Twilio is your all in one solution channel",
+        "icon": "https://ik.imagekit.io/bethere/unpod/channels/twilio.png"
+      },
+      "org_handle": "recalll.co",
+      "meta_json": [
+        {
+          "meta_key": "key",
+          "meta_value": "mklsfjodfdo"
+        }
+      ],
+      "active": true,
+      "api_key": "dsds154154xxxxx54fs5",
+      "api_secret": "sfs1f5sxxxxxfs4f",
+      "base_url": null,
+      "sip_url": null
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field            | Type    | Description                              |
+|------------------|---------|------------------------------------------|
+| status_code      | integer | HTTP status code                         |
+| message          | string  | Response message                         |
+| data             | array   | Array of provider configuration objects  |
+
+### Configuration Object Fields
+
+| Field            | Type    | Description                              |
+|------------------|---------|------------------------------------------|
+| id               | integer | Configuration unique identifier          |
+| name             | string  | Configuration name                       |
+| provider         | integer | Provider ID                              |
+| provider_details | object  | Provider information                     |
+| org_handle       | string  | Organization domain handle               |
+| meta_json        | array   | Additional metadata key-value pairs      |
+| active           | boolean | Whether the configuration is active      |
+| api_key          | string  | Provider API key                         |
+| api_secret       | string  | Provider API secret                      |
+| base_url         | string  | Provider base URL                        |
+| sip_url          | string  | SIP URL for VoIP                         |
+
+### Error Response (401  Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Create Provider Configuration
+
+Create or update telephony provider settings by sending the required configuration details in the request body.
+
+```http
+POST /api/v2/platform/telephony/providers-configurations/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Org-Handle    | string | Yes      | Organization domain handle      |
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+
+### Example Request
+
+```http
+POST /api/v2/platform/telephony/providers-configurations/
+Headers:
+  Org-Handle: your-org-handle
+  Authorization: Token your-api-token
+  Content-Type: application/json
+
+Body:
+{
+  "name": "Twilio Suport",
+  "provider": 3,
+  "api_key": "sk_xxx",
+  "api_secret": "secret_xxx"
+}
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Success",
+  "data": {
+    "id": 1,
+    "name": "Twilio Suport",
+    "provider": 3,
+    "provider_details": {
+      "id": 3,
+      "name": "Twilio",
+      "description": "Desc 1",
+      "icon": "https://ik.imagekit.io/techblog/channels/twilio.png"
+    },
+    "org_handle": "abc",
+    "meta_json": [
+      {
+        "meta_key": "key",
+        "meta_value": "mklsfjodfdo"
+      }
+    ],
+    "active": true,
+    "api_key": "sk_xxx",
+    "api_secret": "secret_xxx",
+    "base_url": null,
+    "sip_url": ""
+  }
+}
+```
+
+
+### Response Fields
+
+| Field       | Type    | Description                   |
+|-------------|---------|-------------------------------|
+| status_code | integer | HTTP status code              |
+| message     | string  | Response message              |
+| data        | object  | Created configuration details |
+
+### Configuration Object Fields
+
+| Field            | Type    | Description                         |
+|------------------|---------|-------------------------------------|
+| id               | integer | Configuration unique identifier     |
+| name             | string  | Configuration name                  |
+| provider         | integer | Provider ID                         |
+| provider_details | object  | Provider information                |
+| org_handle       | string  | Organization domain handle          |
+| meta_json        | array   | Additional metadata key-value pairs |
+| active           | boolean | Whether the configuration is active |
+| api_key          | string  | Provider API key                    |
+| api_secret       | string  | Provider API secret                 |
+| base_url         | string  | Provider base URL                   |
+| sip_url          | string  | SIP URL for VoIP                    |
+
+### Error Response (401  Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Get Provider Configuration by ID
+
+Retrieve complete telephony provider configuration data for a specific ID, allowing you to view settings stored in the system.
+
+```http
+GET /api/v2/platform/telephony/providers-configurations/{id}/
+```
+
+### Path Parameters
+
+| Name | Type    | Required | Description                      |
+|------|---------|----------|----------------------------------|
+| id   | integer | Yes      | Configuration unique identifier  |
+
+### Headers
+
+| Name          | Type    | Required | Description                     |
+|---------------|---------|----------|---------------------------------|
+| Org-Handle    | string  | Yes      | Organization domain handle      |
+| Product-ID    | integer | Yes      | Product identifier              |
+
+### Example Request
+
+```http
+GET /api/v2/platform/telephony/providers-configurations/1/
+Headers:
+  Org-Handle: your-org-handle
+  Product-ID: your-product-id
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Success",
+  "data": {
+    "id": 1,
+    "name": "Twilio Suport",
+    "provider": 3,
+    "provider_details": {
+      "id": 3,
+      "name": "Twilio",
+      "description": "Twilio is your all in one solution channel",
+      "icon": "https://ik.imagekit.io/bethere/unpod/channels/twilio.png"
+    },
+    "org_handle": "recalll.co",
+    "meta_json": [
+      {
+        "meta_key": "key",
+        "meta_value": "mklsfjodfdo"
+      }
+    ],
+    "active": true,
+    "api_key": "dsds154xxxxxxxs54fs5",
+    "api_secret": "sfs1fxxxxxxxfs4f",
+    "base_url": null,
+    "sip_url": null
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description            |
+|-------------|---------|------------------------|
+| status_code | integer | HTTP status code       |
+| message     | string  | Response message       |
+| data        | object  | Configuration details  |
+
+### Configuration Object Fields
+
+| Field            | Type    | Description                         |
+|------------------|---------|-------------------------------------|
+| id               | integer | Configuration unique identifier     |
+| name             | string  | Configuration name                  |
+| provider         | integer | Provider ID                         |
+| provider_details | object  | Provider information                |
+| org_handle       | string  | Organization domain handle          |
+| meta_json        | array   | Additional metadata key-value pairs |
+| active           | boolean | Whether the configuration is active |
+| api_key          | string  | Provider API key                    |
+| api_secret       | string  | Provider API secret                 |
+| base_url         | string  | Provider base URL                   |
+| sip_url          | string  | SIP URL for VoIP                    |
+
+
+### Error Response (401  Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Update Provider Configuration
+
+Partially modify a telephony provider's configuration, enabling you to update only the required attributes without replacing the entire record.
+
+```http
+PATCH /api/v2/platform/telephony/providers-configurations/{id}/
+```
+
+### Path Parameters
+
+| Name | Type    | Required | Description                      |
+|------|---------|----------|----------------------------------|
+| id   | integer | Yes      | Configuration unique identifier  |
+
+### Headers
+
+| Name          | Type    | Required | Description                     |
+|---------------|---------|----------|---------------------------------|
+| Org-Handle    | string  | Yes      | Organization domain handle      |
+| Product-ID    | integer | Yes      | Product identifier              |
+
+### Request Body
+
+| Field      | Type    | Required | Description                        |
+|------------|---------|----------|------------------------------------|
+| name       | string  | No       | Updated configuration name         |
+| api_key    | string  | No       | Updated provider API key           |
+| api_secret | string  | No       | Updated provider API secret        |
+| active     | boolean | No       | Enable/disable configuration       |
+| base_url   | string  | No       | Updated provider base URL          |
+| sip_url    | string  | No       | Updated SIP URL                    |
+
+### Example Request
+
+```http
+PATCH /api/v2/platform/telephony/providers-configurations/1/
+Headers:
+  Org-Handle: your-org-handle
+  Product-ID: your-product-id
+  Content-Type: application/json
+
+Body:
+{
+  "name": "My Vapi Configuration",
+  "api_key": "sk_xxx",
+  "api_secret": "secret_xxx"
+}
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Success",
+  "data": {
+    "id": 1,
+    "name": "My Vapi Configuration",
+    "provider": 3,
+    "provider_details": {
+      "id": 3,
+      "name": "Twilio",
+      "description": "Twilio is your all in one solution channel",
+      "icon": "https://ik.imagekit.io/bethere/unpod/channels/twilio.png"
+    },
+    "org_handle": "recalll.co",
+    "meta_json": [
+      {
+        "meta_key": "key",
+        "meta_value": "mklsfjodfdo"
+      }
+    ],
+    "active": true,
+    "api_key": "sk_xxx",
+    "api_secret": "secret_xxx",
+    "base_url": null,
+    "sip_url": null
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description            |
+|-------------|---------|------------------------|
+| status_code | integer | HTTP status code       |
+| message     | string  | Response message       |
+| data        | object  | Configuration details  |
+
+### Configuration Object Fields
+
+| Field            | Type    | Description                         |
+|------------------|---------|-------------------------------------|
+| id               | integer | Configuration unique identifier     |
+| name             | string  | Configuration name                  |
+| provider         | integer | Provider ID                         |
+| provider_details | object  | Provider information                |
+| org_handle       | string  | Organization domain handle          |
+| meta_json        | array   | Additional metadata key-value pairs |
+| active           | boolean | Whether the configuration is active |
+| api_key          | string  | Provider API key                    |
+| api_secret       | string  | Provider API secret                 |
+| base_url         | string  | Provider base URL                   |
+| sip_url          | string  | SIP URL for VoIP                    |
+
+
+### Error Response (401  Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Delete Provider Configuration
+
+Permanently delete a telephony provider's configuration identified by ID, ensuring it is no longer available or used in the platform.
+
+```http
+DELETE /api/v2/platform/telephony/providers-configurations/{id}/
+```
+
+### Path Parameters
+
+| Name | Type    | Required | Description                      |
+|------|---------|----------|----------------------------------|
+| id   | integer | Yes      | Configuration unique identifier  |
+
+### Headers
+
+| Name          | Type    | Required | Description                     |
+|---------------|---------|----------|---------------------------------|
+| Org-Handle    | string  | Yes      | Organization domain handle      |
+| Product-ID    | integer | Yes      | Product identifier              |
+
+### Example Request
+
+```http
+DELETE /api/v2/platform/telephony/providers-configurations/1/
+Headers:
+  Org-Handle: your-org-handle
+  Product-ID: your-product-id
+```
+
+### Success Response (204)
+
+```json
+{
+  "status_code": 204,
+  "message": "Provider configuration deleted successfully",
+  "data": {}
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description      |
+|-------------|---------|------------------|
+| status_code | integer | HTTP status code |
+| message     | string  | Response message |
+| data        | object  | Empty object     |
+
+
+### Error Response (401  Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Request completed successfully         |
+| 204         | No Content - Resource deleted successfully       |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Configuration not found              |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Org-Handle': 'your-org-handle',
+  'Authorization': 'Token your-api-token',
+  'Product-ID': 'your-product-id',
+  'Content-Type': 'application/json'
+};
+
+const BASE_URL = 'https://unpod.dev/api/v2/platform/telephony/providers-configurations';
+
+// Get all provider configurations
+const getConfigurations = async () => {
+  const response = await axios.get(`${BASE_URL}/`, { headers });
+  console.log(`Total configurations: ${response.data.data.length}`);
+  return response.data.data;
+};
+
+// Create a new provider configuration
+const createConfiguration = async (name, providerId, apiKey, apiSecret) => {
+  const response = await axios.post(
+    `${BASE_URL}/`,
+    { name, provider: providerId, api_key: apiKey, api_secret: apiSecret },
+    { headers }
+  );
+  console.log(`Configuration created: ${response.data.data.name}`);
+  return response.data.data;
+};
+
+// Get a specific configuration
+const getConfiguration = async (id) => {
+  const response = await axios.get(`${BASE_URL}/${id}/`, { headers });
+  console.log(`Configuration: ${response.data.data.name}`);
+  return response.data.data;
+};
+
+// Update a configuration
+const updateConfiguration = async (id, updates) => {
+  const response = await axios.patch(`${BASE_URL}/${id}/`, updates, { headers });
+  console.log(`Configuration updated: ${response.data.data.name}`);
+  return response.data.data;
+};
+
+// Delete a configuration
+const deleteConfiguration = async (id) => {
+  const response = await axios.delete(`${BASE_URL}/${id}/`, { headers });
+  console.log('Configuration deleted successfully');
+  return response.data;
+};
+
+// Example usage
+getConfigurations();
+```
+
+```python Python
+import requests
+
+headers = {
+    'Org-Handle': 'your-org-handle',
+    'Authorization': 'Token your-api-token',
+    'Product-ID': 'your-product-id',
+    'Content-Type': 'application/json'
+}
+
+BASE_URL = 'https://unpod.dev/api/v2/platform/telephony/providers-configurations'
+
+def get_configurations():
+    """Get all provider configurations"""
+    response = requests.get(f'{BASE_URL}/', headers=headers)
+    data = response.json()
+    print(f"Total configurations: {len(data['data'])}")
+    return data['data']
+
+def create_configuration(name: str, provider_id: int, api_key: str, api_secret: str):
+    """Create a new provider configuration"""
+    payload = {
+        'name': name,
+        'provider': provider_id,
+        'api_key': api_key,
+        'api_secret': api_secret
+    }
+    response = requests.post(f'{BASE_URL}/', headers=headers, json=payload)
+    data = response.json()
+    print(f"Configuration created: {data['data']['name']}")
+    return data['data']
+
+def get_configuration(config_id: int):
+    """Get a specific configuration by ID"""
+    response = requests.get(f'{BASE_URL}/{config_id}/', headers=headers)
+    data = response.json()
+    print(f"Configuration: {data['data']['name']}")
+    return data['data']
+
+def update_configuration(config_id: int, updates: dict):
+    """Update a configuration"""
+    response = requests.patch(f'{BASE_URL}/{config_id}/', headers=headers, json=updates)
+    data = response.json()
+    print(f"Configuration updated: {data['data']['name']}")
+    return data['data']
+
+def delete_configuration(config_id: int):
+    """Delete a configuration"""
+    response = requests.delete(f'{BASE_URL}/{config_id}/', headers=headers)
+    print('Configuration deleted successfully')
+    return response.json()
+
+# Example usage
+get_configurations()
+```
+
+```bash cURL
+# Get all provider configurations
+curl -X GET "https://unpod.dev/api/v2/platform/telephony/providers-configurations/" \
+  -H "Authorization: Token your-api-token"
+
+# Create a new provider configuration
+curl -X POST "https://unpod.dev/api/v2/platform/telephony/providers-configurations/" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Authorization: Token your-api-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Twilio Config",
+    "provider": 3,
+    "api_key": "sk_xxx",
+    "api_secret": "secret_xxx"
+  }'
+
+# Get a specific configuration
+curl -X GET "https://unpod.dev/api/v2/platform/telephony/providers-configurations/1/" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Product-ID: your-product-id"
+
+# Update a configuration
+curl -X PATCH "https://unpod.dev/api/v2/platform/telephony/providers-configurations/1/" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Product-ID: your-product-id" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Config Name"
+  }'
+
+# Delete a configuration
+curl -X DELETE "https://unpod.dev/api/v2/platform/telephony/providers-configurations/1/" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Product-ID: your-product-id"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Secure Credentials**: Never expose API keys or secrets in client-side code
+2. **Configuration Naming**: Use descriptive names to easily identify configurations
+3. **Provider Selection**: Choose the appropriate provider based on your region and requirements
+4. **Validation**: Verify provider credentials before saving configurations
+5. **Cleanup**: Delete unused configurations to maintain a clean setup
+6. **Error Handling**: Always handle potential errors and implement retry logic
+7. **Security**: Keep API tokens secure and rotate them regularly
+8. **Backup**: Keep a record of configuration details before making changes

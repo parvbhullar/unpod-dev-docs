@@ -45,6 +45,13 @@
         "tab": "API Reference",
         "groups": [
           {
+            "group": "Get Started",
+            "pages": [
+              "api/get-started/quickstart",
+              "api/get-started/authentication"
+            ]
+          },
+          {
             "group": "Execution",
             "pages": [
               "api/execution/runs",
@@ -54,8 +61,15 @@
           {
             "group": "Telephony",
             "pages": [
-              "api/telephony/numbers",
-              "api/telephony/bridges"
+              "api/telephony/Providers",
+              "api/telephony/bridges",
+              "api/telephony/numbers"
+            ]
+          },
+          {
+            "group": "Provider",
+            "pages": [
+              "api/provider/configurations"
             ]
           },
           {
