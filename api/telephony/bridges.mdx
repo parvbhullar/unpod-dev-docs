@@ -496,6 +496,10 @@ Headers:
 
 Connect a provider credential to a specific telephony bridge for enabling call functionality.
 
+<Note>
+The `provider_credential_id` must be a configuration that is already assigned to the bridge. You can only use a `number_id` that is linked to the bridge while connect and disconnect provider.
+</Note>
+
 ```http
 POST /api/v2/platform/telephony/bridges/{slug}/connect-provider/
 ```
