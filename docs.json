@@ -77,6 +77,12 @@
             "pages": [
               "api/logs/calls"
             ]
+          },
+          {
+            "group": "Space",
+            "pages": [
+              "api/space/spaces"
+            ]
           }
         ]
       }

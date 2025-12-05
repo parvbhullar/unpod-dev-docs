@@ -18,6 +18,81 @@ Each space has a unique token. Make sure you're using the correct space token fo
 
 ---
 
+## Get All Agents
+
+Retrieve detailed information for all registered agents, helping you view and manage agent records within the system.
+
+```http
+GET /api/v2/platform/agents/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+### Example Request
+
+```http
+GET /api/v2/platform/agents/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 94,
+  "status_code": 200,
+  "message": "Agents fetched successfully",
+  "data": [
+    {
+      "handle": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+      "name": "General Agentic",
+      "type": "Voice",
+      "state": "published",
+      "description": "Hi,",
+      "purpose": ""
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description            |
+|-------------|---------|------------------------|
+| count       | integer | Total number of agents |
+| status_code | integer | HTTP status code       |
+| message     | string  | Response message       |
+| data        | array   | Array of agent objects |
+
+### Agent Object Fields
+
+| Field       | Type   | Description                                    |
+|-------------|--------|------------------------------------------------|
+| handle      | string | Unique agent handle/identifier                 |
+| name        | string | Agent display name                             |
+| type        | string | Agent type: `Voice`, `Chat`, etc.              |
+| state       | string | Agent state: `published`, `draft`, `archived`  |
+| description | string | Agent description                              |
+| purpose     | string | Agent purpose/use case                         |
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
 ## Get Tasks by Agent Handle
 
 Fetch all tasks assigned to a specific agent/pilot using their handle. This returns full task metadata including user info, input payloads, attachments, and execution details.
@@ -25,6 +100,10 @@ Fetch all tasks assigned to a specific agent/pilot using their handle. This retu
 ```http
 GET /api/v2/platform/agents/{handle}/tasks/
 ```
+
+<Note>
+You can get the agent `handle` from the [Get All Agents](/api/execution/tasks#get-all-agents) endpoint above or from the **Space** tab under [Get All Organizations](/api/space/spaces#get-all-organizations).
+</Note>
 
 ### Path Parameters
 
@@ -437,7 +516,6 @@ Body:
       "company_name": "TechCorp",
       "address": "123/456 Main Street",
       "about": "Software Developer",
-      "number": "1234567890",
       "context": "Follow up call",
       "multi_select": "multi",
       "created": "2025-10-30T05:44:56",
