@@ -26,6 +26,10 @@ Retrieve detailed information for all registered agents, helping you view and ma
 GET /api/v2/platform/agents/
 ```
 
+<Note>
+You can get the agent `handle` from the  **Space** tab under [Get All Organizations](/api/space/spaces#get-all-organizations).
+</Note>
+
 ### Headers
 
 | Name          | Type   | Required | Description                     |
@@ -101,9 +105,7 @@ Fetch all tasks assigned to a specific agent/pilot using their handle. This retu
 GET /api/v2/platform/agents/{handle}/tasks/
 ```
 
-<Note>
-You can get the agent `handle` from the [Get All Agents](/api/execution/tasks#get-all-agents) endpoint above or from the **Space** tab under [Get All Organizations](/api/space/spaces#get-all-organizations).
-</Note>
+
 
 ### Path Parameters
 
