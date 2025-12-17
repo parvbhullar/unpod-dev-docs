@@ -2,83 +2,9 @@
 
 The Bridges API allows you to manage telephony bridges for connecting multiple call participants. Bridges are used for call routing, conferencing, and managing telephony channels.
 
-## Get All Telephony Bridges
-
-Retrieve a list of all telephony bridges in the system, including their IDs, status, type, and associated numbers for monitoring and call-routing management.
-
-```http
-GET /api/v2/platform/telephony/bridges/
-```
-
 <Note>
-You can get the `Org-Handle` from the **Space** tab by hitting the [Get All Organizations](/api/space/spaces#get-all-organizations) API.
+**Prerequisites:** Make sure you have your API Token. See [Authentication](/api/get-started/authentication) for details.
 </Note>
-
-### Headers
-
-| Name          | Type   | Required | Description                     |
-|---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | API Key format: `Token <token>` |
-| Org-Handle    | string | Yes      | Organization domain handle      |
-| Product-ID    | string | Yes      | Product identifier              |
-
-### Example Request
-
-```http
-GET /api/v2/platform/telephony/bridges/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-  Product-ID: your-product-id
-```
-
-### Success Response (200)
-
-```json
-{
-  "count": 6,
-  "status_code": 200,
-  "message": "Success",
-  "data": [
-    {
-      "id": 348,
-      "name": "test",
-      "slug": "test-1f5evfn7",
-      "status": "ACTIVE",
-      "description": ""
-    }
-  ]
-}
-```
-
-### Response Fields
-
-| Field       | Type    | Description             |
-|-------------|---------|-------------------------|
-| count       | integer | Total number of bridges |
-| status_code | integer | HTTP status code        |
-| message     | string  | Response message        |
-| data        | array   | Array of bridge objects |
-
-### Bridge Object Fields
-
-| Field       | Type   | Description                                  |
-|-------------|--------|----------------------------------------------|
-| id          | integer | Bridge unique identifier                    |
-| name        | string | Bridge name                                  |
-| slug        | string | Unique bridge slug identifier                |
-| status      | string | Bridge status: `ACTIVE`, `DRAFT`, `INACTIVE` |
-| description | string | Bridge description                           |
-
-### Error Response (400 — Bad Request)
-
-```json
-{
-  "status_code": 400,
-  "message": "Invalid request parameters",
-  "errors": "Detailed error description"
-}
-```
 
 ---
 
@@ -98,6 +24,10 @@ POST /api/v2/platform/telephony/bridges/
 | Org-Handle    | string | Yes      | Organization domain handle      |
 | Product-ID    | string | Yes      | Product identifier              |
 | Content-Type  | string | Yes      | `application/json`              |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
 
 ### Request Body
 
@@ -224,6 +154,82 @@ Body:
 
 ---
 
+## Get All Telephony Bridges
+
+Retrieve a list of all telephony bridges in the system, including their IDs, status, type, and associated numbers for monitoring and call-routing management.
+
+```http
+GET /api/v2/platform/telephony/bridges/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+| Product-ID    | string | Yes      | Product identifier              |
+
+### Example Request
+
+```http
+GET /api/v2/platform/telephony/bridges/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+  Product-ID: your-product-id
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 6,
+  "status_code": 200,
+  "message": "Success",
+  "data": [
+    {
+      "id": 348,
+      "name": "test",
+      "slug": "test-1f5evfn7",
+      "status": "ACTIVE",
+      "description": ""
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description             |
+|-------------|---------|-------------------------|
+| count       | integer | Total number of bridges |
+| status_code | integer | HTTP status code        |
+| message     | string  | Response message        |
+| data        | array   | Array of bridge objects |
+
+### Bridge Object Fields
+
+| Field       | Type   | Description                                  |
+|-------------|--------|----------------------------------------------|
+| id          | integer | Bridge unique identifier                    |
+| name        | string | Bridge name                                  |
+| slug        | string | Unique bridge slug identifier                |
+| status      | string | Bridge status: `ACTIVE`, `DRAFT`, `INACTIVE` |
+| description | string | Bridge description                           |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "status_code": 400,
+  "message": "Invalid request parameters",
+  "errors": "Detailed error description"
+}
+```
+
+---
+
 ## Get Bridge by Slug
 
 Retrieve details of a specific telephony bridge using its unique slug identifier.
@@ -237,6 +243,10 @@ GET /api/v2/platform/telephony/bridges/{slug}/
 | Name | Type   | Required | Description                |
 |------|--------|----------|----------------------------|
 | slug | string | Yes      | Unique bridge slug         |
+
+<Note>
+You can get the `slug` by hitting the [Get All Telephony Bridges](/api/telephony/bridges#get-all-telephony-bridges) API. The `slug` field in the response is your Bridge Slug.
+</Note>
 
 ### Headers
 
@@ -346,6 +356,11 @@ PATCH /api/v2/platform/telephony/bridges/{slug}/
 |------|--------|----------|----------------------------|
 | slug | string | Yes      | Unique bridge slug         |
 
+<Note>
+You can get the `slug` by hitting the [Get All Telephony Bridges](/api/telephony/bridges#get-all-telephony-bridges) API. The `slug` field in the response is your Bridge Slug.
+</Note>
+
+
 ### Headers
 
 | Name          | Type   | Required | Description                     |
@@ -448,6 +463,11 @@ DELETE /api/v2/platform/telephony/bridges/{slug}/
 |------|--------|----------|----------------------------|
 | slug | string | Yes      | Unique bridge slug         |
 
+<Note>
+You can get the `slug` by hitting the [Get All Telephony Bridges](/api/telephony/bridges#get-all-telephony-bridges) API. The `slug` field in the response is your Bridge Slug.
+</Note>
+
+
 ### Headers
 
 | Name          | Type   | Required | Description                     |
@@ -514,6 +534,11 @@ POST /api/v2/platform/telephony/bridges/{slug}/connect-provider/
 |------|--------|----------|----------------------------|
 | slug | string | Yes      | Unique bridge slug         |
 
+<Note>
+You can get the `slug` by hitting the [Get All Telephony Bridges](/api/telephony/bridges#get-all-telephony-bridges) API. The `slug` field in the response is your Bridge Slug.
+</Note>
+
+
 ### Headers
 
 | Name          | Type   | Required | Description                     |
@@ -522,6 +547,10 @@ POST /api/v2/platform/telephony/bridges/{slug}/connect-provider/
 | Org-Handle    | string | Yes      | Organization domain handle      |
 | Product-ID    | string | Yes      | Product identifier              |
 | Content-Type  | string | Yes      | `application/json`              |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
 
 ### Request Body
 
@@ -631,6 +660,10 @@ POST /api/v2/platform/telephony/bridges/{slug}/disconnect-provider/
 |------|--------|----------|----------------------------|
 | slug | string | Yes      | Unique bridge slug         |
 
+<Note>
+You can get the `slug` by hitting the [Get All Telephony Bridges](/api/telephony/bridges#get-all-telephony-bridges) API. The `slug` field in the response is your Bridge Slug.
+</Note>
+
 ### Headers
 
 | Name          | Type   | Required | Description                     |
@@ -639,6 +672,11 @@ POST /api/v2/platform/telephony/bridges/{slug}/disconnect-provider/
 | Org-Handle    | string | Yes      | Organization domain handle      |
 | Product-ID    | string | Yes      | Product identifier              |
 | Content-Type  | string | Yes      | `application/json`              |
+
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
 
 ### Request Body
 

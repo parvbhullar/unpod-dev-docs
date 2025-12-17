@@ -7,6 +7,117 @@ description: 'Manage telephony provider configurations'
 
 The Provider Configurations API allows you to manage telephony provider configurations. You can list, create, retrieve, update, and delete provider configurations for your telephony services.
 
+<Note>
+**Prerequisites:** Make sure you have your API Token ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Create Provider Configuration
+
+Create or update telephony provider settings by sending the required configuration details in the request body.
+
+```http
+POST /api/v2/platform/telephony/providers-configurations/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Org-Handle    | string | Yes      | Organization domain handle      |
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Example Request
+
+```http
+POST /api/v2/platform/telephony/providers-configurations/
+Headers:
+  Org-Handle: your-org-handle
+  Authorization: Token your-api-token
+  Content-Type: application/json
+
+Body:
+{
+  "name": "Twilio Suport",
+  "provider": 3,
+  "api_key": "sk_xxx",
+  "api_secret": "secret_xxx"
+}
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Success",
+  "data": {
+    "id": 1,
+    "name": "Twilio Suport",
+    "provider": 3,
+    "provider_details": {
+      "id": 3,
+      "name": "Twilio",
+      "description": "Desc 1",
+      "icon": "https://ik.imagekit.io/techblog/channels/twilio.png"
+    },
+    "org_handle": "abc",
+    "meta_json": [
+      {
+        "meta_key": "key",
+        "meta_value": "mklsfjodfdo"
+      }
+    ],
+    "active": true,
+    "api_key": "sk_xxx",
+    "api_secret": "secret_xxx",
+    "base_url": null,
+    "sip_url": ""
+  }
+}
+```
+
+
+### Response Fields
+
+| Field       | Type    | Description                   |
+|-------------|---------|-------------------------------|
+| status_code | integer | HTTP status code              |
+| message     | string  | Response message              |
+| data        | object  | Created configuration details |
+
+### Configuration Object Fields
+
+| Field            | Type    | Description                         |
+|------------------|---------|-------------------------------------|
+| id               | integer | Configuration unique identifier     |
+| name             | string  | Configuration name                  |
+| provider         | integer | Provider ID                         |
+| provider_details | object  | Provider information                |
+| org_handle       | string  | Organization domain handle          |
+| meta_json        | array   | Additional metadata key-value pairs |
+| active           | boolean | Whether the configuration is active |
+| api_key          | string  | Provider API key                    |
+| api_secret       | string  | Provider API secret                 |
+| base_url         | string  | Provider base URL                   |
+| sip_url          | string  | SIP URL for VoIP                    |
+
+### Error Response (401  Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
 ## Get All Provider Configurations
 
 Fetch information about all configured telephony providers to help identify and manage available calling services.
@@ -98,107 +209,6 @@ Headers:
 
 ---
 
-## Create Provider Configuration
-
-Create or update telephony provider settings by sending the required configuration details in the request body.
-
-```http
-POST /api/v2/platform/telephony/providers-configurations/
-```
-
-### Headers
-
-| Name          | Type   | Required | Description                     |
-|---------------|--------|----------|---------------------------------|
-| Org-Handle    | string | Yes      | Organization domain handle      |
-| Authorization | string | Yes      | API Key format: `Token <token>` |
-
-### Example Request
-
-```http
-POST /api/v2/platform/telephony/providers-configurations/
-Headers:
-  Org-Handle: your-org-handle
-  Authorization: Token your-api-token
-  Content-Type: application/json
-
-Body:
-{
-  "name": "Twilio Suport",
-  "provider": 3,
-  "api_key": "sk_xxx",
-  "api_secret": "secret_xxx"
-}
-```
-
-### Success Response (200)
-
-```json
-{
-  "status_code": 200,
-  "message": "Success",
-  "data": {
-    "id": 1,
-    "name": "Twilio Suport",
-    "provider": 3,
-    "provider_details": {
-      "id": 3,
-      "name": "Twilio",
-      "description": "Desc 1",
-      "icon": "https://ik.imagekit.io/techblog/channels/twilio.png"
-    },
-    "org_handle": "abc",
-    "meta_json": [
-      {
-        "meta_key": "key",
-        "meta_value": "mklsfjodfdo"
-      }
-    ],
-    "active": true,
-    "api_key": "sk_xxx",
-    "api_secret": "secret_xxx",
-    "base_url": null,
-    "sip_url": ""
-  }
-}
-```
-
-
-### Response Fields
-
-| Field       | Type    | Description                   |
-|-------------|---------|-------------------------------|
-| status_code | integer | HTTP status code              |
-| message     | string  | Response message              |
-| data        | object  | Created configuration details |
-
-### Configuration Object Fields
-
-| Field            | Type    | Description                         |
-|------------------|---------|-------------------------------------|
-| id               | integer | Configuration unique identifier     |
-| name             | string  | Configuration name                  |
-| provider         | integer | Provider ID                         |
-| provider_details | object  | Provider information                |
-| org_handle       | string  | Organization domain handle          |
-| meta_json        | array   | Additional metadata key-value pairs |
-| active           | boolean | Whether the configuration is active |
-| api_key          | string  | Provider API key                    |
-| api_secret       | string  | Provider API secret                 |
-| base_url         | string  | Provider base URL                   |
-| sip_url          | string  | SIP URL for VoIP                    |
-
-### Error Response (401  Unauthorized)
-
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
-
----
-
 ## Get Provider Configuration by ID
 
 Retrieve complete telephony provider configuration data for a specific ID, allowing you to view settings stored in the system.
@@ -213,12 +223,20 @@ GET /api/v2/platform/telephony/providers-configurations/{id}/
 |------|---------|----------|----------------------------------|
 | id   | integer | Yes      | Configuration unique identifier  |
 
+<Note>
+You can get the `id` by hitting the [Get All Provider Configurations](#get-all-provider-configurations) API. The `id` field in the response is your Configuration ID.
+</Note>
+
 ### Headers
 
 | Name          | Type    | Required | Description                     |
 |---------------|---------|----------|---------------------------------|
 | Org-Handle    | string  | Yes      | Organization domain handle      |
 | Product-ID    | integer | Yes      | Product identifier              |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
 
 ### Example Request
 
@@ -311,12 +329,20 @@ PATCH /api/v2/platform/telephony/providers-configurations/{id}/
 |------|---------|----------|----------------------------------|
 | id   | integer | Yes      | Configuration unique identifier  |
 
+<Note>
+You can get the `id` by hitting the [Get All Provider Configurations](#get-all-provider-configurations) API. The `id` field in the response is your Configuration ID.
+</Note>
+
 ### Headers
 
 | Name          | Type    | Required | Description                     |
 |---------------|---------|----------|---------------------------------|
 | Org-Handle    | string  | Yes      | Organization domain handle      |
 | Product-ID    | integer | Yes      | Product identifier              |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
 
 ### Request Body
 
@@ -428,12 +454,20 @@ DELETE /api/v2/platform/telephony/providers-configurations/{id}/
 |------|---------|----------|----------------------------------|
 | id   | integer | Yes      | Configuration unique identifier  |
 
+<Note>
+You can get the `id` by hitting the [Get All Provider Configurations](#get-all-provider-configurations) API. The `id` field in the response is your Configuration ID.
+</Note>
+
 ### Headers
 
 | Name          | Type    | Required | Description                     |
 |---------------|---------|----------|---------------------------------|
 | Org-Handle    | string  | Yes      | Organization domain handle      |
 | Product-ID    | integer | Yes      | Product identifier              |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
 
 ### Example Request
 

@@ -2,19 +2,144 @@
 
 The Tasks API allows you to manage and retrieve tasks in your Unpod platform. Tasks represent individual execution units within a run or space.
 
-## How to Get Your Space Token
+<Note>
+**Prerequisites:** Make sure you have your API Token. See [Authentication](/api/get-started/authentication) for details.
+</Note>
 
-Follow these steps to obtain your Space Token from the Unpod Dashboard:
+---
 
-1. **Login** to the [Unpod Dashboard](https://unpod.ai/)
-2. On the **left sidebar**, click on the **Conversation** tab
-3. Click on the **Settings** icon
-4. You'll see the **Space Token** option
-5. Click on it to **copy** the Space Token
+## Create a Task in a Space
+
+Create a new task inside a given space using the space's public token. You can assign the task to a pilot/agent, attach multiple documents, provide additional context, and optionally schedule the execution.
+
+```http
+POST /api/v2/platform/spaces/{space_token}/tasks/
+```
+
+### Path Parameters
+
+| Name        | Type   | Required | Description                                    |
+|-------------|--------|----------|------------------------------------------------|
+| space_token | string | Yes      | Public token of the space where task is created |
 
 <Note>
-Each space has a unique token. Make sure you're using the correct space token for your API requests.
+You can get the `space_token` by hitting the [Get All Spaces](/api/space/spaces#get-all-spaces) API. The `token` field in the response is your Space Token.
 </Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Content-Type  | string | Yes      | `application/json`              |
+
+### Request Body
+
+| Field     | Type   | Required | Description                                |
+|-----------|--------|----------|--------------------------------------------|
+| pilot     | string | Yes      | Agent/pilot handle to assign the task      |
+| documents | array  | Yes      | Array of document objects with task data   |
+| context   | string | No       | Additional context for the task            |
+| schedule  | object | No       | Schedule configuration (type: "now")       |
+
+### Example Request
+
+```http
+POST /api/v2/platform/spaces/your-space-token/tasks/
+Headers:
+  Authorization: Token your-api-token
+  Content-Type: application/json
+
+Body:
+{
+  "pilot": "space-agent-f1o3qjm1y7q1avvuynv4vprb1",
+  "documents": [
+    {
+      "name": "John Doe",
+      "time": null,
+      "email": "john@example.com",
+      "contact_number": "1234567890",
+      "alternate_number": "9876543210",
+      "occupation": "Developer",
+      "company_name": "TechCorp",
+      "address": "123/456 Main Street",
+      "about": "Software Developer",
+      "context": "Follow up call",
+      "multi_select": "multi",
+      "created": "2025-10-30T05:44:56",
+      "labels": ["Interested"],
+      "title": "Document Title",
+      "description": "Description text",
+      "document_id": "6902fb5840a736e125e80ebc"
+    }
+  ],
+  "context": "Call the lead and discuss the project requirements.",
+  "schedule": {
+    "type": "now"
+  }
+}
+```
+
+### Document Object Fields
+
+| Field            | Type   | Required | Description                       |
+|------------------|--------|----------|-----------------------------------|
+| name             | string | Yes      | Contact name                      |
+| email            | string | No       | Contact email                     |
+| contact_number   | string | Yes      | Primary contact number            |
+| alternate_number | string | No       | Alternate contact number          |
+| occupation       | string | No       | Contact's occupation              |
+| company_name     | string | No       | Contact's company                 |
+| address          | string | No       | Contact's address                 |
+| about            | string | No       | About the contact                 |
+| context          | string | No       | Additional context for the call   |
+| labels           | array  | No       | Labels/tags for the document      |
+| title            | string | No       | Document title                    |
+| description      | string | No       | Document description              |
+| document_id      | string | No       | Unique document identifier        |
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Task Created Successfully",
+  "data": {
+    "run_id": "Rf36292fceaa211ef8e2a91681c5ad3ab",
+    "space_id": "321",
+    "status": "pending",
+    "created": "2025-11-17T10:30:00.000000",
+    "_id": "67aeecb2851179ff81e48f64"
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description          |
+|-------------|---------|----------------------|
+| status_code | integer | HTTP status code     |
+| message     | string  | Response message     |
+| data        | object  | Created task details |
+
+### Data Object Fields
+
+| Field    | Type   | Description                       |
+|----------|--------|-----------------------------------|
+| run_id   | string | Created run identifier            |
+| space_id | string | Space identifier                  |
+| status   | string | Task status (initially `pending`) |
+| created  | string | Task creation timestamp           |
+| _id      | string | Internal task document ID         |
+
+### Error Response (206 — Validation / Creation Failed)
+
+```json
+{
+  "message": "Task creation failed",
+  "errors": "Detailed error description"
+}
+```
 
 ---
 
@@ -26,16 +151,16 @@ Retrieve detailed information for all registered agents, helping you view and ma
 GET /api/v2/platform/agents/
 ```
 
-<Note>
-You can get the agent `handle` from the  **Space** tab under [Get All Organizations](/api/space/spaces#get-all-organizations).
-</Note>
-
 ### Headers
 
 | Name          | Type   | Required | Description                     |
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
 
 ### Example Request
 
@@ -112,6 +237,10 @@ GET /api/v2/platform/agents/{handle}/tasks/
 | Name   | Type   | Required | Description                           |
 |--------|--------|----------|---------------------------------------|
 | handle | string | Yes      | Unique handle/identifier of the agent |
+
+<Note>
+The `handle` is the agent handle. You can get it by hitting the [Get All Agents](#get-all-agents) API. The `handle` field in the response is your Agent Handle.
+</Note>
 
 ### Headers
 
@@ -245,6 +374,10 @@ GET /api/v2/platform/spaces/{space_token}/tasks/
 |-------------|--------|----------|---------------------------------------|
 | space_token | string | Yes      | Public token identifying the workspace |
 
+<Note>
+You can get the `space_token` by hitting the [Get All Spaces](/api/space/spaces#get-all-spaces) API. The `token` field in the response is your Space Token.
+</Note>
+
 ### Query Parameters (Optional)
 
 | Name      | Type | Required | Description                        |
@@ -258,6 +391,7 @@ GET /api/v2/platform/spaces/{space_token}/tasks/
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Content-Type  | string | Yes      | `application/json`              |
+
 
 ### Example Request
 
@@ -460,137 +594,6 @@ Headers:
 ```json
 {
   "message": "Error fetching tasks",
-  "errors": "Detailed error description"
-}
-```
-
----
-
-## Create a Task in a Space
-
-Create a new task inside a given space using the space's public token. You can assign the task to a pilot/agent, attach multiple documents, provide additional context, and optionally schedule the execution.
-
-```http
-POST /api/v2/platform/spaces/{space_token}/tasks/
-```
-
-### Path Parameters
-
-| Name        | Type   | Required | Description                                    |
-|-------------|--------|----------|------------------------------------------------|
-| space_token | string | Yes      | Public token of the space where task is created |
-
-### Headers
-
-| Name          | Type   | Required | Description                     |
-|---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | API Key format: `Token <token>` |
-| Content-Type  | string | Yes      | `application/json`              |
-
-### Request Body
-
-| Field     | Type   | Required | Description                                |
-|-----------|--------|----------|--------------------------------------------|
-| pilot     | string | Yes      | Agent/pilot handle to assign the task      |
-| documents | array  | Yes      | Array of document objects with task data   |
-| context   | string | No       | Additional context for the task            |
-| schedule  | object | No       | Schedule configuration (type: "now")       |
-
-### Example Request
-
-```http
-POST /api/v2/platform/spaces/your-space-token/tasks/
-Headers:
-  Authorization: Token your-api-token
-  Content-Type: application/json
-
-Body:
-{
-  "pilot": "space-agent-f1o3qjm1y7q1avvuynv4vprb1",
-  "documents": [
-    {
-      "name": "John Doe",
-      "time": null,
-      "email": "john@example.com",
-      "contact_number": "1234567890",
-      "alternate_number": "9876543210",
-      "occupation": "Developer",
-      "company_name": "TechCorp",
-      "address": "123/456 Main Street",
-      "about": "Software Developer",
-      "context": "Follow up call",
-      "multi_select": "multi",
-      "created": "2025-10-30T05:44:56",
-      "labels": ["Interested"],
-      "title": "Document Title",
-      "description": "Description text",
-      "document_id": "6902fb5840a736e125e80ebc"
-    }
-  ],
-  "context": "Call the lead and discuss the project requirements.",
-  "schedule": {
-    "type": "now"
-  }
-}
-```
-
-### Document Object Fields
-
-| Field            | Type   | Required | Description                       |
-|------------------|--------|----------|-----------------------------------|
-| name             | string | Yes      | Contact name                      |
-| email            | string | No       | Contact email                     |
-| contact_number   | string | Yes      | Primary contact number            |
-| alternate_number | string | No       | Alternate contact number          |
-| occupation       | string | No       | Contact's occupation              |
-| company_name     | string | No       | Contact's company                 |
-| address          | string | No       | Contact's address                 |
-| about            | string | No       | About the contact                 |
-| context          | string | No       | Additional context for the call   |
-| labels           | array  | No       | Labels/tags for the document      |
-| title            | string | No       | Document title                    |
-| description      | string | No       | Document description              |
-| document_id      | string | No       | Unique document identifier        |
-
-### Success Response (200)
-
-```json
-{
-  "status_code": 200,
-  "message": "Task Created Successfully",
-  "data": {
-    "run_id": "Rf36292fceaa211ef8e2a91681c5ad3ab",
-    "space_id": "321",
-    "status": "pending",
-    "created": "2025-11-17T10:30:00.000000",
-    "_id": "67aeecb2851179ff81e48f64"
-  }
-}
-```
-
-### Response Fields
-
-| Field       | Type    | Description          |
-|-------------|---------|----------------------|
-| status_code | integer | HTTP status code     |
-| message     | string  | Response message     |
-| data        | object  | Created task details |
-
-### Data Object Fields
-
-| Field    | Type   | Description                       |
-|----------|--------|-----------------------------------|
-| run_id   | string | Created run identifier            |
-| space_id | string | Space identifier                  |
-| status   | string | Task status (initially `pending`) |
-| created  | string | Task creation timestamp           |
-| _id      | string | Internal task document ID         |
-
-### Error Response (206 — Validation / Creation Failed)
-
-```json
-{
-  "message": "Task creation failed",
   "errors": "Detailed error description"
 }
 ```

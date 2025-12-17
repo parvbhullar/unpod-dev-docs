@@ -2,6 +2,12 @@
 
 The Call Logs API allows you to retrieve call history logs for your organization. This endpoint provides comprehensive call details including duration, status, timestamps, and source/destination numbers.
 
+<Note>
+**Prerequisites:** Make sure you have your API Token. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
 ## Get Call Logs
 
 Retrieve the call history logs for the organization. Supports filtering, pagination, and provides details like call duration, status, start/end times, and source/destination numbers.
@@ -16,6 +22,10 @@ GET /api/v2/platform/call-logs/
 |---------------|--------|----------|--------------------------------------|
 | Org-Handle    | string | Yes      | Organization domain handle           |
 | Authorization | string | Yes      | API Key format: `Token <token>`      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
 
 ### Query Parameters
 

@@ -52,36 +52,38 @@
             ]
           },
           {
-            "group": "Execution",
+            "group": "Space",
             "pages": [
-              "api/execution/runs",
-              "api/execution/tasks"
-            ]
-          },
-          {
-            "group": "Telephony",
-            "pages": [
-              "api/telephony/Providers",
-              "api/telephony/bridges",
-              "api/telephony/numbers"
+              "api/space/organizations",
+              "api/space/spaces"
+
             ]
           },
           {
             "group": "Provider",
             "pages": [
+              "api/telephony/Providers",
               "api/provider/configurations"
+            ]
+          },
+          {
+            "group": "Telephony",
+            "pages": [
+              "api/telephony/numbers",
+              "api/telephony/bridges"
+            ]
+          },
+          {
+            "group": "Execution",
+            "pages": [
+              "api/execution/tasks",
+              "api/execution/runs"
             ]
           },
           {
             "group": "Logs",
             "pages": [
               "api/logs/calls"
-            ]
-          },
-          {
-            "group": "Space",
-            "pages": [
-              "api/space/spaces"
             ]
           }
         ]

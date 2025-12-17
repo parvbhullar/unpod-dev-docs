@@ -2,6 +2,12 @@
 
 The Numbers API allows you to manage phone numbers for your telephony operations.
 
+<Note>
+**Prerequisites:** Make sure you have your API Token. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
 ## Get Telephony Numbers
 
 Retrieve a list of all telephony numbers in the system along with their details and current status.
@@ -16,6 +22,11 @@ GET /api/v2/platform/telephony/numbers/
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Org-Handle    | string | Yes      | Organization domain handle      |
+
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
 
 ### Example Request
 

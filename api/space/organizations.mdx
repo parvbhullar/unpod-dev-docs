@@ -1,0 +1,155 @@
+---
+title: 'Organizations'
+description: 'Retrieve information about organizations'
+---
+
+# Organizations API
+
+The Organizations API allows you to retrieve information about all registered organizations in your Unpod platform.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get All Organizations
+
+Retrieve detailed information of every registered organization, helping you view and manage organizational records in the system.
+
+```http
+GET /api/v2/platform/organizations/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+
+### Example Request
+
+```http
+GET /api/v2/platform/organizations/
+Headers:
+  Authorization: Token your-api-token
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 2,
+  "status_code": 200,
+  "message": "Organizations fetched successfully",
+  "data": [
+    {
+      "name": "xyz",
+      "token": "T6ZN4WQK9JX2BC7LGPR5",
+      "domain": "abc.com",
+      "domain_handle": "abc.com",
+      "is_private_domain": true,
+      "role": "viewer"
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description                   |
+|-------------|---------|-------------------------------|
+| count       | integer | Total number of organizations |
+| status_code | integer | HTTP status code              |
+| message     | string  | Response message              |
+| data        | array   | Array of organization objects |
+
+### Organization Object Fields
+
+| Field             | Type    | Description                              |
+|-------------------|---------|------------------------------------------|
+| name              | string  | Organization name                        |
+| token             | string  | Organization token                       |
+| domain            | string  | Organization domain                      |
+| domain_handle     | string  | Domain handle for API requests           |
+| is_private_domain | boolean | Whether the domain is private            |
+| role              | string  | User's role: `viewer`, `admin`, `member` |
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Request completed successfully         |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token'
+};
+
+// Get all organizations
+const getAllOrganizations = async () => {
+  const response = await axios.get(
+    'https://unpod.dev/api/v2/platform/organizations/',
+    { headers }
+  );
+  console.log(`Total organizations: ${response.data.count}`);
+  return response.data.data;
+};
+
+// Example usage
+getAllOrganizations();
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token'
+}
+
+def get_all_organizations():
+    """Get all organizations"""
+    url = 'https://unpod.dev/api/v2/platform/organizations/'
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    print(f"Total organizations: {data['count']}")
+    return data['data']
+
+# Example usage
+get_all_organizations()
+```
+
+```bash cURL
+# Get all organizations
+curl -X GET "https://unpod.dev/api/v2/platform/organizations/" \
+  -H "Authorization: Token your-api-token"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Org-Handle**: Use the `domain_handle` from this API as the `Org-Handle` header in other API requests
+2. **Caching**: Cache organization data to reduce API calls
+3. **Error Handling**: Always handle potential errors and edge cases
+4. **Security**: Keep API tokens secure and rotate them regularly

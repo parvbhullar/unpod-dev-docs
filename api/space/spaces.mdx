@@ -2,6 +2,10 @@
 
 The Spaces API allows you to manage and retrieve spaces (workspaces/groups) in your Unpod platform. Spaces are containers that organize your tasks, runs, and data collections.
 
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
 ---
 
 ## Get All Spaces
@@ -18,6 +22,10 @@ GET /api/v2/platform/spaces/
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
 
 ### Example Request
 
@@ -102,12 +110,20 @@ GET /api/v2/platform/spaces/{space_token}/
 |-------------|--------|----------|------------------------------------|
 | space_token | string | Yes      | Public token identifying the space |
 
+<Note>
+You can get the `space_token` by hitting the [Get All Spaces](/api/space/spaces#get-all-spaces) API. The `token` field in the response is your Space Token.
+</Note>
+
 ### Headers
 
 | Name          | Type   | Required | Description                     |
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
 
 ### Example Request
 
@@ -169,79 +185,6 @@ Headers:
 
 ---
 
-## Get All Organizations
-
-Retrieve detailed information of every registered organization, helping you view and manage organizational records in the system.
-
-```http
-GET /api/v2/platform/organizations/
-```
-
-### Headers
-
-| Name          | Type   | Required | Description                     |
-|---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | API Key format: `Token <token>` |
-
-### Example Request
-
-```http
-GET /api/v2/platform/organizations/
-Headers:
-  Authorization: Token your-api-token
-```
-
-### Success Response (200)
-
-```json
-{
-  "count": 2,
-  "status_code": 200,
-  "message": "Organizations fetched successfully",
-  "data": [
-    {
-      "name": "xyz",
-      "token": "T6ZN4WQK9JX2BC7LGPR5",
-      "domain": "abc.com",
-      "domain_handle": "abc.com",
-      "is_private_domain": true,
-      "role": "viewer"
-    }
-  ]
-}
-```
-
-### Response Fields
-
-| Field       | Type    | Description                   |
-|-------------|---------|-------------------------------|
-| count       | integer | Total number of organizations |
-| status_code | integer | HTTP status code              |
-| message     | string  | Response message              |
-| data        | array   | Array of organization objects |
-
-### Organization Object Fields
-
-| Field             | Type    | Description                              |
-|-------------------|---------|------------------------------------------|
-| name              | string  | Organization name                        |
-| token             | string  | Organization token                       |
-| domain            | string  | Organization domain                      |
-| domain_handle     | string  | Domain handle for API requests           |
-| is_private_domain | boolean | Whether the domain is private            |
-| role              | string  | User's role: `viewer`, `admin`, `member` |
-
-### Error Response (401  Unauthorized)
-
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
-
----
-
 ## Common Error Codes
 
 | Status Code | Description                                      |
@@ -285,20 +228,9 @@ const getSpaceByToken = async (spaceToken) => {
   return response.data.data;
 };
 
-// Get all organizations
-const getAllOrganizations = async () => {
-  const response = await axios.get(
-    'https://unpod.dev/api/v2/platform/organizations/',
-    { headers: { 'Authorization': 'Token your-api-token' } }
-  );
-  console.log(`Total organizations: ${response.data.count}`);
-  return response.data.data;
-};
-
 // Example usage
 getAllSpaces();
 getSpaceByToken('8KZRTQP7BNW5XEDLORYUHMJC');
-getAllOrganizations();
 ```
 
 ```python Python
@@ -325,19 +257,9 @@ def get_space_by_token(space_token: str):
     print(f"Space name: {data['data']['name']}")
     return data['data']
 
-def get_all_organizations():
-    """Get all organizations"""
-    url = 'https://unpod.dev/api/v2/platform/organizations/'
-    auth_headers = {'Authorization': 'Token your-api-token'}
-    response = requests.get(url, headers=auth_headers)
-    data = response.json()
-    print(f"Total organizations: {data['count']}")
-    return data['data']
-
 # Example usage
 get_all_spaces()
 get_space_by_token('8KZRTQP7BNW5XEDLORYUHMJC')
-get_all_organizations()
 ```
 
 ```bash cURL
@@ -350,10 +272,6 @@ curl -X GET "https://unpod.dev/api/v2/platform/spaces/" \
 curl -X GET "https://unpod.dev/api/v2/platform/spaces/8KZRTQP7BNW5XEDLORYUHMJC/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
-
-# Get all organizations
-curl -X GET "https://unpod.dev/api/v2/platform/organizations/" \
-  -H "Authorization: Token your-api-token"
 ```
 
 </CodeGroup>

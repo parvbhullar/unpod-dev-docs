@@ -2,18 +2,8 @@
 
 The Runs API allows you to manage and monitor execution runs in your Unpod platform. A run represents a batch execution or group of tasks within a space.
 
-## How to Get Your Space Token
-
-Follow these steps to obtain your Space Token from the Unpod Dashboard:
-
-1. **Login** to the [Unpod Dashboard](https://unpod.ai/)
-2. On the **left sidebar**, click on the **Conversation** tab
-3. Click on the **Settings** icon
-4. You'll see the **Space Token** option
-5. Click on it to **copy** the Space Token
-
 <Note>
-Each space has a unique token. Make sure you're using the correct space token for your API requests.
+**Prerequisites:** Make sure you have your API Token. See [Authentication](/api/get-started/authentication)  for details.
 </Note>
 
 ---
@@ -32,12 +22,18 @@ GET /api/v2/platform/spaces/{space_token}/runs/
 |-------------|--------|----------|------------------------------------|
 | space_token | string | Yes      | Public token identifying the space |
 
+<Note>
+You can get the `space_token` by hitting the [Get All Spaces](/api/space/spaces#get-all-spaces) API. The `token` field in the response is your Space Token.
+</Note>
+
 ### Headers
 
 | Name          | Type   | Required | Description                     |
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Content-Type  | string | Yes      | `application/json`              |
+
+
 
 ### Example Request
 
@@ -128,6 +124,10 @@ GET /api/v2/platform/spaces/{space_token}/runs/{run_id}/tasks/
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Content-Type  | string | Yes      | `application/json`              |
+
+<Note>
+You can get the `space_token` by hitting the [Get All Spaces](/api/space/spaces#get-all-spaces) API. The `run_id` can be obtained from the [Get All Runs in a Space](#get-all-runs-in-a-space) API response.
+</Note>
 
 ### Example Request
 
