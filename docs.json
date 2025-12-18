@@ -93,7 +93,7 @@
       "anchors": [
         {
           "anchor": "YouTube",
-          "href": "https://www.youtube.com/@unpodai",
+          "href": "https://www.youtube.com/@unpod-ai",
           "icon": "youtube"
         },
         {
@@ -126,7 +126,7 @@
     "socials": {
       "github": "https://github.com/parvbhullar",
       "twitter": "https://x.com/unpod_ai",
-      "youtube": "https://www.youtube.com/@unpodai",
+      "youtube": "https://www.youtube.com/@unpod-ai",
       "discord": "https://discord.gg/7kQ4ewNSHZ"
     }
   },
