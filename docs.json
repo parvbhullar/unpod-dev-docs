@@ -31,10 +31,37 @@
         "tab": "Voice AI",
         "groups": [
           {
-            "group": "Modes",
+            "group": "Getting Started",
             "pages": [
-              "space mode",
-              "studio mode"
+              "Voice AI/introduction"
+            ]
+          },
+          {
+            "group": "Space Mode",
+            "pages": [
+              "Voice AI/Space Mode/Introduction",
+              "Voice AI/Space Mode/edit space",
+              "Voice AI/Space Mode/space token", 
+              "Voice AI/Space Mode/call logs",
+              "Voice AI/Space Mode/conversation",
+              "Voice AI/Space Mode/calls",
+              "Voice AI/Space Mode/people",
+              "Voice AI/Space Mode/analytics"
+            ]
+          },
+          {
+            "group": "Studio Mode", 
+            "pages": [
+              "Voice AI/Studio Mode/introduction",
+              "Voice AI/Studio Mode/identity",
+              "Voice AI/Studio Mode/persona",
+              "Voice AI/Studio Mode/knowledge base",
+              "Voice AI/Studio Mode/voice profile",
+              "Voice AI/Studio Mode/telephony",
+              "Voice AI/Studio Mode/advance",
+              "Voice AI/Studio Mode/analysis",
+              "Voice AI/Studio Mode/integration",
+              "Voice AI/Studio Mode/api key"
             ]
           }
         ]
@@ -42,16 +69,22 @@
       {
         "tab": "Dev Platform",
         "groups": [
+           {
+            "group": "Getting Started",
+            "pages": [
+              "Dev Platform/introduction"
+            ]
+          },
           {
             "group": "Dev Platform",
             "pages": [
-              "telephony",
-              "numbers",
-              "provider",
-              "agents",
-              "Analytics-and-Reporting",
-              "Load-Testing",
-              "Security-&-Compliance"
+              "Dev Platform/telephony",
+              "Dev Platform/numbers",
+              "Dev Platform/provider",
+              "Dev Platform/agents",
+              "Dev Platform/Analytics-and-Reporting",
+              "Dev Platform/Load-Testing",
+              "Dev Platform/Security-&-Compliance"
             ]
           }
         ]

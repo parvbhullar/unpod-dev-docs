@@ -1,0 +1,42 @@
+---
+title: 'Integration'
+description: 'Configure webhook integrations and API connections.'
+icon: 'link'
+---
+
+## Integration
+
+Webhook integration is the process of using webhooks to enable real-time communication between web applications, where one application sends data to another as an event occurs.
+
+<img src="../../images/Integration1.png" alt="Webhook Integration Screenshot" />
+
+To enable the webhook integration, you have to click on Enable Webhook as Yes.
+
+Webhook URL is the endpoint which will be provided by the user.
+
+You can also add some headers while doing this integration if needed. Webhook headers are the key-value pairs for identification, authentication, and context, telling the receiver who sent it, how to process data, and event details.
+
+<img src="../../images/Integration2.png" alt="Webhook Headers Screenshot" />
+
+### Common Webhook Headers
+
+**Common and Standard Headers:**
+- **Content-Type** - Describes the format of the data (e.g., application/json, application/x-www-form-urlencoded).
+- **User-Agent** - Identifies the client sending the request (e.g., GitLab/15.5.0).
+- **Content-Length** - Size of the request body in bytes.
+
+**Security and Authentication Headers:**
+- **Authorization** - For bearer tokens or basic auth (e.g., Bearer token).
+- **X-Hub-Signature / X-Hub-Signature-256** - HMAC signature to verify the request authenticity (GitHub, etc.).
+- **X-Shopify-Hmac-Sha256** - The signature of Shopify to verify the delivery.
+- **Idempotency-Key** - Ensures a request is processed only once, even with retries.
+
+**Platform-Specific Headers (Examples):**
+- **X-GitHub-Event** - Type of event (e.g., push, pull_request).
+- **X-Shopify-Topic** - The event topic (e.g., products/create).
+- **X-Gitlab-Event** - GitLab event type (e.g., Push Hook).
+- **X-Contentful-Topic** - Event topic in Contentful.
+
+After entering all the required information, click on Save. At last click on the Publish button at the right top corner and the agent is ready to use.
+
+---
