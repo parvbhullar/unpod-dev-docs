@@ -1,0 +1,57 @@
+---
+title: 'Security and Compliance Documentation'
+description: 'Security and compliance documentation'
+icon: 'shield'
+---
+
+## Security and Compliance
+
+### Getting Started
+
+Unpod is built with enterprise-grade security and compliance as foundational principles. Our zero-retention model ensures maximum data privacy while maintaining full functionality for your voice AI operations.
+
+---
+
+## Data Handling Matrix (ZERO Retention Model)
+
+| Data Type | Retention | Storage | Notes |
+|-----------|-----------|---------|-------|
+| Voice Audio (Raw) | 0 seconds | Memory only | Wiped on session end |
+| Transcripts | 0 seconds | Memory only | Never written to disk |
+| LLM Prompts/Responses | 0 seconds | GPU memory | No fine-tuning on customer data |
+| Caller PII (phone, name) | 0 seconds | Never captured | Pass-through only |
+| Anonymized Metrics | 90 days | Our systems | Latency, duration, errors only |
+| Recordings/Transcripts | 90 days | Our systems | As per compliance requirements |
+| Billing Records | 7 years | Our systems | Legal/tax compliance |
+
+---
+
+## Security Controls
+
+- **In-Transit Encryption**: TLS 1.3 for all API calls, SRTP for voice streams
+- **Memory Isolation**: Each session in isolated container with dedicated memory space; no cross-tenant leakage
+- **Secure Wipe**: Memory overwritten with zeros on session termination; containers destroyed, not recycled
+- **No Model Training**: Customer data never used for training or fine-tuning; contractually guaranteed
+
+---
+
+## Compliance Certifications
+
+Built-in compliance with ISO-27001, and telecom regulations.
+
+| Certification/Standard | Status |
+|------------------------|---------|
+| ISO/IEC 27001:2021 | Annual audit; report available under NDA |
+| GDPR Article 17 | Compliant - Zero retention model inherently supports right to erasure |
+| RBI Data Localization | India-only processing (Mumbai ap-south-1); no data leaves jurisdiction. Other than explicitly chosen models |
+
+---
+
+## Access Control and SSO
+
+SSO integration documentation:
+
+- **Role-based access control** for admin console (Admin, Editor, User Roles)
+- **SSO integration** available (SAML 2.0, OAuth 2.0)
+- **Audit logging** for all administrative actions
+- **API key rotation and revocation** capabilities
