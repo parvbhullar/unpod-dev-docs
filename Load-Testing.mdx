@@ -1,0 +1,88 @@
+---
+title: 'Load Testing'
+description: 'Perform load testing and stress testing.'
+icon: 'zap'
+---
+
+## Getting Started
+
+Load testing helps ensure your Unpod applications can handle concurrent user traffic and maintain optimal performance under various load conditions.
+
+---
+
+## Performance Targets and SLAs
+
+The platform guarantees 99.99% uptime with automatic failover. SLA documentation
+
+### Metric Commitment
+
+| Metric | Commitment | Credit Policy |
+|--------|------------|---------------|
+| Uptime SLA | 99.90% available | 0.5% credit per 0.1% below |
+| End-to-End Latency p99 | less than 1500ms | Included in E2E |
+| WebApp Service Latency | less than 10ms internal routing | Included in E2E |
+| Vector Store Query p99 | less than 50ms | Included in E2E |
+| MongoDB Write Fire and Forget | less than 40ms | Included in E2E |
+| Data Purge Verification | On-demand audit | Included Enterprise |
+
+### Baseline Performance Metrics
+
+The following metrics represent measured performance under optimal baseline conditions single session, warm cache, optimal network:
+
+| Component | Measured p50 | Measured p95 |
+|-----------|-------------|-------------|
+| Platform Orchestration | 8ms | 12ms |
+| Speech-to-Text STT | 0.5s | 0.7s |
+| LLM Inference | 0.8s | 1.2s |
+| Text-to-Speech TTS | 0.3s | 0.5s |
+| End-to-End Voice Pipeline | 1.6s | 2.4s |
+
+### Concurrent Load Test Results
+
+Platform stability validated under concurrent session load:
+
+| Test Scenario | Concurrency | Success Rate | Avg Latency |
+|---------------|-------------|--------------|-------------|
+| Baseline Single Session | 1 | 100% | 1.6s |
+| Low Concurrency | 5 | 100% | 1.65s |
+| Medium Concurrency | 10 | 100% | 1.7s |
+| High Concurrency | 15 | 100% | 1.7s |
+
+### Infrastructure Robustness
+
+| Capability | Status |
+|------------|--------|
+| Auto-scaling | Horizontal pod scaling enabled |
+| Failover | Multi-region redundancy |
+| Connection Pooling | Optimized for concurrent sessions |
+| Rate Limiting | Per-tenant throttling |
+| Observability | Real-time latency monitoring |
+| Data Residency | India region available |
+
+---
+
+## Scalability Architecture
+
+- Horizontal Scaling: Native HPA Horizontal Pod Autoscaler for all stateless components
+- GPU Node Affinity: Dedicated GPU pools with NVIDIA A10G L4 for inference workloads
+- Regional Infrastructure: Automatic routing through worldwide infrastructure for optimal latency
+- Database Scaling: Postgres read replicas, MongoDB ReplicaSet with automatic failover
+- SaaS Auto-scaling: Instant autoscale vs manual capacity planning for self-hosted
+
+---
+
+## Latency Optimization Techniques
+
+- Streaming STT TTS: Real-time processing without full-file buffering
+- Speculative Decoding: Parallel token generation for faster LLM responses
+- Same Availability Zone: Co-located services to minimize network latency
+- gRPC WebSocket: Low-overhead protocols for inter-service communication
+
+---
+
+## Notes
+
+- End-to-End latency includes external service providers STT, LLM, TTS which contribute to variability under load.
+- Platform orchestration layer maintains less than 15ms latency regardless of concurrent load.
+- Performance optimizations for high-concurrency scenarios are actively being deployed.
+- Custom SLA tiers available for enterprise customers with dedicated infrastructure.

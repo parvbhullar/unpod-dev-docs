@@ -16,7 +16,7 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Documentation",
+        "tab": "Introduction",
         "groups": [
           {
             "group": "Documentation",
@@ -28,21 +28,35 @@
         ]
       },
       {
-        "tab": "Product Guides",
+        "tab": "Voice AI",
         "groups": [
           {
-            "group": "Product Guides",
+            "group": "Modes",
             "pages": [
-              "telephony",
-              "numbers",
-              "provider",
-              "agents"
+              "space mode",
+              "studio mode"
             ]
           }
         ]
       },
       {
-        "tab": "API Reference",
+        "tab": "Dev Platform",
+        "groups": [
+          {
+            "group": "Dev Platform",
+            "pages": [
+              "telephony",
+              "numbers",
+              "provider",
+              "agents",
+              "Load-Testing",
+              "Analytics-and-Reporting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Documentation",
         "groups": [
           {
             "group": "Get Started",
