@@ -107,15 +107,15 @@ Body:
 
 ```json
 {
-  "status_code": 200,
-  "message": "Task Created Successfully",
-  "data": {
-    "run_id": "Rf36292fceaa211ef8e2a91681c5ad3ab",
-    "space_id": "321",
-    "status": "pending",
-    "created": "2025-11-17T10:30:00.000000",
-    "_id": "67aeecb2851179ff81e48f64"
-  }
+    "status_code": 200,
+    "message": "Task Created Successfully",
+    "data": {
+        "run_id": "R74802366fe9011f0878d43cd8a99e069",
+        "task_ids": [
+            "T74802367fe9011f0878d43cd8a99e069"
+        ],
+        "status": "pending"
+    }
 }
 ```
 
@@ -132,10 +132,8 @@ Body:
 | Field    | Type   | Description                       |
 |----------|--------|-----------------------------------|
 | run_id   | string | Created run identifier            |
-| space_id | string | Space identifier                  |
+| task_ids | array  | Array of created task identifiers |
 | status   | string | Task status (initially `pending`) |
-| created  | string | Task creation timestamp           |
-| _id      | string | Internal task document ID         |
 
 ### Error Response (206 — Validation / Creation Failed)
 
@@ -272,42 +270,115 @@ Headers:
   "message": "Tasks Fetched Successfully",
   "data": [
     {
-      "_id": "example123456789",
-      "space_id": "999",
-      "thread_id": null,
-      "user": "101",
-      "user_org_id": "501",
+      "_id": "697debb84c27faa892bfa0cc",
+      "thread_id": "675272289779974401",
+      "user_org_id": "145",
       "user_info": {
-        "id": "101",
-        "email": "demo.user@example.com",
-        "full_name": "Demo User",
-        "user_token": "DEMO123TOKEN456"
+        "email": "user@example.com",
+        "full_name": "John Doe"
       },
-      "created": "2025-01-10T10:20:30.000000",
-      "modified": "2025-01-10T10:25:30.000000",
-      "task_id": "TASK123456789",
-      "run_id": "RUN123456789",
-      "collection_ref": "collection_data_DEMO123456",
+      "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
+      "run_id": "R8ff2ccdefe9a11f0878d43cd8a99e069",
+      "collection_ref": "collection_data_SA2W8R6NZRK6C9PO3JSL1J85",
       "task": {
-        "objective": "call"
+        "objective": "Call it"
       },
       "input": {
         "name": "John Doe",
-        "about": "Software Developer",
-        "email": "john.doe@example.com",
-        "address": "New Delhi",
+        "email": "john@example.com",
+        "contact_number": "1234567890",
+        "alternate_number": "",
         "occupation": "Developer",
         "company_name": "TechCorp",
-        "contact_number": "9876543210",
-        "created": "2025-01-01T12:00:00.000000",
-        "context": "Policy Number 123456789, Amount Rupees ten thousand, Due Date 10th March 2025"
+        "address": "123 Main Street",
+        "about": "Software Developer",
+        "context": "Follow up call",
+        "multi_select": "multi",
+        "created": "2025-10-30T05:44:56",
+        "labels": [
+          "Interested"
+        ],
+        "document_id": "6902fb5840a736e125e80c",
+        "quality": "good"
       },
-      "output": {},
+      "output": {
+        "call_id": "675272289779974401",
+        "call_end_reason": null,
+        "start_time": "2026-01-31 11:47:38.067021",
+        "end_time": "2026-01-31 11:48:11.385745",
+        "assistant_number": "1234567890",
+        "call_summary": "Call completed successfully",
+        "duration": 33,
+        "recording_url": "https://example.com/recording.ogg",
+        "transcript": [
+          {
+            "role": "user",
+            "content": "Hello?",
+            "timestamp": "2026-01-31 11:47:46.675013",
+            "participant": "idt_+1234567890"
+          },
+          {
+            "role": "assistant",
+            "content": "Hi! This is [name] from [company]. Am I speaking with John?\n",
+            "timestamp": "2026-01-31 11:47:54.259815",
+            "message_id": "2e8be35b-303"
+          }
+        ],
+        "post_call_data": {
+          "classification": {
+            "labels": ["Interested"]
+          },
+          "summary": {
+            "status": "Connected",
+            "summary": "The call was successful and the user showed interest in the product.",
+            "callback_datetime": "2026-02-01T10:00:00",
+            "hours_from_now": "24"
+          },
+          "call_back": {
+            "scheduled": true,
+            "time": "2026-02-01T10:00:00"
+          },
+          "follow_up": {
+            "required": "follow_up enabled"
+          },
+          "profile_summary": {
+            "tone": "Positive",
+            "engagement": "High",
+            "interest_level": "Very Interested",
+            "objections": [],
+            "questions_asked": ["What is the pricing?", "When can we start?"],
+            "pain_points": ["Current solution is expensive"],
+            "outcome": "Interested",
+            "next_action": "Schedule demo",
+            "callback_requested": true,
+            "callback_time": "2026-02-01T10:00:00",
+            "summary_text": "The user showed high interest and requested a callback for product demo."
+          },
+          "structured_data": {
+            "lead_score": 8,
+            "budget": "$5000-$10000"
+          }
+        },
+        "metadata": {
+          "cost": 0.5,
+          "usage": {
+            "tokens": 150,
+            "duration": 33
+          }
+        },
+        "call_type": "outbound",
+        "call_status": "completed"
+      },
       "attachments": [],
       "assignee": "sales-agent-v1",
-      "status": "pending",
+      "status": "completed",
       "execution_type": "call",
-      "ref_id": "doc-123456"
+      "ref_id": "6902fb5840a736e125e80c",
+      "failure_count": 0,
+      "last_failure_reason": null,
+      "retry_attempt": 0,
+      "last_status_change": "2026-01-31T11:47:31.198984",
+      "scheduled_timestamp": null
     }
   ]
 }
@@ -324,27 +395,28 @@ Headers:
 
 ### Task Object Fields
 
-| Field          | Type    | Description                                   |
-|----------------|---------|-----------------------------------------------|
-| _id            | string  | Internal task document ID                     |
-| space_id       | string  | Space identifier                              |
-| thread_id      | string  | Thread identifier (null if not applicable)    |
-| user           | string  | User ID who created the task                  |
-| user_org_id    | string  | Organization ID of the user                   |
-| user_info      | object  | User details (id, email, full_name, token)    |
-| created        | string  | Task creation timestamp                       |
-| modified       | string  | Last modified timestamp                       |
-| task_id        | string  | Unique task identifier                        |
-| run_id         | string  | Parent run identifier                         |
-| collection_ref | string  | Reference to the data collection              |
-| task           | object  | Task definition with objective                |
-| input          | object  | Input data for the task                       |
-| output         | object  | Task output (empty if pending)                |
-| attachments    | array   | List of attachments                           |
-| assignee       | string  | Agent handle assigned to the task             |
-| status         | string  | Task status: `pending`, `completed`, `failed` |
-| execution_type | string  | Type of execution: `call`, `email`, etc.      |
-| ref_id         | string  | Reference ID linking to input data            |
+| Field                | Type    | Description                                   |
+|----------------------|---------|-----------------------------------------------|
+| _id                  | string  | Internal task document ID                     |
+| thread_id            | string  | Thread identifier                             |
+| user_org_id          | string  | Organization ID of the user                   |
+| user_info            | object  | User details (email, full_name)               |
+| task_id              | string  | Unique task identifier                        |
+| run_id               | string  | Parent run identifier                         |
+| collection_ref       | string  | Reference to the data collection              |
+| task                 | object  | Task definition with objective                |
+| input                | object  | Input data for the task                       |
+| output               | object  | Task output with call details                 |
+| attachments          | array   | List of attachments                           |
+| assignee             | string  | Agent handle assigned to the task             |
+| status               | string  | Task status: `pending`, `completed`, `failed` |
+| execution_type       | string  | Type of execution: `call`, `email`, etc.      |
+| ref_id               | string  | Reference ID linking to input data            |
+| failure_count        | integer | Number of failed attempts                    |
+| last_failure_reason  | string  | Reason for last failure                       |
+| retry_attempt        | integer | Current retry attempt number                  |
+| last_status_change   | string  | Timestamp of last status change               |
+| scheduled_timestamp  | string  | Scheduled execution timestamp                 |
 
 ### Error Response (206 — Tasks Fetch Failed)
 

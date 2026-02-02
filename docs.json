@@ -40,10 +40,15 @@
             "group": "Space Mode",
             "pages": [
               "Voice AI/Space Mode/Introduction",
-              "Voice AI/Space Mode/edit space",
-              "Voice AI/Space Mode/space token", 
-              "Voice AI/Space Mode/call logs",
-              "Voice AI/Space Mode/conversation",
+              {
+                "group": "Thread",
+                "pages": [
+                  "Voice AI/Space Mode/thread/edit",
+                  "Voice AI/Space Mode/thread/space token", 
+                  "Voice AI/Space Mode/thread/call logs",
+                  "Voice AI/Space Mode/thread/conversation"
+                ]
+              },
               "Voice AI/Space Mode/calls",
               "Voice AI/Space Mode/people",
               "Voice AI/Space Mode/analytics"
@@ -53,13 +58,18 @@
             "group": "Studio Mode", 
             "pages": [
               "Voice AI/Studio Mode/introduction",
-              "Voice AI/Studio Mode/identity",
-              "Voice AI/Studio Mode/persona",
+              {
+                "group": "Agents",
+                "pages": [
+                  "Voice AI/Studio Mode/identity",
+                  "Voice AI/Studio Mode/persona",
+                  "Voice AI/Studio Mode/voice profile",
+                  "Voice AI/Studio Mode/telephony",
+                  "Voice AI/Studio Mode/advance",
+                  "Voice AI/Studio Mode/analysis"
+                ]
+              },
               "Voice AI/Studio Mode/knowledge base",
-              "Voice AI/Studio Mode/voice profile",
-              "Voice AI/Studio Mode/telephony",
-              "Voice AI/Studio Mode/advance",
-              "Voice AI/Studio Mode/analysis",
               "Voice AI/Studio Mode/integration",
               "Voice AI/Studio Mode/api key"
             ]
@@ -108,6 +118,19 @@
             ]
           },
           {
+            "group": "Execution",
+            "pages": [
+              "api/execution/tasks",
+              "api/execution/runs"
+            ]
+          },
+          {
+            "group": "Logs",
+            "pages": [
+              "api/logs/calls"
+            ]
+          },
+          {
             "group": "Provider",
             "pages": [
               "api/telephony/Providers",
@@ -120,20 +143,8 @@
               "api/telephony/numbers",
               "api/telephony/bridges"
             ]
-          },
-          {
-            "group": "Execution",
-            "pages": [
-              "api/execution/tasks",
-              "api/execution/runs"
-            ]
-          },
-          {
-            "group": "Logs",
-            "pages": [
-              "api/logs/calls"
-            ]
           }
+
         ]
       }
     ],
