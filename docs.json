@@ -37,41 +37,34 @@
             ]
           },
           {
-            "group": "Space Mode",
+            "group": "Space View",
             "pages": [
-              "Voice AI/Space Mode/Introduction",
-              {
-                "group": "Thread",
-                "pages": [
-                  "Voice AI/Space Mode/thread/edit",
-                  "Voice AI/Space Mode/thread/space token", 
-                  "Voice AI/Space Mode/thread/call logs",
-                  "Voice AI/Space Mode/thread/conversation"
-                ]
-              },
-              "Voice AI/Space Mode/calls",
-              "Voice AI/Space Mode/people",
-              "Voice AI/Space Mode/analytics"
+              "Voice AI/Space View/introduction",
+              "Voice AI/Space View/conversation",
+              "Voice AI/Space View/calls",
+              "Voice AI/Space View/people",
+              "Voice AI/Space View/analytics"
             ]
           },
           {
-            "group": "Studio Mode", 
+            "group": "Studio View",
             "pages": [
-              "Voice AI/Studio Mode/introduction",
+              "Voice AI/Studio View/dashboard",
               {
                 "group": "Agents",
                 "pages": [
-                  "Voice AI/Studio Mode/identity",
-                  "Voice AI/Studio Mode/persona",
-                  "Voice AI/Studio Mode/voice profile",
-                  "Voice AI/Studio Mode/telephony",
-                  "Voice AI/Studio Mode/advance",
-                  "Voice AI/Studio Mode/analysis"
+                  "Voice AI/Studio View/identity",
+                  "Voice AI/Studio View/persona",
+                  "Voice AI/Studio View/voice profile",
+                  "Voice AI/Studio View/telephony",
+                  "Voice AI/Studio View/advance",
+                  "Voice AI/Studio View/analysis",
+                  "Voice AI/Studio View/integration"
                 ]
               },
-              "Voice AI/Studio Mode/knowledge base",
-              "Voice AI/Studio Mode/integration",
-              "Voice AI/Studio Mode/api key"
+              "Voice AI/Studio View/knowledge base",
+              "Voice AI/Studio View/call logs",
+              "Voice AI/Studio View/api key"
             ]
           }
         ]
