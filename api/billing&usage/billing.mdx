@@ -1,0 +1,98 @@
+# Billing API
+
+The Billing API lets you fetch invoices and payment status for an organization.
+
+## Get Billing Data
+
+Get billing data for an organization. The response includes a list of subscription invoices with their payment status.
+
+```http
+GET /api/v2/platform/organisation/billing/
+```
+
+### Query Parameters
+
+| Parameter | Type    | Required | Description                               |
+|-----------|---------|----------|-------------------------------------------|
+| page      | integer | No       | Page number (default: `1`)                 |
+| page_size | integer | No       | Number of invoices per page (default: `20`) |
+
+### Headers
+
+| Header        | Type   | Required | Description                                  |
+|---------------|--------|----------|----------------------------------------------|
+| Org-Handle    | string | Yes      | Organization domain handle                    |
+| Product-Id    | string | No       | Product identifier (default: `unpod.dev`)     |
+| Authorization | string | Yes      | `jwt <token>`                                |
+
+### Example Request
+
+```bash
+curl -X GET \
+  'http://127.0.0.1:8000/api/v2/platform/organisation/billing/?page=1&page_size=10' \
+  -H 'accept: application/json' \
+  -H 'Org-Handle: recalll.co' \
+  -H 'Product-Id: unpod.dev' \
+  -H 'Authorization: jwt <token>'
+```
+
+### Response
+
+```json
+{
+  "count": 17,
+  "status_code": 200,
+  "message": "Billing data fetched successfully",
+  "data": [
+    {
+      "invoice_number": "INV-00118",
+      "amount": "1357.35",
+      "tax_amount": "207.05",
+      "currency": "INR",
+      "status": "pending",
+      "charge_type": "subscription",
+      "invoice_date": "2026-01-04T00:00:15.045893Z",
+      "due_date": "2026-01-11T00:00:15.045893Z",
+      "payment_at": null
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description                         |
+|-------------|---------|-------------------------------------|
+| message     | string  | Status message                      |
+| status_code | integer | HTTP-like status code               |
+| count       | integer | Total number of invoices            |
+| data        | array   | List of invoice objects             |
+
+Each invoice object includes:
+
+| Field          | Type                | Description                  |
+|----------------|---------------------|------------------------------|
+| invoice_number | string              | Invoice identifier           |
+| amount         | string or number    | Invoice amount               |
+| tax_amount     | string or number    | Tax amount                   |
+| currency       | string              | Currency code                |
+| status         | string              | Payment status               |
+| charge_type    | string              | Charge type                  |
+| invoice_date   | string (ISO 8601)    | Invoice date                 |
+| due_date       | string (ISO 8601)    | Due date                     |
+| payment_at     | string (ISO 8601)    | Payment timestamp or `null`  |
+
+### Error Responses
+
+400 Bad request - missing required headers.
+
+401 Unauthorized
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+404 Organization not found.

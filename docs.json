@@ -136,8 +136,14 @@
               "api/telephony/numbers",
               "api/telephony/bridges"
             ]
+          },
+          {
+            "group": "Billing & Usage",
+            "pages": [
+              "api/billing&usage/analytics",
+              "api/billing&usage/billing"
+            ]
           }
-
         ]
       }
     ],

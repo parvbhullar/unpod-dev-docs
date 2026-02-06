@@ -1,0 +1,119 @@
+# Analytics API
+
+The Analytics API lets you fetch call analytics and task status for an organization.
+
+## Get Analytics
+
+Get analytics data for an organization.
+
+```http
+GET /api/v2/platform/organisation/analytics/
+```
+
+Behavior:
+- Automatically filters for contact content type only.
+- If `space_token` is provided: fetches analytics for that specific space.
+- If `space_token` is not provided: fetches analytics for all contact spaces in the organization.
+
+Note: For billing data (invoices), use the separate `/billing/` endpoint.
+
+### Query Parameters
+
+| Parameter   | Type   | Required | Description                                                                 |
+|-------------|--------|----------|-----------------------------------------------------------------------------|
+| space_token | string | No       | Space token to filter by specific space. If not provided, fetches all contact spaces. |
+
+### Headers
+
+| Header        | Type   | Required | Description                                  |
+|---------------|--------|----------|----------------------------------------------|
+| Org-Handle    | string | Yes      | Organization domain handle                    |
+| Product-Id    | string | No       | Product identifier (default: `unpod.dev`)     |
+| Authorization | string | Yes      | `jwt <token>`                                |
+
+### Example Request
+
+```bash
+curl -X GET \
+  'http://127.0.0.1:8000/api/v2/platform/organisation/analytics/?space_token=F1O3QJM1Y7Q1AVVUYNV4VPRB' \
+  -H 'accept: application/json' \
+  -H 'Org-Handle: recalll.co' \
+  -H 'Product-Id: unpod.dev' \
+  -H 'Authorization: jwt <token>'
+```
+
+### Response
+
+```json
+{
+  "status_code": 200,
+  "message": "Analytics fetched successfully",
+  "data": {
+    "call_analytics": {
+      "total_calls": 419,
+      "interested": 77,
+      "call_back": 13,
+      "send_details": 1,
+      "not_interested": 20,
+      "not_connected": 35,
+      "failed": 200,
+      "avg_success_score": 467
+    },
+    "call_status": {
+      "total_tasks": 419,
+      "completed": 302,
+      "failed": 109,
+      "pending": 2,
+      "in_progress": 1,
+      "success_rate": 72.08
+    }
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description                         |
+|-------------|---------|-------------------------------------|
+| message     | string  | Status message                      |
+| status_code | integer | HTTP-like status code               |
+| data        | object  | Analytics payload                   |
+
+`data.call_analytics` includes:
+
+| Field             | Type    | Description                     |
+|-------------------|---------|---------------------------------|
+| total_calls       | integer | Total calls                     |
+| interested        | integer | Interested calls                |
+| call_back         | integer | Callback requests               |
+| send_details      | integer | Send details count              |
+| not_interested    | integer | Not interested count            |
+| not_connected     | integer | Not connected count             |
+| failed            | integer | Failed calls                    |
+| avg_success_score | number  | Average success score           |
+
+`data.call_status` includes:
+
+| Field        | Type    | Description                     |
+|--------------|---------|---------------------------------|
+| total_tasks  | integer | Total tasks                     |
+| completed    | integer | Completed tasks                 |
+| failed       | integer | Failed tasks                    |
+| pending      | integer | Pending tasks                   |
+| in_progress  | integer | In progress tasks               |
+| success_rate | number  | Success rate percentage         |
+
+### Error Responses
+
+400 Bad request - missing required headers.
+
+401 Unauthorized
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+404 Organization not found.
