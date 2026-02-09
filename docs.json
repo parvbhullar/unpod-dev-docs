@@ -2,6 +2,9 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Unpod Dev",
+  "icons": {
+    "library": "lucide"
+  },
   "colors": {
     "primary": "#796cff",
     "light": "#9a90ff",
@@ -20,6 +23,7 @@
         "groups": [
           {
             "group": "Documentation",
+            "icon": "book",
             "pages": [
               "introduction",
               "core-components"
@@ -32,12 +36,14 @@
         "groups": [
           {
             "group": "Getting Started",
+            "icon": "book-open",
             "pages": [
               "Voice AI/introduction"
             ]
           },
           {
             "group": "Space View",
+            "icon": "grid-2x2",
             "pages": [
               "Voice AI/Space View/introduction",
               "Voice AI/Space View/conversation",
@@ -48,6 +54,7 @@
           },
           {
             "group": "Studio View",
+            "icon": "layout-panel-left",
             "pages": [
               "Voice AI/Studio View/dashboard",
               {
@@ -74,12 +81,14 @@
         "groups": [
            {
             "group": "Getting Started",
+            "icon": "book-open",
             "pages": [
               "Dev Platform/introduction"
             ]
           },
           {
             "group": "Dev Platform",
+            "icon": "sliders-horizontal",
             "pages": [
               "Dev Platform/telephony",
               "Dev Platform/numbers",
@@ -97,6 +106,7 @@
         "groups": [
           {
             "group": "Get Started",
+            "icon": "book-open",
             "pages": [
               "api/get-started/quickstart",
               "api/get-started/authentication"
@@ -104,6 +114,7 @@
           },
           {
             "group": "Space",
+            "icon": "layout-grid",
             "pages": [
               "api/space/organizations",
               "api/space/spaces"
@@ -112,6 +123,7 @@
           },
           {
             "group": "Execution",
+            "icon": "activity",
             "pages": [
               "api/execution/tasks",
               "api/execution/runs"
@@ -119,12 +131,14 @@
           },
           {
             "group": "Logs",
+            "icon": "file-text",
             "pages": [
               "api/logs/calls"
             ]
           },
           {
             "group": "Provider",
+            "icon": "server",
             "pages": [
               "api/telephony/Providers",
               "api/provider/configurations"
@@ -132,6 +146,7 @@
           },
           {
             "group": "Telephony",
+            "icon": "phone",
             "pages": [
               "api/telephony/numbers",
               "api/telephony/bridges"
@@ -139,6 +154,7 @@
           },
           {
             "group": "Billing & Usage",
+            "icon": "credit-card",
             "pages": [
               "api/billing&usage/analytics",
               "api/billing&usage/billing"
