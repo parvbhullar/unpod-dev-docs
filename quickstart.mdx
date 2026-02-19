@@ -28,7 +28,7 @@ cd unpod
 make quick-start
 ```
 
-This configures environment files, installs dependencies, and starts all Docker services.
+This configures environment files, installs Node and Python dependencies, starts infrastructure services (PostgreSQL, MongoDB, Redis, Centrifugo), and runs database migrations.
 
 Then launch the development servers:
 
@@ -38,7 +38,51 @@ make dev
 
 ---
 
-### Option 2: Docker Only
+### Option 2: Manual Setup
+
+If you prefer full control over each step:
+
+```bash
+git clone https://github.com/parvbhullar/unpod.git
+cd unpod
+npm install
+```
+
+Set up the Python environment:
+
+```bash
+python3 -m venv apps/backend-core/.venv
+source apps/backend-core/.venv/bin/activate
+pip install -r apps/backend-core/requirements/local.txt
+```
+
+Start infrastructure services:
+
+```bash
+docker compose -f docker-compose.simple.yml up -d postgres mongodb redis centrifugo
+```
+
+Run migrations and seed data:
+
+```bash
+cd apps/backend-core
+python manage.py migrate --no-input
+python manage.py seed_reference_data
+python manage.py setup_schedules
+cd ../..
+```
+
+Start the development servers:
+
+```bash
+npm run dev
+```
+
+For detailed environment variable configuration, see the [Configuration](/configuration) page.
+
+---
+
+### Option 3: Docker Only
 
 If you just want to run the platform without a local dev environment:
 
@@ -78,8 +122,8 @@ Once running, the following services are available:
 ### Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Manual Setup" icon="wrench" href="/configuration">
-    Step-by-step manual installation, environment variables, and database configuration.
+  <Card title="Configuration" icon="wrench" href="/configuration">
+    Environment variables, database commands, and testing setup.
   </Card>
   <Card title="Architecture" icon="sitemap" href="/architecture">
     Understand the monorepo structure, tech stack, and how services connect.

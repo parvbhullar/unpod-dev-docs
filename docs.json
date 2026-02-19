@@ -27,13 +27,6 @@
             "pages": [
               "introduction",
               "platform",
-              "core-components"
-            ]
-          },
-          {
-            "group": "Developer Quickstart",
-            "icon": "rocket",
-            "pages": [
               "quickstart",
               "configuration",
               "architecture"
