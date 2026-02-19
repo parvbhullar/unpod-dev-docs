@@ -1,0 +1,93 @@
+---
+title: 'Quickstart'
+description: 'Get Unpod running on your machine in minutes'
+---
+
+## Developer Quickstart
+
+Get the Unpod platform running locally and deploy your first voice agent. Choose the setup method that works best for you.
+
+### Prerequisites
+
+Before you begin, ensure you have:
+
+- **Node.js** v20+ / **npm** v10+
+- **Python** 3.11+
+- **Docker** and **Docker Compose**
+- **Git**
+
+---
+
+### Option 1: One-Command Setup (Recommended)
+
+The fastest way to get everything running:
+
+```bash
+git clone https://github.com/parvbhullar/unpod.git
+cd unpod
+make quick-start
+```
+
+This configures environment files, installs dependencies, and starts all Docker services.
+
+Then launch the development servers:
+
+```bash
+make dev
+```
+
+---
+
+### Option 2: Docker Only
+
+If you just want to run the platform without a local dev environment:
+
+```bash
+git clone https://github.com/parvbhullar/unpod.git
+cd unpod
+docker compose -f docker-compose.simple.yml up -d --build
+```
+
+Default credentials: `admin@unpod.dev` / `admin123`
+
+---
+
+### Access Points
+
+Once running, the following services are available:
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend API | http://localhost:8000/api/v1/ |
+| Admin Panel | http://localhost:8000/unpod-admin/ |
+| FastAPI Docs | http://localhost:9116/docs |
+| Centrifugo Admin | http://localhost:8100 |
+
+---
+
+### Verify It Works
+
+1. Open http://localhost:3000 in your browser
+2. Log in with the default credentials or create a new account
+3. Create a voice agent from the AI Studio
+4. Assign a phone number and make a test call
+
+---
+
+### Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Manual Setup" icon="wrench" href="/configuration">
+    Step-by-step manual installation, environment variables, and database configuration.
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/architecture">
+    Understand the monorepo structure, tech stack, and how services connect.
+  </Card>
+  <Card title="Dev Platform Guide" icon="sliders-horizontal" href="/Dev Platform/introduction">
+    Configure telephony, agents, and providers via the developer dashboard.
+  </Card>
+  <Card title="API Documentation" icon="code" href="/api/get-started/quickstart">
+    Programmatic access to agents, calls, numbers, and more.
+  </Card>
+</CardGroup>

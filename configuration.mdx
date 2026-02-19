@@ -1,0 +1,145 @@
+---
+title: 'Configuration'
+description: 'Manual setup, environment variables, and database configuration'
+---
+
+## Manual Setup
+
+If you prefer full control over the installation process instead of `make quick-start`, follow these steps.
+
+### Step 1: Clone and Install
+
+```bash
+git clone https://github.com/parvbhullar/unpod.git
+cd unpod
+npm install
+```
+
+### Step 2: Setup Python Environment
+
+```bash
+python3 -m venv apps/backend-core/.venv
+source apps/backend-core/.venv/bin/activate
+pip install -r apps/backend-core/requirements/local.txt
+```
+
+### Step 3: Start Infrastructure Services
+
+Start the required Docker services (PostgreSQL, MongoDB, Redis, Centrifugo):
+
+```bash
+docker compose -f docker-compose.simple.yml up -d postgres mongodb redis centrifugo
+```
+
+### Step 4: Run Migrations
+
+```bash
+cd apps/backend-core
+python manage.py migrate --no-input
+cd ../..
+```
+
+### Step 5: Seed Reference Data (Optional)
+
+```bash
+cd apps/backend-core
+python manage.py seed_reference_data
+python manage.py setup_schedules
+cd ../..
+```
+
+### Step 6: Start Development Servers
+
+```bash
+npm run dev
+```
+
+---
+
+## Environment Variables
+
+### Frontend (`apps/web/.env.local`)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `API_URL` | `http://localhost:8000` | Backend API base URL |
+| `PRODUCT_ID` | `unpod` | Product identifier |
+| `IS_DEV_MODE` | `true` | Enable development mode |
+| `CURRENCY` | `USD` | Default currency |
+| `LIVEKIT_URL` | `ws://localhost:7880` | LiveKit WebSocket URL |
+| `CENTRIFUGO_URL` | `ws://localhost:8000/connection/centrifugo` | Centrifugo WebSocket URL |
+
+### Backend Core (`.env`)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DJANGO_SECRET_KEY` | Yes | Django secret key |
+| `POSTGRES_HOST` | Yes | PostgreSQL host (`localhost`) |
+| `POSTGRES_PORT` | Yes | PostgreSQL port (`5432`) |
+| `POSTGRES_DB` | Yes | Database name (`unpod_db`) |
+| `POSTGRES_USER` | Yes | Database user (`postgres`) |
+| `POSTGRES_PASSWORD` | Yes | Database password |
+| `MONGO_DSN` | Yes | MongoDB connection string |
+| `REDIS_URL` | Yes | Redis URL (`redis://localhost:6379/1`) |
+| `BASE_URL` | Yes | Backend base URL (`http://localhost:8000`) |
+| `BASE_FRONTEND_URL` | Yes | Frontend URL (`http://localhost:3000`) |
+| `LIVEKIT_URL` | No | LiveKit WebSocket URL |
+| `AWS_ACCESS_KEY_ID` | No | S3 storage access key |
+| `AWS_SECRET_ACCESS_KEY` | No | S3 storage secret key |
+| `AWS_STORAGE_BUCKET_NAME` | No | S3 bucket name |
+| `SENDGRID_API_KEY` | No | SendGrid API key for emails |
+
+---
+
+## Database Commands
+
+Common database operations for the backend:
+
+```bash
+cd apps/backend-core
+
+# Run migrations
+python manage.py migrate
+
+# Create new migrations after model changes
+python manage.py makemigrations
+
+# Seed reference data
+python manage.py seed_reference_data
+
+# Setup scheduled tasks
+python manage.py setup_schedules
+```
+
+---
+
+## Testing and Quality
+
+```bash
+cd apps/backend-core
+
+# Run tests
+pytest
+
+# Run tests with coverage
+pytest --cov
+
+# Type checking
+mypy unpod
+
+# Code formatting
+black unpod
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="sitemap" href="/architecture">
+    Monorepo structure, tech stack, and services overview.
+  </Card>
+  <Card title="API Documentation" icon="code" href="/api/get-started/quickstart">
+    Programmatic access to the Unpod platform.
+  </Card>
+</CardGroup>

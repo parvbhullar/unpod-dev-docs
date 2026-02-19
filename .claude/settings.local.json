@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:unpod.ai)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git stash pop:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(gh repo view:*)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}
