@@ -1,62 +1,22 @@
 ---
 title: 'Configuration'
-description: 'Manual setup, environment variables, and database configuration'
+description: 'Environment variables, development commands, and Docker setup'
 ---
 
-## Manual Setup
+## Environment Configuration
 
-If you prefer full control over the installation process instead of `make quick-start`, follow these steps.
+Copy `.env.example` to `.env` at the repo root. The Docker simple setup passes all variables to containers automatically.
 
-### Step 1: Clone and Install
+For local development, each app reads config from:
 
-```bash
-git clone https://github.com/parvbhullar/unpod.git
-cd unpod
-npm install
-```
-
-### Step 2: Setup Python Environment
-
-```bash
-python3 -m venv apps/backend-core/.venv
-source apps/backend-core/.venv/bin/activate
-pip install -r apps/backend-core/requirements/local.txt
-```
-
-### Step 3: Start Infrastructure Services
-
-Start the required Docker services (PostgreSQL, MongoDB, Redis, Centrifugo):
-
-```bash
-docker compose -f docker-compose.simple.yml up -d postgres mongodb redis centrifugo
-```
-
-### Step 4: Run Migrations
-
-```bash
-cd apps/backend-core
-python manage.py migrate --no-input
-cd ../..
-```
-
-### Step 5: Seed Reference Data (Optional)
-
-```bash
-cd apps/backend-core
-python manage.py seed_reference_data
-python manage.py setup_schedules
-cd ../..
-```
-
-### Step 6: Start Development Servers
-
-```bash
-npm run dev
-```
+| App | Config Source |
+|-----|--------------|
+| `backend-core` | `.env` in its own directory (`DJANGO_READ_DOT_ENV_FILE=True`) |
+| `api-services` | `.env` from monorepo root via python-dotenv |
+| `web` | `apps/web/.env.local` (copy from `.env.local.example`) |
+| `super` | `.env` from monorepo root via python-dotenv |
 
 ---
-
-## Environment Variables
 
 ### Frontend (`apps/web/.env.local`)
 
@@ -83,17 +43,96 @@ npm run dev
 | `REDIS_URL` | Yes | Redis URL (`redis://localhost:6379/1`) |
 | `BASE_URL` | Yes | Backend base URL (`http://localhost:8000`) |
 | `BASE_FRONTEND_URL` | Yes | Frontend URL (`http://localhost:3000`) |
-| `LIVEKIT_URL` | No | LiveKit WebSocket URL |
-| `AWS_ACCESS_KEY_ID` | No | S3 storage access key |
-| `AWS_SECRET_ACCESS_KEY` | No | S3 storage secret key |
-| `AWS_STORAGE_BUCKET_NAME` | No | S3 bucket name |
-| `SENDGRID_API_KEY` | No | SendGrid API key for emails |
+
+### Voice AI (`apps/super`)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `LIVEKIT_URL` | Yes | LiveKit WebSocket URL |
+| `LIVEKIT_API_KEY` | Yes | LiveKit API key |
+| `LIVEKIT_API_SECRET` | Yes | LiveKit API secret |
+| `OPENAI_API_KEY` | Yes | OpenAI API key |
+| `ANTHROPIC_API_KEY` | Yes | Anthropic API key |
+| `DEEPGRAM_API_KEY` | Yes | Deepgram STT API key |
+| `CARTESIA_API_KEY` | Yes | Cartesia TTS API key |
+| `PREFECT_API_URL` | Yes | Prefect orchestration URL |
+
+### Optional Variables
+
+| Variable | Description |
+|----------|-------------|
+| `AWS_ACCESS_KEY_ID` | S3 storage access key |
+| `AWS_SECRET_ACCESS_KEY` | S3 storage secret key |
+| `AWS_STORAGE_BUCKET_NAME` | S3 bucket name |
+| `SENDGRID_API_KEY` | SendGrid API key for emails |
+
+See `.env.example` for the full list.
+
+---
+
+## Development Commands
+
+### Make (uses `docker-compose.simple.yml`)
+
+| Command | Description |
+|---------|-------------|
+| `make quick-start` | Full setup: env + deps + docker + db + migrate |
+| `make dev` | Start frontend + backend dev servers |
+| `make docker` | Start Docker containers |
+| `make migrate` | Run Django migrations |
+| `make stop` | Stop Docker containers |
+| `make clean` | Stop containers and remove all data |
+| `make logs` | Tail Docker container logs |
+| `make superuser` | Create Django superuser |
+
+### NPM
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start web + backend-core (via NX) |
+| `npm run dev:frontend` | Frontend only (port 3000) |
+| `npm run build` | Build frontend |
+| `npm run test` | Run tests |
+| `npm run e2e` | E2E tests (Playwright) |
+| `npm run lint:all` | Lint all projects |
+| `npm run graph` | View NX dependency graph |
+
+---
+
+## Docker
+
+### Development Setup (Recommended)
+
+Uses `docker-compose.simple.yml` — single PostgreSQL instance, all services pre-configured:
+
+```bash
+docker compose -f docker-compose.simple.yml up -d        # Start
+docker compose -f docker-compose.simple.yml logs -f       # Logs
+docker compose -f docker-compose.simple.yml down          # Stop
+docker compose -f docker-compose.simple.yml down -v       # Stop + remove data
+```
+
+| Container | Port | Service |
+|-----------|------|---------|
+| `unpod-postgres` | 5432 | PostgreSQL 16 |
+| `unpod-mongodb` | 27017 | MongoDB 7 |
+| `unpod-redis` | 6379 | Redis 7 |
+| `unpod-centrifugo` | 8100 | Centrifugo v5 |
+| `unpod-backend-core` | 8000 | Django API |
+| `unpod-api-services` | 9116 | FastAPI |
+| `unpod-web` | 3000 | Next.js |
+
+### Full Infrastructure
+
+Uses `docker-compose.yml` — separate PostgreSQL per service + Kafka (KRaft). For microservices development:
+
+```bash
+docker compose up -d
+```
 
 ---
 
 ## Database Commands
-
-Common database operations for the backend:
 
 ```bash
 cd apps/backend-core

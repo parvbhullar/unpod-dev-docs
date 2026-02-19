@@ -5,20 +5,21 @@ description: 'Monorepo structure, tech stack, and services overview'
 
 ## Monorepo Structure
 
-Unpod is organized as an NX monorepo with five core applications and shared libraries.
+Unpod is an NX monorepo with four main applications and a shared library layer.
 
 ```
 unpod/
 ├── apps/
-│   ├── web/                 # Next.js frontend
-│   ├── backend-core/        # Django REST API
-│   ├── api-services/        # FastAPI microservices
-│   ├── super/               # Voice AI framework
-│   └── unpod-tauri/         # Desktop application
-├── libs/nextjs/             # Shared frontend libraries
-├── infrastructure/docker/   # Service configurations
-├── scripts/                 # Utility scripts
-└── docker-compose*.yml      # Orchestration
+│   ├── web/              # Next.js 16 frontend (React 19)
+│   ├── backend-core/     # Django 5 REST API
+│   ├── api-services/     # FastAPI microservices
+│   ├── super/            # Voice AI engine (LiveKit + Pipecat)
+│   └── unpod-tauri/      # Desktop app (Tauri 2)
+├── libs/
+│   └── nextjs/           # Shared React libraries (@unpod/*)
+├── infrastructure/
+│   └── docker/           # Dockerfiles & service configs
+└── scripts/              # Setup, migration, and utility scripts
 ```
 
 ---
@@ -27,61 +28,101 @@ unpod/
 
 ### Web Frontend (`apps/web/`)
 
-The user-facing application built with **Next.js 16** and **React 19** using the App Router pattern.
+Next.js 16 frontend with App Router, group-based layouts, styled-components, and Ant Design.
 
-- **UI:** Styled-components + Ant Design
 - **Key features:** Auth, dashboard, AI Studio, spaces, knowledge bases, settings
 - **Testing:** Playwright for E2E tests
 
+```bash
+npx nx dev web              # Dev server at port 3000
+npx nx build web            # Production build
+npx nx e2e web              # Playwright E2E tests
+```
+
+Environment: copy `apps/web/.env.local.example` to `apps/web/.env.local`.
+
+Desktop app (Tauri): `npm run desktop:dev` / `npm run desktop:build`
+
 ### Backend Core (`apps/backend-core/`)
 
-The main REST API built with **Django 5.2** and **Django REST Framework**.
+Django 5 REST API with JWT auth, multi-tenant organizations, RBAC, and background tasks.
 
-- **Architecture:** Multi-tenant organization/workspace model
 - **Auth:** JWT authentication + Google OAuth
 - **Storage:** PostgreSQL (relational), MongoDB (documents), Redis (cache)
-- **Management commands:** Seeding, migrations, scheduling
+- **Endpoints:** All under `/api/v1/`
+
+```bash
+cd apps/backend-core
+source .venv/bin/activate
+python manage.py runserver        # API at port 8000
+pytest                            # Run tests
+```
 
 ### API Services (`apps/api-services/`)
 
-Specialized **FastAPI** microservices for specific workloads:
+FastAPI microservices for messaging, document store, AI search, and task management. MongoDB primary storage.
 
-| Service | Purpose |
-|---------|---------|
-| **Messaging** | Real-time conversations and WebSocket support |
-| **Document Store** | File parsing and connectors |
-| **Search** | AI-powered semantic search |
-| **Task Management** | Background task execution |
+```bash
+cd apps/api-services
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 9116 --reload
+```
 
-### Voice AI Platform (`apps/super/`)
+Interactive docs at http://localhost:9116/docs.
 
-The voice agent framework built with **Python 3.10+**.
+| Route | Service | Description |
+|-------|---------|-------------|
+| `/api/v1/store` | store_service | Document store & indexing |
+| `/api/v1/connector` | store_service | Data connectors |
+| `/api/v1/voice` | store_service | LiveKit voice/video |
+| `/api/v1/search` | search_service | AI-powered search |
+| `/api/v1/conversation` | messaging_service | Chat conversations |
+| `/api/v1/agent` | messaging_service | Agent management |
+| `/api/v1/task` | task_service | Task management |
 
-- **Integrations:** LiveKit, Pipecat, LangChain
-- **Features:** Voice processing, memory management, plugin system
-- **Orchestration:** Prefect workflow engine
+WebSocket: `ws://localhost:9116/ws/v1/conversation/{thread_id}/`
+
+### Voice AI Engine (`apps/super/`)
+
+Voice AI engine built on LiveKit and Pipecat. Orchestrates real-time voice agents with LLM providers, TTS/STT engines, and workflow automation via Prefect.
+
+```bash
+cd apps/super
+
+# Install (uv recommended)
+uv pip install -r requirements/super.txt -r requirements/super_services.txt
+
+# Run voice executor
+uv run super_services/orchestration/executors/voice_executor_v3.py start
+
+# Run Prefect worker
+uv run -m prefect worker start --pool call-work-pool
+```
+
+```bash
+# Testing
+pytest                      # All tests
+pytest -m unit              # Unit tests only
+pytest -m integration       # Integration tests
+```
 
 ### Desktop Application (`apps/unpod-tauri/`)
 
-Cross-platform desktop client built with **Tauri 2.x** and Rust.
+Native cross-platform desktop client built with **Tauri 2** and Rust.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology | Version |
-|-------|-----------|---------|
-| Frontend | Next.js / React | 16 / 19 |
-| Monorepo | NX | 22 |
-| Backend | Django + DRF | 5.2 / 3.16 |
-| Microservices | FastAPI | 0.129 |
-| Database | PostgreSQL | 16 |
-| NoSQL | MongoDB | 7 |
-| Cache / Queue | Redis | 7 |
-| Message Bus | Kafka (KRaft) | Confluent 7.5 |
-| Real-time | Centrifugo | v5 |
-| Voice | LiveKit + Pipecat | Latest |
-| Desktop | Tauri | 2.x |
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 16 / React 19 / styled-components / Ant Design |
+| Monorepo | NX 22 |
+| Desktop | Tauri 2 |
+| Backend | Django 5 + DRF / FastAPI |
+| Voice AI | LiveKit + Pipecat + LangChain |
+| Databases | PostgreSQL 16, MongoDB 7, Redis 7 |
+| Messaging | Kafka (KRaft), Centrifugo v5 |
 
 ---
 

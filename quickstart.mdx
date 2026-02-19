@@ -12,9 +12,10 @@ Get the Unpod platform running locally and deploy your first voice agent. Choose
 Before you begin, ensure you have:
 
 - **Node.js** v20+ / **npm** v10+
-- **Python** 3.11+
+- **Python** 3.11+ (3.10+ for `apps/super`)
 - **Docker** and **Docker Compose**
 - **Git**
+- **uv** (only for `apps/super`)
 
 ---
 
@@ -25,15 +26,8 @@ The fastest way to get everything running:
 ```bash
 git clone https://github.com/parvbhullar/unpod.git
 cd unpod
-make quick-start
-```
-
-This configures environment files, installs Node and Python dependencies, starts infrastructure services (PostgreSQL, MongoDB, Redis, Centrifugo), and runs database migrations.
-
-Then launch the development servers:
-
-```bash
-make dev
+make quick-start    # Install deps, start Docker, run migrations
+make dev            # Start frontend (port 3000) + backend (port 8000)
 ```
 
 ---
@@ -43,12 +37,13 @@ make dev
 If you prefer full control over each step:
 
 ```bash
+# Install Node.js dependencies
 git clone https://github.com/parvbhullar/unpod.git
 cd unpod
 npm install
 ```
 
-Set up the Python environment:
+Create Python venv for backend:
 
 ```bash
 python3 -m venv apps/backend-core/.venv
@@ -56,25 +51,16 @@ source apps/backend-core/.venv/bin/activate
 pip install -r apps/backend-core/requirements/local.txt
 ```
 
-Start infrastructure services:
+Start infrastructure (PostgreSQL, MongoDB, Redis, Centrifugo):
 
 ```bash
 docker compose -f docker-compose.simple.yml up -d postgres mongodb redis centrifugo
 ```
 
-Run migrations and seed data:
+Run migrations and start dev servers:
 
 ```bash
-cd apps/backend-core
-python manage.py migrate --no-input
-python manage.py seed_reference_data
-python manage.py setup_schedules
-cd ../..
-```
-
-Start the development servers:
-
-```bash
+cd apps/backend-core && python manage.py migrate --no-input && cd ../..
 npm run dev
 ```
 
@@ -82,9 +68,9 @@ For detailed environment variable configuration, see the [Configuration](/config
 
 ---
 
-### Option 3: Docker Only
+### Option 3: Docker Only (No Local Dependencies)
 
-If you just want to run the platform without a local dev environment:
+Starts everything in containers with working defaults:
 
 ```bash
 git clone https://github.com/parvbhullar/unpod.git
@@ -92,7 +78,7 @@ cd unpod
 docker compose -f docker-compose.simple.yml up -d --build
 ```
 
-Default credentials: `admin@unpod.dev` / `admin123`
+Default admin: `admin@unpod.dev` / `admin123`
 
 ---
 
@@ -105,8 +91,8 @@ Once running, the following services are available:
 | Frontend | http://localhost:3000 |
 | Backend API | http://localhost:8000/api/v1/ |
 | Admin Panel | http://localhost:8000/unpod-admin/ |
-| FastAPI Docs | http://localhost:9116/docs |
-| Centrifugo Admin | http://localhost:8100 |
+| API Services | http://localhost:9116/docs |
+| Centrifugo | http://localhost:8100 |
 
 ---
 
@@ -123,7 +109,7 @@ Once running, the following services are available:
 
 <CardGroup cols={2}>
   <Card title="Configuration" icon="wrench" href="/configuration">
-    Environment variables, database commands, and testing setup.
+    Environment variables, development commands, and Docker setup.
   </Card>
   <Card title="Architecture" icon="sitemap" href="/architecture">
     Understand the monorepo structure, tech stack, and how services connect.
