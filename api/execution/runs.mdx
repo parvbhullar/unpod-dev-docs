@@ -53,24 +53,29 @@ Headers:
 
 ```json
 {
-  "count": 1716,
-  "status_code": 200,
-  "message": "Runs Fetched Successfully",
-  "data": [
-    {
-      "space_id": "346",
-      "user": "38",
-      "thread_id": null,
-      "run_id": "R40fe5eface1511f082ac156368e7acc4",
-      "collection_ref": "collection_data_F1O3QJM1Y7Q1AVVUYNV4VPRB",
-      "run_mode": "dev",
-      "status": "completed",
-      "batch_count": 1,
-      "created": "2025-11-30T17:51:52",
-      "modified": "2025-11-30T17:51:52"
-    }
-  ]
+    "count": 9,
+    "status_code": 200,
+    "message": "Runs Fetched Successfully",
+    "data": [
+        {
+            "run_id": "Recac64fe03e911f1878d43cd8a99e069",
+            "collection_ref": "collection_data_SA2W8R6NZRK6C9PO3JSL1J85",
+            "run_mode": "prefect",
+            "status": "completed",
+            "created": "2026-02-07T05:57:45",
+            "modified": "2026-02-07T05:57:45"
+        },
+        {
+            "run_id": "R6b653894fe9411f0878d43cd8a99e069",
+            "collection_ref": "collection_data_SA2W8R6NZRK6C9PO3JSL1J85",
+            "run_mode": "prefect",
+            "status": "completed",
+            "created": "2026-01-31T11:03:05",
+            "modified": "2026-01-31T11:03:05"
+        }
+    ]
 }
+
 ```
 
 ### Response Fields
@@ -84,18 +89,14 @@ Headers:
 
 ### Run Object Fields
 
-| Field          | Type    | Description                                   |
-|----------------|---------|-----------------------------------------------|
-| space_id       | string  | Space identifier                              |
-| user           | string  | User ID who created the run                   |
-| thread_id      | string  | Thread identifier (null if not applicable)    |
-| run_id         | string  | Unique run identifier                         |
-| collection_ref | string  | Reference to the data collection              |
-| run_mode       | string  | Execution mode: `dev`, `prod`                 |
-| status         | string  | Run status: `completed`, `running`, `failed`  |
-| batch_count    | integer | Number of batches in the run                  |
-| created        | string  | Run creation timestamp                        |
-| modified       | string  | Last modified timestamp                       |
+| Field          | Type   | Description                                  |
+|----------------|--------|----------------------------------------------|
+| run_id         | string | Unique run identifier                        |
+| collection_ref | string | Reference to the data collection             |
+| run_mode       | string | Execution engine: `prefect`, etc.            |
+| status         | string | Run status: `completed`, `running`, `failed` |
+| created        | string | Run creation timestamp                       |
+| modified       | string | Last modified timestamp                      |
 
 ### Error Response (206 — Fetch Failed)
 
@@ -147,62 +148,29 @@ Headers:
 
 ```json
 {
-  "count": 1,
-  "status_code": 200,
-  "message": "Tasks Fetched Successfully",
-  "data": [
-    {
-      "space_id": "346",
-      "thread_id": null,
-      "user": "261",
-      "user_org_id": "22",
-      "user_info": {
-        "id": "261",
-        "email": "abc@domain.com",
-        "full_name": "John Doe",
-        "user_token": "JY60XSSVVPTV5W5A"
-      },
-      "run_id": "R0e3294d4cc4211f082ac156368e7acc4",
-      "task_id": "T0e3294d5cc4211f082ac156368e7acc4",
-      "collection_ref": "collection_data_F1O3QJM1Y7Q1AVVUYNV4VPRB",
-      "execution_type": "call",
-      "task": {
-        "objective": "hey"
-      },
-      "input": {
-        "document_id": "692974344eb028916272c240",
-        "name": "John Doe",
-        "contact_number": "9876688992",
-        "created": "2025-11-28T10:06:44",
-        "token": "F1O3QJM1Y7Q1AVVUYNV4VPRB",
-        "vapi_agent_id": "6a683958-27ab-4ac5-8b0f-52dae3892efe",
-        "number_id": "2d81624a-a0ec-4459-9399-cf71fb21be06",
-        "quality": "high"
-      },
-      "output": {
-        "id": "call-uuid-001",
-        "assistantId": "assistant-123",
-        "phoneNumberId": "phone-456",
-        "type": "outbound",
-        "startedAt": "2025-11-17T12:05:00.000Z",
-        "endedAt": "2025-11-17T12:10:00.000Z",
-        "transcript": "Agent: Hello, this is calling to confirm...\nCustomer: Yes, confirmed.",
-        "recordingUrl": "https://example.com/recordings/rec123.mp3",
-        "summary": "Customer confirmed the appointment for tomorrow at 2 PM",
-        "createdAt": "2025-11-17T12:05:00.000Z",
-        "updatedAt": "2025-11-17T12:10:00.000Z",
-        "orgId": "org-789",
-        "cost": 0.45,
-        "customer": {
-          "number": "+1234567890",
-          "name": "Alice Smith"
+    "count": 9,
+    "status_code": 200,
+    "message": "Runs Fetched Successfully",
+    "data": [
+        {
+            "run_id": "Recac64fe03e911f1878d43cd8a99e069",
+            "collection_ref": "collection_data_SA2W8R6NZRK6C9PO3JSL1J85",
+            "run_mode": "prefect",
+            "status": "completed",
+            "created": "2026-02-07T05:57:45",
+            "modified": "2026-02-07T05:57:45"
+        },
+        {
+            "run_id": "R6b653894fe9411f0878d43cd8a99e069",
+            "collection_ref": "collection_data_SA2W8R6NZRK6C9PO3JSL1J85",
+            "run_mode": "prefect",
+            "status": "completed",
+            "created": "2026-01-31T11:03:05",
+            "modified": "2026-01-31T11:03:05"
         }
-      },
-      "created": "2025-11-28T10:07:32",
-      "modified": "2025-11-28T12:04:08"
-    }
-  ]
+    ]
 }
+
 ```
 
 ### Response Fields
@@ -216,54 +184,18 @@ Headers:
 
 ### Task Object Fields
 
-| Field          | Type    | Description                                   |
-|----------------|---------|-----------------------------------------------|
-| space_id       | string  | Space identifier                              |
-| thread_id      | string  | Thread identifier (null if not applicable)    |
-| user           | string  | User ID who created the task                  |
-| user_org_id    | string  | Organization ID of the user                   |
-| user_info      | object  | User details (id, email, full_name, token)    |
-| run_id         | string  | Parent run identifier                         |
-| task_id        | string  | Unique task identifier                        |
-| collection_ref | string  | Reference to the data collection              |
-| execution_type | string  | Type of execution: `call`, `email`, etc.      |
-| task           | object  | Task definition with objective                |
-| input          | object  | Input data for the task                       |
-| output         | object  | Task output including call details            |
-| created        | string  | Task creation timestamp                       |
-| modified       | string  | Last modified timestamp                       |
-
-### Input Object Fields
-
-| Field          | Type   | Description                          |
-|----------------|--------|--------------------------------------|
-| document_id    | string | Document identifier                  |
-| name           | string | Contact name                         |
-| contact_number | string | Contact phone number                 |
-| created        | string | Input creation timestamp             |
-| token          | string | Collection token                     |
-| vapi_agent_id  | string | Vapi agent identifier                |
-| number_id      | string | Number identifier                    |
-| quality        | string | Call quality setting: `high`, `low`  |
-
-### Output Object Fields
-
-| Field          | Type   | Description                          |
-|----------------|--------|--------------------------------------|
-| id             | string | Unique call identifier               |
-| assistantId    | string | Assistant identifier                 |
-| phoneNumberId  | string | Phone number identifier              |
-| type           | string | Call type: `outbound`, `inbound`     |
-| startedAt      | string | Call start timestamp                 |
-| endedAt        | string | Call end timestamp                   |
-| transcript     | string | Call transcript                      |
-| recordingUrl   | string | URL to call recording                |
-| summary        | string | AI-generated call summary            |
-| createdAt      | string | Record creation timestamp            |
-| updatedAt      | string | Record update timestamp              |
-| orgId          | string | Organization identifier              |
-| cost           | number | Cost of the call in USD              |
-| customer       | object | Customer details (number, name)      |
+| Field          | Type   | Description                              |
+|----------------|--------|------------------------------------------|
+| thread_id      | string | Thread identifier                        |
+| user_info      | object | User details (email, full_name)          |
+| run_id         | string | Parent run identifier                    |
+| task_id        | string | Unique task identifier                   |
+| execution_type | string | Type of execution: `call`, `email`, etc. |
+| task           | object | Task definition with objective           |
+| input          | object | Input data for the task                  |
+| output         | object | Task output including call details       |
+| created        | string | Task creation timestamp                  |
+| modified       | string | Last modified timestamp                  |
 
 ### Error Response (206 — Business Logic Error)
 

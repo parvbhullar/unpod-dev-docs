@@ -187,7 +187,6 @@ Headers:
       "name": "General Agentic",
       "type": "Voice",
       "state": "published",
-      "description": "Hi,",
       "purpose": ""
     }
   ]
@@ -211,7 +210,6 @@ Headers:
 | name        | string | Agent display name                             |
 | type        | string | Agent type: `Voice`, `Chat`, etc.              |
 | state       | string | Agent state: `published`, `draft`, `archived`  |
-| description | string | Agent description                              |
 | purpose     | string | Agent purpose/use case                         |
 
 ### Error Response (401 — Unauthorized)
@@ -272,31 +270,29 @@ Headers:
     {
       "_id": "697debb84c27faa892bfa0cc",
       "thread_id": "675272289779974401",
-      "user_org_id": "145",
       "user_info": {
-        "email": "user@example.com",
-        "full_name": "John Doe"
+        "email": "harshitaunpod.qa1+166@gmail.com",
+        "full_name": "harshita166"
       },
       "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
       "run_id": "R8ff2ccdefe9a11f0878d43cd8a99e069",
-      "collection_ref": "collection_data_SA2W8R6NZRK6C9PO3JSL1J85",
       "task": {
         "objective": "Call it"
       },
       "input": {
-        "name": "John Doe",
+        "name": "Bhaishab",
         "email": "john@example.com",
-        "contact_number": "1234567890",
+        "contact_number": "8109689090",
         "alternate_number": "",
         "occupation": "Developer",
         "company_name": "TechCorp",
-        "address": "123 Main Street",
+        "address": "123/456 Main Street",
         "about": "Software Developer",
         "context": "Follow up call",
         "multi_select": "multi",
         "created": "2025-10-30T05:44:56",
         "labels": [
-          "Interested"
+          "not Interested"
         ],
         "document_id": "6902fb5840a736e125e80c",
         "quality": "good"
@@ -306,71 +302,62 @@ Headers:
         "call_end_reason": null,
         "start_time": "2026-01-31 11:47:38.067021",
         "end_time": "2026-01-31 11:48:11.385745",
-        "assistant_number": "1234567890",
-        "call_summary": "Call completed successfully",
+        "assistant_number": "7890789090",
+        "call_summary": null,
         "duration": 33,
-        "recording_url": "https://example.com/recording.ogg",
+        "recording_url": "https://cdr-storage-recs.s3.ap-south-1.amazonaws.com/media/p79974498.ogg",
         "transcript": [
           {
             "role": "user",
             "content": "Hello?",
             "timestamp": "2026-01-31 11:47:46.675013",
-            "participant": "idt_+1234567890"
+            "participant": "idt_+918109687225"
           },
           {
             "role": "assistant",
-            "content": "Hi! This is [name] from [company]. Am I speaking with John?\n",
+            "content": "Hi! This is [name] from [company]. Am I speaking with Bhaishab?\n",
             "timestamp": "2026-01-31 11:47:54.259815",
             "message_id": "2e8be35b-303"
           }
         ],
         "post_call_data": {
           "classification": {
-            "labels": ["Interested"]
+            "labels": []
           },
           "summary": {
-            "status": "Connected",
-            "summary": "The call was successful and the user showed interest in the product.",
-            "callback_datetime": "2026-02-01T10:00:00",
-            "hours_from_now": "24"
+            "status": "Not Connected",
+            "summary": "The call began with the assistant introducing themselves and confirming they were speaking with Bhaishab. However, there was no further discussion or engagement from the user, leading to an inconclusive interaction.",
+            "callback_datetime": "N/A",
+            "hours_from_now": "N/A"
           },
-          "call_back": {
-            "scheduled": true,
-            "time": "2026-02-01T10:00:00"
-          },
+          "call_back": null,
           "follow_up": {
-            "required": "follow_up enabled"
+            "required": "follow_up disabled"
           },
           "profile_summary": {
-            "tone": "Positive",
-            "engagement": "High",
-            "interest_level": "Very Interested",
+            "tone": "Neutral",
+            "engagement": "Low",
+            "interest_level": "Maybe",
             "objections": [],
-            "questions_asked": ["What is the pricing?", "When can we start?"],
-            "pain_points": ["Current solution is expensive"],
-            "outcome": "Interested",
-            "next_action": "Schedule demo",
-            "callback_requested": true,
-            "callback_time": "2026-02-01T10:00:00",
-            "summary_text": "The user showed high interest and requested a callback for product demo."
+            "questions_asked": [],
+            "pain_points": [],
+            "outcome": "Connected",
+            "next_action": "Continue the conversation",
+            "callback_requested": false,
+            "callback_time": null,
+            "summary_text": "The user appears to be neutral and minimally engaged during the call. They acknowledged the assistant's greeting but did not express any specific interest or objections at this stage."
           },
-          "structured_data": {
-            "lead_score": 8,
-            "budget": "$5000-$10000"
-          }
+          "structured_data": null
         },
         "metadata": {
-          "cost": 0.5,
-          "usage": {
-            "tokens": 150,
-            "duration": 33
-          }
+          "cost": 0.0,
+          "usage": {}
         },
         "call_type": "outbound",
         "call_status": "completed"
       },
       "attachments": [],
-      "assignee": "sales-agent-v1",
+      "assignee": "jockey-india-apparel-assistant-kk19u",
       "status": "completed",
       "execution_type": "call",
       "ref_id": "6902fb5840a736e125e80c",
@@ -399,11 +386,9 @@ Headers:
 |----------------------|---------|-----------------------------------------------|
 | _id                  | string  | Internal task document ID                     |
 | thread_id            | string  | Thread identifier                             |
-| user_org_id          | string  | Organization ID of the user                   |
 | user_info            | object  | User details (email, full_name)               |
 | task_id              | string  | Unique task identifier                        |
 | run_id               | string  | Parent run identifier                         |
-| collection_ref       | string  | Reference to the data collection              |
 | task                 | object  | Task definition with objective                |
 | input                | object  | Input data for the task                       |
 | output               | object  | Task output with call details                 |
@@ -412,7 +397,7 @@ Headers:
 | status               | string  | Task status: `pending`, `completed`, `failed` |
 | execution_type       | string  | Type of execution: `call`, `email`, etc.      |
 | ref_id               | string  | Reference ID linking to input data            |
-| failure_count        | integer | Number of failed attempts                    |
+| failure_count        | integer | Number of failed attempts                     |
 | last_failure_reason  | string  | Reason for last failure                       |
 | retry_attempt        | integer | Current retry attempt number                  |
 | last_status_change   | string  | Timestamp of last status change               |
@@ -483,132 +468,107 @@ Headers:
 
 ```json
 {
-  "count": 2,
+  "count": 1,
   "status_code": 200,
   "message": "Tasks Fetched Successfully",
   "data": [
     {
-      "_id": "space_task_id_001",
-      "space_id": "999",
-      "thread_id": null,
-      "user": "456",
-      "user_org_id": "789",
+      "_id": "697debb84c27faa892bfa0cc",
+      "thread_id": "675272289779974401",
       "user_info": {
-        "id": "456",
-        "email": "sales.manager@company.com",
-        "full_name": "Sarah Johnson",
-        "user_token": "SPACE_TOKEN_ABC123"
+        "email": "harshitaunpod.qa1+166@gmail.com",
+        "full_name": "harshita166"
       },
-      "created": "2025-01-15T14:30:00.000000",
-      "modified": "2025-01-15T14:35:00.000000",
-      "task_id": "TASK_SPACE_456789",
-      "run_id": "RUN_SPACE_987654",
-      "collection_ref": "collection_data_SPACE123456",
+      "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
+      "run_id": "R8ff2ccdefe9a11f0878d43cd8a99e069",
       "task": {
-        "objective": "Follow up with potential clients for product demo"
+        "objective": "Call it"
       },
       "input": {
-        "name": "Rajesh Kumar",
-        "contact_number": "+919988776655",
-        "email": "rajesh.kumar@techstart.in",
-        "address": "Bangalore, Karnataka, India",
-        "occupation": "CTO",
-        "company_name": "TechStart Solutions",
-        "context": "Interested in AI automation tools for their startup. Budget: 50K-1L, Timeline: Q1 2025"
+        "name": "Bhaishab",
+        "email": "john@example.com",
+        "contact_number": "8109689090",
+        "alternate_number": "",
+        "occupation": "Developer",
+        "company_name": "TechCorp",
+        "address": "123/456 Main Street",
+        "about": "Software Developer",
+        "context": "Follow up call",
+        "multi_select": "multi",
+        "created": "2025-10-30T05:44:56",
+        "labels": [
+          "not Interested"
+        ],
+        "document_id": "6902fb5840a736e125e80c",
+        "quality": "good"
       },
       "output": {
-        "call_id": "019aa6a9-809f-7ddb-b110-7a16167cb632",
-        "customer": "Cust 1",
-        "contact_number": "70000380188",
-        "call_end_reason": "customer-ended-call",
-        "recording_url": "https://store.unpod.ai/media/private/high-call-recordings/...",
+        "call_id": "675272289779974401",
+        "call_end_reason": null,
+        "start_time": "2026-01-31 11:47:38.067021",
+        "end_time": "2026-01-31 11:48:11.385745",
+        "assistant_number": "7890789090",
+        "call_summary": null,
+        "duration": 33,
+        "recording_url": "https://cdr-storage-recs.s3.ap-south-1.amazonaws.com/media/p79974498.ogg",
         "transcript": [
           {
             "role": "user",
-            "content": "And reason for calling",
-            "user_id": "unknown",
-            "timestamp": ""
+            "content": "Hello?",
+            "timestamp": "2026-01-31 11:47:46.675013",
+            "participant": "idt_+918109687225"
           },
           {
             "role": "assistant",
-            "content": "Hello?",
-            "user_id": null,
-            "timestamp": ""
+            "content": "Hi! This is [name] from [company]. Am I speaking with Bhaishab?\n",
+            "timestamp": "2026-01-31 11:47:54.259815",
+            "message_id": "2e8be35b-303"
           }
         ],
-        "start_time": "2025-11-21 13:45:20",
-        "end_time": "2025-11-21 13:46:36",
-        "assistant_number": "+919949883072",
-        "call_summary": "An AI representative called regarding the premium project inquiry...",
-        "duration": 76.769,
-        "cost": 0.139,
         "post_call_data": {
           "classification": {
-            "labels": ["Interested"],
-            "summary": "The agent called to discuss the project. The user expressed interest."
+            "labels": []
           },
           "summary": {
-            "status": "Call Back",
-            "summary": "The call involved an introduction and inquiry about the project.",
-            "name": "N/A",
-            "contact": "N/A",
+            "status": "Not Connected",
+            "summary": "The call began with the assistant introducing themselves and confirming they were speaking with Bhaishab. However, there was no further discussion or engagement from the user, leading to an inconclusive interaction.",
             "callback_datetime": "N/A",
             "hours_from_now": "N/A"
           },
-          "success_evaluator": "{\"score\": 5, \"reason\": \"...\"}",
           "call_back": null,
-          "follow_up": null,
-          "structured_data": "{\"customer_name\": null, ...}",
-          "webhook_data": null,
-          "call_evaluation": []
+          "follow_up": {
+            "required": "follow_up disabled"
+          },
+          "profile_summary": {
+            "tone": "Neutral",
+            "engagement": "Low",
+            "interest_level": "Maybe",
+            "objections": [],
+            "questions_asked": [],
+            "pain_points": [],
+            "outcome": "Connected",
+            "next_action": "Continue the conversation",
+            "callback_requested": false,
+            "callback_time": null,
+            "summary_text": "The user appears to be neutral and minimally engaged during the call. They acknowledged the assistant's greeting but did not express any specific interest or objections at this stage."
+          },
+          "structured_data": null
         },
         "metadata": {
-          "cost": 0.139,
-          "type": "outboundPhoneCall",
+          "cost": 0.0,
           "usage": {}
-        }
+        },
+        "call_type": "outbound",
+        "call_status": "completed"
       },
       "attachments": [],
-      "assignee": "sales-bot-v3",
+      "assignee": "jockey-india-apparel-assistant-kk19u",
       "status": "completed",
       "execution_type": "call",
-      "ref_id": "lead_doc_456789"
-    },
-    {
-      "_id": "space_task_id_002",
-      "space_id": "999",
-      "thread_id": null,
-      "user": "456",
-      "user_org_id": "789",
-      "user_info": {
-        "id": "456",
-        "email": "sales.manager@company.com",
-        "full_name": "Sarah Johnson",
-        "user_token": "SPACE_TOKEN_ABC123"
-      },
-      "created": "2025-01-15T13:20:00.000000",
-      "modified": "2025-01-15T13:20:00.000000",
-      "task_id": "TASK_SPACE_456790",
-      "run_id": "RUN_SPACE_987655",
-      "collection_ref": "collection_data_SPACE123456",
-      "task": {
-        "objective": "Payment reminder for invoice #INV-2025-001"
-      },
-      "input": {
-        "name": "Priya Sharma",
-        "contact_number": "+919876543210",
-        "email": "priya.sharma@business.com",
-        "address": "Mumbai, Maharashtra",
-        "occupation": "Finance Manager",
-        "company_name": "Global Enterprises Ltd",
-        "context": "Pending invoice INV-2025-001 amount Rs. 45,000, due date 20th Jan 2025"
-      },
-      "output": {},
-      "attachments": [],
-      "assignee": "payment-bot-v1",
-      "status": "pending",
-      "execution_type": "call",
-      "ref_id": "invoice_doc_001"
+      "ref_id": "6902fb5840a736e125e80c",
+      "run_mode": "dev",
+      "created": "2026-02-07T05:57:45",
+      "modified": "2026-02-07T05:57:45"
     }
   ]
 }
@@ -628,16 +588,10 @@ Headers:
 | Field          | Type    | Description                                   |
 |----------------|---------|-----------------------------------------------|
 | _id            | string  | Internal task document ID                     |
-| space_id       | string  | Space identifier                              |
-| thread_id      | string  | Thread identifier (null if not applicable)    |
-| user           | string  | User ID who created the task                  |
-| user_org_id    | string  | Organization ID of the user                   |
-| user_info      | object  | User details (id, email, full_name, token)    |
-| created        | string  | Task creation timestamp                       |
-| modified       | string  | Last modified timestamp                       |
+| thread_id      | string  | Thread identifier                             |
+| user_info      | object  | User details (email, full_name)               |
 | task_id        | string  | Unique task identifier                        |
 | run_id         | string  | Parent run identifier                         |
-| collection_ref | string  | Reference to the data collection              |
 | task           | object  | Task definition with objective                |
 | input          | object  | Input data for the task                       |
 | output         | object  | Task output (empty if pending)                |
@@ -646,25 +600,27 @@ Headers:
 | status         | string  | Task status: `pending`, `completed`, `failed` |
 | execution_type | string  | Type of execution: `call`, `email`, etc.      |
 | ref_id         | string  | Reference ID linking to input data            |
+| run_mode       | string  | Execution mode: `dev`, `prod`, etc.           |
+| created        | string  | Task creation timestamp                       |
+| modified       | string  | Last modified timestamp                       |
 
 ### Output Object Fields
 
 | Field            | Type   | Description                              |
 |------------------|--------|------------------------------------------|
 | call_id          | string | Unique call identifier                   |
-| customer         | string | Customer name                            |
-| contact_number   | string | Contact phone number                     |
 | call_end_reason  | string | Reason for call ending                   |
-| recording_url    | string | URL to call recording                    |
-| transcript       | array  | Array of conversation messages           |
 | start_time       | string | Call start timestamp                     |
 | end_time         | string | Call end timestamp                       |
 | assistant_number | string | Outbound phone number used               |
 | call_summary     | string | AI-generated summary of the call         |
 | duration         | number | Call duration in seconds                 |
-| cost             | number | Cost of the call in USD                  |
+| recording_url    | string | URL to call recording                    |
+| transcript       | array  | Array of conversation messages           |
 | post_call_data   | object | Post-call analysis data                  |
-| metadata         | object | Additional metadata (cost, type, usage)  |
+| metadata         | object | Additional metadata (cost, usage)        |
+| call_type        | string | Direction of call: `outbound`, `inbound` |
+| call_status      | string | Status of the call: `completed`, etc.    |
 
 ### Error Response (206 — Tasks Fetch Failed)
 

@@ -61,7 +61,6 @@ Headers:
   "message": "Call logs fetched successfully",
   "data": [
     {
-      "id": "call_abc123def456",
       "source_number": "+919876543210",
       "destination_number": "+911234567890",
       "call_type": "outbound",
@@ -71,7 +70,6 @@ Headers:
       "end_time": "2025-11-18T10:35:30.000Z",
       "call_duration": "0:05:25",
       "end_reason": "customer-ended-call",
-      "bridge": 1
     }
   ],
 }
@@ -88,19 +86,17 @@ Headers:
 
 ### Call Log Object Fields
 
-| Field              | Type    | Description                                |
-|--------------------|---------|--------------------------------------------|
-| id                 | string  | Unique call identifier                     |
-| source_number      | string  | Originating phone number                   |
-| destination_number | string  | Destination phone number                   |
-| call_type          | string  | Type of call: `inbound` or `outbound`      |
-| call_status        | string  | Status: `completed`, `missed`, or `failed` |
-| creation_time      | string  | Call creation timestamp (ISO 8601)         |
-| start_time         | string  | Call start timestamp (ISO 8601)            |
-| end_time           | string  | Call end timestamp (ISO 8601)              |
-| call_duration      | string  | Duration in HH:MM:SS format                |
-| end_reason         | string  | Reason for call ending                     |
-| bridge             | integer | Bridge identifier                          |
+| Field              | Type   | Description                                |
+|--------------------|--------|--------------------------------------------|
+| source_number      | string | Originating phone number                   |
+| destination_number | string | Destination phone number                   |
+| call_type          | string | Type of call: `inbound` or `outbound`      |
+| call_status        | string | Status: `completed`, `missed`, or `failed` |
+| creation_time      | string | Call creation timestamp (ISO 8601)         |
+| start_time         | string | Call start timestamp (ISO 8601)            |
+| end_time           | string | Call end timestamp (ISO 8601)              |
+| call_duration      | string | Duration in HH:MM:SS format                |
+| end_reason         | string | Reason for call ending                     |
 
 ### Error Response (400 — Bad Request)
 
