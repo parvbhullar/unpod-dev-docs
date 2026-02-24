@@ -1,21 +1,22 @@
 ---
-title: 'Numbers'
-description: 'Manage phone numbers for telephony operations'
+title: 'Get Telephony Numbers'
+description: 'Retrieve list of all telephony numbers'
+openapi: 'GET /api/v2/platform/telephony/numbers/'
 ---
 
-# Numbers API
+# Get Telephony Numbers
 
-The Numbers API allows you to manage phone numbers for your telephony operations.
+Retrieve a list of all telephony numbers associated with your organization. This includes all numbers from connected providers, along with their assignment status, bridge associations, and current activity state.
 
 <Note>
-**Prerequisites:** Make sure you have your API Token. See [Authentication](/api/get-started/authentication) for details.
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
 
 ---
 
 ## Get Telephony Numbers
 
-Retrieve a list of all telephony numbers in the system along with their details and current status.
+Retrieve all telephony numbers available in your organization.
 
 ```http
 GET /api/v2/platform/telephony/numbers/
@@ -27,7 +28,6 @@ GET /api/v2/platform/telephony/numbers/
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Org-Handle    | string | Yes      | Organization domain handle      |
-
 
 <Note>
 You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
@@ -47,12 +47,28 @@ Headers:
 ```json
 {
   "status_code": 200,
-  "message": "Telephony numbers fetched successfully.",
+  "message": "Numbers fetched successfully.",
   "data": [
     {
-      "id": 183,
+      "id": 501,
       "number": "+1234567890",
-      "active": true
+      "provider": "twilio",
+      "bridge_slug": "sales-bridge-001",
+      "status": "active"
+    },
+    {
+      "id": 502,
+      "number": "+0987654321",
+      "provider": "twilio",
+      "bridge_slug": null,
+      "status": "inactive"
+    },
+    {
+      "id": 503,
+      "number": "+911234567890",
+      "provider": "plivo",
+      "bridge_slug": "support-bridge-002",
+      "status": "active"
     }
   ]
 }
@@ -60,28 +76,21 @@ Headers:
 
 ### Response Fields
 
-| Field       | Type    | Description             |
-|-------------|---------|-------------------------|
-| status_code | integer | HTTP status code        |
-| message     | string  | Response message        |
-| data        | array   | Array of number objects |
+| Field       | Type    | Description              |
+|-------------|---------|--------------------------|
+| status_code | integer | HTTP status code         |
+| message     | string  | Response message         |
+| data        | array   | Array of number objects  |
 
 ### Number Object Fields
 
-| Field  | Type    | Description                  |
-|--------|---------|------------------------------|
-| id     | integer | Number unique identifier     |
-| number | string  | Phone number in E.164 format |
-| active | boolean | Whether the number is active |
-
-### Error Response (400 — Bad Request)
-
-```json
-{
-  "status_code": 400,
-  "message": "Organization handle is required in Org-Handle header."
-}
-```
+| Field       | Type    | Description                                          |
+|-------------|---------|------------------------------------------------------|
+| id          | integer | Unique number identifier                             |
+| number      | string  | Phone number in E.164 format                         |
+| provider    | string  | Provider slug this number belongs to                 |
+| bridge_slug | string  | Slug of the bridge this number is assigned to (null if unassigned) |
+| status      | string  | Number status: `active`, `inactive`                  |
 
 ### Error Response (401 — Unauthorized)
 
@@ -92,16 +101,25 @@ Headers:
 }
 ```
 
+### Error Response (403 — Forbidden)
+
+```json
+{
+  "status_code": 403,
+  "message": "Invalid organization handle."
+}
+```
+
 ---
 
 ## Common Error Codes
 
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
-| 200         | Success - Request completed successfully         |
-| 400         | Bad Request - Org-Handle header missing          |
+| 200         | Success - Numbers fetched successfully           |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Access denied to the resource        |
+| 403         | Forbidden - Invalid organization handle          |
+| 404         | Not Found - Organization not found               |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples
@@ -117,20 +135,28 @@ const headers = {
 };
 
 // Get all telephony numbers
-const getNumbers = async () => {
+const getTelephonyNumbers = async () => {
   const response = await axios.get(
     'https://unpod.dev/api/v2/platform/telephony/numbers/',
     { headers }
   );
-  console.log(`Total numbers: ${response.data.data.length}`);
-  response.data.data.forEach(num => {
-    console.log(`${num.number} - Active: ${num.active}`);
+  const numbers = response.data.data;
+  console.log(`Total numbers: ${numbers.length}`);
+  numbers.forEach(num => {
+    const bridgeInfo = num.bridge_slug ? `assigned to ${num.bridge_slug}` : 'unassigned';
+    console.log(`${num.number} (${num.provider}) - ${num.status} - ${bridgeInfo}`);
   });
-  return response.data.data;
+  return numbers;
+};
+
+// Get only unassigned numbers
+const getUnassignedNumbers = async () => {
+  const numbers = await getTelephonyNumbers();
+  return numbers.filter(num => num.bridge_slug === null);
 };
 
 // Example usage
-getnumbers();
+getTelephonyNumbers();
 ```
 
 ```python Python
@@ -141,21 +167,25 @@ headers = {
     'Org-Handle': 'your-org-handle'
 }
 
-BASE_URL = 'https://unpod.dev/api/v2/platform/telephony/numbers'
-
-def get_numbers():
+def get_telephony_numbers():
     """Get all telephony numbers"""
-    response = requests.get(f'{BASE_URL}/', headers=headers)
+    url = 'https://unpod.dev/api/v2/platform/telephony/numbers/'
+    response = requests.get(url, headers=headers)
     data = response.json()
+    numbers = data['data']
+    print(f"Total numbers: {len(numbers)}")
+    for num in numbers:
+        bridge_info = f"assigned to {num['bridge_slug']}" if num['bridge_slug'] else 'unassigned'
+        print(f"{num['number']} ({num['provider']}) - {num['status']} - {bridge_info}")
+    return numbers
 
-    print(f"Total numbers: {len(data['data'])}")
-    for num in data['data']:
-        print(f"{num['number']} - Active: {num['active']}")
-
-    return data['data']
+def get_unassigned_numbers():
+    """Get only unassigned numbers"""
+    numbers = get_telephony_numbers()
+    return [num for num in numbers if num['bridge_slug'] is None]
 
 # Example usage
-get_numbers()
+get_telephony_numbers()
 ```
 
 ```bash cURL
@@ -169,7 +199,9 @@ curl -X GET "https://unpod.dev/api/v2/platform/telephony/numbers/" \
 
 ## Best Practices
 
-1. **E.164 Format**: Phone numbers are returned in E.164 format (e.g., `+1234567890`)
-2. **Org-Handle Required**: Always include the Org-Handle header in your requests
-3. **Error Handling**: Always handle potential errors and implement retry logic
-4. **Security**: Keep API tokens secure and rotate them regularly
+1. **Bridge Assignment**: Check `bridge_slug` to identify unassigned numbers available for new bridge connections
+2. **Status Check**: Only numbers with `status: active` can handle calls — filter inactive numbers in your application
+3. **Provider Tracking**: Use the `provider` field to understand which provider account each number belongs to
+4. **Number Inventory**: Regularly audit your number list to identify unused or misconfigured numbers
+5. **E.164 Format**: All numbers are returned in E.164 format — use this format consistently in all API calls
+6. **Security**: Keep API tokens secure and rotate them regularly

@@ -1,0 +1,232 @@
+---
+title: 'Get Tasks by Space Token'
+description: 'Retrieve all tasks within a specific space using its token'
+openapi: 'GET /api/v2/platform/spaces/{space_token}/tasks/'
+---
+
+# Get Tasks by Space Token
+
+Fetch all tasks for a specific space using the space token. Supports pagination with `page` and `page_size` query parameters for efficient data retrieval.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get Tasks by Space Token
+
+Retrieve all tasks associated with a specific space, with optional pagination.
+
+```http
+GET /api/v2/platform/spaces/{space_token}/tasks/
+```
+
+### Path Parameters
+
+| Name        | Type   | Required | Description                             |
+|-------------|--------|----------|-----------------------------------------|
+| space_token | string | Yes      | Public token identifying the workspace  |
+
+<Note>
+You can get the `space_token` by hitting the [Get All Spaces](/api/space/get-all-spaces) API. The `token` field in the response is your Space Token.
+</Note>
+
+### Query Parameters
+
+| Name      | Type    | Required | Description                               |
+|-----------|---------|----------|-------------------------------------------|
+| page      | integer | No       | Page number for pagination (default = 1)  |
+| page_size | integer | No       | Number of tasks per page (default = 20)   |
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Content-Type  | string | Yes      | `application/json`              |
+
+### Example Request
+
+```http
+GET /api/v2/platform/spaces/your-space-token/tasks/?page=1&page_size=20
+Headers:
+  Authorization: Token your-api-token
+  Content-Type: application/json
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 45,
+  "status_code": 200,
+  "message": "Tasks Fetched Successfully",
+  "data": [
+    {
+      "_id": "697debb84c27faa892bfa0cc",
+      "thread_id": "675272289779974401",
+      "user_info": {
+        "email": "user@example.com",
+        "full_name": "John Doe"
+      },
+      "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
+      "run_id": "R8ff2ccdefe9a11f0878d43cd8a99e069",
+      "task": {
+        "objective": "Follow up call"
+      },
+      "input": {
+        "name": "Jane Smith",
+        "email": "jane@example.com",
+        "contact_number": "9876543210",
+        "alternate_number": "",
+        "occupation": "Manager",
+        "company_name": "Acme Corp",
+        "address": "456 Oak Avenue",
+        "about": "Potential client",
+        "context": "Follow up on proposal",
+        "labels": ["Interested"],
+        "document_id": "6902fb5840a736e125e80ebc"
+      },
+      "output": {
+        "call_id": "675272289779974401",
+        "call_end_reason": null,
+        "start_time": "2026-02-07T05:57:45",
+        "end_time": "2026-02-07T06:01:12",
+        "duration": 207,
+        "call_type": "outbound",
+        "call_status": "completed"
+      },
+      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+      "status": "completed",
+      "execution_type": "call",
+      "run_mode": "prod",
+      "created": "2026-02-07T05:57:45",
+      "modified": "2026-02-07T06:01:15"
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description           |
+|-------------|---------|-----------------------|
+| count       | integer | Total number of tasks |
+| status_code | integer | HTTP status code      |
+| message     | string  | Response message      |
+| data        | array   | Array of task objects |
+
+### Task Object Fields
+
+| Field          | Type    | Description                                   |
+|----------------|---------|-----------------------------------------------|
+| _id            | string  | Internal task document ID                     |
+| thread_id      | string  | Thread identifier                             |
+| user_info      | object  | User details (email, full_name)               |
+| task_id        | string  | Unique task identifier                        |
+| run_id         | string  | Parent run identifier                         |
+| task           | object  | Task definition with objective                |
+| input          | object  | Input data for the task                       |
+| output         | object  | Task output with call details                 |
+| assignee       | string  | Agent handle assigned to the task             |
+| status         | string  | Task status: `pending`, `completed`, `failed` |
+| execution_type | string  | Type of execution: `call`, `email`, etc.      |
+| run_mode       | string  | Execution mode: `dev`, `prod`, etc.           |
+| created        | string  | Task creation timestamp                       |
+| modified       | string  | Last modified timestamp                       |
+
+### Error Response (206 — Tasks Fetch Failed)
+
+```json
+{
+  "message": "Error fetching tasks",
+  "errors": "Detailed error description"
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Data fetched successfully              |
+| 206         | Partial Content - Business logic error occurred  |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Space not found                      |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Content-Type': 'application/json'
+};
+
+// Get tasks by space token with pagination
+const getTasksBySpace = async (spaceToken, page = 1, pageSize = 20) => {
+  const response = await axios.get(
+    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/tasks/`,
+    {
+      headers,
+      params: { page, page_size: pageSize }
+    }
+  );
+  console.log(`Total tasks: ${response.data.count}`);
+  response.data.data.forEach(task => {
+    console.log(`Task ${task.task_id}: ${task.status}`);
+  });
+  return response.data.data;
+};
+
+// Example usage
+getTasksBySpace('your-space-token', 1, 20);
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Content-Type': 'application/json'
+}
+
+def get_tasks_by_space(space_token: str, page: int = 1, page_size: int = 20):
+    """Get tasks by space token with pagination"""
+    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/tasks/'
+    params = {'page': page, 'page_size': page_size}
+    response = requests.get(url, headers=headers, params=params)
+    data = response.json()
+    print(f"Total tasks: {data['count']}")
+    for task in data['data']:
+        print(f"Task {task['task_id']}: {task['status']}")
+    return data['data']
+
+# Example usage
+get_tasks_by_space('your-space-token', page=1, page_size=20)
+```
+
+```bash cURL
+# Get tasks by space token with pagination
+curl -X GET "https://unpod.dev/api/v2/platform/spaces/your-space-token/tasks/?page=1&page_size=20" \
+  -H "Authorization: Token your-api-token" \
+  -H "Content-Type: application/json"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Pagination**: Use `page` and `page_size` parameters for efficient data retrieval in large datasets
+2. **Space Token**: Ensure you are using a valid space token from your organization
+3. **Error Handling**: Always handle potential errors and edge cases
+4. **Status Filtering**: Filter tasks by status in your application logic to focus on relevant tasks
+5. **Security**: Keep API tokens secure and rotate them regularly

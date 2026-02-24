@@ -1,0 +1,252 @@
+---
+title: 'Get Detailed Tasks for a Specific Run'
+description: 'Retrieve all tasks with full execution details for a specific run'
+openapi: 'GET /api/v2/platform/spaces/{space_token}/runs/{run_id}/tasks/'
+---
+
+# Get Detailed Tasks for a Specific Run
+
+Fetch all tasks for a specific run, including complete input, output, call transcript, costs, analysis, artifacts, and provider metadata. This endpoint is used when you need deep inspection of how a run executed each task.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get Tasks for a Specific Run
+
+Retrieve all tasks with full execution details for a specific run within a space.
+
+```http
+GET /api/v2/platform/spaces/{space_token}/runs/{run_id}/tasks/
+```
+
+### Path Parameters
+
+| Name        | Type   | Required | Description                        |
+|-------------|--------|----------|------------------------------------|
+| space_token | string | Yes      | Public token of the space          |
+| run_id      | string | Yes      | The run ID whose tasks to retrieve |
+
+<Note>
+You can get the `space_token` from the [Get All Spaces](/api/space/get-all-spaces) API. The `run_id` can be obtained from the [Get All Runs](/api/execution/get-all-runs) API response.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Content-Type  | string | Yes      | `application/json`              |
+
+### Example Request
+
+```http
+GET /api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/runs/Recac64fe03e911f1878d43cd8a99e069/tasks/
+Headers:
+  Authorization: Token your-api-token
+  Content-Type: application/json
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 9,
+  "status_code": 200,
+  "message": "Tasks Fetched Successfully",
+  "data": [
+    {
+      "_id": "697debb84c27faa892bfa0cc",
+      "thread_id": "675272289779974401",
+      "user_info": {
+        "email": "user@example.com",
+        "full_name": "John Doe"
+      },
+      "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
+      "run_id": "Recac64fe03e911f1878d43cd8a99e069",
+      "task": {
+        "objective": "Call the lead and discuss requirements"
+      },
+      "input": {
+        "name": "Jane Smith",
+        "email": "jane@example.com",
+        "contact_number": "9876543210",
+        "labels": ["Interested"],
+        "document_id": "6902fb5840a736e125e80ebc"
+      },
+      "output": {
+        "call_id": "675272289779974401",
+        "start_time": "2026-02-07T05:57:45",
+        "end_time": "2026-02-07T06:01:12",
+        "duration": 207,
+        "recording_url": "https://cdr-storage-recs.s3.ap-south-1.amazonaws.com/media/recording.ogg",
+        "transcript": [
+          {
+            "role": "assistant",
+            "content": "Hi! This is Alex from TechSupport.",
+            "timestamp": "2026-02-07T05:57:50"
+          },
+          {
+            "role": "user",
+            "content": "Hello, yes speaking.",
+            "timestamp": "2026-02-07T05:57:55"
+          }
+        ],
+        "post_call_data": {
+          "summary": {
+            "status": "Connected",
+            "summary": "The lead was reached and expressed interest in the product."
+          }
+        },
+        "call_type": "outbound",
+        "call_status": "completed"
+      },
+      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+      "status": "completed",
+      "execution_type": "call",
+      "created": "2026-02-07T05:57:45",
+      "modified": "2026-02-07T06:01:15"
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description           |
+|-------------|---------|-----------------------|
+| count       | integer | Total number of tasks |
+| status_code | integer | HTTP status code      |
+| message     | string  | Response message      |
+| data        | array   | Array of task objects |
+
+### Task Object Fields
+
+| Field          | Type    | Description                                   |
+|----------------|---------|-----------------------------------------------|
+| _id            | string  | Internal task document ID                     |
+| thread_id      | string  | Thread identifier                             |
+| user_info      | object  | User details (email, full_name)               |
+| task_id        | string  | Unique task identifier                        |
+| run_id         | string  | Parent run identifier                         |
+| task           | object  | Task definition with objective                |
+| input          | object  | Input data for the task                       |
+| output         | object  | Task output including call details            |
+| assignee       | string  | Agent handle assigned to the task             |
+| status         | string  | Task status: `pending`, `completed`, `failed` |
+| execution_type | string  | Type of execution: `call`, `email`, etc.      |
+| created        | string  | Task creation timestamp                       |
+| modified       | string  | Last modified timestamp                       |
+
+### Output Object Fields
+
+| Field           | Type   | Description                              |
+|-----------------|--------|------------------------------------------|
+| call_id         | string | Unique call identifier                   |
+| start_time      | string | Call start timestamp                     |
+| end_time        | string | Call end timestamp                       |
+| duration        | number | Call duration in seconds                 |
+| recording_url   | string | URL to call recording                    |
+| transcript      | array  | Array of conversation messages           |
+| post_call_data  | object | Post-call analysis data                  |
+| call_type       | string | Direction: `outbound`, `inbound`         |
+| call_status     | string | Status of the call                       |
+
+### Error Response (206 — Business Logic Error)
+
+```json
+{
+  "message": "Error retrieving run tasks",
+  "errors": "Detailed error description"
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Data fetched successfully              |
+| 206         | Partial Content - Business logic error occurred  |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Space or Run not found               |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Content-Type': 'application/json'
+};
+
+// Get tasks for a specific run
+const getRunTasks = async (spaceToken, runId) => {
+  const response = await axios.get(
+    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/runs/${runId}/tasks/`,
+    { headers }
+  );
+  console.log(`Total tasks: ${response.data.count}`);
+  response.data.data.forEach(task => {
+    console.log(`Task ${task.task_id}: ${task.status}`);
+    if (task.output?.duration) {
+      console.log(`  Duration: ${task.output.duration}s`);
+    }
+  });
+  return response.data.data;
+};
+
+// Example usage
+getRunTasks('8KZAMRAHSXXXXXXMAYNASMJC', 'Recac64fe03e911f1878d43cd8a99e069');
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Content-Type': 'application/json'
+}
+
+def get_run_tasks(space_token: str, run_id: str):
+    """Get all tasks for a specific run"""
+    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/runs/{run_id}/tasks/'
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    print(f"Total tasks: {data['count']}")
+    for task in data['data']:
+        print(f"Task {task['task_id']}: {task['status']}")
+        if task.get('output', {}).get('duration'):
+            print(f"  Duration: {task['output']['duration']}s")
+    return data['data']
+
+# Example usage
+get_run_tasks('8KZAMRAHSXXXXXXMAYNASMJC', 'Recac64fe03e911f1878d43cd8a99e069')
+```
+
+```bash cURL
+# Get tasks for a specific run
+curl -X GET "https://unpod.dev/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/runs/Recac64fe03e911f1878d43cd8a99e069/tasks/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Content-Type: application/json"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Run ID**: Always retrieve the `run_id` from the [Get All Runs](/api/execution/get-all-runs) endpoint first
+2. **Transcript Review**: Use the `transcript` array in output for conversation quality analysis
+3. **Recording Access**: Store `recording_url` for compliance, QA, and playback
+4. **Post-call Data**: Check `post_call_data.summary` for AI-generated call summaries and outcomes
+5. **Error Handling**: Always handle potential errors and edge cases
+6. **Security**: Keep API tokens secure and rotate them regularly

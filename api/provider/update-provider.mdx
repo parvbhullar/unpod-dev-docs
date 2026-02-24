@@ -1,0 +1,199 @@
+---
+title: 'Update Provider'
+description: 'Partially update a telephony provider configuration'
+openapi: 'PATCH /api/v2/platform/telephony/providers-configurations/{id}/'
+---
+
+# Update Provider Configuration
+
+Partially update an existing telephony provider configuration. This is useful for rotating credentials such as the `auth_token` without deleting and recreating the entire configuration.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Update Provider Configuration
+
+Partially update a provider configuration by its ID. Only include the fields you want to change.
+
+```http
+PATCH /api/v2/platform/telephony/providers-configurations/{id}/
+```
+
+### Path Parameters
+
+| Name | Type    | Required | Description                                |
+|------|---------|----------|--------------------------------------------|
+| id   | integer | Yes      | Unique identifier of the provider configuration |
+
+<Note>
+You can get the provider configuration `id` by hitting the [Get All Providers](/api/provider/get-all-providers) API.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+| Content-Type  | string | Yes      | `application/json`              |
+
+### Request Body
+
+All fields are optional — include only the fields you wish to update.
+
+| Field      | Type   | Required | Description                        |
+|------------|--------|----------|------------------------------------|
+| auth_token | string | No       | Updated Auth Token / Secret key    |
+| account_sid | string | No      | Updated Account SID                |
+
+### Example Request
+
+```http
+PATCH /api/v2/platform/telephony/providers-configurations/42/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+  Content-Type: application/json
+
+Body:
+{
+  "auth_token": "your-new-auth-token-here"
+}
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Provider configuration updated successfully.",
+  "data": {
+    "id": 42,
+    "provider": "twilio",
+    "account_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "created_at": "2026-02-07T10:00:00Z"
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description                      |
+|-------------|---------|----------------------------------|
+| status_code | integer | HTTP status code                 |
+| message     | string  | Response message                 |
+| data        | object  | Updated provider config details  |
+
+### Provider Config Object Fields
+
+| Field       | Type    | Description                              |
+|-------------|---------|------------------------------------------|
+| id          | integer | Unique provider configuration identifier |
+| provider    | string  | Provider slug/identifier                 |
+| account_sid | string  | Account SID for the provider             |
+| created_at  | string  | Configuration creation timestamp         |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "status_code": 400,
+  "message": "Update failed.",
+  "errors": "Invalid auth_token value"
+}
+```
+
+### Error Response (404 — Not Found)
+
+```json
+{
+  "status_code": 404,
+  "message": "Provider configuration not found."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Configuration updated successfully     |
+| 400         | Bad Request - Invalid update parameters          |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Invalid organization handle          |
+| 404         | Not Found - Provider configuration not found     |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle',
+  'Content-Type': 'application/json'
+};
+
+// Update a provider configuration
+const updateProvider = async (id, updates) => {
+  const response = await axios.patch(
+    `https://unpod.dev/api/v2/platform/telephony/providers-configurations/${id}/`,
+    updates,
+    { headers }
+  );
+  console.log(`Provider #${response.data.data.id} updated successfully`);
+  return response.data.data;
+};
+
+// Example: rotate auth_token
+updateProvider(42, { auth_token: 'your-new-auth-token-here' });
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle',
+    'Content-Type': 'application/json'
+}
+
+def update_provider(config_id: int, updates: dict):
+    """Partially update a provider configuration"""
+    url = f'https://unpod.dev/api/v2/platform/telephony/providers-configurations/{config_id}/'
+    response = requests.patch(url, headers=headers, json=updates)
+    data = response.json()
+    print(f"Provider #{data['data']['id']} updated successfully")
+    return data['data']
+
+# Example: rotate auth_token
+update_provider(42, {'auth_token': 'your-new-auth-token-here'})
+```
+
+```bash cURL
+# Update a provider configuration (rotate auth token)
+curl -X PATCH "https://unpod.dev/api/v2/platform/telephony/providers-configurations/42/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "auth_token": "your-new-auth-token-here"
+  }'
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Partial Updates**: Only include fields you want to change — PATCH supports partial updates
+2. **Credential Rotation**: Regularly rotate `auth_token` values for security without disrupting bridges
+3. **Security**: Never expose `auth_token` values in logs or responses
+4. **Verify Before Update**: Use [Get Provider by ID](/api/provider/get-provider-by-id) to confirm the configuration exists before patching
+5. **Error Handling**: Handle 404 and 400 errors to catch invalid IDs or credential formats

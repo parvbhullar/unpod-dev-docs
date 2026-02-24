@@ -1,0 +1,206 @@
+---
+title: 'Get Billing Data'
+description: 'Retrieve invoices and payment status for your organization'
+openapi: 'GET /api/v2/platform/organisation/billing/'
+---
+
+# Get Billing Data
+
+Retrieve invoices and payment history for your organization with pagination support. This endpoint returns billing records including invoice amounts, currency, payment status, and invoice dates.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get Billing Data
+
+Retrieve a paginated list of invoices and billing records for your organization.
+
+```http
+GET /api/v2/platform/organisation/billing/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Query Parameters
+
+| Name      | Type    | Required | Description                               |
+|-----------|---------|----------|-------------------------------------------|
+| page      | integer | No       | Page number for pagination (default = 1)  |
+| page_size | integer | No       | Number of records per page (default = 20) |
+
+### Example Request
+
+```http
+GET /api/v2/platform/organisation/billing/?page=1&page_size=20
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 12,
+  "status_code": 200,
+  "message": "Billing data fetched successfully",
+  "results": [
+    {
+      "id": 101,
+      "amount": "299.00",
+      "currency": "USD",
+      "status": "paid",
+      "invoice_date": "2026-02-01T00:00:00Z"
+    },
+    {
+      "id": 100,
+      "amount": "299.00",
+      "currency": "USD",
+      "status": "paid",
+      "invoice_date": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": 99,
+      "amount": "149.00",
+      "currency": "USD",
+      "status": "pending",
+      "invoice_date": "2025-12-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description                         |
+|-------------|---------|-------------------------------------|
+| count       | integer | Total number of billing records     |
+| status_code | integer | HTTP status code                    |
+| message     | string  | Response message                    |
+| results     | array   | Array of invoice/billing objects    |
+
+### Invoice Object Fields
+
+| Field        | Type   | Description                                        |
+|--------------|--------|----------------------------------------------------|
+| id           | integer | Unique invoice identifier                         |
+| amount       | string  | Invoice amount as decimal string                  |
+| currency     | string  | Currency code (e.g., `USD`, `INR`)                |
+| status       | string  | Payment status: `paid`, `pending`, `failed`       |
+| invoice_date | string  | Invoice creation date (ISO 8601)                  |
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+### Error Response (403 — Forbidden)
+
+```json
+{
+  "status_code": 403,
+  "message": "Invalid organization handle."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Billing data fetched successfully      |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Invalid organization handle          |
+| 404         | Not Found - Organization not found               |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle'
+};
+
+// Get billing data with pagination
+const getBillingData = async (page = 1, pageSize = 20) => {
+  const response = await axios.get(
+    'https://unpod.dev/api/v2/platform/organisation/billing/',
+    {
+      headers,
+      params: { page, page_size: pageSize }
+    }
+  );
+  console.log(`Total invoices: ${response.data.count}`);
+  response.data.results.forEach(invoice => {
+    console.log(`Invoice #${invoice.id}: ${invoice.currency} ${invoice.amount} - ${invoice.status}`);
+  });
+  return response.data.results;
+};
+
+// Example usage
+getBillingData(1, 20);
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle'
+}
+
+def get_billing_data(page: int = 1, page_size: int = 20):
+    """Get billing invoices with pagination"""
+    url = 'https://unpod.dev/api/v2/platform/organisation/billing/'
+    params = {'page': page, 'page_size': page_size}
+    response = requests.get(url, headers=headers, params=params)
+    data = response.json()
+    print(f"Total invoices: {data['count']}")
+    for invoice in data['results']:
+        print(f"Invoice #{invoice['id']}: {invoice['currency']} {invoice['amount']} - {invoice['status']}")
+    return data['results']
+
+# Example usage
+get_billing_data(page=1, page_size=20)
+```
+
+```bash cURL
+# Get billing data
+curl -X GET "https://unpod.dev/api/v2/platform/organisation/billing/?page=1&page_size=20" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Pagination**: Use `page` and `page_size` to retrieve billing records in manageable chunks
+2. **Status Monitoring**: Watch for `pending` or `failed` invoice statuses that may require action
+3. **Currency Handling**: Always check the `currency` field before displaying amounts to users
+4. **Org-Handle**: Ensure the correct organization handle is used for accurate billing records
+5. **Reconciliation**: Use `invoice_date` alongside `id` for billing reconciliation workflows
+6. **Security**: Keep API tokens secure and rotate them regularly

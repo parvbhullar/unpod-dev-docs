@@ -1,0 +1,276 @@
+---
+title: 'Get Tasks by Agent Handle'
+description: 'Retrieve all tasks assigned to a specific agent using its handle'
+openapi: 'GET /api/v2/platform/agents/{agent_handle}/tasks/'
+---
+
+# Get Tasks by Agent Handle
+
+Fetch all tasks assigned to a specific agent/pilot using their handle. This returns full task metadata including user info, input payloads, call output, transcripts, and execution details.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get Tasks by Agent Handle
+
+Retrieve all tasks assigned to a specific agent using its handle identifier.
+
+```http
+GET /api/v2/platform/agents/{agent_handle}/tasks/
+```
+
+### Path Parameters
+
+| Name         | Type   | Required | Description                           |
+|--------------|--------|----------|---------------------------------------|
+| agent_handle | string | Yes      | Unique handle/identifier of the agent |
+
+<Note>
+You can get the `agent_handle` by hitting the [Get All Agents](/api/agent/get-all-agents) API. The `handle` field in the response is your Agent Handle.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Content-Type  | string | Yes      | `application/json`              |
+
+### Example Request
+
+```http
+GET /api/v2/platform/agents/space-agent-8qmk42nslp91wrh3dz7btxc4/tasks/
+Headers:
+  Authorization: Token your-api-token
+  Content-Type: application/json
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 1,
+  "status_code": 200,
+  "message": "Tasks Fetched Successfully",
+  "data": [
+    {
+      "_id": "697debb84c27faa892bfa0cc",
+      "thread_id": "675272289779974401",
+      "user_info": {
+        "email": "user@example.com",
+        "full_name": "John Doe"
+      },
+      "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
+      "run_id": "R8ff2ccdefe9a11f0878d43cd8a99e069",
+      "task": {
+        "objective": "Call the lead and discuss project requirements"
+      },
+      "input": {
+        "name": "Bhaishab",
+        "email": "bhaishab@example.com",
+        "contact_number": "8109689090",
+        "alternate_number": "",
+        "occupation": "Developer",
+        "company_name": "TechCorp",
+        "address": "123/456 Main Street",
+        "about": "Software Developer",
+        "context": "Follow up call",
+        "labels": ["Interested"],
+        "document_id": "6902fb5840a736e125e80c"
+      },
+      "output": {
+        "call_id": "675272289779974401",
+        "call_end_reason": null,
+        "start_time": "2026-01-31 11:47:38.067021",
+        "end_time": "2026-01-31 11:48:11.385745",
+        "assistant_number": "7890789090",
+        "call_summary": null,
+        "duration": 33,
+        "recording_url": "https://cdr-storage-recs.s3.ap-south-1.amazonaws.com/media/p79974498.ogg",
+        "transcript": [
+          {
+            "role": "user",
+            "content": "Hello?",
+            "timestamp": "2026-01-31 11:47:46.675013"
+          },
+          {
+            "role": "assistant",
+            "content": "Hi! This is Alex from TechSupport. Am I speaking with Bhaishab?",
+            "timestamp": "2026-01-31 11:47:54.259815"
+          }
+        ],
+        "post_call_data": {
+          "summary": {
+            "status": "Connected",
+            "summary": "The call connected successfully and the agent introduced themselves.",
+            "callback_datetime": "N/A"
+          }
+        },
+        "call_type": "outbound",
+        "call_status": "completed"
+      },
+      "attachments": [],
+      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+      "status": "completed",
+      "execution_type": "call",
+      "ref_id": "6902fb5840a736e125e80c",
+      "failure_count": 0,
+      "last_failure_reason": null,
+      "retry_attempt": 0,
+      "last_status_change": "2026-01-31T11:47:31.198984",
+      "scheduled_timestamp": null
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description           |
+|-------------|---------|-----------------------|
+| count       | integer | Total number of tasks |
+| status_code | integer | HTTP status code      |
+| message     | string  | Response message      |
+| data        | array   | Array of task objects |
+
+### Task Object Fields
+
+| Field               | Type    | Description                                   |
+|---------------------|---------|-----------------------------------------------|
+| _id                 | string  | Internal task document ID                     |
+| thread_id           | string  | Thread identifier                             |
+| user_info           | object  | User details (email, full_name)               |
+| task_id             | string  | Unique task identifier                        |
+| run_id              | string  | Parent run identifier                         |
+| task                | object  | Task definition with objective                |
+| input               | object  | Input data for the task                       |
+| output              | object  | Task output with call details                 |
+| attachments         | array   | List of attachments                           |
+| assignee            | string  | Agent handle assigned to the task             |
+| status              | string  | Task status: `pending`, `completed`, `failed` |
+| execution_type      | string  | Type of execution: `call`, `email`, etc.      |
+| ref_id              | string  | Reference ID linking to input data            |
+| failure_count       | integer | Number of failed attempts                     |
+| last_failure_reason | string  | Reason for last failure (null if none)        |
+| retry_attempt       | integer | Current retry attempt number                  |
+| last_status_change  | string  | Timestamp of last status change               |
+| scheduled_timestamp | string  | Scheduled execution timestamp (null if now)   |
+
+### Output Object Fields
+
+| Field            | Type   | Description                              |
+|------------------|--------|------------------------------------------|
+| call_id          | string | Unique call identifier                   |
+| call_end_reason  | string | Reason for call ending                   |
+| start_time       | string | Call start timestamp                     |
+| end_time         | string | Call end timestamp                       |
+| assistant_number | string | Outbound phone number used               |
+| call_summary     | string | AI-generated summary of the call         |
+| duration         | number | Call duration in seconds                 |
+| recording_url    | string | URL to call recording                    |
+| transcript       | array  | Array of conversation messages           |
+| post_call_data   | object | Post-call analysis data                  |
+| call_type        | string | Direction of call: `outbound`, `inbound` |
+| call_status      | string | Status of the call: `completed`, etc.    |
+
+### Error Response (206 — Tasks Fetch Failed)
+
+```json
+{
+  "message": "Error fetching tasks",
+  "errors": "Detailed error description"
+}
+```
+
+### Error Response (404 — Agent Not Found)
+
+```json
+{
+  "message": "Agent not found"
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Data fetched successfully              |
+| 206         | Partial Content - Business logic error occurred  |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Agent not found                      |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Content-Type': 'application/json'
+};
+
+// Get tasks by agent handle
+const getTasksByAgentHandle = async (agentHandle) => {
+  const response = await axios.get(
+    `https://unpod.dev/api/v2/platform/agents/${agentHandle}/tasks/`,
+    { headers }
+  );
+  console.log(`Total tasks: ${response.data.count}`);
+  response.data.data.forEach(task => {
+    console.log(`Task ${task.task_id}: ${task.status} (${task.execution_type})`);
+  });
+  return response.data.data;
+};
+
+// Example usage
+getTasksByAgentHandle('space-agent-8qmk42nslp91wrh3dz7btxc4');
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Content-Type': 'application/json'
+}
+
+def get_tasks_by_agent_handle(agent_handle: str):
+    """Get all tasks assigned to a specific agent"""
+    url = f'https://unpod.dev/api/v2/platform/agents/{agent_handle}/tasks/'
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    print(f"Total tasks: {data['count']}")
+    for task in data['data']:
+        print(f"Task {task['task_id']}: {task['status']} ({task['execution_type']})")
+    return data['data']
+
+# Example usage
+get_tasks_by_agent_handle('space-agent-8qmk42nslp91wrh3dz7btxc4')
+```
+
+```bash cURL
+# Get tasks by agent handle
+curl -X GET "https://unpod.dev/api/v2/platform/agents/space-agent-8qmk42nslp91wrh3dz7btxc4/tasks/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Content-Type: application/json"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Agent Handle**: Use the exact agent handle from the [Get All Agents](/api/agent/get-all-agents) response
+2. **Transcript Analysis**: Use the `transcript` field in the output for detailed conversation analysis
+3. **Retry Logic**: Check `failure_count` and `last_failure_reason` for failed tasks to understand issues
+4. **Recording Access**: Store `recording_url` from output for compliance and quality review
+5. **Security**: Keep API tokens secure and rotate them regularly

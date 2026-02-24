@@ -1,0 +1,914 @@
+openapi: 3.0.3
+info:
+  title: Unpod API
+  description: REST API for Unpod Voice AI Platform
+  version: 2.0.0
+
+servers:
+  - url: http://localhost:3001
+    description: Local Development
+
+tags:
+  - name: Organisation
+  - name: Spaces
+  - name: Agents
+  - name: Tasks
+  - name: Runs
+  - name: Call Logs
+  - name: Analytics
+  - name: Providers
+  - name: Bridges
+  - name: Billing
+
+paths:
+
+  # ─── Organisation ────────────────────────────────────────────
+  /api/v2/platform/organizations/:
+    get:
+      operationId: getOrganizations
+      summary: Get Organizations
+      tags: [Organisation]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: List of organizations
+          content:
+            application/json:
+              example:
+                - id: 1
+                  name: "Unpod Inc"
+                  domain_handle: "unpod"
+                  created_at: "2024-01-01T00:00:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── Spaces ──────────────────────────────────────────────────
+  /api/v2/platform/spaces/:
+    get:
+      operationId: getAllSpaces
+      summary: Get All Spaces
+      tags: [Spaces]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: List of all spaces
+          content:
+            application/json:
+              example:
+                - id: 1
+                  name: "Sales Outreach"
+                  token: "8KZRTQP7BNW5XEDLORYUHMJC"
+                  created_at: "2024-01-01T00:00:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v2/platform/spaces/{space_token}/:
+    get:
+      operationId: getSpaceByToken
+      summary: Get Space by Token
+      tags: [Spaces]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: space_token
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "8KZRTQP7BNW5XEDLORYUHMJC"
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: Space details
+          content:
+            application/json:
+              example:
+                id: 1
+                name: "Sales Outreach"
+                token: "8KZRTQP7BNW5XEDLORYUHMJC"
+                agent_handle: "sales-agent"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v2/platform/spaces/{space_token}/tasks/:
+    get:
+      operationId: getTasksBySpaceToken
+      summary: Get Tasks by Space Token
+      tags: [Spaces]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: space_token
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "8KZRTQP7BNW5XEDLORYUHMJC"
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: List of tasks in the space
+          content:
+            application/json:
+              example:
+                - id: 101
+                  status: "completed"
+                  phone_number: "+1234567890"
+                  created_at: "2024-01-01T00:00:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── Agents ──────────────────────────────────────────────────
+  /api/v2/platform/agents/:
+    get:
+      operationId: getAllAgents
+      summary: Get All Agents
+      tags: [Agents]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: List of all agents
+          content:
+            application/json:
+              example:
+                - id: 1
+                  name: "Sales Agent"
+                  handle: "sales-agent"
+                  voice: "en-US-Neural2-F"
+                  status: "active"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v2/platform/agents/{agent_handle}/tasks/:
+    get:
+      operationId: getTasksByAgentHandle
+      summary: Get Tasks by Agent Handle
+      tags: [Agents]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: agent_handle
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "sales-agent"
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: List of tasks for the agent
+          content:
+            application/json:
+              example:
+                - id: 101
+                  status: "completed"
+                  phone_number: "+1234567890"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v2/platform/agents/{agent_handle}/executions/:
+    get:
+      operationId: getAgentExecutions
+      summary: Get All Agent Executions
+      tags: [Agents]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: agent_handle
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "sales-agent"
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: List of executions for the agent
+          content:
+            application/json:
+              example:
+                - id: "R40fe5eface1511f082ac"
+                  status: "completed"
+                  total_tasks: 50
+                  completed_tasks: 48
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── Tasks / Make Call ────────────────────────────────────────
+  /api/v2/platform/spaces/{space_token}/tasks/create/:
+    post:
+      operationId: createTask
+      summary: Create a Task - Make Voice AI Call
+      tags: [Tasks]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: space_token
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "8KZRTQP7BNW5XEDLORYUHMJC"
+        - $ref: '#/components/parameters/OrgHandle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone_number
+                - agent_handle
+              properties:
+                phone_number:
+                  type: string
+                  example: "+1234567890"
+                agent_handle:
+                  type: string
+                  example: "sales-agent"
+                context:
+                  type: string
+                  example: "Follow up on demo request"
+                scheduled_at:
+                  type: string
+                  format: date-time
+                  example: "2024-06-01T10:00:00Z"
+            example:
+              phone_number: "+1234567890"
+              agent_handle: "sales-agent"
+              context: "Follow up on demo request"
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              example:
+                id: 101
+                status: "queued"
+                phone_number: "+1234567890"
+                agent_handle: "sales-agent"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── Runs ─────────────────────────────────────────────────────
+  /api/v2/platform/spaces/{space_token}/runs/:
+    get:
+      operationId: getAllRuns
+      summary: Get All Runs in a Space
+      tags: [Runs]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: space_token
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "8KZRTQP7BNW5XEDLORYUHMJC"
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: List of all runs
+          content:
+            application/json:
+              example:
+                - id: "R40fe5eface1511f082ac"
+                  status: "completed"
+                  total_tasks: 50
+                  created_at: "2024-01-01T00:00:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v2/platform/spaces/{space_token}/runs/{run_id}/tasks/:
+    get:
+      operationId: getRunTasks
+      summary: Get Detailed Tasks for a Specific Run
+      tags: [Runs]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: space_token
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "8KZRTQP7BNW5XEDLORYUHMJC"
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "R40fe5eface1511f082ac156368e7acc4"
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: List of tasks for the run
+          content:
+            application/json:
+              example:
+                - id: 101
+                  status: "completed"
+                  phone_number: "+1234567890"
+                  duration: 120
+                  recording_url: "https://storage.unpod.dev/rec/abc.mp3"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── Call Logs ────────────────────────────────────────────────
+  /api/v2/platform/call-logs/:
+    get:
+      operationId: getCallLogs
+      summary: Get Call Logs
+      tags: [Call Logs]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            example: 20
+        - name: call_type
+          in: query
+          schema:
+            type: string
+            enum: [inbound, outbound]
+            example: outbound
+        - name: call_status
+          in: query
+          schema:
+            type: string
+            enum: [completed, failed, no-answer]
+            example: completed
+      responses:
+        '200':
+          description: List of call logs
+          content:
+            application/json:
+              example:
+                count: 120
+                results:
+                  - id: 1
+                    phone_number: "+1234567890"
+                    duration: 95
+                    status: "completed"
+                    call_type: "outbound"
+                    created_at: "2024-01-01T10:00:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── Analytics ────────────────────────────────────────────────
+  /api/v2/platform/organisation/analytics/:
+    get:
+      operationId: getAnalytics
+      summary: Get Analytics
+      tags: [Analytics]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+        - name: space_token
+          in: query
+          schema:
+            type: string
+            example: "8KZRTQP7BNW5XEDLORYUHMJC"
+      responses:
+        '200':
+          description: Analytics data
+          content:
+            application/json:
+              example:
+                total_calls: 500
+                completed_calls: 470
+                failed_calls: 30
+                avg_duration: 95
+                total_tasks: 500
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── Providers ────────────────────────────────────────────────
+  /api/v2/platform/telephony/providers/:
+    get:
+      operationId: getTelephonyProviders
+      summary: Get Telephony Providers
+      tags: [Providers]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: List of available telephony providers
+          content:
+            application/json:
+              example:
+                - id: 1
+                  name: "Twilio"
+                  slug: "twilio"
+                - id: 2
+                  name: "Plivo"
+                  slug: "plivo"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v2/platform/telephony/providers-configurations/:
+    get:
+      operationId: getAllProviders
+      summary: Get All Providers
+      tags: [Providers]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: List of provider configurations
+          content:
+            application/json:
+              example:
+                - id: 1
+                  provider: "twilio"
+                  account_sid: "ACxxxxxxxxxxxxxxxx"
+                  created_at: "2024-01-01T00:00:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      operationId: createProvider
+      summary: Create Provider
+      tags: [Providers]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - provider
+                - account_sid
+                - auth_token
+              properties:
+                provider:
+                  type: string
+                  example: "twilio"
+                account_sid:
+                  type: string
+                  example: "ACxxxxxxxxxxxxxxxx"
+                auth_token:
+                  type: string
+                  example: "your_auth_token"
+            example:
+              provider: "twilio"
+              account_sid: "ACxxxxxxxxxxxxxxxx"
+              auth_token: "your_auth_token"
+      responses:
+        '201':
+          description: Provider created
+          content:
+            application/json:
+              example:
+                id: 1
+                provider: "twilio"
+                account_sid: "ACxxxxxxxxxxxxxxxx"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v2/platform/telephony/providers-configurations/{id}/:
+    get:
+      operationId: getProviderById
+      summary: Get Provider by ID
+      tags: [Providers]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: Provider configuration details
+          content:
+            application/json:
+              example:
+                id: 1
+                provider: "twilio"
+                account_sid: "ACxxxxxxxxxxxxxxxx"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      operationId: updateProvider
+      summary: Update Provider
+      tags: [Providers]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - $ref: '#/components/parameters/OrgHandle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                auth_token:
+                  type: string
+                  example: "new_auth_token"
+            example:
+              auth_token: "new_auth_token"
+      responses:
+        '200':
+          description: Provider updated
+          content:
+            application/json:
+              example:
+                id: 1
+                provider: "twilio"
+                account_sid: "ACxxxxxxxxxxxxxxxx"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    delete:
+      operationId: deleteProvider
+      summary: Delete Provider
+      tags: [Providers]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '204':
+          description: Provider deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ─── Telephony Numbers ────────────────────────────────────────
+  /api/v2/platform/telephony/numbers/:
+    get:
+      operationId: getTelephonyNumbers
+      summary: Get Telephony Numbers
+      tags: [Bridges]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: List of telephony numbers
+          content:
+            application/json:
+              example:
+                - id: 1
+                  number: "+1234567890"
+                  provider: "twilio"
+                  bridge_slug: "sales-bridge"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── Bridges ──────────────────────────────────────────────────
+  /api/v2/platform/telephony/bridges/:
+    get:
+      operationId: getAllBridges
+      summary: Get All Bridges
+      tags: [Bridges]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: List of all bridges
+          content:
+            application/json:
+              example:
+                - id: 1
+                  name: "Sales Bridge"
+                  slug: "sales-bridge"
+                  provider: "twilio"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      operationId: createBridge
+      summary: Create Bridge
+      tags: [Bridges]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - slug
+              properties:
+                name:
+                  type: string
+                  example: "Sales Bridge"
+                slug:
+                  type: string
+                  example: "sales-bridge"
+            example:
+              name: "Sales Bridge"
+              slug: "sales-bridge"
+      responses:
+        '201':
+          description: Bridge created
+          content:
+            application/json:
+              example:
+                id: 1
+                name: "Sales Bridge"
+                slug: "sales-bridge"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v2/platform/telephony/bridges/{slug}/:
+    get:
+      operationId: getBridgeBySlug
+      summary: Get Bridge by Slug
+      tags: [Bridges]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "sales-bridge"
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: Bridge details
+          content:
+            application/json:
+              example:
+                id: 1
+                name: "Sales Bridge"
+                slug: "sales-bridge"
+                numbers:
+                  - "+1234567890"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      operationId: updateBridge
+      summary: Update Bridge
+      tags: [Bridges]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "sales-bridge"
+        - $ref: '#/components/parameters/OrgHandle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Updated Sales Bridge"
+            example:
+              name: "Updated Sales Bridge"
+      responses:
+        '200':
+          description: Bridge updated
+          content:
+            application/json:
+              example:
+                id: 1
+                name: "Updated Sales Bridge"
+                slug: "sales-bridge"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    delete:
+      operationId: deleteBridge
+      summary: Delete Bridge
+      tags: [Bridges]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "sales-bridge"
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '204':
+          description: Bridge deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v2/platform/telephony/bridges/{slug}/connect-provider/:
+    post:
+      operationId: connectProviderToBridge
+      summary: Connect Provider to Bridge
+      tags: [Bridges]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "sales-bridge"
+        - $ref: '#/components/parameters/OrgHandle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - provider_config_id
+                - phone_number
+              properties:
+                provider_config_id:
+                  type: integer
+                  example: 1
+                phone_number:
+                  type: string
+                  example: "+1234567890"
+            example:
+              provider_config_id: 1
+              phone_number: "+1234567890"
+      responses:
+        '200':
+          description: Provider connected to bridge
+          content:
+            application/json:
+              example:
+                message: "Provider connected successfully"
+                bridge_slug: "sales-bridge"
+                phone_number: "+1234567890"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v2/platform/telephony/bridges/{slug}/disconnect-provider/:
+    post:
+      operationId: disconnectProviderFromBridge
+      summary: Disconnect Provider from Bridge
+      tags: [Bridges]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "sales-bridge"
+        - $ref: '#/components/parameters/OrgHandle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone_number
+              properties:
+                phone_number:
+                  type: string
+                  example: "+1234567890"
+            example:
+              phone_number: "+1234567890"
+      responses:
+        '200':
+          description: Provider disconnected from bridge
+          content:
+            application/json:
+              example:
+                message: "Provider disconnected successfully"
+                bridge_slug: "sales-bridge"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── Billing ──────────────────────────────────────────────────
+  /api/v2/platform/organisation/billing/:
+    get:
+      operationId: getBilling
+      summary: Get Billing Data
+      tags: [Billing]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            example: 10
+      responses:
+        '200':
+          description: Billing data
+          content:
+            application/json:
+              example:
+                count: 5
+                results:
+                  - id: 1
+                    amount: 49.99
+                    currency: "USD"
+                    status: "paid"
+                    invoice_date: "2024-01-01"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: "Format: Token <your-api-key>"
+
+  parameters:
+    OrgHandle:
+      name: Org-Handle
+      in: header
+      required: true
+      schema:
+        type: string
+        example: "unpod"
+      description: "Organization domain handle"
+
+  responses:
+    Unauthorized:
+      description: Unauthorized - Invalid or missing API token
+      content:
+        application/json:
+          example:
+            detail: "Authentication credentials were not provided."
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          example:
+            detail: "Not found."

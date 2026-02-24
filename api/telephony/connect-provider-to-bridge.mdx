@@ -1,0 +1,212 @@
+---
+title: 'Connect Provider to Bridge'
+description: 'Connect a provider credential to a telephony bridge to add a number'
+openapi: 'POST /api/v2/platform/telephony/bridges/{slug}/connect-provider/'
+---
+
+# Connect Provider to Bridge
+
+Connect a telephony provider configuration to a specific bridge, linking a phone number to the bridge for call routing. This enables inbound and outbound calls through the connected provider.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token, Org-Handle, a configured Bridge, and a Provider Configuration ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+<Note>
+The `provider_config_id` must be a valid provider configuration already created for your organization. You can only use a `phone_number` that is linked to the provider account.
+</Note>
+
+---
+
+## Connect Provider to Bridge
+
+Link a provider configuration and phone number to a telephony bridge.
+
+```http
+POST /api/v2/platform/telephony/bridges/{slug}/connect-provider/
+```
+
+### Path Parameters
+
+| Name | Type   | Required | Description                |
+|------|--------|----------|----------------------------|
+| slug | string | Yes      | Unique bridge slug         |
+
+<Note>
+You can get the bridge `slug` by hitting the [Get All Bridges](/api/telephony/get-all-bridges) API. The `slug` field in the response is your Bridge Slug.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+| Content-Type  | string | Yes      | `application/json`              |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Request Body
+
+| Field              | Type    | Required | Description                                               |
+|--------------------|---------|----------|-----------------------------------------------------------|
+| provider_config_id | integer | Yes      | ID of the provider configuration to connect               |
+| phone_number       | string  | Yes      | Phone number (E.164 format) to assign to the bridge       |
+
+### Example Request
+
+```http
+POST /api/v2/platform/telephony/bridges/sales-bridge-001/connect-provider/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+  Content-Type: application/json
+
+Body:
+{
+  "provider_config_id": 42,
+  "phone_number": "+1234567890"
+}
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Provider connected to bridge successfully.",
+  "data": {
+    "message": "Provider connected successfully",
+    "bridge_slug": "sales-bridge-001",
+    "phone_number": "+1234567890"
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description      |
+|-------------|---------|------------------|
+| status_code | integer | HTTP status code |
+| message     | string  | Response message |
+| data        | object  | Connection result |
+
+### Data Object Fields
+
+| Field        | Type   | Description                          |
+|--------------|--------|--------------------------------------|
+| message      | string | Success message                      |
+| bridge_slug  | string | The bridge slug the provider connected to |
+| phone_number | string | The phone number assigned to the bridge |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "status_code": 400,
+  "message": "Failed to connect provider.",
+  "errors": "Provider configuration not found or phone number invalid"
+}
+```
+
+### Error Response (404 — Not Found)
+
+```json
+{
+  "status_code": 404,
+  "message": "Bridge not found."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Provider connected successfully        |
+| 400         | Bad Request - Invalid provider ID or phone number |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Invalid organization handle          |
+| 404         | Not Found - Bridge not found                     |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle',
+  'Content-Type': 'application/json'
+};
+
+// Connect a provider to a bridge
+const connectProviderToBridge = async (slug, providerConfigId, phoneNumber) => {
+  const response = await axios.post(
+    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/connect-provider/`,
+    { provider_config_id: providerConfigId, phone_number: phoneNumber },
+    { headers }
+  );
+  console.log(`Provider connected to bridge: ${response.data.data.bridge_slug}`);
+  console.log(`Phone number assigned: ${response.data.data.phone_number}`);
+  return response.data.data;
+};
+
+// Example usage
+connectProviderToBridge('sales-bridge-001', 42, '+1234567890');
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle',
+    'Content-Type': 'application/json'
+}
+
+def connect_provider_to_bridge(slug: str, provider_config_id: int, phone_number: str):
+    """Connect a provider configuration to a bridge"""
+    url = f'https://unpod.dev/api/v2/platform/telephony/bridges/{slug}/connect-provider/'
+    payload = {
+        'provider_config_id': provider_config_id,
+        'phone_number': phone_number
+    }
+    response = requests.post(url, headers=headers, json=payload)
+    data = response.json()
+    print(f"Provider connected to bridge: {data['data']['bridge_slug']}")
+    print(f"Phone number assigned: {data['data']['phone_number']}")
+    return data['data']
+
+# Example usage
+connect_provider_to_bridge('sales-bridge-001', 42, '+1234567890')
+```
+
+```bash cURL
+# Connect a provider to a bridge
+curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-001/connect-provider/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider_config_id": 42,
+    "phone_number": "+1234567890"
+  }'
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Provider Config ID**: Get the correct `provider_config_id` from [Get All Providers](/api/provider/get-all-providers) before connecting
+2. **Phone Number Format**: Use E.164 format (e.g., `+1234567890`) for phone numbers
+3. **Verify Bridge**: Confirm the bridge exists using [Get Bridge by Slug](/api/telephony/get-bridge-by-slug) before connecting
+4. **One Provider per Bridge**: A bridge typically connects to one provider — verify current state before re-connecting
+5. **Error Handling**: Handle 400 errors that may indicate an invalid phone number or provider config
+6. **Security**: Keep API tokens secure and rotate them regularly

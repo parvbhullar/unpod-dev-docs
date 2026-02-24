@@ -1,0 +1,205 @@
+---
+title: 'Get Bridge by Slug'
+description: 'Retrieve details of a specific telephony bridge using its slug'
+openapi: 'GET /api/v2/platform/telephony/bridges/{slug}/'
+---
+
+# Get Bridge by Slug
+
+Retrieve full details of a specific telephony bridge using its unique slug identifier, including its assigned phone numbers and current configuration.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get Bridge by Slug
+
+Retrieve the complete details of a single telephony bridge using its slug.
+
+```http
+GET /api/v2/platform/telephony/bridges/{slug}/
+```
+
+### Path Parameters
+
+| Name | Type   | Required | Description                |
+|------|--------|----------|----------------------------|
+| slug | string | Yes      | Unique bridge slug         |
+
+<Note>
+You can get the bridge `slug` by hitting the [Get All Bridges](/api/telephony/get-all-bridges) API. The `slug` field in the response is your Bridge Slug.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Example Request
+
+```http
+GET /api/v2/platform/telephony/bridges/sales-bridge-001/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Bridge fetched successfully.",
+  "data": {
+    "id": 314,
+    "name": "Sales Bridge",
+    "slug": "sales-bridge-001",
+    "numbers": [
+      {
+        "id": 501,
+        "number_id": 25,
+        "number": "+1234567890",
+        "state": "ASSIGNED",
+        "active": true,
+        "channels_count": 1,
+        "status": "active"
+      }
+    ]
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description       |
+|-------------|---------|-------------------|
+| status_code | integer | HTTP status code  |
+| message     | string  | Response message  |
+| data        | object  | Bridge details    |
+
+### Bridge Object Fields
+
+| Field   | Type    | Description                     |
+|---------|---------|---------------------------------|
+| id      | integer | Bridge unique identifier        |
+| name    | string  | Bridge display name             |
+| slug    | string  | Unique bridge slug identifier   |
+| numbers | array   | List of assigned phone numbers  |
+
+### Number Object Fields
+
+| Field          | Type    | Description                |
+|----------------|---------|----------------------------|
+| id             | integer | Number assignment ID       |
+| number_id      | integer | Phone number ID            |
+| number         | string  | Phone number (E.164 format) |
+| state          | string  | Number state: `ASSIGNED`, `UNASSIGNED` |
+| active         | boolean | Whether number is active   |
+| channels_count | integer | Number of active channels  |
+| status         | string  | Number status: `active`, `inactive` |
+
+### Error Response (404 — Not Found)
+
+```json
+{
+  "status_code": 404,
+  "message": "Bridge not found.",
+  "errors": "No bridge exists with the provided slug"
+}
+```
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Bridge fetched successfully            |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Invalid organization handle          |
+| 404         | Not Found - Bridge not found                     |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle'
+};
+
+// Get bridge by slug
+const getBridgeBySlug = async (slug) => {
+  const response = await axios.get(
+    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/`,
+    { headers }
+  );
+  const bridge = response.data.data;
+  console.log(`Bridge: ${bridge.name} (${bridge.slug})`);
+  console.log(`Assigned numbers: ${bridge.numbers.length}`);
+  return bridge;
+};
+
+// Example usage
+getBridgeBySlug('sales-bridge-001');
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle'
+}
+
+def get_bridge_by_slug(slug: str):
+    """Get bridge details by slug"""
+    url = f'https://unpod.dev/api/v2/platform/telephony/bridges/{slug}/'
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    bridge = data['data']
+    print(f"Bridge: {bridge['name']} ({bridge['slug']})")
+    print(f"Assigned numbers: {len(bridge['numbers'])}")
+    return bridge
+
+# Example usage
+get_bridge_by_slug('sales-bridge-001')
+```
+
+```bash cURL
+# Get bridge by slug
+curl -X GET "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-001/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Slug Validation**: Handle 404 errors when a bridge slug may have been deleted or renamed
+2. **Number Inspection**: Check the `numbers` array to verify active phone numbers before routing calls
+3. **Active Status**: Only numbers with `active: true` and `status: active` are ready to handle calls
+4. **Error Handling**: Always handle potential errors and edge cases
+5. **Security**: Keep API tokens secure and rotate them regularly

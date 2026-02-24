@@ -1,11 +1,12 @@
 ---
 title: 'Organizations'
 description: 'Retrieve information about organizations'
+openapi: 'GET /api/v2/platform/organizations/'
 ---
 
 # Organizations API
 
-The Organizations API allows you to retrieve information about all registered organizations in your Unpod platform.
+The Organizations API allows you to retrieve all organizations registered in your Unpod platform.
 
 <Note>
 **Prerequisites:** Make sure you have your API Token ready. See [Authentication](/api/get-started/authentication) for details.
@@ -15,7 +16,7 @@ The Organizations API allows you to retrieve information about all registered or
 
 ## Get All Organizations
 
-Retrieve detailed information of every registered organization, helping you view and manage organizational records in the system.
+Retrieve a list of all organizations associated with your API token. The `domain_handle` field in the response is used as the `Org-Handle` header in subsequent API requests.
 
 ```http
 GET /api/v2/platform/organizations/
@@ -26,6 +27,7 @@ GET /api/v2/platform/organizations/
 | Name          | Type   | Required | Description                     |
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
 
 ### Example Request
 
@@ -33,23 +35,28 @@ GET /api/v2/platform/organizations/
 GET /api/v2/platform/organizations/
 Headers:
   Authorization: Token your-api-token
+  Org-Handle: your-org-handle
 ```
 
 ### Success Response (200)
 
 ```json
 {
-  "count": 2,
+  "count": 3,
   "status_code": 200,
   "message": "Organizations fetched successfully",
   "data": [
     {
-      "name": "xyz",
-      "token": "T6ZN4WQK9JX2BC7LGPR5",
-      "domain": "abc.com",
-      "domain_handle": "abc.com",
-      "is_private_domain": true,
-      "role": "viewer"
+      "id": 1,
+      "name": "Unpod TV",
+      "domain_handle": "unpod.tv",
+      "created_at": "2024-01-15T10:30:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Recalll",
+      "domain_handle": "recalll.co",
+      "created_at": "2024-03-20T08:00:00Z"
     }
   ]
 }
@@ -57,23 +64,21 @@ Headers:
 
 ### Response Fields
 
-| Field       | Type    | Description                   |
-|-------------|---------|-------------------------------|
-| count       | integer | Total number of organizations |
-| status_code | integer | HTTP status code              |
-| message     | string  | Response message              |
-| data        | array   | Array of organization objects |
+| Field       | Type    | Description                    |
+|-------------|---------|--------------------------------|
+| count       | integer | Total number of organizations  |
+| status_code | integer | HTTP status code               |
+| message     | string  | Response message               |
+| data        | array   | Array of organization objects  |
 
 ### Organization Object Fields
 
-| Field             | Type    | Description                              |
-|-------------------|---------|------------------------------------------|
-| name              | string  | Organization name                        |
-| token             | string  | Organization token                       |
-| domain            | string  | Organization domain                      |
-| domain_handle     | string  | Domain handle for API requests           |
-| is_private_domain | boolean | Whether the domain is private            |
-| role              | string  | User's role: `viewer`, `admin`, `member` |
+| Field         | Type    | Description                                          |
+|---------------|---------|------------------------------------------------------|
+| id            | integer | Unique organization identifier                       |
+| name          | string  | Organization display name                            |
+| domain_handle | string  | Domain handle used as `Org-Handle` in API requests   |
+| created_at    | string  | Organization creation timestamp (ISO 8601)           |
 
 ### Error Response (401 — Unauthorized)
 
@@ -91,8 +96,10 @@ Headers:
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - Request completed successfully         |
+| 400         | Bad Request - Invalid parameters provided        |
 | 401         | Unauthorized - Invalid or missing API token      |
 | 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Organization not found               |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples
@@ -103,53 +110,62 @@ Headers:
 const axios = require('axios');
 
 const headers = {
-  'Authorization': 'Token your-api-token'
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle'
 };
 
 // Get all organizations
-const getAllOrganizations = async () => {
+const getOrganizations = async () => {
   const response = await axios.get(
     'https://unpod.dev/api/v2/platform/organizations/',
     { headers }
   );
   console.log(`Total organizations: ${response.data.count}`);
+  response.data.data.forEach(org => {
+    console.log(`${org.name} - Handle: ${org.domain_handle}`);
+  });
   return response.data.data;
 };
 
 // Example usage
-getAllOrganizations();
+getOrganizations();
 ```
 
 ```python Python
 import requests
 
 headers = {
-    'Authorization': 'Token your-api-token'
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle'
 }
 
-def get_all_organizations():
+def get_organizations():
     """Get all organizations"""
     url = 'https://unpod.dev/api/v2/platform/organizations/'
     response = requests.get(url, headers=headers)
     data = response.json()
     print(f"Total organizations: {data['count']}")
+    for org in data['data']:
+        print(f"{org['name']} - Handle: {org['domain_handle']}")
     return data['data']
 
 # Example usage
-get_all_organizations()
+get_organizations()
 ```
 
 ```bash cURL
 # Get all organizations
 curl -X GET "https://unpod.dev/api/v2/platform/organizations/" \
-  -H "Authorization: Token your-api-token"
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
 ```
 
 </CodeGroup>
 
 ## Best Practices
 
-1. **Org-Handle**: Use the `domain_handle` from this API as the `Org-Handle` header in other API requests
-2. **Caching**: Cache organization data to reduce API calls
+1. **Org-Handle**: Use the `domain_handle` from the response as the `Org-Handle` header in all subsequent requests
+2. **Caching**: Cache organization data locally to reduce API calls since organizations change infrequently
 3. **Error Handling**: Always handle potential errors and edge cases
 4. **Security**: Keep API tokens secure and rotate them regularly
+5. **Multiple Orgs**: If you have access to multiple organizations, store all handles and switch between them as needed

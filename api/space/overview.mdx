@@ -1,0 +1,41 @@
+---
+title: 'Overview'
+description: 'Introduction to the Organisation API'
+---
+
+# Organisation API
+
+The Organisation API allows you to manage and retrieve information about organizations registered in your Unpod platform.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+## What You Can Do
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v2/platform/organizations/` | Retrieve all registered organizations |
+
+## Base URL
+
+```
+https://unpod.dev/api/v2/platform/
+```
+
+## Authentication
+
+All Organisation API requests require a valid API token in the `Authorization` header:
+
+```http
+Authorization: Token your-api-token
+```
+
+## Common Error Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Success - Request completed successfully |
+| 401 | Unauthorized - Invalid or missing API token |
+| 403 | Forbidden - Access denied to the resource |
+| 500 | Internal Server Error - Server-side error |

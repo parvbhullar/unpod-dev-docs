@@ -1,0 +1,52 @@
+---
+title: 'Overview'
+description: 'Introduction to the Analytics API'
+---
+
+# Analytics API
+
+The Analytics API lets you fetch call analytics and task status for your organization. It provides insights into call outcomes, success rates, and task execution summaries.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+## What You Can Do
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v2/platform/organisation/analytics/` | Retrieve call analytics and task status for the organization |
+
+## Base URL
+
+```
+https://unpod.dev/api/v2/platform/
+```
+
+## Authentication
+
+All Analytics API requests require a valid token and Org-Handle in the headers:
+
+```http
+Authorization: jwt <token>
+Org-Handle: your-org-handle
+```
+
+## Behavior
+
+- If `space_token` is provided → fetches analytics for that specific space
+- If `space_token` is not provided → fetches analytics for **all contact spaces** in the organization
+- Automatically filters for **contact content type** only
+
+<Note>
+For billing/invoice data, use the separate [Billing](/api/billing&usage/billing) endpoint.
+</Note>
+
+## Common Error Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Success - Analytics fetched successfully |
+| 400 | Bad Request - Missing required headers |
+| 401 | Unauthorized - Invalid or missing token |
+| 404 | Not Found - Organization not found |

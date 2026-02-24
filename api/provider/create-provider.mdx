@@ -1,0 +1,202 @@
+---
+title: 'Create Provider'
+description: 'Create a new telephony provider configuration'
+openapi: 'POST /api/v2/platform/telephony/providers-configurations/'
+---
+
+# Create Provider Configuration
+
+Create a new telephony provider configuration by linking your provider credentials (Account SID and Auth Token) to your organization. These configurations are used to connect telephony providers to bridges.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token, Org-Handle, and telephony provider credentials ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Create Provider Configuration
+
+Create a new provider configuration with your telephony provider credentials.
+
+```http
+POST /api/v2/platform/telephony/providers-configurations/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+| Content-Type  | string | Yes      | `application/json`              |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Request Body
+
+| Field       | Type    | Required | Description                                              |
+|-------------|---------|----------|----------------------------------------------------------|
+| provider    | string  | Yes      | Provider identifier (slug or ID from Get Providers API)  |
+| account_sid | string  | Yes      | Provider Account SID / Account identifier                |
+| auth_token  | string  | Yes      | Provider Auth Token / Secret key                         |
+
+### Example Request
+
+```http
+POST /api/v2/platform/telephony/providers-configurations/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+  Content-Type: application/json
+
+Body:
+{
+  "provider": "twilio",
+  "account_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "auth_token": "your-auth-token-here"
+}
+```
+
+### Success Response (201)
+
+```json
+{
+  "status_code": 201,
+  "message": "Provider configuration created successfully.",
+  "data": {
+    "id": 42,
+    "provider": "twilio",
+    "account_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "created_at": "2026-02-07T10:00:00Z"
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description                      |
+|-------------|---------|----------------------------------|
+| status_code | integer | HTTP status code                 |
+| message     | string  | Response message                 |
+| data        | object  | Created provider config details  |
+
+### Provider Config Object Fields
+
+| Field       | Type    | Description                              |
+|-------------|---------|------------------------------------------|
+| id          | integer | Unique provider configuration identifier |
+| provider    | string  | Provider slug/identifier                 |
+| account_sid | string  | Account SID (auth_token is not returned) |
+| created_at  | string  | Creation timestamp (ISO 8601)            |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "status_code": 400,
+  "message": "Provider configuration creation failed.",
+  "errors": "Invalid account_sid or auth_token"
+}
+```
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 201         | Created - Provider configuration created         |
+| 400         | Bad Request - Invalid credentials or parameters  |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Invalid organization handle          |
+| 409         | Conflict - Configuration already exists          |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle',
+  'Content-Type': 'application/json'
+};
+
+// Create a provider configuration
+const createProvider = async (provider, accountSid, authToken) => {
+  const response = await axios.post(
+    'https://unpod.dev/api/v2/platform/telephony/providers-configurations/',
+    { provider, account_sid: accountSid, auth_token: authToken },
+    { headers }
+  );
+  console.log(`Provider created with ID: ${response.data.data.id}`);
+  return response.data.data;
+};
+
+// Example usage
+createProvider('twilio', 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'your-auth-token');
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle',
+    'Content-Type': 'application/json'
+}
+
+def create_provider(provider: str, account_sid: str, auth_token: str):
+    """Create a new telephony provider configuration"""
+    url = 'https://unpod.dev/api/v2/platform/telephony/providers-configurations/'
+    payload = {
+        'provider': provider,
+        'account_sid': account_sid,
+        'auth_token': auth_token
+    }
+    response = requests.post(url, headers=headers, json=payload)
+    data = response.json()
+    print(f"Provider created with ID: {data['data']['id']}")
+    return data['data']
+
+# Example usage
+create_provider('twilio', 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'your-auth-token')
+```
+
+```bash cURL
+# Create a provider configuration
+curl -X POST "https://unpod.dev/api/v2/platform/telephony/providers-configurations/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "twilio",
+    "account_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "auth_token": "your-auth-token-here"
+  }'
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Provider Slug**: Use the `slug` from the [Get Telephony Providers](/api/provider/get-telephony-providers) endpoint to identify the provider
+2. **Credential Security**: Never log or expose `auth_token` values — treat them as secrets
+3. **Credential Rotation**: Use the [Update Provider](/api/provider/update-provider) endpoint to rotate credentials without deleting the configuration
+4. **Configuration ID**: Store the returned `id` to reference this configuration when connecting to bridges
+5. **Error Handling**: Handle 400 errors that indicate invalid credentials before they cause production issues
+6. **Security**: Keep API tokens secure and rotate them regularly

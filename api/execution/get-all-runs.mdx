@@ -1,0 +1,188 @@
+---
+title: 'Get All Runs in a Space'
+description: 'Retrieve all batch executions associated with a specific space'
+openapi: 'GET /api/v2/platform/spaces/{space_token}/runs/'
+---
+
+# Get All Runs in a Space
+
+Retrieve all runs associated with a specific space. A run represents a batch execution — a group of tasks triggered together within a space. This endpoint returns run details including run ID, status, timestamps, and associated collection metadata.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get All Runs in a Space
+
+Retrieve all batch execution runs within a specific space.
+
+```http
+GET /api/v2/platform/spaces/{space_token}/runs/
+```
+
+### Path Parameters
+
+| Name        | Type   | Required | Description                        |
+|-------------|--------|----------|------------------------------------|
+| space_token | string | Yes      | Public token identifying the space |
+
+<Note>
+You can get the `space_token` by hitting the [Get All Spaces](/api/space/get-all-spaces) API. The `token` field in the response is your Space Token.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Content-Type  | string | Yes      | `application/json`              |
+
+### Example Request
+
+```http
+GET /api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/runs/
+Headers:
+  Authorization: Token your-api-token
+  Content-Type: application/json
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 9,
+  "status_code": 200,
+  "message": "Runs Fetched Successfully",
+  "data": [
+    {
+      "run_id": "Recac64fe03e911f1878d43cd8a99e069",
+      "collection_ref": "collection_data_SA2W8R6NZRK6C9PO3JSL1J85",
+      "run_mode": "prefect",
+      "status": "completed",
+      "created": "2026-02-07T05:57:45",
+      "modified": "2026-02-07T05:57:45"
+    },
+    {
+      "run_id": "R6b653894fe9411f0878d43cd8a99e069",
+      "collection_ref": "collection_data_SA2W8R6NZRK6C9PO3JSL1J85",
+      "run_mode": "prefect",
+      "status": "completed",
+      "created": "2026-01-31T11:03:05",
+      "modified": "2026-01-31T11:03:05"
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description           |
+|-------------|---------|-----------------------|
+| count       | integer | Total number of runs  |
+| status_code | integer | HTTP status code      |
+| message     | string  | Response message      |
+| data        | array   | Array of run objects  |
+
+### Run Object Fields
+
+| Field          | Type   | Description                                  |
+|----------------|--------|----------------------------------------------|
+| run_id         | string | Unique run identifier                        |
+| collection_ref | string | Reference to the data collection             |
+| run_mode       | string | Execution engine: `prefect`, etc.            |
+| status         | string | Run status: `completed`, `running`, `failed`, `pending` |
+| created        | string | Run creation timestamp                       |
+| modified       | string | Last modified timestamp                      |
+
+### Error Response (206 — Fetch Failed)
+
+```json
+{
+  "message": "Error fetching runs",
+  "errors": "Detailed error description"
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Data fetched successfully              |
+| 206         | Partial Content - Business logic error occurred  |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Space not found                      |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Content-Type': 'application/json'
+};
+
+// Get all runs in a space
+const getAllRuns = async (spaceToken) => {
+  const response = await axios.get(
+    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/runs/`,
+    { headers }
+  );
+  console.log(`Total runs: ${response.data.count}`);
+  response.data.data.forEach(run => {
+    console.log(`Run ${run.run_id}: ${run.status} (${run.run_mode})`);
+  });
+  return response.data.data;
+};
+
+// Example usage
+getAllRuns('8KZAMRAHSXXXXXXMAYNASMJC');
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Content-Type': 'application/json'
+}
+
+def get_all_runs(space_token: str):
+    """Get all runs in a space"""
+    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/runs/'
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    print(f"Total runs: {data['count']}")
+    for run in data['data']:
+        print(f"Run {run['run_id']}: {run['status']} ({run['run_mode']})")
+    return data['data']
+
+# Example usage
+get_all_runs('8KZAMRAHSXXXXXXMAYNASMJC')
+```
+
+```bash cURL
+# Get all runs in a space
+curl -X GET "https://unpod.dev/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/runs/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Content-Type: application/json"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Space Token**: Always use the correct space token for your API requests
+2. **Run ID**: Store the `run_id` from each run to query tasks within that run
+3. **Status Monitoring**: Poll this endpoint to track the status of ongoing batch executions
+4. **Error Handling**: Always handle potential errors and edge cases
+5. **Security**: Keep API tokens secure and rotate them regularly

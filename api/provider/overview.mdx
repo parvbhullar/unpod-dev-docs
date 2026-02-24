@@ -1,0 +1,47 @@
+---
+title: 'Overview'
+description: 'Introduction to the Providers API'
+---
+
+# Providers API
+
+The Providers API allows you to manage telephony providers and their configurations in your Unpod platform. It covers both listing available telephony providers and full CRUD operations for provider configurations.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+## What You Can Do
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v2/platform/telephony/providers/` | GET | List all available telephony providers |
+| `/api/v2/platform/telephony/providers-configurations/` | POST | Create a new provider configuration |
+| `/api/v2/platform/telephony/providers-configurations/` | GET | Get all provider configurations |
+| `/api/v2/platform/telephony/providers-configurations/{id}/` | GET | Get a specific provider configuration |
+| `/api/v2/platform/telephony/providers-configurations/{id}/` | PATCH | Update a provider configuration |
+| `/api/v2/platform/telephony/providers-configurations/{id}/` | DELETE | Delete a provider configuration |
+
+## Base URL
+
+```
+https://unpod.dev/api/v2/platform/
+```
+
+## Authentication
+
+```http
+Authorization: Token your-api-token
+Org-Handle: your-org-handle
+```
+
+## Common Error Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Success - Request completed successfully |
+| 204 | No Content - Resource deleted successfully |
+| 401 | Unauthorized - Invalid or missing API token |
+| 403 | Forbidden - Access denied |
+| 404 | Not Found - Configuration not found |
+| 500 | Internal Server Error |

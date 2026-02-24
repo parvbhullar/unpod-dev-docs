@@ -1,0 +1,178 @@
+---
+title: 'Get All Agents'
+description: 'Retrieve all AI agents configured in your organization'
+openapi: 'GET /api/v2/platform/agents/'
+---
+
+# Get All Agents
+
+Retrieve detailed information for all registered AI agents in your organization, helping you view and manage agent records within the system.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get All Agents
+
+Retrieve a list of all AI agents configured in your organization.
+
+```http
+GET /api/v2/platform/agents/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Example Request
+
+```http
+GET /api/v2/platform/agents/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 94,
+  "status_code": 200,
+  "message": "Agents fetched successfully",
+  "data": [
+    {
+      "handle": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+      "name": "General Agentic",
+      "type": "Voice",
+      "state": "published",
+      "purpose": "Handle outbound sales calls"
+    },
+    {
+      "handle": "space-agent-f1o3qjm1y7q1avvuynv4vprb1",
+      "name": "Support Agent",
+      "type": "Voice",
+      "state": "published",
+      "purpose": "Handle customer support inquiries"
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description            |
+|-------------|---------|------------------------|
+| count       | integer | Total number of agents |
+| status_code | integer | HTTP status code       |
+| message     | string  | Response message       |
+| data        | array   | Array of agent objects |
+
+### Agent Object Fields
+
+| Field   | Type   | Description                                    |
+|---------|--------|------------------------------------------------|
+| handle  | string | Unique agent handle/identifier                 |
+| name    | string | Agent display name                             |
+| type    | string | Agent type: `Voice`, `Chat`, etc.              |
+| state   | string | Agent state: `published`, `draft`, `archived`  |
+| purpose | string | Agent purpose/use case description             |
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Request completed successfully         |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Organization not found               |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle'
+};
+
+// Get all agents
+const getAllAgents = async () => {
+  const response = await axios.get(
+    'https://unpod.dev/api/v2/platform/agents/',
+    { headers }
+  );
+  console.log(`Total agents: ${response.data.count}`);
+  response.data.data.forEach(agent => {
+    console.log(`${agent.name} (${agent.handle}) - ${agent.state}`);
+  });
+  return response.data.data;
+};
+
+// Example usage
+getAllAgents();
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle'
+}
+
+def get_all_agents():
+    """Get all AI agents in the organization"""
+    url = 'https://unpod.dev/api/v2/platform/agents/'
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    print(f"Total agents: {data['count']}")
+    for agent in data['data']:
+        print(f"{agent['name']} ({agent['handle']}) - {agent['state']}")
+    return data['data']
+
+# Example usage
+get_all_agents()
+```
+
+```bash cURL
+# Get all agents
+curl -X GET "https://unpod.dev/api/v2/platform/agents/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Agent Handle**: Note the `handle` field — it is used as the `agent_handle` path parameter in other agent endpoints
+2. **State Filtering**: Filter by `state` in your application to show only `published` agents
+3. **Org-Handle**: Always include the correct organization handle in requests
+4. **Error Handling**: Always handle potential errors and edge cases
+5. **Security**: Keep API tokens secure and rotate them regularly

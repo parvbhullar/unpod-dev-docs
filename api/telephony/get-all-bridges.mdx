@@ -1,0 +1,190 @@
+---
+title: 'Get All Bridges'
+description: 'Retrieve a list of all telephony bridges in the system'
+openapi: 'GET /api/v2/platform/telephony/bridges/'
+---
+
+# Get All Bridges
+
+Retrieve a list of all telephony bridges in your organization, including their IDs, names, slugs, associated providers, and linked phone numbers for monitoring and call-routing management.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get All Telephony Bridges
+
+Retrieve all telephony bridges configured in your organization.
+
+```http
+GET /api/v2/platform/telephony/bridges/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Example Request
+
+```http
+GET /api/v2/platform/telephony/bridges/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 6,
+  "status_code": 200,
+  "message": "Bridges fetched successfully.",
+  "data": [
+    {
+      "id": 314,
+      "name": "Sales Bridge",
+      "slug": "sales-bridge-001",
+      "provider": "twilio",
+      "numbers": [
+        {
+          "id": 501,
+          "number": "+1234567890",
+          "status": "active"
+        }
+      ]
+    },
+    {
+      "id": 315,
+      "name": "Support Bridge",
+      "slug": "support-bridge-002",
+      "provider": null,
+      "numbers": []
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description             |
+|-------------|---------|-------------------------|
+| count       | integer | Total number of bridges |
+| status_code | integer | HTTP status code        |
+| message     | string  | Response message        |
+| data        | array   | Array of bridge objects |
+
+### Bridge Object Fields
+
+| Field    | Type    | Description                                  |
+|----------|---------|----------------------------------------------|
+| id       | integer | Bridge unique identifier                     |
+| name     | string  | Bridge display name                          |
+| slug     | string  | Unique bridge slug identifier                |
+| provider | string  | Connected provider slug (null if none)       |
+| numbers  | array   | List of phone numbers assigned to the bridge |
+
+### Number Object Fields
+
+| Field  | Type    | Description              |
+|--------|---------|--------------------------|
+| id     | integer | Number assignment ID     |
+| number | string  | Phone number (E.164 format) |
+| status | string  | Number status: `active`, `inactive` |
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Bridges fetched successfully           |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Invalid organization handle          |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle'
+};
+
+// Get all bridges
+const getAllBridges = async () => {
+  const response = await axios.get(
+    'https://unpod.dev/api/v2/platform/telephony/bridges/',
+    { headers }
+  );
+  console.log(`Total bridges: ${response.data.count}`);
+  response.data.data.forEach(bridge => {
+    console.log(`${bridge.name} (${bridge.slug}) - Numbers: ${bridge.numbers.length}`);
+  });
+  return response.data.data;
+};
+
+// Example usage
+getAllBridges();
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle'
+}
+
+def get_all_bridges():
+    """Get all telephony bridges"""
+    url = 'https://unpod.dev/api/v2/platform/telephony/bridges/'
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    print(f"Total bridges: {data['count']}")
+    for bridge in data['data']:
+        print(f"{bridge['name']} ({bridge['slug']}) - Numbers: {len(bridge['numbers'])}")
+    return data['data']
+
+# Example usage
+get_all_bridges()
+```
+
+```bash cURL
+# Get all telephony bridges
+curl -X GET "https://unpod.dev/api/v2/platform/telephony/bridges/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Bridge Slug**: Note each bridge's `slug` — it is used as a path parameter in other bridge endpoints
+2. **Provider Check**: Verify bridges have a connected provider before routing calls through them
+3. **Number Assignment**: Bridges without numbers in the `numbers[]` array cannot receive inbound calls
+4. **Error Handling**: Always handle potential errors and edge cases
+5. **Security**: Keep API tokens secure and rotate them regularly

@@ -1,0 +1,183 @@
+---
+title: 'Get Space by Token'
+description: 'Retrieve configuration and metadata of a specific space by its token'
+openapi: 'GET /api/v2/platform/spaces/{space_token}/'
+---
+
+# Get Space by Token
+
+Retrieve configuration and metadata of a specific space identified by its token. This allows you to view a space's current setup, properties, and organization context.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get Space by Token
+
+Retrieve the full details of a single space using its unique public token.
+
+```http
+GET /api/v2/platform/spaces/{space_token}/
+```
+
+### Path Parameters
+
+| Name        | Type   | Required | Description                        |
+|-------------|--------|----------|------------------------------------|
+| space_token | string | Yes      | Public token identifying the space |
+
+<Note>
+You can get the `space_token` by hitting the [Get All Spaces](/api/space/get-all-spaces) API. The `token` field in the response is your Space Token.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Example Request
+
+```http
+GET /api/v2/platform/spaces/8KZRTQP7BNW5XEDLORYUHMJC/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Space fetched successfully",
+  "data": {
+    "id": "sp_001",
+    "name": "Sales Outreach Q1",
+    "token": "8KZRTQP7BNW5XEDLORYUHMJC",
+    "agent_handle": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+    "created_at": "2026-01-10T08:00:00Z"
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description          |
+|-------------|---------|----------------------|
+| status_code | integer | HTTP status code     |
+| message     | string  | Response message     |
+| data        | object  | Space object details |
+
+### Space Object Fields
+
+| Field        | Type   | Description                                       |
+|--------------|--------|---------------------------------------------------|
+| id           | string | Unique space identifier                           |
+| name         | string | Space display name                                |
+| token        | string | Public token for API access                       |
+| agent_handle | string | Handle of the agent assigned to this space        |
+| created_at   | string | Space creation timestamp (ISO 8601)               |
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+### Error Response (404 — Not Found)
+
+```json
+{
+  "status_code": 404,
+  "message": "Space not found."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Request completed successfully         |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Space or Organization not found      |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle'
+};
+
+// Get space by token
+const getSpaceByToken = async (spaceToken) => {
+  const response = await axios.get(
+    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/`,
+    { headers }
+  );
+  console.log(`Space name: ${response.data.data.name}`);
+  console.log(`Agent handle: ${response.data.data.agent_handle}`);
+  return response.data.data;
+};
+
+// Example usage
+getSpaceByToken('8KZRTQP7BNW5XEDLORYUHMJC');
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle'
+}
+
+def get_space_by_token(space_token: str):
+    """Get a specific space by its token"""
+    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/'
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    print(f"Space name: {data['data']['name']}")
+    print(f"Agent handle: {data['data']['agent_handle']}")
+    return data['data']
+
+# Example usage
+get_space_by_token('8KZRTQP7BNW5XEDLORYUHMJC')
+```
+
+```bash cURL
+# Get space by token
+curl -X GET "https://unpod.dev/api/v2/platform/spaces/8KZRTQP7BNW5XEDLORYUHMJC/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Space Token**: Ensure you are using a valid space token from your organization
+2. **Org-Handle**: Always include the correct organization handle in requests
+3. **Error Handling**: Handle 404 responses when a space token may have been deleted or is invalid
+4. **Security**: Keep API tokens secure and rotate them regularly
+5. **Caching**: Consider caching space details to avoid repeated lookups for the same space

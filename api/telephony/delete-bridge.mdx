@@ -1,0 +1,156 @@
+---
+title: 'Delete Bridge'
+description: 'Permanently delete a telephony bridge'
+openapi: 'DELETE /api/v2/platform/telephony/bridges/{slug}/'
+---
+
+# Delete Bridge
+
+Permanently delete a telephony bridge by its slug. Once deleted, the bridge and all associated configurations are removed. This action cannot be undone.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+<Warning>
+Deleting a bridge that has active phone numbers or is actively routing calls will disrupt service. Disconnect all providers and reassign numbers before deleting.
+</Warning>
+
+---
+
+## Delete Telephony Bridge
+
+Permanently remove a telephony bridge from your organization.
+
+```http
+DELETE /api/v2/platform/telephony/bridges/{slug}/
+```
+
+### Path Parameters
+
+| Name | Type   | Required | Description                |
+|------|--------|----------|----------------------------|
+| slug | string | Yes      | Unique bridge slug         |
+
+<Note>
+You can get the bridge `slug` by hitting the [Get All Bridges](/api/telephony/get-all-bridges) API. The `slug` field in the response is your Bridge Slug.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+### Example Request
+
+```http
+DELETE /api/v2/platform/telephony/bridges/sales-bridge-001/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+```
+
+### Success Response (204 — No Content)
+
+```
+HTTP/1.1 204 No Content
+```
+
+No response body is returned on successful deletion.
+
+### Error Response (404 — Not Found)
+
+```json
+{
+  "status_code": 404,
+  "message": "Bridge not found.",
+  "errors": "No bridge exists with the provided slug"
+}
+```
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                     |
+|-------------|-------------------------------------------------|
+| 204         | No Content - Bridge deleted successfully        |
+| 401         | Unauthorized - Invalid or missing API token     |
+| 403         | Forbidden - Invalid organization handle         |
+| 404         | Not Found - Bridge not found                    |
+| 500         | Internal Server Error - Server-side error       |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle'
+};
+
+// Delete a bridge
+const deleteBridge = async (slug) => {
+  await axios.delete(
+    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/`,
+    { headers }
+  );
+  console.log(`Bridge '${slug}' deleted successfully`);
+};
+
+// Example usage
+deleteBridge('sales-bridge-001');
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle'
+}
+
+def delete_bridge(slug: str):
+    """Delete a telephony bridge"""
+    url = f'https://unpod.dev/api/v2/platform/telephony/bridges/{slug}/'
+    response = requests.delete(url, headers=headers)
+    if response.status_code == 204:
+        print(f"Bridge '{slug}' deleted successfully")
+    else:
+        print(f"Error: {response.json()}")
+
+# Example usage
+delete_bridge('sales-bridge-001')
+```
+
+```bash cURL
+# Delete a bridge
+curl -X DELETE "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-001/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Disconnect First**: Always [disconnect the provider from the bridge](/api/telephony/disconnect-provider-from-bridge) before deleting it
+2. **Irreversible**: Deletion is permanent — verify the correct `slug` before proceeding
+3. **204 Response**: A successful delete returns HTTP 204 with no body — handle this in your code
+4. **Error Handling**: Handle 404 gracefully — the bridge may have already been deleted
+5. **Pre-check**: Use [Get Bridge by Slug](/api/telephony/get-bridge-by-slug) to verify the bridge exists and check for active numbers before deletion
+6. **Security**: Keep API tokens secure and rotate them regularly

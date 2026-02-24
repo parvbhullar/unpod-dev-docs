@@ -1,0 +1,173 @@
+---
+title: 'Get Telephony Providers'
+description: 'Retrieve a list of all available telephony providers in the system'
+openapi: 'GET /api/v2/platform/telephony/providers/'
+---
+
+# Get Telephony Providers
+
+Retrieve a list of all available telephony providers in the system. These are the supported providers that you can configure credentials for using the Provider Configurations endpoints.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get Telephony Providers
+
+Retrieve all supported telephony providers available for configuration.
+
+```http
+GET /api/v2/platform/telephony/providers/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Example Request
+
+```http
+GET /api/v2/platform/telephony/providers/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Voice infra providers fetched successfully.",
+  "data": [
+    {
+      "id": 1,
+      "name": "Twilio",
+      "slug": "twilio"
+    },
+    {
+      "id": 2,
+      "name": "Plivo",
+      "slug": "plivo"
+    },
+    {
+      "id": 3,
+      "name": "Exotel",
+      "slug": "exotel"
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description               |
+|-------------|---------|---------------------------|
+| status_code | integer | HTTP status code          |
+| message     | string  | Response message          |
+| data        | array   | Array of provider objects |
+
+### Provider Object Fields
+
+| Field | Type    | Description                                         |
+|-------|---------|-----------------------------------------------------|
+| id    | integer | Provider unique identifier                          |
+| name  | string  | Provider display name                               |
+| slug  | string  | URL-friendly provider identifier used in config API |
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Providers fetched successfully         |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Invalid organization handle          |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle'
+};
+
+// Get all available telephony providers
+const getTelephonyProviders = async () => {
+  const response = await axios.get(
+    'https://unpod.dev/api/v2/platform/telephony/providers/',
+    { headers }
+  );
+  console.log(`Available providers: ${response.data.data.length}`);
+  response.data.data.forEach(provider => {
+    console.log(`${provider.name} (id: ${provider.id}, slug: ${provider.slug})`);
+  });
+  return response.data.data;
+};
+
+// Example usage
+getTelephonyProviders();
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle'
+}
+
+def get_telephony_providers():
+    """Get all available telephony providers"""
+    url = 'https://unpod.dev/api/v2/platform/telephony/providers/'
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    print(f"Available providers: {len(data['data'])}")
+    for provider in data['data']:
+        print(f"{provider['name']} (id: {provider['id']}, slug: {provider['slug']})")
+    return data['data']
+
+# Example usage
+get_telephony_providers()
+```
+
+```bash cURL
+# Get all telephony providers
+curl -X GET "https://unpod.dev/api/v2/platform/telephony/providers/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Provider ID**: Use the `id` field when creating provider configurations via the [Create Provider](/api/provider/create-provider) endpoint
+2. **Provider Selection**: Choose the provider that best suits your region and call volume requirements
+3. **Caching**: Cache the providers list locally since it changes infrequently
+4. **Error Handling**: Always handle potential errors and implement retry logic
+5. **Security**: Keep API tokens secure and rotate them regularly

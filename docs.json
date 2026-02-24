@@ -116,51 +116,114 @@
             ]
           },
           {
-            "group": "Space",
-            "icon": "layout-grid",
+            "group": "API Reference",
             "pages": [
-              "api/space/organizations",
-              "api/space/spaces"
-
-            ]
-          },
-          {
-            "group": "Execution",
-            "icon": "activity",
-            "pages": [
-              "api/execution/tasks",
-              "api/execution/runs"
-            ]
-          },
-          {
-            "group": "Logs",
-            "icon": "file-text",
-            "pages": [
-              "api/logs/calls"
-            ]
-          },
-          {
-            "group": "Provider",
-            "icon": "server",
-            "pages": [
-              "api/telephony/Providers",
-              "api/provider/configurations"
-            ]
-          },
-          {
-            "group": "Telephony",
-            "icon": "phone",
-            "pages": [
-              "api/telephony/numbers",
-              "api/telephony/bridges"
-            ]
-          },
-          {
-            "group": "Billing & Usage",
-            "icon": "credit-card",
-            "pages": [
-              "api/billing&usage/analytics",
-              "api/billing&usage/billing"
+              {
+                "group": "Organisation",
+                "icon": "building-2",
+                "expanded": false,
+                "pages": [
+                  "api/space/overview",
+                  "api/space/organizations"
+                ]
+              },
+              {
+                "group": "Spaces",
+                "icon": "layout-grid",
+                "expanded": false,
+                "pages": [
+                  "api/space/spaces-overview",
+                  "api/space/get-all-spaces",
+                  "api/space/get-space-by-token",
+                  "api/space/get-task-by-space-token"
+                ]
+              },
+              {
+                "group": "Agent",
+                "icon": "bot",
+                "expanded": false,
+                "pages": [
+                  "api/agent/overview",
+                  "api/agent/get-all-agents",
+                  "api/agent/get-tasks-by-agent-handle",
+                  "api/agent/get-agent-executions"
+                ]
+              },
+              {
+                "group": "Task - Make Call",
+                "icon": "phone-call",
+                "expanded": false,
+                "pages": [
+                  "api/execution/create-task"
+                ]
+              },
+              {
+                "group": "Runs - Executions & calls",
+                "icon": "activity",
+                "expanded": false,
+                "pages": [
+                  "api/execution/runs-overview",
+                  "api/execution/get-all-runs",
+                  "api/execution/get-run-tasks"
+                ]
+              },
+              {
+                "group": "Call Logs",
+                "icon": "file-text",
+                "expanded": false,
+                "pages": [
+                  "api/logs/overview",
+                  "api/logs/get-call-logs"
+                ]
+              },
+              {
+                "group": "Analytics",
+                "icon": "chart-bar",
+                "expanded": false,
+                "pages": [
+                  "api/billing&usage/analytics-overview",
+                  "api/billing&usage/get-analytics"
+                ]
+              },
+              {
+                "group": "Providers",
+                "icon": "server",
+                "expanded": false,
+                "pages": [
+                  "api/provider/overview",
+                  "api/provider/get-telephony-providers",
+                  "api/provider/create-provider",
+                  "api/provider/get-all-providers",
+                  "api/provider/get-provider-by-id",
+                  "api/provider/update-provider",
+                  "api/provider/delete-provider"
+                ]
+              },
+              {
+                "group": "Telephony & Bridges",
+                "icon": "git-branch",
+                "expanded": false,
+                "pages": [
+                  "api/telephony/bridges-overview",
+                  "api/telephony/create-bridge",
+                  "api/telephony/get-all-bridges",
+                  "api/telephony/get-bridge-by-slug",
+                  "api/telephony/update-bridge",
+                  "api/telephony/delete-bridge",
+                  "api/telephony/connect-provider-to-bridge",
+                  "api/telephony/numbers",
+                  "api/telephony/disconnect-provider-from-bridge"
+                ]
+              },
+              {
+                "group": "Billing",
+                "icon": "credit-card",
+                "expanded": false,
+                "pages": [
+                  "api/billing&usage/billing-overview",
+                  "api/billing&usage/get-billing"
+                ]
+              }
             ]
           }
         ]

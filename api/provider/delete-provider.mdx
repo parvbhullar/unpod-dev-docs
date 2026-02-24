@@ -1,0 +1,154 @@
+---
+title: 'Delete Provider'
+description: 'Permanently delete a telephony provider configuration'
+openapi: 'DELETE /api/v2/platform/telephony/providers-configurations/{id}/'
+---
+
+# Delete Provider Configuration
+
+Permanently delete a telephony provider configuration by its ID. Once deleted, this configuration can no longer be used to connect to bridges. This action cannot be undone.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+<Warning>
+Deleting a provider configuration that is actively connected to a bridge may disrupt call routing. Disconnect the provider from all bridges before deleting.
+</Warning>
+
+---
+
+## Delete Provider Configuration
+
+Permanently remove a provider configuration from your organization.
+
+```http
+DELETE /api/v2/platform/telephony/providers-configurations/{id}/
+```
+
+### Path Parameters
+
+| Name | Type    | Required | Description                                |
+|------|---------|----------|--------------------------------------------|
+| id   | integer | Yes      | Unique identifier of the provider configuration |
+
+<Note>
+You can get the provider configuration `id` by hitting the [Get All Providers](/api/provider/get-all-providers) API.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+### Example Request
+
+```http
+DELETE /api/v2/platform/telephony/providers-configurations/42/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+```
+
+### Success Response (204 — No Content)
+
+```
+HTTP/1.1 204 No Content
+```
+
+No response body is returned on successful deletion.
+
+### Error Response (404 — Not Found)
+
+```json
+{
+  "status_code": 404,
+  "message": "Provider configuration not found."
+}
+```
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                        |
+|-------------|----------------------------------------------------|
+| 204         | No Content - Configuration deleted successfully    |
+| 401         | Unauthorized - Invalid or missing API token        |
+| 403         | Forbidden - Invalid organization handle            |
+| 404         | Not Found - Provider configuration not found       |
+| 500         | Internal Server Error - Server-side error          |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle'
+};
+
+// Delete a provider configuration
+const deleteProvider = async (id) => {
+  await axios.delete(
+    `https://unpod.dev/api/v2/platform/telephony/providers-configurations/${id}/`,
+    { headers }
+  );
+  console.log(`Provider configuration #${id} deleted successfully`);
+};
+
+// Example usage
+deleteProvider(42);
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle'
+}
+
+def delete_provider(config_id: int):
+    """Delete a provider configuration"""
+    url = f'https://unpod.dev/api/v2/platform/telephony/providers-configurations/{config_id}/'
+    response = requests.delete(url, headers=headers)
+    if response.status_code == 204:
+        print(f"Provider configuration #{config_id} deleted successfully")
+    else:
+        print(f"Error: {response.json()}")
+
+# Example usage
+delete_provider(42)
+```
+
+```bash cURL
+# Delete a provider configuration
+curl -X DELETE "https://unpod.dev/api/v2/platform/telephony/providers-configurations/42/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Disconnect First**: Always [disconnect the provider from bridges](/api/telephony/disconnect-provider-from-bridge) before deleting a configuration
+2. **Irreversible**: Deletion is permanent — verify the correct `id` before proceeding
+3. **Audit Trail**: Note the deletion in your records for compliance and troubleshooting purposes
+4. **204 Response**: A successful delete returns HTTP 204 with no body — handle this in your code
+5. **Error Handling**: Handle 404 gracefully — the configuration may have already been deleted

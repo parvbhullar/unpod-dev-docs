@@ -1,0 +1,46 @@
+---
+title: 'Overview'
+description: 'Introduction to the Billing API'
+---
+
+# Billing API
+
+The Billing API lets you fetch invoices and payment status for your organization. It provides a paginated list of subscription invoices with their payment details.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+## What You Can Do
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v2/platform/organisation/billing/` | Retrieve invoices and billing data for the organization |
+
+## Base URL
+
+```
+https://unpod.dev/api/v2/platform/
+```
+
+## Authentication
+
+All Billing API requests require a valid JWT token and Org-Handle in the headers:
+
+```http
+Authorization: jwt <token>
+Org-Handle: your-org-handle
+```
+
+<Note>
+For call analytics data, use the separate [Analytics](/api/billing&usage/get-analytics) endpoint.
+</Note>
+
+## Common Error Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Success - Billing data fetched successfully |
+| 400 | Bad Request - Missing required headers |
+| 401 | Unauthorized - Invalid or missing token |
+| 404 | Not Found - Organization not found |

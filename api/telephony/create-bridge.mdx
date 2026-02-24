@@ -1,0 +1,195 @@
+---
+title: 'Create Bridge'
+description: 'Create a new telephony bridge for call routing'
+openapi: 'POST /api/v2/platform/telephony/bridges/'
+---
+
+# Create Bridge
+
+Create a new telephony bridge for call routing. Bridges are the core routing entities that link telephony providers and phone numbers to your Voice AI agents.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Create Telephony Bridge
+
+Create a new telephony bridge with a name and unique slug.
+
+```http
+POST /api/v2/platform/telephony/bridges/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+| Content-Type  | string | Yes      | `application/json`              |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Request Body
+
+| Field | Type   | Required | Description                                 |
+|-------|--------|----------|---------------------------------------------|
+| name  | string | Yes      | Display name for the bridge                 |
+| slug  | string | Yes      | URL-friendly unique identifier for the bridge |
+
+### Example Request
+
+```http
+POST /api/v2/platform/telephony/bridges/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+  Content-Type: application/json
+
+Body:
+{
+  "name": "Sales Bridge",
+  "slug": "sales-bridge-001"
+}
+```
+
+### Success Response (201)
+
+```json
+{
+  "status_code": 201,
+  "message": "Bridge created successfully.",
+  "data": {
+    "id": 314,
+    "name": "Sales Bridge",
+    "slug": "sales-bridge-001",
+    "created_at": "2026-02-07T10:00:00Z"
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description            |
+|-------------|---------|------------------------|
+| status_code | integer | HTTP status code       |
+| message     | string  | Response message       |
+| data        | object  | Created bridge details |
+
+### Bridge Object Fields
+
+| Field      | Type    | Description                         |
+|------------|---------|-------------------------------------|
+| id         | integer | Bridge unique identifier            |
+| name       | string  | Bridge display name                 |
+| slug       | string  | Unique bridge slug identifier       |
+| created_at | string  | Bridge creation timestamp (ISO 8601) |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "status_code": 400,
+  "message": "Bridge creation failed.",
+  "errors": "Slug already exists or name is required"
+}
+```
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 201         | Created - Bridge created successfully            |
+| 400         | Bad Request - Invalid or duplicate slug/name     |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Invalid organization handle          |
+| 409         | Conflict - Bridge with this slug already exists  |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle',
+  'Content-Type': 'application/json'
+};
+
+// Create a new telephony bridge
+const createBridge = async (name, slug) => {
+  const response = await axios.post(
+    'https://unpod.dev/api/v2/platform/telephony/bridges/',
+    { name, slug },
+    { headers }
+  );
+  console.log(`Bridge created: ${response.data.data.slug} (ID: ${response.data.data.id})`);
+  return response.data.data;
+};
+
+// Example usage
+createBridge('Sales Bridge', 'sales-bridge-001');
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle',
+    'Content-Type': 'application/json'
+}
+
+def create_bridge(name: str, slug: str):
+    """Create a new telephony bridge"""
+    url = 'https://unpod.dev/api/v2/platform/telephony/bridges/'
+    payload = {'name': name, 'slug': slug}
+    response = requests.post(url, headers=headers, json=payload)
+    data = response.json()
+    print(f"Bridge created: {data['data']['slug']} (ID: {data['data']['id']})")
+    return data['data']
+
+# Example usage
+create_bridge('Sales Bridge', 'sales-bridge-001')
+```
+
+```bash cURL
+# Create a new telephony bridge
+curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Sales Bridge",
+    "slug": "sales-bridge-001"
+  }'
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Slug Naming**: Use descriptive, lowercase slugs (e.g., `sales-outbound-us`) to easily identify bridges
+2. **Unique Slugs**: Ensure slugs are unique across your organization to avoid conflicts
+3. **Post-Creation**: After creating a bridge, use [Connect Provider to Bridge](/api/telephony/connect-provider-to-bridge) to link a telephony provider
+4. **Bridge ID**: Store the returned `id` and `slug` for subsequent bridge management operations
+5. **Error Handling**: Handle 409 Conflict responses for duplicate slugs
+6. **Security**: Keep API tokens secure and rotate them regularly

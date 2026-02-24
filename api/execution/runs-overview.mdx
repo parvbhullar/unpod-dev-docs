@@ -1,0 +1,50 @@
+---
+title: 'Overview'
+description: 'Introduction to the Runs & Executions API'
+---
+
+# Runs & Executions API
+
+The Runs API allows you to manage and monitor execution runs in your Unpod platform. A **run** represents a batch execution — a group of tasks triggered together within a space.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+## What You Can Do
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v2/platform/spaces/{space_token}/runs/` | Retrieve all batch runs in a space |
+| `GET /api/v2/platform/spaces/{space_token}/runs/{run_id}/tasks/` | Retrieve all tasks for a specific run |
+
+## Run Lifecycle
+
+```
+Create Task (POST) → Run Created (pending) → Executing → completed / failed
+```
+
+## Base URL
+
+```
+https://unpod.dev/api/v2/platform/
+```
+
+## Authentication
+
+All Runs API requests require a valid API token in the headers:
+
+```http
+Authorization: Token your-api-token
+Content-Type: application/json
+```
+
+## Common Error Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Success - Data fetched successfully |
+| 206 | Partial Content - Business logic error occurred |
+| 401 | Unauthorized - Invalid or missing API token |
+| 404 | Not Found - Space or Run not found |
+| 500 | Internal Server Error - Server-side error |

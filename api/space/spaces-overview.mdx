@@ -1,0 +1,49 @@
+---
+title: 'Overview'
+description: 'Introduction to the Spaces API'
+---
+
+# Spaces API
+
+The Spaces API allows you to manage and retrieve spaces (workspaces/groups) in your Unpod platform. Spaces are containers that organize your tasks, runs, and data collections.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+## What You Can Do
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v2/platform/spaces/` | Retrieve all spaces in your organization |
+| `GET /api/v2/platform/spaces/{space_token}/` | Retrieve a specific space by its token |
+| `GET /api/v2/platform/spaces/{space_token}/tasks/` | Retrieve all tasks within a specific space |
+
+## Base URL
+
+```
+https://unpod.dev/api/v2/platform/
+```
+
+## Authentication
+
+All Spaces API requests require a valid API token and Org-Handle in the headers:
+
+```http
+Authorization: Token your-api-token
+Org-Handle: your-org-handle
+```
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+## Common Error Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Success - Request completed successfully |
+| 401 | Unauthorized - Invalid or missing API token |
+| 403 | Forbidden - Access denied to the resource |
+| 404 | Not Found - Space or Organization not found |
+| 500 | Internal Server Error - Server-side error |

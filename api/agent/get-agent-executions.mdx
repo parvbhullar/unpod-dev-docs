@@ -1,0 +1,199 @@
+---
+title: 'Get All Agent Executions'
+description: 'Retrieve all executions (call runs) for a specific agent'
+openapi: 'GET /api/v2/platform/agents/{agent_handle}/executions/'
+---
+
+# Get All Agent Executions
+
+Retrieve all execution runs associated with a specific agent. This endpoint provides a summary of each run including status, task counts, and timestamps — useful for monitoring agent performance and execution history.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get All Agent Executions
+
+Retrieve all executions (batch runs) for a specific agent using its handle.
+
+```http
+GET /api/v2/platform/agents/{agent_handle}/executions/
+```
+
+### Path Parameters
+
+| Name         | Type   | Required | Description                           |
+|--------------|--------|----------|---------------------------------------|
+| agent_handle | string | Yes      | Unique handle/identifier of the agent |
+
+<Note>
+You can get the `agent_handle` by hitting the [Get All Agents](/api/agent/get-all-agents) API. The `handle` field in the response is your Agent Handle.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Example Request
+
+```http
+GET /api/v2/platform/agents/space-agent-8qmk42nslp91wrh3dz7btxc4/executions/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 12,
+  "status_code": 200,
+  "message": "Executions fetched successfully",
+  "data": [
+    {
+      "run_id": "Recac64fe03e911f1878d43cd8a99e069",
+      "status": "completed",
+      "total_tasks": 25,
+      "completed_tasks": 23,
+      "created": "2026-02-07T05:57:45Z"
+    },
+    {
+      "run_id": "R6b653894fe9411f0878d43cd8a99e069",
+      "status": "completed",
+      "total_tasks": 10,
+      "completed_tasks": 10,
+      "created": "2026-01-31T11:03:05Z"
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description                 |
+|-------------|---------|-----------------------------|
+| count       | integer | Total number of executions  |
+| status_code | integer | HTTP status code            |
+| message     | string  | Response message            |
+| data        | array   | Array of execution objects  |
+
+### Execution Object Fields
+
+| Field           | Type    | Description                                          |
+|-----------------|---------|------------------------------------------------------|
+| run_id          | string  | Unique run identifier                                |
+| status          | string  | Run status: `completed`, `running`, `failed`, `pending` |
+| total_tasks     | integer | Total number of tasks in the run                     |
+| completed_tasks | integer | Number of successfully completed tasks               |
+| created         | string  | Run creation timestamp (ISO 8601)                    |
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+### Error Response (404 — Agent Not Found)
+
+```json
+{
+  "status_code": 404,
+  "message": "Agent not found."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Request completed successfully         |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Agent not found                      |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle'
+};
+
+// Get all executions for an agent
+const getAgentExecutions = async (agentHandle) => {
+  const response = await axios.get(
+    `https://unpod.dev/api/v2/platform/agents/${agentHandle}/executions/`,
+    { headers }
+  );
+  console.log(`Total executions: ${response.data.count}`);
+  response.data.data.forEach(exec => {
+    const completionRate = (exec.completed_tasks / exec.total_tasks * 100).toFixed(1);
+    console.log(`Run ${exec.run_id}: ${exec.status} (${completionRate}% complete)`);
+  });
+  return response.data.data;
+};
+
+// Example usage
+getAgentExecutions('space-agent-8qmk42nslp91wrh3dz7btxc4');
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle'
+}
+
+def get_agent_executions(agent_handle: str):
+    """Get all executions for a specific agent"""
+    url = f'https://unpod.dev/api/v2/platform/agents/{agent_handle}/executions/'
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    print(f"Total executions: {data['count']}")
+    for exec_item in data['data']:
+        completion_rate = exec_item['completed_tasks'] / exec_item['total_tasks'] * 100
+        print(f"Run {exec_item['run_id']}: {exec_item['status']} ({completion_rate:.1f}% complete)")
+    return data['data']
+
+# Example usage
+get_agent_executions('space-agent-8qmk42nslp91wrh3dz7btxc4')
+```
+
+```bash cURL
+# Get all executions for an agent
+curl -X GET "https://unpod.dev/api/v2/platform/agents/space-agent-8qmk42nslp91wrh3dz7btxc4/executions/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Agent Handle**: Use the exact agent handle from the [Get All Agents](/api/agent/get-all-agents) response
+2. **Completion Tracking**: Calculate `completed_tasks / total_tasks` ratio to monitor run success rates
+3. **Status Monitoring**: Poll this endpoint to track long-running executions
+4. **Error Handling**: Always handle potential errors and edge cases
+5. **Security**: Keep API tokens secure and rotate them regularly

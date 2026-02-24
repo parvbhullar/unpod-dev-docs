@@ -1,0 +1,45 @@
+---
+title: 'Overview'
+description: 'Introduction to the Agent API'
+---
+
+# Agent API
+
+The Agent API allows you to manage and retrieve AI agents configured in your Unpod platform. Agents are voice AI entities that handle calls, follow personas, and execute tasks.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+## What You Can Do
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v2/platform/agents/` | Retrieve all agents in your organization |
+| `GET /api/v2/platform/agents/{agent_handle}/tasks/` | Retrieve all tasks assigned to a specific agent |
+| `GET /api/v2/platform/agents/{agent_handle}/executions/` | Retrieve all executions for a specific agent |
+
+## Base URL
+
+```
+https://unpod.dev/api/v2/platform/
+```
+
+## Authentication
+
+All Agent API requests require a valid API token and Org-Handle in the headers:
+
+```http
+Authorization: Token your-api-token
+Org-Handle: your-org-handle
+```
+
+## Common Error Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Success - Request completed successfully |
+| 401 | Unauthorized - Invalid or missing API token |
+| 403 | Forbidden - Access denied to the resource |
+| 404 | Not Found - Agent not found |
+| 500 | Internal Server Error - Server-side error |

@@ -1,0 +1,204 @@
+---
+title: 'Update Bridge'
+description: 'Update an existing telephony bridge configuration'
+openapi: 'PATCH /api/v2/platform/telephony/bridges/{slug}/'
+---
+
+# Update Bridge
+
+Partially update an existing telephony bridge's configuration. Currently supports updating the bridge's display name.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Update Telephony Bridge
+
+Update the configuration of an existing telephony bridge using its slug.
+
+```http
+PATCH /api/v2/platform/telephony/bridges/{slug}/
+```
+
+### Path Parameters
+
+| Name | Type   | Required | Description                |
+|------|--------|----------|----------------------------|
+| slug | string | Yes      | Unique bridge slug         |
+
+<Note>
+You can get the bridge `slug` by hitting the [Get All Bridges](/api/telephony/get-all-bridges) API. The `slug` field in the response is your Bridge Slug.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+| Content-Type  | string | Yes      | `application/json`              |
+
+### Request Body
+
+All fields are optional — include only the fields you wish to update.
+
+| Field | Type   | Required | Description                     |
+|-------|--------|----------|---------------------------------|
+| name  | string | No       | Updated display name for the bridge |
+
+### Example Request
+
+```http
+PATCH /api/v2/platform/telephony/bridges/sales-bridge-001/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+  Content-Type: application/json
+
+Body:
+{
+  "name": "Sales Bridge — Updated"
+}
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Bridge updated successfully.",
+  "data": {
+    "id": 314,
+    "name": "Sales Bridge — Updated",
+    "slug": "sales-bridge-001",
+    "numbers": [
+      {
+        "id": 501,
+        "number": "+1234567890",
+        "status": "active"
+      }
+    ]
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description            |
+|-------------|---------|------------------------|
+| status_code | integer | HTTP status code       |
+| message     | string  | Response message       |
+| data        | object  | Updated bridge details |
+
+### Bridge Object Fields
+
+| Field   | Type    | Description                     |
+|---------|---------|---------------------------------|
+| id      | integer | Bridge unique identifier        |
+| name    | string  | Updated bridge display name     |
+| slug    | string  | Unique bridge slug identifier   |
+| numbers | array   | List of assigned phone numbers  |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "status_code": 400,
+  "message": "Bridge update failed.",
+  "errors": "Invalid field value"
+}
+```
+
+### Error Response (404 — Not Found)
+
+```json
+{
+  "status_code": 404,
+  "message": "Bridge not found."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Bridge updated successfully            |
+| 400         | Bad Request - Invalid update parameters          |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Invalid organization handle          |
+| 404         | Not Found - Bridge not found                     |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle',
+  'Content-Type': 'application/json'
+};
+
+// Update a bridge
+const updateBridge = async (slug, updates) => {
+  const response = await axios.patch(
+    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/`,
+    updates,
+    { headers }
+  );
+  console.log(`Bridge updated: ${response.data.data.name}`);
+  return response.data.data;
+};
+
+// Example usage
+updateBridge('sales-bridge-001', { name: 'Sales Bridge — Updated' });
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle',
+    'Content-Type': 'application/json'
+}
+
+def update_bridge(slug: str, updates: dict):
+    """Update an existing telephony bridge"""
+    url = f'https://unpod.dev/api/v2/platform/telephony/bridges/{slug}/'
+    response = requests.patch(url, headers=headers, json=updates)
+    data = response.json()
+    print(f"Bridge updated: {data['data']['name']}")
+    return data['data']
+
+# Example usage
+update_bridge('sales-bridge-001', {'name': 'Sales Bridge — Updated'})
+```
+
+```bash cURL
+# Update a bridge name
+curl -X PATCH "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-001/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Sales Bridge — Updated"
+  }'
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Partial Updates**: Only include fields you want to change — PATCH supports partial updates
+2. **Slug Immutable**: The `slug` cannot be changed after creation — use descriptive slugs from the start
+3. **Verify Before Update**: Use [Get Bridge by Slug](/api/telephony/get-bridge-by-slug) to confirm the bridge exists before patching
+4. **Error Handling**: Handle 404 errors when the bridge slug is invalid or the bridge has been deleted
+5. **Security**: Keep API tokens secure and rotate them regularly

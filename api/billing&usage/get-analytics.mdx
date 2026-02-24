@@ -1,0 +1,227 @@
+---
+title: 'Get Analytics'
+description: 'Retrieve call analytics and task status for your organization'
+openapi: 'GET /api/v2/platform/organisation/analytics/'
+---
+
+# Get Analytics
+
+Retrieve call analytics and task status for your organization. Provides insights into call outcomes, success rates, average durations, and task execution summaries. Optionally filter by a specific space using the `space_token` query parameter.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get Organization Analytics
+
+Retrieve aggregated call and task analytics for your organization.
+
+```http
+GET /api/v2/platform/organisation/analytics/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Query Parameters
+
+| Name        | Type   | Required | Description                                                          |
+|-------------|--------|----------|----------------------------------------------------------------------|
+| space_token | string | No       | Filter analytics for a specific space. If omitted, returns org-wide analytics |
+
+<Note>
+If `space_token` is provided, analytics are scoped to that space only. If not provided, analytics aggregate across all contact spaces in the organization.
+</Note>
+
+### Example Request
+
+```http
+GET /api/v2/platform/organisation/analytics/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+```
+
+### Example Request with Space Filter
+
+```http
+GET /api/v2/platform/organisation/analytics/?space_token=8KZAMRAHSXXXXXXMAYNASMJC
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Analytics fetched successfully",
+  "data": {
+    "total_calls": 1250,
+    "completed_calls": 987,
+    "failed_calls": 143,
+    "avg_duration_seconds": 145.3,
+    "total_tasks": 1350,
+    "task_status_breakdown": {
+      "pending": 45,
+      "running": 12,
+      "completed": 1180,
+      "failed": 113
+    }
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description          |
+|-------------|---------|----------------------|
+| status_code | integer | HTTP status code     |
+| message     | string  | Response message     |
+| data        | object  | Analytics data       |
+
+### Analytics Data Fields
+
+| Field                | Type    | Description                                      |
+|----------------------|---------|--------------------------------------------------|
+| total_calls          | integer | Total number of calls made                       |
+| completed_calls      | integer | Number of successfully completed calls           |
+| failed_calls         | integer | Number of failed calls                           |
+| avg_duration_seconds | number  | Average call duration in seconds                 |
+| total_tasks          | integer | Total number of tasks across all runs            |
+| task_status_breakdown | object | Breakdown of tasks by status                    |
+
+### Task Status Breakdown Fields
+
+| Field     | Type    | Description                         |
+|-----------|---------|-------------------------------------|
+| pending   | integer | Number of tasks awaiting execution  |
+| running   | integer | Number of tasks currently executing |
+| completed | integer | Number of successfully completed tasks |
+| failed    | integer | Number of failed tasks              |
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+### Error Response (404 — Not Found)
+
+```json
+{
+  "status_code": 404,
+  "message": "Organization not found."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Analytics fetched successfully         |
+| 400         | Bad Request - Missing required headers           |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Invalid organization handle          |
+| 404         | Not Found - Organization not found               |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle'
+};
+
+// Get org-wide analytics
+const getAnalytics = async (spaceToken = null) => {
+  const params = spaceToken ? { space_token: spaceToken } : {};
+  const response = await axios.get(
+    'https://unpod.dev/api/v2/platform/organisation/analytics/',
+    { headers, params }
+  );
+  const data = response.data.data;
+  console.log(`Total calls: ${data.total_calls}`);
+  console.log(`Completed: ${data.completed_calls}`);
+  console.log(`Failed: ${data.failed_calls}`);
+  console.log(`Avg duration: ${data.avg_duration_seconds}s`);
+  return data;
+};
+
+// Get org-wide analytics
+getAnalytics();
+
+// Get analytics for a specific space
+getAnalytics('8KZAMRAHSXXXXXXMAYNASMJC');
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle'
+}
+
+def get_analytics(space_token: str = None):
+    """Get call analytics and task status"""
+    url = 'https://unpod.dev/api/v2/platform/organisation/analytics/'
+    params = {'space_token': space_token} if space_token else {}
+    response = requests.get(url, headers=headers, params=params)
+    data = response.json()['data']
+    print(f"Total calls: {data['total_calls']}")
+    print(f"Completed: {data['completed_calls']}")
+    print(f"Failed: {data['failed_calls']}")
+    print(f"Avg duration: {data['avg_duration_seconds']}s")
+    return data
+
+# Get org-wide analytics
+get_analytics()
+
+# Get analytics for a specific space
+get_analytics('8KZAMRAHSXXXXXXMAYNASMJC')
+```
+
+```bash cURL
+# Get org-wide analytics
+curl -X GET "https://unpod.dev/api/v2/platform/organisation/analytics/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
+
+# Get analytics for a specific space
+curl -X GET "https://unpod.dev/api/v2/platform/organisation/analytics/?space_token=8KZAMRAHSXXXXXXMAYNASMJC" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Space Scoping**: Use the `space_token` filter to get analytics for individual campaigns or spaces
+2. **Success Rate**: Calculate success rate as `completed_calls / total_calls * 100` for performance tracking
+3. **Task Breakdown**: Monitor `task_status_breakdown` to detect stuck or failed tasks requiring attention
+4. **Scheduled Reports**: Call this endpoint on a schedule to build trend dashboards
+5. **Org-Handle**: Ensure the correct organization handle is included for accurate scoping
+6. **Security**: Keep API tokens secure and rotate them regularly

@@ -1,0 +1,178 @@
+---
+title: 'Get All Spaces'
+description: 'Retrieve details of all created spaces in your organization'
+openapi: 'GET /api/v2/platform/spaces/'
+---
+
+# Get All Spaces
+
+Retrieve details of all created spaces, allowing you to view and manage workspace/group entities in your organization.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Get All Spaces
+
+Retrieve a list of all spaces within your organization. Spaces are containers that organize your tasks, runs, and data collections.
+
+```http
+GET /api/v2/platform/spaces/
+```
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Example Request
+
+```http
+GET /api/v2/platform/spaces/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+```
+
+### Success Response (200)
+
+```json
+{
+  "count": 207,
+  "status_code": 200,
+  "message": "Spaces fetched successfully",
+  "data": [
+    {
+      "id": "sp_001",
+      "name": "Sales Outreach Q1",
+      "token": "8KZAMRAHSXXXXXXMAYNASMJC",
+      "agent_handle": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+      "created_at": "2026-01-10T08:00:00Z"
+    },
+    {
+      "id": "sp_002",
+      "name": "Support Follow-up",
+      "token": "9LZBNSITKYYYYYOBZNATNKJD",
+      "agent_handle": "space-agent-f1o3qjm1y7q1avvuynv4vprb1",
+      "created_at": "2026-01-15T09:30:00Z"
+    }
+  ]
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description            |
+|-------------|---------|------------------------|
+| count       | integer | Total number of spaces |
+| status_code | integer | HTTP status code       |
+| message     | string  | Response message       |
+| data        | array   | Array of space objects |
+
+### Space Object Fields
+
+| Field        | Type   | Description                                  |
+|--------------|--------|----------------------------------------------|
+| id           | string | Unique space identifier                      |
+| name         | string | Space display name                           |
+| token        | string | Public token for API access (use as space_token) |
+| agent_handle | string | Handle of the agent assigned to the space    |
+| created_at   | string | Space creation timestamp (ISO 8601)          |
+
+### Error Response (401 — Unauthorized)
+
+```json
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Request completed successfully         |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Organization not found               |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle'
+};
+
+// Get all spaces
+const getAllSpaces = async () => {
+  const response = await axios.get(
+    'https://unpod.dev/api/v2/platform/spaces/',
+    { headers }
+  );
+  console.log(`Total spaces: ${response.data.count}`);
+  response.data.data.forEach(space => {
+    console.log(`${space.name} - Token: ${space.token}`);
+  });
+  return response.data.data;
+};
+
+// Example usage
+getAllSpaces();
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle'
+}
+
+def get_all_spaces():
+    """Get all spaces in the organization"""
+    url = 'https://unpod.dev/api/v2/platform/spaces/'
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    print(f"Total spaces: {data['count']}")
+    for space in data['data']:
+        print(f"{space['name']} - Token: {space['token']}")
+    return data['data']
+
+# Example usage
+get_all_spaces()
+```
+
+```bash cURL
+# Get all spaces
+curl -X GET "https://unpod.dev/api/v2/platform/spaces/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Org-Handle**: Always include the correct organization handle in your requests
+2. **Space Token**: Note the `token` field — it is used as the `space_token` path parameter in other endpoints
+3. **Agent Handle**: Use the `agent_handle` when creating tasks to assign them to the correct agent
+4. **Error Handling**: Always handle potential errors and edge cases
+5. **Caching**: Consider caching space data to reduce API calls since spaces change infrequently

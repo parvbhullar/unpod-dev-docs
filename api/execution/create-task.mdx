@@ -1,0 +1,273 @@
+---
+title: 'Create a Task - Make Voice AI Call'
+description: 'Create a new task in a space to trigger a Voice AI outbound call'
+openapi: 'POST /api/v2/platform/spaces/{space_token}/tasks/create/'
+---
+
+# Create a Task — Make Voice AI Call
+
+Create a new task inside a given space using the space's public token. You can assign the task to a pilot/agent, attach multiple documents (contacts), provide additional context, and schedule the execution.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token, Space Token, and Agent Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Create a Task in a Space
+
+Create one or more Voice AI call tasks for a batch of contacts.
+
+```http
+POST /api/v2/platform/spaces/{space_token}/tasks/create/
+```
+
+### Path Parameters
+
+| Name        | Type   | Required | Description                                     |
+|-------------|--------|----------|-------------------------------------------------|
+| space_token | string | Yes      | Public token of the space where task is created |
+
+<Note>
+You can get the `space_token` by hitting the [Get All Spaces](/api/space/get-all-spaces) API. The `token` field in the response is your Space Token.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Content-Type  | string | Yes      | `application/json`              |
+
+### Request Body
+
+| Field     | Type   | Required | Description                                    |
+|-----------|--------|----------|------------------------------------------------|
+| pilot     | string | Yes      | Agent/pilot handle to assign the task          |
+| documents | array  | Yes      | Array of document/contact objects with data    |
+| context   | string | No       | Additional context/objective for the task      |
+| schedule  | object | No       | Schedule configuration (e.g., `{"type": "now"}`) |
+
+### Document Object Fields
+
+| Field            | Type   | Required | Description                            |
+|------------------|--------|----------|----------------------------------------|
+| name             | string | Yes      | Contact name                           |
+| email            | string | No       | Contact email address                  |
+| contact_number   | string | Yes      | Primary contact phone number           |
+| alternate_number | string | No       | Alternate contact phone number         |
+| occupation       | string | No       | Contact's occupation                   |
+| company_name     | string | No       | Contact's company name                 |
+| address          | string | No       | Contact's address                      |
+| about            | string | No       | Additional info about the contact      |
+| context          | string | No       | Per-contact context for the call       |
+| labels           | array  | No       | Labels/tags associated with the record |
+| title            | string | No       | Document title                         |
+| description      | string | No       | Document description                   |
+| document_id      | string | No       | Unique document identifier             |
+
+### Example Request
+
+```http
+POST /api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/create/
+Headers:
+  Authorization: Token your-api-token
+  Content-Type: application/json
+
+Body:
+{
+  "pilot": "space-agent-f1o3qjm1y7q1avvuynv4vprb1",
+  "documents": [
+    {
+      "name": "John Doe",
+      "email": "john@example.com",
+      "contact_number": "1234567890",
+      "alternate_number": "9876543210",
+      "occupation": "Developer",
+      "company_name": "TechCorp",
+      "address": "123/456 Main Street",
+      "about": "Software Developer",
+      "context": "Follow up on proposal",
+      "labels": ["Interested"],
+      "title": "Lead Document",
+      "description": "Sales lead from Q1",
+      "document_id": "6902fb5840a736e125e80ebc"
+    }
+  ],
+  "context": "Call the lead and discuss the project requirements.",
+  "schedule": {
+    "type": "now"
+  }
+}
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Task Created Successfully",
+  "data": {
+    "run_id": "R74802366fe9011f0878d43cd8a99e069",
+    "task_ids": [
+      "T74802367fe9011f0878d43cd8a99e069"
+    ],
+    "status": "pending"
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description          |
+|-------------|---------|----------------------|
+| status_code | integer | HTTP status code     |
+| message     | string  | Response message     |
+| data        | object  | Created task details |
+
+### Data Object Fields
+
+| Field    | Type   | Description                       |
+|----------|--------|-----------------------------------|
+| run_id   | string | Created run identifier            |
+| task_ids | array  | Array of created task identifiers |
+| status   | string | Task status (initially `pending`) |
+
+### Error Response (206 — Validation / Creation Failed)
+
+```json
+{
+  "message": "Task creation failed",
+  "errors": "Detailed error description"
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Task created successfully              |
+| 206         | Partial Content - Business logic error occurred  |
+| 400         | Bad Request - Invalid parameters provided        |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Access denied to the resource        |
+| 404         | Not Found - Space or Agent not found             |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Content-Type': 'application/json'
+};
+
+// Create a task to make a Voice AI call
+const createTask = async (spaceToken, pilot, documents, context) => {
+  const response = await axios.post(
+    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/tasks/create/`,
+    {
+      pilot,
+      documents,
+      context,
+      schedule: { type: 'now' }
+    },
+    { headers }
+  );
+  console.log(`Run ID: ${response.data.data.run_id}`);
+  console.log(`Task IDs: ${response.data.data.task_ids.join(', ')}`);
+  return response.data.data;
+};
+
+// Example usage
+createTask(
+  '8KZAMRAHSXXXXXXMAYNASMJC',
+  'space-agent-f1o3qjm1y7q1avvuynv4vprb1',
+  [
+    {
+      name: 'John Doe',
+      contact_number: '1234567890',
+      email: 'john@example.com',
+      context: 'Follow up on proposal'
+    }
+  ],
+  'Call the lead and discuss the project requirements.'
+);
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Content-Type': 'application/json'
+}
+
+def create_task(space_token: str, pilot: str, documents: list, context: str):
+    """Create a Voice AI call task in a space"""
+    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/tasks/create/'
+    payload = {
+        'pilot': pilot,
+        'documents': documents,
+        'context': context,
+        'schedule': {'type': 'now'}
+    }
+    response = requests.post(url, headers=headers, json=payload)
+    data = response.json()
+    print(f"Run ID: {data['data']['run_id']}")
+    print(f"Task IDs: {', '.join(data['data']['task_ids'])}")
+    return data['data']
+
+# Example usage
+create_task(
+    space_token='8KZAMRAHSXXXXXXMAYNASMJC',
+    pilot='space-agent-f1o3qjm1y7q1avvuynv4vprb1',
+    documents=[
+        {
+            'name': 'John Doe',
+            'contact_number': '1234567890',
+            'email': 'john@example.com',
+            'context': 'Follow up on proposal'
+        }
+    ],
+    context='Call the lead and discuss the project requirements.'
+)
+```
+
+```bash cURL
+# Create a task to trigger a Voice AI call
+curl -X POST "https://unpod.dev/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/create/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pilot": "space-agent-f1o3qjm1y7q1avvuynv4vprb1",
+    "documents": [
+      {
+        "name": "John Doe",
+        "contact_number": "1234567890",
+        "email": "john@example.com",
+        "context": "Follow up on proposal",
+        "document_id": "6902fb5840a736e125e80ebc"
+      }
+    ],
+    "context": "Call the lead and discuss the project requirements.",
+    "schedule": {"type": "now"}
+  }'
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Pilot Handle**: Use the correct agent handle from the [Get All Agents](/api/agent/get-all-agents) API
+2. **contact_number**: Always include a valid `contact_number` in each document — this is required for call execution
+3. **Batch Calls**: Pass multiple documents in the `documents` array to trigger batch calls in a single request
+4. **Context**: Provide clear, specific context to guide the agent's conversation objectives
+5. **Run ID**: Store the returned `run_id` to track task execution status using the [Get All Runs](/api/execution/get-all-runs) API
+6. **Security**: Keep API tokens secure and rotate them regularly

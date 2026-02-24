@@ -1,0 +1,198 @@
+---
+title: 'Disconnect Provider from Bridge'
+description: 'Disconnect a provider credential from a telephony bridge to remove the number'
+openapi: 'POST /api/v2/platform/telephony/bridges/{slug}/disconnect-provider/'
+---
+
+# Disconnect Provider from Bridge
+
+Disconnect a telephony provider from a specific bridge, removing the associated phone number from the bridge. Use this before deleting a bridge or reassigning a phone number to a different bridge.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+## Disconnect Provider from Bridge
+
+Remove a phone number and provider connection from a telephony bridge.
+
+```http
+POST /api/v2/platform/telephony/bridges/{slug}/disconnect-provider/
+```
+
+### Path Parameters
+
+| Name | Type   | Required | Description                |
+|------|--------|----------|----------------------------|
+| slug | string | Yes      | Unique bridge slug         |
+
+<Note>
+You can get the bridge `slug` by hitting the [Get All Bridges](/api/telephony/get-all-bridges) API. The `slug` field in the response is your Bridge Slug.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+| Content-Type  | string | Yes      | `application/json`              |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Request Body
+
+| Field        | Type   | Required | Description                                              |
+|--------------|--------|----------|----------------------------------------------------------|
+| phone_number | string | Yes      | Phone number (E.164 format) to remove from the bridge    |
+
+### Example Request
+
+```http
+POST /api/v2/platform/telephony/bridges/sales-bridge-001/disconnect-provider/
+Headers:
+  Authorization: Token your-api-token
+  Org-Handle: your-org-handle
+  Content-Type: application/json
+
+Body:
+{
+  "phone_number": "+1234567890"
+}
+```
+
+### Success Response (200)
+
+```json
+{
+  "status_code": 200,
+  "message": "Provider disconnected from bridge successfully.",
+  "data": {
+    "message": "Provider disconnected successfully",
+    "bridge_slug": "sales-bridge-001"
+  }
+}
+```
+
+### Response Fields
+
+| Field       | Type    | Description       |
+|-------------|---------|-------------------|
+| status_code | integer | HTTP status code  |
+| message     | string  | Response message  |
+| data        | object  | Disconnection result |
+
+### Data Object Fields
+
+| Field       | Type   | Description                               |
+|-------------|--------|-------------------------------------------|
+| message     | string | Success message                           |
+| bridge_slug | string | The bridge slug the provider disconnected from |
+
+### Error Response (400 — Bad Request)
+
+```json
+{
+  "status_code": 400,
+  "message": "Failed to disconnect provider.",
+  "errors": "Phone number is not connected to this bridge"
+}
+```
+
+### Error Response (404 — Not Found)
+
+```json
+{
+  "status_code": 404,
+  "message": "Bridge not found."
+}
+```
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - Provider disconnected successfully     |
+| 400         | Bad Request - Phone number not connected or invalid |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Invalid organization handle          |
+| 404         | Not Found - Bridge not found                     |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle',
+  'Content-Type': 'application/json'
+};
+
+// Disconnect a provider from a bridge
+const disconnectProviderFromBridge = async (slug, phoneNumber) => {
+  const response = await axios.post(
+    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/disconnect-provider/`,
+    { phone_number: phoneNumber },
+    { headers }
+  );
+  console.log(`Provider disconnected from bridge: ${response.data.data.bridge_slug}`);
+  return response.data.data;
+};
+
+// Example usage
+disconnectProviderFromBridge('sales-bridge-001', '+1234567890');
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle',
+    'Content-Type': 'application/json'
+}
+
+def disconnect_provider_from_bridge(slug: str, phone_number: str):
+    """Disconnect a provider from a bridge"""
+    url = f'https://unpod.dev/api/v2/platform/telephony/bridges/{slug}/disconnect-provider/'
+    payload = {'phone_number': phone_number}
+    response = requests.post(url, headers=headers, json=payload)
+    data = response.json()
+    print(f"Provider disconnected from bridge: {data['data']['bridge_slug']}")
+    return data['data']
+
+# Example usage
+disconnect_provider_from_bridge('sales-bridge-001', '+1234567890')
+```
+
+```bash cURL
+# Disconnect a provider from a bridge
+curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-001/disconnect-provider/" \
+  -H "Authorization: Token your-api-token" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number": "+1234567890"
+  }'
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Pre-disconnect Check**: Verify the phone number is currently connected using [Get Bridge by Slug](/api/telephony/get-bridge-by-slug) before disconnecting
+2. **Phone Number Format**: Use E.164 format (e.g., `+1234567890`) for the `phone_number` field
+3. **Before Deletion**: Always disconnect providers before deleting a bridge to ensure clean teardown
+4. **Error Handling**: Handle 400 errors — the phone number may not be connected to the specified bridge
+5. **Service Disruption**: Disconnecting an active number will stop calls routing through the bridge immediately
+6. **Security**: Keep API tokens secure and rotate them regularly
