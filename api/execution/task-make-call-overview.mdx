@@ -1,0 +1,50 @@
+---
+title: 'Overview'
+description: 'Introduction to the Task - Make Call API'
+---
+
+# Task - Make Call API
+
+The Task - Make Call API lets you create Voice AI outbound call tasks in a specific space. Each task triggers a call workflow for one or more contacts and is executed by a selected agent/pilot.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token, Space Token, and Agent Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+## What You Can Do
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /api/v2/platform/spaces/{space_token}/tasks/create/` | Create a Voice AI call task for one or more contacts |
+
+## Call Task Flow
+
+```
+Create Task (POST) → Task Created (pending) → Executing → completed / failed
+```
+
+## Base URL
+
+```
+https://unpod.dev/api/v2/platform/
+```
+
+## Authentication
+
+All Task - Make Call API requests require a valid API token in the headers:
+
+```http
+Authorization: Token your-api-token
+Content-Type: application/json
+```
+
+## Common Error Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Success - Task created successfully |
+| 206 | Partial Content - Business logic error occurred |
+| 400 | Bad Request - Invalid input payload |
+| 401 | Unauthorized - Invalid or missing API token |
+| 404 | Not Found - Space not found |
+| 500 | Internal Server Error - Server-side error |

@@ -26,7 +26,7 @@
             "icon": "book",
             "pages": [
               "introduction",
-              "platform",
+
               "quickstart",
               "configuration",
               "architecture"
@@ -41,6 +41,7 @@
             "group": "Getting Started",
             "icon": "book-open",
             "pages": [
+              "platform",
               "Voice AI/introduction"
             ]
           },
@@ -76,23 +77,12 @@
               "Voice AI/Studio View/call logs",
               "Voice AI/Studio View/api key"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Dev Platform",
-        "groups": [
-           {
-            "group": "Getting Started",
-            "icon": "book-open",
-            "pages": [
-              "Dev Platform/introduction"
-            ]
           },
           {
             "group": "Dev Platform",
             "icon": "sliders-horizontal",
             "pages": [
+              "Dev Platform/introduction",
               "Dev Platform/telephony",
               "Dev Platform/numbers",
               "Dev Platform/provider",
@@ -116,7 +106,7 @@
             ]
           },
           {
-            "group": "API Reference",
+            "group": "API Lists",
             "pages": [
               {
                 "group": "Organisation",
@@ -154,6 +144,7 @@
                 "icon": "phone-call",
                 "expanded": false,
                 "pages": [
+                  "api/execution/task-make-call-overview",
                   "api/execution/create-task"
                 ]
               },
@@ -186,20 +177,6 @@
                 ]
               },
               {
-                "group": "Providers",
-                "icon": "server",
-                "expanded": false,
-                "pages": [
-                  "api/provider/overview",
-                  "api/provider/get-telephony-providers",
-                  "api/provider/create-provider",
-                  "api/provider/get-all-providers",
-                  "api/provider/get-provider-by-id",
-                  "api/provider/update-provider",
-                  "api/provider/delete-provider"
-                ]
-              },
-              {
                 "group": "Telephony & Bridges",
                 "icon": "git-branch",
                 "expanded": false,
@@ -213,6 +190,20 @@
                   "api/telephony/connect-provider-to-bridge",
                   "api/telephony/numbers",
                   "api/telephony/disconnect-provider-from-bridge"
+                ]
+              },
+              {
+                "group": "Providers",
+                "icon": "server",
+                "expanded": false,
+                "pages": [
+                  "api/provider/overview",
+                  "api/provider/get-telephony-providers",
+                  "api/provider/create-provider",
+                  "api/provider/get-all-providers",
+                  "api/provider/get-provider-by-id",
+                  "api/provider/update-provider",
+                  "api/provider/delete-provider"
                 ]
               },
               {

@@ -12,26 +12,7 @@ Unpod provides two ways to interact with the platform:
 | **Dashboard** | Visual interface at [unpod.dev](https://unpod.dev) | Manual setup, configuration, monitoring |
 | **REST API** | Programmatic access | Automation, integrations, custom workflows |
 
----
-
-## Part 1: Dashboard UI Setup
-
-### Step 1: Get Access
-
-1. Open [https://unpod.dev/](https://unpod.dev/)
-2. Click on **Request a Call Back**
-3. Fill in the required fields and click **Submit**
-4. After review your information, you will receive login credentials via email
-
-### Step 2: Login to Dashboard
-
-1. Open [https://unpod.dev/](https://unpod.dev/)
-2. Enter your **Email** and **Password**
-3. Click **Login**
-4. You'll be redirected to the main dashboard
-5. We recommended change your password after first login .
-
-### Step 3: Understand Core Components
+## Understand Core Components
 
 Unpod has 4 core building blocks:
 
@@ -42,79 +23,7 @@ Unpod has 4 core building blocks:
 | **Bridges** | Routing hubs that connect Numbers, Providers & Agents |
 | **Agents** | AI voice agents that handle conversations |
 
-### Step 4: Create a Bridge
-
-1. Go to **Telephony**
-2. Click on the **Add** icon at the top
-3. Enter:
-   - **Name**: Bridge identifier (e.g., "Sales Bridge")
-   - **Region**: Select region (`IN`, `US`, etc.)
-4. Click **Save Draft** or **Publish**
-5. Bridge created successfully
-
-### Step 5: Select a Number
-
-1. Go to **Telephony**
-2. Select a **Bridge**
-3. Click on **Select Available Number**
-4. Available numbers will be displayed
-5. Select a number and click **Submit**
-6. Number assigned successfully
-
-### Step 6: Configure Provider
-
-1. Go to **Telephony**
-2. Select a **Bridge**
-3. Selected numbers will be displayed (if not, go to **Select Available Number** and select a number)
-4. You will see your number list in **Selected Numbers** section
-5. You will see two options: **Unassign** and **Configure**
-6. Click **Configure**
-7. If you have an active provider, you can directly select it. Otherwise, you see different types of voice infra providers (LiveKit, Vapi, Twilio, Unpod.Ai etc.) and configure the one you need by filling the required fields
-
-<Note>
-Each provider has different required fields. Fill in the fields as per the selected provider.
-</Note>
-8. Click **Verify and Configure**
-9. You will see your configured provider at the top under **Active Provider**
-
-<Note>
-If you want to unassign a number, click **Unassign**. The number will be removed from your bridge but will still be available in the **Available Numbers** section.
-</Note>
-
-### Step 7: Link Number with Provider
-
-1. Go to **Telephony**
-2. Select a **Bridge**
-3. In the **Selected Numbers** list, click **Configure** on your number
-4. Under **Active Providers**, select your configured Voice Infra Provider
-5. Number linked with provider successfully
-
-<Note>
-You can click the **Settings** button on a selected number to edit or unlink the provider. Under **Config**, click **Manage** to change the provider or update concurrency channels according to your plan.
-</Note>
-
-### Step 8: Create an Agent (Optional)
-
-1. Go to **Agents**
-2. Click on the **Add** icon at the top
-3. Configure:
-   - **Name**: Agent name
-   - **System Prompt**: Define behavior and personality
-   - **Voice**: Select voice provider and voice
-   - **Model**: Select AI model
-4. Click **Save**
-
-### Step 9: Publish
-
-Click **Publish** button at the top of the dashboard to make your configuration live.
-
-<Note>
-Your setup is now ready for inbound and outbound calls!
-</Note>
-
----
-
-## Part 2: API Setup
+## API Setup
 
 ### Base URL
 
@@ -139,66 +48,6 @@ Authorization: Token your-api-token
 | Product-ID    | Sometimes      | Product identifier           |
 | Content-Type  | For POST/PATCH | `application/json`           |
 
----
-
-## Available API Endpoints
-
-### Telephony - Bridges
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/telephony/bridges/` | List all bridges |
-| `POST` | `/telephony/bridges/` | Create a new bridge |
-| `GET` | `/telephony/bridges/{slug}/` | Get bridge by slug |
-| `PATCH` | `/telephony/bridges/{slug}/` | Update a bridge |
-| `DELETE` | `/telephony/bridges/{slug}/` | Delete a bridge |
-| `POST` | `/telephony/bridges/{slug}/connect-provider/` | Assign provider to bridge |
-| `POST` | `/telephony/bridges/{slug}/disconnect-provider/` | Remove provider from bridge |
-
-### Telephony - Numbers
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/telephony/numbers/` | List all numbers |
-
-### Telephony - Providers
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/telephony/providers/` | List all providers |
-
-### Provider Configurations
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/telephony/provider-configurations/` | List all configurations |
-| `POST` | `/telephony/provider-configurations/` | Create configuration |
-| `GET` | `/telephony/provider-configurations/{id}/` | Get configuration by ID |
-| `PATCH` | `/telephony/provider-configurations/{id}/` | Update configuration |
-| `DELETE` | `/telephony/provider-configurations/{id}/` | Delete configuration |
-
-### Call Logs
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/call-logs/` | Get call history logs |
-
-### Tasks (Agent Tasks)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/agents/{handle}/tasks/` | Get tasks for an agent |
-| `GET` | `/spaces/{space_token}/tasks/` | Get tasks for a space |
-| `POST` | `/spaces/{space_token}/tasks/` | Create a new task |
-
-### Runs (Execution)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/spaces/{space_token}/runs/` | List all runs |
-| `GET` | `/spaces/{space_token}/runs/{run_id}/tasks/` | Get tasks for a run |
-
----
 
 ## Quick API Examples
 
