@@ -4,6 +4,30 @@ description: 'Partially update a telephony provider configuration'
 openapi: 'PATCH /api/v2/platform/telephony/providers-configurations/{id}/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "status_code": 200,
+  "message": "Provider configuration updated successfully.",
+  "data": {
+    "id": 42,
+    "provider": "twilio",
+    "account_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "created_at": "2026-02-07T10:00:00Z"
+  }
+}
+```
+
+```json Error Response (404)
+{
+  "status_code": 404,
+  "message": "Provider configuration not found."
+}
+```
+
+</ResponseExample>
+
 # Update Provider Configuration
 
 Partially update an existing telephony provider configuration. This is useful for rotating credentials such as the `auth_token` without deleting and recreating the entire configuration.
@@ -11,16 +35,6 @@ Partially update an existing telephony provider configuration. This is useful fo
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
-
----
-
-## Update Provider Configuration
-
-Partially update a provider configuration by its ID. Only include the fields you want to change.
-
-```http
-PATCH /api/v2/platform/telephony/providers-configurations/{id}/
-```
 
 ### Path Parameters
 
@@ -49,35 +63,7 @@ All fields are optional — include only the fields you wish to update.
 | auth_token | string | No       | Updated Auth Token / Secret key    |
 | account_sid | string | No      | Updated Account SID                |
 
-### Example Request
 
-```http
-PATCH /api/v2/platform/telephony/providers-configurations/42/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-  Content-Type: application/json
-
-Body:
-{
-  "auth_token": "your-new-auth-token-here"
-}
-```
-
-### Success Response (200)
-
-```json
-{
-  "status_code": 200,
-  "message": "Provider configuration updated successfully.",
-  "data": {
-    "id": 42,
-    "provider": "twilio",
-    "account_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "created_at": "2026-02-07T10:00:00Z"
-  }
-}
-```
 
 ### Response Fields
 
@@ -96,26 +82,7 @@ Body:
 | account_sid | string  | Account SID for the provider             |
 | created_at  | string  | Configuration creation timestamp         |
 
-### Error Response (400 — Bad Request)
 
-```json
-{
-  "status_code": 400,
-  "message": "Update failed.",
-  "errors": "Invalid auth_token value"
-}
-```
-
-### Error Response (404 — Not Found)
-
-```json
-{
-  "status_code": 404,
-  "message": "Provider configuration not found."
-}
-```
-
----
 
 ## Common Error Codes
 

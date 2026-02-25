@@ -4,6 +4,21 @@ description: 'Permanently delete a telephony provider configuration'
 openapi: 'DELETE /api/v2/platform/telephony/providers-configurations/{id}/'
 ---
 
+<ResponseExample>
+
+```json Success Response (204)
+HTTP/1.1 204 No Content
+```
+
+```json Error Response (404)
+{
+  "status_code": 404,
+  "message": "Provider configuration not found."
+}
+```
+
+</ResponseExample>
+
 # Delete Provider Configuration
 
 Permanently delete a telephony provider configuration by its ID. Once deleted, this configuration can no longer be used to connect to bridges. This action cannot be undone.
@@ -16,15 +31,6 @@ Permanently delete a telephony provider configuration by its ID. Once deleted, t
 Deleting a provider configuration that is actively connected to a bridge may disrupt call routing. Disconnect the provider from all bridges before deleting.
 </Warning>
 
----
-
-## Delete Provider Configuration
-
-Permanently remove a provider configuration from your organization.
-
-```http
-DELETE /api/v2/platform/telephony/providers-configurations/{id}/
-```
 
 ### Path Parameters
 
@@ -43,42 +49,6 @@ You can get the provider configuration `id` by hitting the [Get All Providers](/
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Org-Handle    | string | Yes      | Organization domain handle      |
 
-### Example Request
-
-```http
-DELETE /api/v2/platform/telephony/providers-configurations/42/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-```
-
-### Success Response (204 — No Content)
-
-```
-HTTP/1.1 204 No Content
-```
-
-No response body is returned on successful deletion.
-
-### Error Response (404 — Not Found)
-
-```json
-{
-  "status_code": 404,
-  "message": "Provider configuration not found."
-}
-```
-
-### Error Response (401 — Unauthorized)
-
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
-
----
 
 ## Common Error Codes
 

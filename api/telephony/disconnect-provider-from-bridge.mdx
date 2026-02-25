@@ -4,6 +4,29 @@ description: 'Disconnect a provider credential from a telephony bridge to remove
 openapi: 'POST /api/v2/platform/telephony/bridges/{slug}/disconnect-provider/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "status_code": 200,
+  "message": "Provider disconnected from bridge successfully.",
+  "data": {
+    "message": "Provider disconnected successfully",
+    "bridge_slug": "sales-bridge-001"
+  }
+}
+```
+
+```json Error Response (400)
+{
+  "status_code": 400,
+  "message": "Failed to disconnect provider.",
+  "errors": "Phone number is not connected to this bridge"
+}
+```
+
+</ResponseExample>
+
 # Disconnect Provider from Bridge
 
 Disconnect a telephony provider from a specific bridge, removing the associated phone number from the bridge. Use this before deleting a bridge or reassigning a phone number to a different bridge.
@@ -11,16 +34,6 @@ Disconnect a telephony provider from a specific bridge, removing the associated 
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
-
----
-
-## Disconnect Provider from Bridge
-
-Remove a phone number and provider connection from a telephony bridge.
-
-```http
-POST /api/v2/platform/telephony/bridges/{slug}/disconnect-provider/
-```
 
 ### Path Parameters
 
@@ -50,33 +63,6 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 |--------------|--------|----------|----------------------------------------------------------|
 | phone_number | string | Yes      | Phone number (E.164 format) to remove from the bridge    |
 
-### Example Request
-
-```http
-POST /api/v2/platform/telephony/bridges/sales-bridge-001/disconnect-provider/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-  Content-Type: application/json
-
-Body:
-{
-  "phone_number": "+1234567890"
-}
-```
-
-### Success Response (200)
-
-```json
-{
-  "status_code": 200,
-  "message": "Provider disconnected from bridge successfully.",
-  "data": {
-    "message": "Provider disconnected successfully",
-    "bridge_slug": "sales-bridge-001"
-  }
-}
-```
 
 ### Response Fields
 
@@ -93,26 +79,6 @@ Body:
 | message     | string | Success message                           |
 | bridge_slug | string | The bridge slug the provider disconnected from |
 
-### Error Response (400 — Bad Request)
-
-```json
-{
-  "status_code": 400,
-  "message": "Failed to disconnect provider.",
-  "errors": "Phone number is not connected to this bridge"
-}
-```
-
-### Error Response (404 — Not Found)
-
-```json
-{
-  "status_code": 404,
-  "message": "Bridge not found."
-}
-```
-
----
 
 ## Common Error Codes
 

@@ -4,6 +4,40 @@ description: 'Retrieve details of a specific telephony bridge using its slug'
 openapi: 'GET /api/v2/platform/telephony/bridges/{slug}/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "status_code": 200,
+  "message": "Bridge fetched successfully.",
+  "data": {
+    "id": 314,
+    "name": "Sales Bridge",
+    "slug": "sales-bridge-001",
+    "numbers": [
+      {
+        "id": 501,
+        "number_id": 25,
+        "number": "+1234567890",
+        "state": "ASSIGNED",
+        "active": true,
+        "status": "active"
+      }
+    ]
+  }
+}
+```
+
+```json Error Response (404)
+{
+  "status_code": 404,
+  "message": "Bridge not found.",
+  "errors": "No bridge exists with the provided slug"
+}
+```
+
+</ResponseExample>
+
 # Get Bridge by Slug
 
 Retrieve full details of a specific telephony bridge using its unique slug identifier, including its assigned phone numbers and current configuration.
@@ -11,16 +45,6 @@ Retrieve full details of a specific telephony bridge using its unique slug ident
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
-
----
-
-## Get Bridge by Slug
-
-Retrieve the complete details of a single telephony bridge using its slug.
-
-```http
-GET /api/v2/platform/telephony/bridges/{slug}/
-```
 
 ### Path Parameters
 
@@ -43,39 +67,6 @@ You can get the bridge `slug` by hitting the [Get All Bridges](/api/telephony/ge
 You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
 </Note>
 
-### Example Request
-
-```http
-GET /api/v2/platform/telephony/bridges/sales-bridge-001/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-```
-
-### Success Response (200)
-
-```json
-{
-  "status_code": 200,
-  "message": "Bridge fetched successfully.",
-  "data": {
-    "id": 314,
-    "name": "Sales Bridge",
-    "slug": "sales-bridge-001",
-    "numbers": [
-      {
-        "id": 501,
-        "number_id": 25,
-        "number": "+1234567890",
-        "state": "ASSIGNED",
-        "active": true,
-        "channels_count": 1,
-        "status": "active"
-      }
-    ]
-  }
-}
-```
 
 ### Response Fields
 
@@ -106,26 +97,6 @@ Headers:
 | channels_count | integer | Number of active channels  |
 | status         | string  | Number status: `active`, `inactive` |
 
-### Error Response (404 — Not Found)
-
-```json
-{
-  "status_code": 404,
-  "message": "Bridge not found.",
-  "errors": "No bridge exists with the provided slug"
-}
-```
-
-### Error Response (401 — Unauthorized)
-
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
-
----
 
 ## Common Error Codes
 

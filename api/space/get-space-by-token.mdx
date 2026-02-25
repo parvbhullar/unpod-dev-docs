@@ -4,57 +4,9 @@ description: 'Retrieve configuration and metadata of a specific space by its tok
 openapi: 'GET /api/v2/platform/spaces/{space_token}/'
 ---
 
-# Get Space by Token
+<ResponseExample>
 
-Retrieve configuration and metadata of a specific space identified by its token. This allows you to view a space's current setup, properties, and organization context.
-
-<Note>
-**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
-</Note>
-
----
-
-## Get Space by Token
-
-Retrieve the full details of a single space using its unique public token.
-
-```http
-GET /api/v2/platform/spaces/{space_token}/
-```
-
-### Path Parameters
-
-| Name        | Type   | Required | Description                        |
-|-------------|--------|----------|------------------------------------|
-| space_token | string | Yes      | Public token identifying the space |
-
-<Note>
-You can get the `space_token` by hitting the [Get All Spaces](/api/space/get-all-spaces) API. The `token` field in the response is your Space Token.
-</Note>
-
-### Headers
-
-| Name          | Type   | Required | Description                     |
-|---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | API Key format: `Token <token>` |
-| Org-Handle    | string | Yes      | Organization domain handle      |
-
-<Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
-</Note>
-
-### Example Request
-
-```http
-GET /api/v2/platform/spaces/8KZRTQP7BNW5XEDLORYUHMJC/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-```
-
-### Success Response (200)
-
-```json
+```json Success Response (200)
 {
   "status_code": 200,
   "message": "Space fetched successfully",
@@ -67,6 +19,38 @@ Headers:
   }
 }
 ```
+
+```json Error Response (404)
+{
+  "status_code": 404,
+  "message": "Space not found."
+}
+```
+
+```json Error Response (401)
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+</ResponseExample>
+
+# Get Space by Token
+
+Retrieve configuration and metadata of a specific space identified by its token. This allows you to view a space's current setup, properties, and organization context.
+
+
+---
+
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
 
 ### Response Fields
 
@@ -86,25 +70,6 @@ Headers:
 | agent_handle | string | Handle of the agent assigned to this space        |
 | created_at   | string | Space creation timestamp (ISO 8601)               |
 
-### Error Response (401 — Unauthorized)
-
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
-
-### Error Response (404 — Not Found)
-
-```json
-{
-  "status_code": 404,
-  "message": "Space not found."
-}
-```
-
----
 
 ## Common Error Codes
 

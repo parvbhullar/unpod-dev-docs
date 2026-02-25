@@ -4,6 +4,36 @@ description: 'Update an existing telephony bridge configuration'
 openapi: 'PATCH /api/v2/platform/telephony/bridges/{slug}/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "status_code": 200,
+  "message": "Bridge updated successfully.",
+  "data": {
+    "id": 314,
+    "name": "Sales Bridge — Updated",
+    "slug": "sales-bridge-001",
+    "numbers": [
+      {
+        "id": 501,
+        "number": "+1234567890",
+        "status": "active"
+      }
+    ]
+  }
+}
+```
+
+```json Error Response (404)
+{
+  "status_code": 404,
+  "message": "Bridge not found."
+}
+```
+
+</ResponseExample>
+
 # Update Bridge
 
 Partially update an existing telephony bridge's configuration. Currently supports updating the bridge's display name.
@@ -11,16 +41,6 @@ Partially update an existing telephony bridge's configuration. Currently support
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
-
----
-
-## Update Telephony Bridge
-
-Update the configuration of an existing telephony bridge using its slug.
-
-```http
-PATCH /api/v2/platform/telephony/bridges/{slug}/
-```
 
 ### Path Parameters
 
@@ -48,41 +68,6 @@ All fields are optional — include only the fields you wish to update.
 |-------|--------|----------|---------------------------------|
 | name  | string | No       | Updated display name for the bridge |
 
-### Example Request
-
-```http
-PATCH /api/v2/platform/telephony/bridges/sales-bridge-001/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-  Content-Type: application/json
-
-Body:
-{
-  "name": "Sales Bridge — Updated"
-}
-```
-
-### Success Response (200)
-
-```json
-{
-  "status_code": 200,
-  "message": "Bridge updated successfully.",
-  "data": {
-    "id": 314,
-    "name": "Sales Bridge — Updated",
-    "slug": "sales-bridge-001",
-    "numbers": [
-      {
-        "id": 501,
-        "number": "+1234567890",
-        "status": "active"
-      }
-    ]
-  }
-}
-```
 
 ### Response Fields
 
@@ -101,26 +86,6 @@ Body:
 | slug    | string  | Unique bridge slug identifier   |
 | numbers | array   | List of assigned phone numbers  |
 
-### Error Response (400 — Bad Request)
-
-```json
-{
-  "status_code": 400,
-  "message": "Bridge update failed.",
-  "errors": "Invalid field value"
-}
-```
-
-### Error Response (404 — Not Found)
-
-```json
-{
-  "status_code": 404,
-  "message": "Bridge not found."
-}
-```
-
----
 
 ## Common Error Codes
 

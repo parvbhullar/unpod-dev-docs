@@ -4,6 +4,31 @@ description: 'Create a new telephony bridge for call routing'
 openapi: 'POST /api/v2/platform/telephony/bridges/'
 ---
 
+<ResponseExample>
+
+```json Success Response (201)
+{
+  "status_code": 201,
+  "message": "Bridge created successfully.",
+  "data": {
+    "id": 314,
+    "name": "Sales Bridge",
+    "slug": "sales-bridge-001",
+    "created_at": "2026-02-07T10:00:00Z"
+  }
+}
+```
+
+```json Error Response (400)
+{
+  "status_code": 400,
+  "message": "Bridge creation failed.",
+  "errors": "Slug already exists or name is required"
+}
+```
+
+</ResponseExample>
+
 # Create Bridge
 
 Create a new telephony bridge for call routing. Bridges are the core routing entities that link telephony providers and phone numbers to your Voice AI agents.
@@ -13,14 +38,6 @@ Create a new telephony bridge for call routing. Bridges are the core routing ent
 </Note>
 
 ---
-
-## Create Telephony Bridge
-
-Create a new telephony bridge with a name and unique slug.
-
-```http
-POST /api/v2/platform/telephony/bridges/
-```
 
 ### Headers
 
@@ -41,36 +58,6 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 | name  | string | Yes      | Display name for the bridge                 |
 | slug  | string | Yes      | URL-friendly unique identifier for the bridge |
 
-### Example Request
-
-```http
-POST /api/v2/platform/telephony/bridges/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-  Content-Type: application/json
-
-Body:
-{
-  "name": "Sales Bridge",
-  "slug": "sales-bridge-001"
-}
-```
-
-### Success Response (201)
-
-```json
-{
-  "status_code": 201,
-  "message": "Bridge created successfully.",
-  "data": {
-    "id": 314,
-    "name": "Sales Bridge",
-    "slug": "sales-bridge-001",
-    "created_at": "2026-02-07T10:00:00Z"
-  }
-}
-```
 
 ### Response Fields
 
@@ -88,25 +75,6 @@ Body:
 | name       | string  | Bridge display name                 |
 | slug       | string  | Unique bridge slug identifier       |
 | created_at | string  | Bridge creation timestamp (ISO 8601) |
-
-### Error Response (400 — Bad Request)
-
-```json
-{
-  "status_code": 400,
-  "message": "Bridge creation failed.",
-  "errors": "Slug already exists or name is required"
-}
-```
-
-### Error Response (401 — Unauthorized)
-
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
 
 ---
 

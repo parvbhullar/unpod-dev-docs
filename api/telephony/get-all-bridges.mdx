@@ -4,47 +4,9 @@ description: 'Retrieve a list of all telephony bridges in the system'
 openapi: 'GET /api/v2/platform/telephony/bridges/'
 ---
 
-# Get All Bridges
+<ResponseExample>
 
-Retrieve a list of all telephony bridges in your organization, including their IDs, names, slugs, associated providers, and linked phone numbers for monitoring and call-routing management.
-
-<Note>
-**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
-</Note>
-
----
-
-## Get All Telephony Bridges
-
-Retrieve all telephony bridges configured in your organization.
-
-```http
-GET /api/v2/platform/telephony/bridges/
-```
-
-### Headers
-
-| Name          | Type   | Required | Description                     |
-|---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | API Key format: `Token <token>` |
-| Org-Handle    | string | Yes      | Organization domain handle      |
-
-<Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
-</Note>
-
-### Example Request
-
-```http
-GET /api/v2/platform/telephony/bridges/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-```
-
-### Success Response (200)
-
-```json
+```json Success Response (200)
 {
   "count": 6,
   "status_code": 200,
@@ -62,17 +24,39 @@ Headers:
           "status": "active"
         }
       ]
-    },
-    {
-      "id": 315,
-      "name": "Support Bridge",
-      "slug": "support-bridge-002",
-      "provider": null,
-      "numbers": []
     }
   ]
 }
 ```
+
+```json Error Response (401)
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+</ResponseExample>
+
+# Get All Bridges
+
+Retrieve a list of all telephony bridges in your organization, including their IDs, names, slugs, associated providers, and linked phone numbers for monitoring and call-routing management.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
 
 ### Response Fields
 
@@ -101,16 +85,6 @@ Headers:
 | number | string  | Phone number (E.164 format) |
 | status | string  | Number status: `active`, `inactive` |
 
-### Error Response (401 — Unauthorized)
-
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
-
----
 
 ## Common Error Codes
 

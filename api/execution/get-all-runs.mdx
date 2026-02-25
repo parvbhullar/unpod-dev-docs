@@ -4,6 +4,35 @@ description: 'Retrieve all batch executions associated with a specific space'
 openapi: 'GET /api/v2/platform/spaces/{space_token}/runs/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "count": 9,
+  "status_code": 200,
+  "message": "Runs Fetched Successfully",
+  "data": [
+    {
+      "run_id": "Recac64fe03e911f1878d43cd8a99e069",
+      "collection_ref": "collection_data_SA2W8R6NZRK6C9PO3JSL1J85",
+      "run_mode": "prefect",
+      "status": "completed",
+      "created": "2026-02-07T05:57:45",
+      "modified": "2026-02-07T05:57:45"
+    }
+  ]
+}
+```
+
+```json Error Response (206)
+{
+  "message": "Error fetching runs",
+  "errors": "Detailed error description"
+}
+```
+
+</ResponseExample>
+
 # Get All Runs in a Space
 
 Retrieve all runs associated with a specific space. A run represents a batch execution — a group of tasks triggered together within a space. This endpoint returns run details including run ID, status, timestamps, and associated collection metadata.
@@ -13,14 +42,6 @@ Retrieve all runs associated with a specific space. A run represents a batch exe
 </Note>
 
 ---
-
-## Get All Runs in a Space
-
-Retrieve all batch execution runs within a specific space.
-
-```http
-GET /api/v2/platform/spaces/{space_token}/runs/
-```
 
 ### Path Parameters
 
@@ -39,42 +60,6 @@ You can get the `space_token` by hitting the [Get All Spaces](/api/space/get-all
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Content-Type  | string | Yes      | `application/json`              |
 
-### Example Request
-
-```http
-GET /api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/runs/
-Headers:
-  Authorization: Token your-api-token
-  Content-Type: application/json
-```
-
-### Success Response (200)
-
-```json
-{
-  "count": 9,
-  "status_code": 200,
-  "message": "Runs Fetched Successfully",
-  "data": [
-    {
-      "run_id": "Recac64fe03e911f1878d43cd8a99e069",
-      "collection_ref": "collection_data_SA2W8R6NZRK6C9PO3JSL1J85",
-      "run_mode": "prefect",
-      "status": "completed",
-      "created": "2026-02-07T05:57:45",
-      "modified": "2026-02-07T05:57:45"
-    },
-    {
-      "run_id": "R6b653894fe9411f0878d43cd8a99e069",
-      "collection_ref": "collection_data_SA2W8R6NZRK6C9PO3JSL1J85",
-      "run_mode": "prefect",
-      "status": "completed",
-      "created": "2026-01-31T11:03:05",
-      "modified": "2026-01-31T11:03:05"
-    }
-  ]
-}
-```
 
 ### Response Fields
 
@@ -96,16 +81,6 @@ Headers:
 | created        | string | Run creation timestamp                       |
 | modified       | string | Last modified timestamp                      |
 
-### Error Response (206 — Fetch Failed)
-
-```json
-{
-  "message": "Error fetching runs",
-  "errors": "Detailed error description"
-}
-```
-
----
 
 ## Common Error Codes
 

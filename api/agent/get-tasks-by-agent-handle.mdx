@@ -4,6 +4,33 @@ description: 'Retrieve all tasks assigned to a specific agent using its handle'
 openapi: 'GET /api/v2/platform/agents/{agent_handle}/tasks/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "count": 1,
+  "status_code": 200,
+  "message": "Tasks Fetched Successfully",
+  "data": [
+    {
+      "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
+      "run_id": "R8ff2ccdefe9a11f0878d43cd8a99e069",
+      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+      "status": "completed",
+      "execution_type": "call"
+    }
+  ]
+}
+```
+
+```json Error Response (404)
+{
+  "message": "Agent not found"
+}
+```
+
+</ResponseExample>
+
 # Get Tasks by Agent Handle
 
 Fetch all tasks assigned to a specific agent/pilot using their handle. This returns full task metadata including user info, input payloads, call output, transcripts, and execution details.
@@ -11,16 +38,6 @@ Fetch all tasks assigned to a specific agent/pilot using their handle. This retu
 <Note>
 **Prerequisites:** Make sure you have your API Token ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
-
----
-
-## Get Tasks by Agent Handle
-
-Retrieve all tasks assigned to a specific agent using its handle identifier.
-
-```http
-GET /api/v2/platform/agents/{agent_handle}/tasks/
-```
 
 ### Path Parameters
 
@@ -39,92 +56,7 @@ You can get the `agent_handle` by hitting the [Get All Agents](/api/agent/get-al
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Content-Type  | string | Yes      | `application/json`              |
 
-### Example Request
-
-```http
-GET /api/v2/platform/agents/space-agent-8qmk42nslp91wrh3dz7btxc4/tasks/
-Headers:
-  Authorization: Token your-api-token
-  Content-Type: application/json
 ```
-
-### Success Response (200)
-
-```json
-{
-  "count": 1,
-  "status_code": 200,
-  "message": "Tasks Fetched Successfully",
-  "data": [
-    {
-      "_id": "697debb84c27faa892bfa0cc",
-      "thread_id": "675272289779974401",
-      "user_info": {
-        "email": "user@example.com",
-        "full_name": "John Doe"
-      },
-      "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
-      "run_id": "R8ff2ccdefe9a11f0878d43cd8a99e069",
-      "task": {
-        "objective": "Call the lead and discuss project requirements"
-      },
-      "input": {
-        "name": "Bhaishab",
-        "email": "bhaishab@example.com",
-        "contact_number": "8109689090",
-        "alternate_number": "",
-        "occupation": "Developer",
-        "company_name": "TechCorp",
-        "address": "123/456 Main Street",
-        "about": "Software Developer",
-        "context": "Follow up call",
-        "labels": ["Interested"],
-        "document_id": "6902fb5840a736e125e80c"
-      },
-      "output": {
-        "call_id": "675272289779974401",
-        "call_end_reason": null,
-        "start_time": "2026-01-31 11:47:38.067021",
-        "end_time": "2026-01-31 11:48:11.385745",
-        "assistant_number": "7890789090",
-        "call_summary": null,
-        "duration": 33,
-        "recording_url": "https://cdr-storage-recs.s3.ap-south-1.amazonaws.com/media/p79974498.ogg",
-        "transcript": [
-          {
-            "role": "user",
-            "content": "Hello?",
-            "timestamp": "2026-01-31 11:47:46.675013"
-          },
-          {
-            "role": "assistant",
-            "content": "Hi! This is Alex from TechSupport. Am I speaking with Bhaishab?",
-            "timestamp": "2026-01-31 11:47:54.259815"
-          }
-        ],
-        "post_call_data": {
-          "summary": {
-            "status": "Connected",
-            "summary": "The call connected successfully and the agent introduced themselves.",
-            "callback_datetime": "N/A"
-          }
-        },
-        "call_type": "outbound",
-        "call_status": "completed"
-      },
-      "attachments": [],
-      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
-      "status": "completed",
-      "execution_type": "call",
-      "ref_id": "6902fb5840a736e125e80c",
-      "failure_count": 0,
-      "last_failure_reason": null,
-      "retry_attempt": 0,
-      "last_status_change": "2026-01-31T11:47:31.198984",
-      "scheduled_timestamp": null
-    }
-  ]
-}
 ```
 
 ### Response Fields
@@ -176,24 +108,6 @@ Headers:
 | call_type        | string | Direction of call: `outbound`, `inbound` |
 | call_status      | string | Status of the call: `completed`, etc.    |
 
-### Error Response (206 — Tasks Fetch Failed)
-
-```json
-{
-  "message": "Error fetching tasks",
-  "errors": "Detailed error description"
-}
-```
-
-### Error Response (404 — Agent Not Found)
-
-```json
-{
-  "message": "Agent not found"
-}
-```
-
----
 
 ## Common Error Codes
 

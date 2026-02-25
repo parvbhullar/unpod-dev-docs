@@ -4,6 +4,30 @@ description: 'Retrieve a specific telephony provider configuration by its ID'
 openapi: 'GET /api/v2/platform/telephony/providers-configurations/{id}/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "status_code": 200,
+  "message": "Provider configuration fetched successfully.",
+  "data": {
+    "id": 42,
+    "provider": "twilio",
+    "account_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "created_at": "2026-02-07T10:00:00Z"
+  }
+}
+```
+
+```json Error Response (404)
+{
+  "status_code": 404,
+  "message": "Provider configuration not found."
+}
+```
+
+</ResponseExample>
+
 # Get Provider Configuration by ID
 
 Retrieve a specific telephony provider configuration by its unique integer identifier. Use this to inspect the details of a particular provider setup.
@@ -12,15 +36,6 @@ Retrieve a specific telephony provider configuration by its unique integer ident
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
 
----
-
-## Get Provider Configuration by ID
-
-Retrieve the details of a single provider configuration using its ID.
-
-```http
-GET /api/v2/platform/telephony/providers-configurations/{id}/
-```
 
 ### Path Parameters
 
@@ -43,29 +58,6 @@ You can get the provider configuration `id` by hitting the [Get All Providers](/
 You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
 </Note>
 
-### Example Request
-
-```http
-GET /api/v2/platform/telephony/providers-configurations/42/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-```
-
-### Success Response (200)
-
-```json
-{
-  "status_code": 200,
-  "message": "Provider configuration fetched successfully.",
-  "data": {
-    "id": 42,
-    "provider": "twilio",
-    "account_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "created_at": "2026-02-07T10:00:00Z"
-  }
-}
-```
 
 ### Response Fields
 
@@ -84,25 +76,6 @@ Headers:
 | account_sid | string  | Account SID for the provider             |
 | created_at  | string  | Configuration creation timestamp         |
 
-### Error Response (404 — Not Found)
-
-```json
-{
-  "status_code": 404,
-  "message": "Provider configuration not found."
-}
-```
-
-### Error Response (401 — Unauthorized)
-
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
-
----
 
 ## Common Error Codes
 

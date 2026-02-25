@@ -4,47 +4,9 @@ description: 'Retrieve list of all telephony numbers'
 openapi: 'GET /api/v2/platform/telephony/numbers/'
 ---
 
-# Get Telephony Numbers
+<ResponseExample>
 
-Retrieve a list of all telephony numbers associated with your organization. This includes all numbers from connected providers, along with their assignment status, bridge associations, and current activity state.
-
-<Note>
-**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
-</Note>
-
----
-
-## Get Telephony Numbers
-
-Retrieve all telephony numbers available in your organization.
-
-```http
-GET /api/v2/platform/telephony/numbers/
-```
-
-### Headers
-
-| Name          | Type   | Required | Description                     |
-|---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | API Key format: `Token <token>` |
-| Org-Handle    | string | Yes      | Organization domain handle      |
-
-<Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
-</Note>
-
-### Example Request
-
-```http
-GET /api/v2/platform/telephony/numbers/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-```
-
-### Success Response (200)
-
-```json
+```json Success Response (200)
 {
   "status_code": 200,
   "message": "Numbers fetched successfully.",
@@ -62,17 +24,41 @@ Headers:
       "provider": "twilio",
       "bridge_slug": null,
       "status": "inactive"
-    },
-    {
-      "id": 503,
-      "number": "+911234567890",
-      "provider": "plivo",
-      "bridge_slug": "support-bridge-002",
-      "status": "active"
     }
   ]
 }
 ```
+
+```json Error Response (401)
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+</ResponseExample>
+
+# Get Telephony Numbers
+
+Retrieve a list of all telephony numbers associated with your organization. This includes all numbers from connected providers, along with their assignment status, bridge associations, and current activity state.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+
 
 ### Response Fields
 
@@ -92,25 +78,6 @@ Headers:
 | bridge_slug | string  | Slug of the bridge this number is assigned to (null if unassigned) |
 | status      | string  | Number status: `active`, `inactive`                  |
 
-### Error Response (401 — Unauthorized)
-
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
-
-### Error Response (403 — Forbidden)
-
-```json
-{
-  "status_code": 403,
-  "message": "Invalid organization handle."
-}
-```
-
----
 
 ## Common Error Codes
 

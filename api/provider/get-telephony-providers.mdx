@@ -4,6 +4,36 @@ description: 'Retrieve a list of all available telephony providers in the system
 openapi: 'GET /api/v2/platform/telephony/providers/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "status_code": 200,
+  "message": "Voice infra providers fetched successfully.",
+  "data": [
+    {
+      "id": 1,
+      "name": "Twilio",
+      "slug": "twilio"
+    },
+    {
+      "id": 2,
+      "name": "Plivo",
+      "slug": "plivo"
+    }
+  ]
+}
+```
+
+```json Error Response (401)
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+</ResponseExample>
+
 # Get Telephony Providers
 
 Retrieve a list of all available telephony providers in the system. These are the supported providers that you can configure credentials for using the Provider Configurations endpoints.
@@ -33,41 +63,6 @@ GET /api/v2/platform/telephony/providers/
 You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
 </Note>
 
-### Example Request
-
-```http
-GET /api/v2/platform/telephony/providers/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-```
-
-### Success Response (200)
-
-```json
-{
-  "status_code": 200,
-  "message": "Voice infra providers fetched successfully.",
-  "data": [
-    {
-      "id": 1,
-      "name": "Twilio",
-      "slug": "twilio"
-    },
-    {
-      "id": 2,
-      "name": "Plivo",
-      "slug": "plivo"
-    },
-    {
-      "id": 3,
-      "name": "Exotel",
-      "slug": "exotel"
-    }
-  ]
-}
-```
-
 ### Response Fields
 
 | Field       | Type    | Description               |
@@ -84,16 +79,7 @@ Headers:
 | name  | string  | Provider display name                               |
 | slug  | string  | URL-friendly provider identifier used in config API |
 
-### Error Response (401 — Unauthorized)
 
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
-
----
 
 ## Common Error Codes
 

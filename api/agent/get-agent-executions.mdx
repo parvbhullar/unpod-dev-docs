@@ -4,6 +4,34 @@ description: 'Retrieve all executions (call runs) for a specific agent'
 openapi: 'GET /api/v2/platform/agents/{agent_handle}/executions/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "count": 12,
+  "status_code": 200,
+  "message": "Executions fetched successfully",
+  "data": [
+    {
+      "run_id": "Recac64fe03e911f1878d43cd8a99e069",
+      "status": "completed",
+      "total_tasks": 25,
+      "completed_tasks": 23,
+      "created": "2026-02-07T05:57:45Z"
+    }
+  ]
+}
+```
+
+```json Error Response (404)
+{
+  "status_code": 404,
+  "message": "Agent not found."
+}
+```
+
+</ResponseExample>
+
 # Get All Agent Executions
 
 Retrieve all execution runs associated with a specific agent. This endpoint provides a summary of each run including status, task counts, and timestamps — useful for monitoring agent performance and execution history.
@@ -11,16 +39,6 @@ Retrieve all execution runs associated with a specific agent. This endpoint prov
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
-
----
-
-## Get All Agent Executions
-
-Retrieve all executions (batch runs) for a specific agent using its handle.
-
-```http
-GET /api/v2/platform/agents/{agent_handle}/executions/
-```
 
 ### Path Parameters
 
@@ -43,40 +61,6 @@ You can get the `agent_handle` by hitting the [Get All Agents](/api/agent/get-al
 You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
 </Note>
 
-### Example Request
-
-```http
-GET /api/v2/platform/agents/space-agent-8qmk42nslp91wrh3dz7btxc4/executions/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-```
-
-### Success Response (200)
-
-```json
-{
-  "count": 12,
-  "status_code": 200,
-  "message": "Executions fetched successfully",
-  "data": [
-    {
-      "run_id": "Recac64fe03e911f1878d43cd8a99e069",
-      "status": "completed",
-      "total_tasks": 25,
-      "completed_tasks": 23,
-      "created": "2026-02-07T05:57:45Z"
-    },
-    {
-      "run_id": "R6b653894fe9411f0878d43cd8a99e069",
-      "status": "completed",
-      "total_tasks": 10,
-      "completed_tasks": 10,
-      "created": "2026-01-31T11:03:05Z"
-    }
-  ]
-}
-```
 
 ### Response Fields
 
@@ -97,25 +81,6 @@ Headers:
 | completed_tasks | integer | Number of successfully completed tasks               |
 | created         | string  | Run creation timestamp (ISO 8601)                    |
 
-### Error Response (401 — Unauthorized)
-
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
-
-### Error Response (404 — Agent Not Found)
-
-```json
-{
-  "status_code": 404,
-  "message": "Agent not found."
-}
-```
-
----
 
 ## Common Error Codes
 

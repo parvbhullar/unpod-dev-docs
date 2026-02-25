@@ -4,6 +4,31 @@ description: 'Create a new task in a space to trigger a Voice AI outbound call'
 openapi: 'POST /api/v2/platform/spaces/{space_token}/tasks/create/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "status_code": 200,
+  "message": "Task Created Successfully",
+  "data": {
+    "run_id": "R74802366fe9011f0878d43cd8a99e069",
+    "task_ids": [
+      "T74802367fe9011f0878d43cd8a99e069"
+    ],
+    "status": "pending"
+  }
+}
+```
+
+```json Error Response (206)
+{
+  "message": "Task creation failed",
+  "errors": "Detailed error description"
+}
+```
+
+</ResponseExample>
+
 # Create a Task — Make Voice AI Call
 
 Create a new task inside a given space using the space's public token. You can assign the task to a pilot/agent, attach multiple documents (contacts), provide additional context, and schedule the execution.
@@ -11,16 +36,6 @@ Create a new task inside a given space using the space's public token. You can a
 <Note>
 **Prerequisites:** Make sure you have your API Token, Space Token, and Agent Handle ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
-
----
-
-## Create a Task in a Space
-
-Create one or more Voice AI call tasks for a batch of contacts.
-
-```http
-POST /api/v2/platform/spaces/{space_token}/tasks/create/
-```
 
 ### Path Parameters
 
@@ -66,56 +81,6 @@ You can get the `space_token` by hitting the [Get All Spaces](/api/space/get-all
 | description      | string | No       | Document description                   |
 | document_id      | string | No       | Unique document identifier             |
 
-### Example Request
-
-```http
-POST /api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/create/
-Headers:
-  Authorization: Token your-api-token
-  Content-Type: application/json
-
-Body:
-{
-  "pilot": "space-agent-f1o3qjm1y7q1avvuynv4vprb1",
-  "documents": [
-    {
-      "name": "John Doe",
-      "email": "john@example.com",
-      "contact_number": "1234567890",
-      "alternate_number": "9876543210",
-      "occupation": "Developer",
-      "company_name": "TechCorp",
-      "address": "123/456 Main Street",
-      "about": "Software Developer",
-      "context": "Follow up on proposal",
-      "labels": ["Interested"],
-      "title": "Lead Document",
-      "description": "Sales lead from Q1",
-      "document_id": "6902fb5840a736e125e80ebc"
-    }
-  ],
-  "context": "Call the lead and discuss the project requirements.",
-  "schedule": {
-    "type": "now"
-  }
-}
-```
-
-### Success Response (200)
-
-```json
-{
-  "status_code": 200,
-  "message": "Task Created Successfully",
-  "data": {
-    "run_id": "R74802366fe9011f0878d43cd8a99e069",
-    "task_ids": [
-      "T74802367fe9011f0878d43cd8a99e069"
-    ],
-    "status": "pending"
-  }
-}
-```
 
 ### Response Fields
 
@@ -132,17 +97,6 @@ Body:
 | run_id   | string | Created run identifier            |
 | task_ids | array  | Array of created task identifiers |
 | status   | string | Task status (initially `pending`) |
-
-### Error Response (206 — Validation / Creation Failed)
-
-```json
-{
-  "message": "Task creation failed",
-  "errors": "Detailed error description"
-}
-```
-
----
 
 ## Common Error Codes
 

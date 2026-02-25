@@ -4,47 +4,9 @@ description: 'Retrieve details of all created spaces in your organization'
 openapi: 'GET /api/v2/platform/spaces/'
 ---
 
-# Get All Spaces
+<ResponseExample>
 
-Retrieve details of all created spaces, allowing you to view and manage workspace/group entities in your organization.
-
-<Note>
-**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
-</Note>
-
----
-
-## Get All Spaces
-
-Retrieve a list of all spaces within your organization. Spaces are containers that organize your tasks, runs, and data collections.
-
-```http
-GET /api/v2/platform/spaces/
-```
-
-### Headers
-
-| Name          | Type   | Required | Description                     |
-|---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | API Key format: `Token <token>` |
-| Org-Handle    | string | Yes      | Organization domain handle      |
-
-<Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
-</Note>
-
-### Example Request
-
-```http
-GET /api/v2/platform/spaces/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-```
-
-### Success Response (200)
-
-```json
+```json Success Response (200)
 {
   "count": 207,
   "status_code": 200,
@@ -56,17 +18,33 @@ Headers:
       "token": "8KZAMRAHSXXXXXXMAYNASMJC",
       "agent_handle": "space-agent-8qmk42nslp91wrh3dz7btxc4",
       "created_at": "2026-01-10T08:00:00Z"
-    },
-    {
-      "id": "sp_002",
-      "name": "Support Follow-up",
-      "token": "9LZBNSITKYYYYYOBZNATNKJD",
-      "agent_handle": "space-agent-f1o3qjm1y7q1avvuynv4vprb1",
-      "created_at": "2026-01-15T09:30:00Z"
     }
   ]
 }
 ```
+
+```json Error Response (401)
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+</ResponseExample>
+
+---
+
+## Get All Spaces
+
+Retrieve a list of all spaces within your organization. Spaces are containers that organize your tasks, runs, and data collections.
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+| Org-Handle    | string | Yes      | Organization domain handle      |
+
 
 ### Response Fields
 
@@ -87,14 +65,6 @@ Headers:
 | agent_handle | string | Handle of the agent assigned to the space    |
 | created_at   | string | Space creation timestamp (ISO 8601)          |
 
-### Error Response (401 — Unauthorized)
-
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
 
 ---
 

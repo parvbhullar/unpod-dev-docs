@@ -4,6 +4,37 @@ description: 'Retrieve call analytics and task status for your organization'
 openapi: 'GET /api/v2/platform/organisation/analytics/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "status_code": 200,
+  "message": "Analytics fetched successfully",
+  "data": {
+    "total_calls": 1250,
+    "completed_calls": 987,
+    "failed_calls": 143,
+    "avg_duration_seconds": 145.3,
+    "total_tasks": 1350,
+    "task_status_breakdown": {
+      "pending": 45,
+      "running": 12,
+      "completed": 1180,
+      "failed": 113
+    }
+  }
+}
+```
+
+```json Error Response (401)
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+</ResponseExample>
+
 # Get Analytics
 
 Retrieve call analytics and task status for your organization. Provides insights into call outcomes, success rates, average durations, and task execution summaries. Optionally filter by a specific space using the `space_token` query parameter.
@@ -11,16 +42,6 @@ Retrieve call analytics and task status for your organization. Provides insights
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
-
----
-
-## Get Organization Analytics
-
-Retrieve aggregated call and task analytics for your organization.
-
-```http
-GET /api/v2/platform/organisation/analytics/
-```
 
 ### Headers
 
@@ -43,45 +64,6 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 If `space_token` is provided, analytics are scoped to that space only. If not provided, analytics aggregate across all contact spaces in the organization.
 </Note>
 
-### Example Request
-
-```http
-GET /api/v2/platform/organisation/analytics/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-```
-
-### Example Request with Space Filter
-
-```http
-GET /api/v2/platform/organisation/analytics/?space_token=8KZAMRAHSXXXXXXMAYNASMJC
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-```
-
-### Success Response (200)
-
-```json
-{
-  "status_code": 200,
-  "message": "Analytics fetched successfully",
-  "data": {
-    "total_calls": 1250,
-    "completed_calls": 987,
-    "failed_calls": 143,
-    "avg_duration_seconds": 145.3,
-    "total_tasks": 1350,
-    "task_status_breakdown": {
-      "pending": 45,
-      "running": 12,
-      "completed": 1180,
-      "failed": 113
-    }
-  }
-}
-```
 
 ### Response Fields
 
@@ -111,23 +93,7 @@ Headers:
 | completed | integer | Number of successfully completed tasks |
 | failed    | integer | Number of failed tasks              |
 
-### Error Response (401 — Unauthorized)
 
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
-
-### Error Response (404 — Not Found)
-
-```json
-{
-  "status_code": 404,
-  "message": "Organization not found."
-}
-```
 
 ---
 

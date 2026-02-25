@@ -4,6 +4,38 @@ description: 'Retrieve call history logs with filtering and pagination support'
 openapi: 'GET /api/v2/platform/call-logs/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "count": 150,
+  "status_code": 200,
+  "message": "Call logs fetched successfully",
+  "data": [
+    {
+      "source_number": "+911234567890",
+      "destination_number": "+919876543210",
+      "call_type": "outbound",
+      "call_status": "completed",
+      "creation_time": "2026-02-07T05:57:00Z",
+      "start_time": "2026-02-07T05:57:45Z",
+      "end_time": "2026-02-07T06:01:12Z",
+      "call_duration": 207,
+      "end_reason": "caller_hangup"
+    }
+  ]
+}
+```
+
+```json Error Response (401)
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+</ResponseExample>
+
 # Get Call Logs
 
 Retrieve call history logs for your organization with support for filtering by date range, call type, call status, and pagination for efficient data retrieval.
@@ -13,14 +45,6 @@ Retrieve call history logs for your organization with support for filtering by d
 </Note>
 
 ---
-
-## Get Call Logs
-
-Retrieve a paginated list of call logs with optional filtering parameters.
-
-```http
-GET /api/v2/platform/call-logs/
-```
 
 ### Headers
 
@@ -44,48 +68,7 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 | call_type   | string  | No      | Filter by call direction: `inbound` or `outbound`    |
 | call_status | string  | No      | Filter by status: `completed`, `missed`, or `failed` |
 
-### Example Request
 
-```http
-GET /api/v2/platform/call-logs/?page=1&page_size=20&call_type=outbound&call_status=completed
-Headers:
-  Org-Handle: your-org-handle
-  Authorization: Token your-api-token
-```
-
-### Success Response (200)
-
-```json
-{
-  "count": 150,
-  "status_code": 200,
-  "message": "Call logs fetched successfully",
-  "data": [
-    {
-      "source_number": "+911234567890",
-      "destination_number": "+919876543210",
-      "call_type": "outbound",
-      "call_status": "completed",
-      "creation_time": "2026-02-07T05:57:00Z",
-      "start_time": "2026-02-07T05:57:45Z",
-      "end_time": "2026-02-07T06:01:12Z",
-      "call_duration": 207,
-      "end_reason": "caller_hangup"
-    },
-    {
-      "source_number": "+911234567890",
-      "destination_number": "+910987654321",
-      "call_type": "outbound",
-      "call_status": "missed",
-      "creation_time": "2026-02-07T06:10:00Z",
-      "start_time": null,
-      "end_time": null,
-      "call_duration": 0,
-      "end_reason": "no_answer"
-    }
-  ]
-}
-```
 
 ### Response Fields
 
@@ -110,23 +93,7 @@ Headers:
 | call_duration      | integer | Duration of the call in seconds                        |
 | end_reason         | string  | Reason the call ended (e.g., `caller_hangup`, `no_answer`) |
 
-### Error Response (401 — Unauthorized)
 
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
-
-### Error Response (403 — Forbidden)
-
-```json
-{
-  "status_code": 403,
-  "message": "Invalid organization handle."
-}
-```
 
 ---
 

@@ -4,6 +4,30 @@ description: 'Connect a provider credential to a telephony bridge to add a numbe
 openapi: 'POST /api/v2/platform/telephony/bridges/{slug}/connect-provider/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "status_code": 200,
+  "message": "Provider connected to bridge successfully.",
+  "data": {
+    "message": "Provider connected successfully",
+    "bridge_slug": "sales-bridge-001",
+    "phone_number": "+1234567890"
+  }
+}
+```
+
+```json Error Response (400)
+{
+  "status_code": 400,
+  "message": "Failed to connect provider.",
+  "errors": "Provider configuration not found or phone number invalid"
+}
+```
+
+</ResponseExample>
+
 # Connect Provider to Bridge
 
 Connect a telephony provider configuration to a specific bridge, linking a phone number to the bridge for call routing. This enables inbound and outbound calls through the connected provider.
@@ -16,15 +40,6 @@ Connect a telephony provider configuration to a specific bridge, linking a phone
 The `provider_config_id` must be a valid provider configuration already created for your organization. You can only use a `phone_number` that is linked to the provider account.
 </Note>
 
----
-
-## Connect Provider to Bridge
-
-Link a provider configuration and phone number to a telephony bridge.
-
-```http
-POST /api/v2/platform/telephony/bridges/{slug}/connect-provider/
-```
 
 ### Path Parameters
 
@@ -55,35 +70,7 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 | provider_config_id | integer | Yes      | ID of the provider configuration to connect               |
 | phone_number       | string  | Yes      | Phone number (E.164 format) to assign to the bridge       |
 
-### Example Request
 
-```http
-POST /api/v2/platform/telephony/bridges/sales-bridge-001/connect-provider/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-  Content-Type: application/json
-
-Body:
-{
-  "provider_config_id": 42,
-  "phone_number": "+1234567890"
-}
-```
-
-### Success Response (200)
-
-```json
-{
-  "status_code": 200,
-  "message": "Provider connected to bridge successfully.",
-  "data": {
-    "message": "Provider connected successfully",
-    "bridge_slug": "sales-bridge-001",
-    "phone_number": "+1234567890"
-  }
-}
-```
 
 ### Response Fields
 
@@ -101,26 +88,7 @@ Body:
 | bridge_slug  | string | The bridge slug the provider connected to |
 | phone_number | string | The phone number assigned to the bridge |
 
-### Error Response (400 — Bad Request)
 
-```json
-{
-  "status_code": 400,
-  "message": "Failed to connect provider.",
-  "errors": "Provider configuration not found or phone number invalid"
-}
-```
-
-### Error Response (404 — Not Found)
-
-```json
-{
-  "status_code": 404,
-  "message": "Bridge not found."
-}
-```
-
----
 
 ## Common Error Codes
 

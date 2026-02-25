@@ -19,11 +19,11 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Get Started",
+        "tab": "Open Source",
         "groups": [
           {
             "group": "Get Started",
-            "icon": "book",
+            "icon": "book-open",
             "pages": [
               "introduction",
 

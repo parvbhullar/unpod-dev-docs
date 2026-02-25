@@ -4,6 +4,22 @@ description: 'Permanently delete a telephony bridge'
 openapi: 'DELETE /api/v2/platform/telephony/bridges/{slug}/'
 ---
 
+<ResponseExample>
+
+```json Success Response (204)
+HTTP/1.1 204 No Content
+```
+
+```json Error Response (404)
+{
+  "status_code": 404,
+  "message": "Bridge not found.",
+  "errors": "No bridge exists with the provided slug"
+}
+```
+
+</ResponseExample>
+
 # Delete Bridge
 
 Permanently delete a telephony bridge by its slug. Once deleted, the bridge and all associated configurations are removed. This action cannot be undone.
@@ -16,15 +32,6 @@ Permanently delete a telephony bridge by its slug. Once deleted, the bridge and 
 Deleting a bridge that has active phone numbers or is actively routing calls will disrupt service. Disconnect all providers and reassign numbers before deleting.
 </Warning>
 
----
-
-## Delete Telephony Bridge
-
-Permanently remove a telephony bridge from your organization.
-
-```http
-DELETE /api/v2/platform/telephony/bridges/{slug}/
-```
 
 ### Path Parameters
 
@@ -43,43 +50,6 @@ You can get the bridge `slug` by hitting the [Get All Bridges](/api/telephony/ge
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Org-Handle    | string | Yes      | Organization domain handle      |
 
-### Example Request
-
-```http
-DELETE /api/v2/platform/telephony/bridges/sales-bridge-001/
-Headers:
-  Authorization: Token your-api-token
-  Org-Handle: your-org-handle
-```
-
-### Success Response (204 — No Content)
-
-```
-HTTP/1.1 204 No Content
-```
-
-No response body is returned on successful deletion.
-
-### Error Response (404 — Not Found)
-
-```json
-{
-  "status_code": 404,
-  "message": "Bridge not found.",
-  "errors": "No bridge exists with the provided slug"
-}
-```
-
-### Error Response (401 — Unauthorized)
-
-```json
-{
-  "status_code": 401,
-  "message": "Authentication credentials were not provided."
-}
-```
-
----
 
 ## Common Error Codes
 

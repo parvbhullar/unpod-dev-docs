@@ -4,6 +4,35 @@ description: 'Retrieve all tasks within a specific space using its token'
 openapi: 'GET /api/v2/platform/spaces/{space_token}/tasks/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "count": 45,
+  "status_code": 200,
+  "message": "Tasks Fetched Successfully",
+  "data": [
+    {
+      "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
+      "run_id": "R8ff2ccdefe9a11f0878d43cd8a99e069",
+      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+      "status": "completed",
+      "execution_type": "call",
+      "created": "2026-02-07T05:57:45"
+    }
+  ]
+}
+```
+
+```json Error Response (206)
+{
+  "message": "Error fetching tasks",
+  "errors": "Detailed error description"
+}
+```
+
+</ResponseExample>
+
 # Get Tasks by Space Token
 
 Fetch all tasks for a specific space using the space token. Supports pagination with `page` and `page_size` query parameters for efficient data retrieval.
@@ -46,67 +75,7 @@ You can get the `space_token` by hitting the [Get All Spaces](/api/space/get-all
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Content-Type  | string | Yes      | `application/json`              |
 
-### Example Request
 
-```http
-GET /api/v2/platform/spaces/your-space-token/tasks/?page=1&page_size=20
-Headers:
-  Authorization: Token your-api-token
-  Content-Type: application/json
-```
-
-### Success Response (200)
-
-```json
-{
-  "count": 45,
-  "status_code": 200,
-  "message": "Tasks Fetched Successfully",
-  "data": [
-    {
-      "_id": "697debb84c27faa892bfa0cc",
-      "thread_id": "675272289779974401",
-      "user_info": {
-        "email": "user@example.com",
-        "full_name": "John Doe"
-      },
-      "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
-      "run_id": "R8ff2ccdefe9a11f0878d43cd8a99e069",
-      "task": {
-        "objective": "Follow up call"
-      },
-      "input": {
-        "name": "Jane Smith",
-        "email": "jane@example.com",
-        "contact_number": "9876543210",
-        "alternate_number": "",
-        "occupation": "Manager",
-        "company_name": "Acme Corp",
-        "address": "456 Oak Avenue",
-        "about": "Potential client",
-        "context": "Follow up on proposal",
-        "labels": ["Interested"],
-        "document_id": "6902fb5840a736e125e80ebc"
-      },
-      "output": {
-        "call_id": "675272289779974401",
-        "call_end_reason": null,
-        "start_time": "2026-02-07T05:57:45",
-        "end_time": "2026-02-07T06:01:12",
-        "duration": 207,
-        "call_type": "outbound",
-        "call_status": "completed"
-      },
-      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
-      "status": "completed",
-      "execution_type": "call",
-      "run_mode": "prod",
-      "created": "2026-02-07T05:57:45",
-      "modified": "2026-02-07T06:01:15"
-    }
-  ]
-}
-```
 
 ### Response Fields
 
@@ -136,16 +105,7 @@ Headers:
 | created        | string  | Task creation timestamp                       |
 | modified       | string  | Last modified timestamp                       |
 
-### Error Response (206 — Tasks Fetch Failed)
 
-```json
-{
-  "message": "Error fetching tasks",
-  "errors": "Detailed error description"
-}
-```
-
----
 
 ## Common Error Codes
 

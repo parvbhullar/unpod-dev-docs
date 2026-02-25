@@ -4,6 +4,35 @@ description: 'Retrieve all tasks with full execution details for a specific run'
 openapi: 'GET /api/v2/platform/spaces/{space_token}/runs/{run_id}/tasks/'
 ---
 
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "count": 9,
+  "status_code": 200,
+  "message": "Tasks Fetched Successfully",
+  "data": [
+    {
+      "_id": "697debb84c27faa892bfa0cc",
+      "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
+      "run_id": "Recac64fe03e911f1878d43cd8a99e069",
+      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+      "status": "completed",
+      "execution_type": "call"
+    }
+  ]
+}
+```
+
+```json Error Response (206)
+{
+  "message": "Error retrieving run tasks",
+  "errors": "Detailed error description"
+}
+```
+
+</ResponseExample>
+
 # Get Detailed Tasks for a Specific Run
 
 Fetch all tasks for a specific run, including complete input, output, call transcript, costs, analysis, artifacts, and provider metadata. This endpoint is used when you need deep inspection of how a run executed each task.
@@ -14,13 +43,6 @@ Fetch all tasks for a specific run, including complete input, output, call trans
 
 ---
 
-## Get Tasks for a Specific Run
-
-Retrieve all tasks with full execution details for a specific run within a space.
-
-```http
-GET /api/v2/platform/spaces/{space_token}/runs/{run_id}/tasks/
-```
 
 ### Path Parameters
 
@@ -40,78 +62,6 @@ You can get the `space_token` from the [Get All Spaces](/api/space/get-all-space
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Content-Type  | string | Yes      | `application/json`              |
 
-### Example Request
-
-```http
-GET /api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/runs/Recac64fe03e911f1878d43cd8a99e069/tasks/
-Headers:
-  Authorization: Token your-api-token
-  Content-Type: application/json
-```
-
-### Success Response (200)
-
-```json
-{
-  "count": 9,
-  "status_code": 200,
-  "message": "Tasks Fetched Successfully",
-  "data": [
-    {
-      "_id": "697debb84c27faa892bfa0cc",
-      "thread_id": "675272289779974401",
-      "user_info": {
-        "email": "user@example.com",
-        "full_name": "John Doe"
-      },
-      "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
-      "run_id": "Recac64fe03e911f1878d43cd8a99e069",
-      "task": {
-        "objective": "Call the lead and discuss requirements"
-      },
-      "input": {
-        "name": "Jane Smith",
-        "email": "jane@example.com",
-        "contact_number": "9876543210",
-        "labels": ["Interested"],
-        "document_id": "6902fb5840a736e125e80ebc"
-      },
-      "output": {
-        "call_id": "675272289779974401",
-        "start_time": "2026-02-07T05:57:45",
-        "end_time": "2026-02-07T06:01:12",
-        "duration": 207,
-        "recording_url": "https://cdr-storage-recs.s3.ap-south-1.amazonaws.com/media/recording.ogg",
-        "transcript": [
-          {
-            "role": "assistant",
-            "content": "Hi! This is Alex from TechSupport.",
-            "timestamp": "2026-02-07T05:57:50"
-          },
-          {
-            "role": "user",
-            "content": "Hello, yes speaking.",
-            "timestamp": "2026-02-07T05:57:55"
-          }
-        ],
-        "post_call_data": {
-          "summary": {
-            "status": "Connected",
-            "summary": "The lead was reached and expressed interest in the product."
-          }
-        },
-        "call_type": "outbound",
-        "call_status": "completed"
-      },
-      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
-      "status": "completed",
-      "execution_type": "call",
-      "created": "2026-02-07T05:57:45",
-      "modified": "2026-02-07T06:01:15"
-    }
-  ]
-}
-```
 
 ### Response Fields
 
@@ -153,15 +103,6 @@ Headers:
 | post_call_data  | object | Post-call analysis data                  |
 | call_type       | string | Direction: `outbound`, `inbound`         |
 | call_status     | string | Status of the call                       |
-
-### Error Response (206 — Business Logic Error)
-
-```json
-{
-  "message": "Error retrieving run tasks",
-  "errors": "Detailed error description"
-}
-```
 
 ---
 
