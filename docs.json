@@ -90,6 +90,8 @@
             "icon": "sliders-horizontal",
             "pages": [
               "Dev Platform/introduction",
+              "Dev Platform/register",
+              "Dev Platform/login",
               "Dev Platform/telephony",
               "Dev Platform/numbers",
               "Dev Platform/provider",
