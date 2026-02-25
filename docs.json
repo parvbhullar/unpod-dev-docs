@@ -22,11 +22,17 @@
         "tab": "Open Source",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Getting Started",
             "icon": "book-open",
             "pages": [
-              "introduction",
-
+              "home",
+              "introduction"
+            ]
+          },
+          {
+            "group": "Open Source",
+            "icon": "",
+            "pages": [
               "quickstart",
               "configuration",
               "architecture"
@@ -35,7 +41,7 @@
         ]
       },
       {
-        "tab": "Voice AI",
+        "tab": "Voice AI Platform",
         "groups": [
           {
             "group": "Getting Started",
@@ -98,7 +104,7 @@
         "tab": "API Documentation",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Getting Started",
             "icon": "book-open",
             "pages": [
               "api/get-started/quickstart",
@@ -221,23 +227,7 @@
       }
     ],
     "global": {
-      "anchors": [
-        {
-          "anchor": "YouTube",
-          "href": "https://www.youtube.com/@unpod-ai",
-          "icon": "youtube"
-        },
-        {
-          "anchor": "GitHub",
-          "href": "https://github.com/parvbhullar/unpod",
-          "icon": "github"
-        },
-        {
-          "anchor": "Discord",
-          "href": "https://discord.gg/7kQ4ewNSHZ",
-          "icon": "discord"
-        }
-      ]
+      "anchors": []
     }
   },
   "navbar": {
