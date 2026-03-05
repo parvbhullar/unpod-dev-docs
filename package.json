@@ -1,0 +1,15 @@
+{
+  "name": "unpod-dev-docs",
+  "version": "1.0.0",
+  "description": "Use the starter kit to get your docs deployed and ready to customize.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

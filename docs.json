@@ -237,7 +237,13 @@
   "navbar": {
     "links": [
       {
+        "label": "GitHub",
+        "icon": "github",
+        "href": "https://github.com/parvbhullar/unpod"
+      },
+      {
         "label": "Documentation",
+        "icon": "book-open",
         "href": "https://docs.unpod.dev/"
       }
     ],
