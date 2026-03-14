@@ -114,7 +114,7 @@ const headers = {
 // Update a bridge
 const updateBridge = async (slug, updates) => {
   const response = await axios.patch(
-    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/`,
+    `https://unpod.ai/api/v2/platform/telephony/bridges/${slug}/`,
     updates,
     { headers }
   );
@@ -137,7 +137,7 @@ headers = {
 
 def update_bridge(slug: str, updates: dict):
     """Update an existing telephony bridge"""
-    url = f'https://unpod.dev/api/v2/platform/telephony/bridges/{slug}/'
+    url = f'https://unpod.ai/api/v2/platform/telephony/bridges/{slug}/'
     response = requests.patch(url, headers=headers, json=updates)
     data = response.json()
     print(f"Bridge updated: {data['data']['name']}")
@@ -149,7 +149,7 @@ update_bridge('sales-bridge-001', {'name': 'Sales Bridge — Updated'})
 
 ```bash cURL
 # Update a bridge name
-curl -X PATCH "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-001/" \
+curl -X PATCH "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-001/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \

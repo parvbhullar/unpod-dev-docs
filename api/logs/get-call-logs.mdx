@@ -128,7 +128,7 @@ const getCallLogs = async (filters = {}) => {
     ...filters
   };
   const response = await axios.get(
-    'https://unpod.dev/api/v2/platform/call-logs/',
+    'https://unpod.ai/api/v2/platform/call-logs/',
     { headers, params }
   );
   console.log(`Total call logs: ${response.data.count}`);
@@ -157,7 +157,7 @@ headers = {
 
 def get_call_logs(page: int = 1, page_size: int = 20, **filters):
     """Get call logs with optional filters"""
-    url = 'https://unpod.dev/api/v2/platform/call-logs/'
+    url = 'https://unpod.ai/api/v2/platform/call-logs/'
     params = {'page': page, 'page_size': page_size, **filters}
     response = requests.get(url, headers=headers, params=params)
     data = response.json()
@@ -179,12 +179,12 @@ get_call_logs(
 
 ```bash cURL
 # Get call logs with filters
-curl -X GET "https://unpod.dev/api/v2/platform/call-logs/?page=1&page_size=20&call_type=outbound&call_status=completed" \
+curl -X GET "https://unpod.ai/api/v2/platform/call-logs/?page=1&page_size=20&call_type=outbound&call_status=completed" \
   -H "Org-Handle: your-org-handle" \
   -H "Authorization: Token your-api-token"
 
 # Get call logs for a specific date range
-curl -X GET "https://unpod.dev/api/v2/platform/call-logs/?start_date=2026-02-01&end_date=2026-02-07" \
+curl -X GET "https://unpod.ai/api/v2/platform/call-logs/?start_date=2026-02-01&end_date=2026-02-07" \
   -H "Org-Handle: your-org-handle" \
   -H "Authorization: Token your-api-token"
 ```

@@ -117,7 +117,7 @@ const headers = {
 // Connect a provider to a bridge
 const connectProviderToBridge = async (slug, providerConfigId, phoneNumber) => {
   const response = await axios.post(
-    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/connect-provider/`,
+    `https://unpod.ai/api/v2/platform/telephony/bridges/${slug}/connect-provider/`,
     { provider_config_id: providerConfigId, phone_number: phoneNumber },
     { headers }
   );
@@ -141,7 +141,7 @@ headers = {
 
 def connect_provider_to_bridge(slug: str, provider_config_id: int, phone_number: str):
     """Connect a provider configuration to a bridge"""
-    url = f'https://unpod.dev/api/v2/platform/telephony/bridges/{slug}/connect-provider/'
+    url = f'https://unpod.ai/api/v2/platform/telephony/bridges/{slug}/connect-provider/'
     payload = {
         'provider_config_id': provider_config_id,
         'phone_number': phone_number
@@ -158,7 +158,7 @@ connect_provider_to_bridge('sales-bridge-001', 42, '+1234567890')
 
 ```bash cURL
 # Connect a provider to a bridge
-curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-001/connect-provider/" \
+curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-001/connect-provider/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \

@@ -76,7 +76,7 @@ const headers = {
 // Delete a bridge
 const deleteBridge = async (slug) => {
   await axios.delete(
-    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/`,
+    `https://unpod.ai/api/v2/platform/telephony/bridges/${slug}/`,
     { headers }
   );
   console.log(`Bridge '${slug}' deleted successfully`);
@@ -96,7 +96,7 @@ headers = {
 
 def delete_bridge(slug: str):
     """Delete a telephony bridge"""
-    url = f'https://unpod.dev/api/v2/platform/telephony/bridges/{slug}/'
+    url = f'https://unpod.ai/api/v2/platform/telephony/bridges/{slug}/'
     response = requests.delete(url, headers=headers)
     if response.status_code == 204:
         print(f"Bridge '{slug}' deleted successfully")
@@ -109,7 +109,7 @@ delete_bridge('sales-bridge-001')
 
 ```bash cURL
 # Delete a bridge
-curl -X DELETE "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-001/" \
+curl -X DELETE "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-001/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

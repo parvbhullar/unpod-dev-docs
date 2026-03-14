@@ -21,6 +21,7 @@ openapi: 'GET /api/v2/platform/telephony/bridges/{slug}/'
         "number": "+1234567890",
         "state": "ASSIGNED",
         "active": true,
+        "channels_count": 2,
         "status": "active"
       }
     ]
@@ -123,7 +124,7 @@ const headers = {
 // Get bridge by slug
 const getBridgeBySlug = async (slug) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/`,
+    `https://unpod.ai/api/v2/platform/telephony/bridges/${slug}/`,
     { headers }
   );
   const bridge = response.data.data;
@@ -146,7 +147,7 @@ headers = {
 
 def get_bridge_by_slug(slug: str):
     """Get bridge details by slug"""
-    url = f'https://unpod.dev/api/v2/platform/telephony/bridges/{slug}/'
+    url = f'https://unpod.ai/api/v2/platform/telephony/bridges/{slug}/'
     response = requests.get(url, headers=headers)
     data = response.json()
     bridge = data['data']
@@ -160,7 +161,7 @@ get_bridge_by_slug('sales-bridge-001')
 
 ```bash cURL
 # Get bridge by slug
-curl -X GET "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-001/" \
+curl -X GET "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-001/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

@@ -124,7 +124,7 @@ const headers = {
 const getAnalytics = async (spaceToken = null) => {
   const params = spaceToken ? { space_token: spaceToken } : {};
   const response = await axios.get(
-    'https://unpod.dev/api/v2/platform/organisation/analytics/',
+    'https://unpod.ai/api/v2/platform/organisation/analytics/',
     { headers, params }
   );
   const data = response.data.data;
@@ -152,7 +152,7 @@ headers = {
 
 def get_analytics(space_token: str = None):
     """Get call analytics and task status"""
-    url = 'https://unpod.dev/api/v2/platform/organisation/analytics/'
+    url = 'https://unpod.ai/api/v2/platform/organisation/analytics/'
     params = {'space_token': space_token} if space_token else {}
     response = requests.get(url, headers=headers, params=params)
     data = response.json()['data']
@@ -171,12 +171,12 @@ get_analytics('8KZAMRAHSXXXXXXMAYNASMJC')
 
 ```bash cURL
 # Get org-wide analytics
-curl -X GET "https://unpod.dev/api/v2/platform/organisation/analytics/" \
+curl -X GET "https://unpod.ai/api/v2/platform/organisation/analytics/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 
 # Get analytics for a specific space
-curl -X GET "https://unpod.dev/api/v2/platform/organisation/analytics/?space_token=8KZAMRAHSXXXXXXMAYNASMJC" \
+curl -X GET "https://unpod.ai/api/v2/platform/organisation/analytics/?space_token=8KZAMRAHSXXXXXXMAYNASMJC" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

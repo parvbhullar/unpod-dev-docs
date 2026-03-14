@@ -87,7 +87,7 @@ const headers = {
 // Get all organizations
 const getOrganizations = async () => {
   const response = await axios.get(
-    'https://unpod.dev/api/v2/platform/organizations/',
+    'https://unpod.ai/api/v2/platform/organizations/',
     { headers }
   );
   console.log(`Total organizations: ${response.data.count}`);
@@ -111,7 +111,7 @@ headers = {
 
 def get_organizations():
     """Get all organizations"""
-    url = 'https://unpod.dev/api/v2/platform/organizations/'
+    url = 'https://unpod.ai/api/v2/platform/organizations/'
     response = requests.get(url, headers=headers)
     data = response.json()
     print(f"Total organizations: {data['count']}")
@@ -125,7 +125,7 @@ get_organizations()
 
 ```bash cURL
 # Get all organizations
-curl -X GET "https://unpod.dev/api/v2/platform/organizations/" \
+curl -X GET "https://unpod.ai/api/v2/platform/organizations/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

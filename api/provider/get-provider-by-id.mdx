@@ -102,7 +102,7 @@ const headers = {
 // Get provider configuration by ID
 const getProviderById = async (id) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/telephony/providers-configurations/${id}/`,
+    `https://unpod.ai/api/v2/platform/telephony/providers-configurations/${id}/`,
     { headers }
   );
   const config = response.data.data;
@@ -125,7 +125,7 @@ headers = {
 
 def get_provider_by_id(config_id: int):
     """Get a specific provider configuration by ID"""
-    url = f'https://unpod.dev/api/v2/platform/telephony/providers-configurations/{config_id}/'
+    url = f'https://unpod.ai/api/v2/platform/telephony/providers-configurations/{config_id}/'
     response = requests.get(url, headers=headers)
     data = response.json()
     config = data['data']
@@ -139,7 +139,7 @@ get_provider_by_id(42)
 
 ```bash cURL
 # Get provider configuration by ID
-curl -X GET "https://unpod.dev/api/v2/platform/telephony/providers-configurations/42/" \
+curl -X GET "https://unpod.ai/api/v2/platform/telephony/providers-configurations/42/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

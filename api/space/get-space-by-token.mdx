@@ -97,7 +97,7 @@ const headers = {
 // Get space by token
 const getSpaceByToken = async (spaceToken) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/`,
+    `https://unpod.ai/api/v2/platform/spaces/${spaceToken}/`,
     { headers }
   );
   console.log(`Space name: ${response.data.data.name}`);
@@ -119,7 +119,7 @@ headers = {
 
 def get_space_by_token(space_token: str):
     """Get a specific space by its token"""
-    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/'
+    url = f'https://unpod.ai/api/v2/platform/spaces/{space_token}/'
     response = requests.get(url, headers=headers)
     data = response.json()
     print(f"Space name: {data['data']['name']}")
@@ -132,7 +132,7 @@ get_space_by_token('8KZRTQP7BNW5XEDLORYUHMJC')
 
 ```bash cURL
 # Get space by token
-curl -X GET "https://unpod.dev/api/v2/platform/spaces/8KZRTQP7BNW5XEDLORYUHMJC/" \
+curl -X GET "https://unpod.ai/api/v2/platform/spaces/8KZRTQP7BNW5XEDLORYUHMJC/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

@@ -104,7 +104,7 @@ const headers = {
 // Get all telephony numbers
 const getTelephonyNumbers = async () => {
   const response = await axios.get(
-    'https://unpod.dev/api/v2/platform/telephony/numbers/',
+    'https://unpod.ai/api/v2/platform/telephony/numbers/',
     { headers }
   );
   const numbers = response.data.data;
@@ -136,7 +136,7 @@ headers = {
 
 def get_telephony_numbers():
     """Get all telephony numbers"""
-    url = 'https://unpod.dev/api/v2/platform/telephony/numbers/'
+    url = 'https://unpod.ai/api/v2/platform/telephony/numbers/'
     response = requests.get(url, headers=headers)
     data = response.json()
     numbers = data['data']
@@ -157,7 +157,7 @@ get_telephony_numbers()
 
 ```bash cURL
 # Get all telephony numbers
-curl -X GET "https://unpod.dev/api/v2/platform/telephony/numbers/" \
+curl -X GET "https://unpod.ai/api/v2/platform/telephony/numbers/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

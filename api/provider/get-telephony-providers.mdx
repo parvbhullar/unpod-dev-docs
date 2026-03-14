@@ -105,7 +105,7 @@ const headers = {
 // Get all available telephony providers
 const getTelephonyProviders = async () => {
   const response = await axios.get(
-    'https://unpod.dev/api/v2/platform/telephony/providers/',
+    'https://unpod.ai/api/v2/platform/telephony/providers/',
     { headers }
   );
   console.log(`Available providers: ${response.data.data.length}`);
@@ -129,7 +129,7 @@ headers = {
 
 def get_telephony_providers():
     """Get all available telephony providers"""
-    url = 'https://unpod.dev/api/v2/platform/telephony/providers/'
+    url = 'https://unpod.ai/api/v2/platform/telephony/providers/'
     response = requests.get(url, headers=headers)
     data = response.json()
     print(f"Available providers: {len(data['data'])}")
@@ -143,7 +143,7 @@ get_telephony_providers()
 
 ```bash cURL
 # Get all telephony providers
-curl -X GET "https://unpod.dev/api/v2/platform/telephony/providers/" \
+curl -X GET "https://unpod.ai/api/v2/platform/telephony/providers/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

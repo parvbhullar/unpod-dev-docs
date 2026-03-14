@@ -778,7 +778,7 @@ const headers = {
 // Get all bridges
 const getBridges = async () => {
   const response = await axios.get(
-    'https://unpod.dev/api/v2/platform/telephony/bridges/',
+    'https://unpod.ai/api/v2/platform/telephony/bridges/',
     { headers }
   );
   console.log(`Total bridges: ${response.data.count}`);
@@ -788,7 +788,7 @@ const getBridges = async () => {
 // Create a new bridge
 const createBridge = async (name, description, region = 'US') => {
   const response = await axios.post(
-    'https://unpod.dev/api/v2/platform/telephony/bridges/',
+    'https://unpod.ai/api/v2/platform/telephony/bridges/',
     { name, description, region },
     { headers }
   );
@@ -799,7 +799,7 @@ const createBridge = async (name, description, region = 'US') => {
 // Get bridge by slug
 const getBridgeBySlug = async (slug) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/`,
+    `https://unpod.ai/api/v2/platform/telephony/bridges/${slug}/`,
     { headers }
   );
   console.log(`Bridge: ${response.data.data.name}`);
@@ -809,7 +809,7 @@ const getBridgeBySlug = async (slug) => {
 // Update a bridge
 const updateBridge = async (slug, updates) => {
   const response = await axios.patch(
-    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/`,
+    `https://unpod.ai/api/v2/platform/telephony/bridges/${slug}/`,
     updates,
     { headers }
   );
@@ -820,7 +820,7 @@ const updateBridge = async (slug, updates) => {
 // Delete a bridge
 const deleteBridge = async (slug) => {
   const response = await axios.delete(
-    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/`,
+    `https://unpod.ai/api/v2/platform/telephony/bridges/${slug}/`,
     { headers }
   );
   console.log('Bridge deleted successfully');
@@ -830,7 +830,7 @@ const deleteBridge = async (slug) => {
 // Connect provider to bridge
 const connectProvider = async (slug, providerCredentialId) => {
   const response = await axios.post(
-    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/connect-provider/`,
+    `https://unpod.ai/api/v2/platform/telephony/bridges/${slug}/connect-provider/`,
     { provider_credential_id: providerCredentialId },
     { headers }
   );
@@ -841,7 +841,7 @@ const connectProvider = async (slug, providerCredentialId) => {
 // Disconnect provider from bridge
 const disconnectProvider = async (slug, providerCredentialId) => {
   const response = await axios.post(
-    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/disconnect-provider/`,
+    `https://unpod.ai/api/v2/platform/telephony/bridges/${slug}/disconnect-provider/`,
     { provider_credential_id: providerCredentialId },
     { headers }
   );
@@ -863,7 +863,7 @@ headers = {
     'Content-Type': 'application/json'
 }
 
-BASE_URL = 'https://unpod.dev/api/v2/platform/telephony/bridges'
+BASE_URL = 'https://unpod.ai/api/v2/platform/telephony/bridges'
 
 def get_bridges():
     """Get all telephony bridges"""
@@ -926,13 +926,13 @@ get_bridges()
 
 ```bash cURL
 # Get all bridges
-curl -X GET "https://unpod.dev/api/v2/platform/telephony/bridges/" \
+curl -X GET "https://unpod.ai/api/v2/platform/telephony/bridges/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Product-ID: your-product-id"
 
 # Create a new bridge
-curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/" \
+curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Product-ID: your-product-id" \
@@ -944,13 +944,13 @@ curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/" \
   }'
 
 # Get bridge by slug
-curl -X GET "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-abc123/" \
+curl -X GET "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-abc123/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Product-ID: your-product-id"
 
 # Update a bridge
-curl -X PATCH "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-abc123/" \
+curl -X PATCH "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-abc123/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Product-ID: your-product-id" \
@@ -961,13 +961,13 @@ curl -X PATCH "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-
   }'
 
 # Delete a bridge
-curl -X DELETE "https://unpod.dev/api/v2/platform/telephony/bridges/support-bridge-xyz789/" \
+curl -X DELETE "https://unpod.ai/api/v2/platform/telephony/bridges/support-bridge-xyz789/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Product-ID: your-product-id"
 
 # Connect provider to bridge
-curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-abc123/connect-provider/" \
+curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-abc123/connect-provider/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Product-ID: your-product-id" \
@@ -977,7 +977,7 @@ curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-a
   }'
 
 # Disconnect provider from bridge
-curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-abc123/disconnect-provider/" \
+curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-abc123/disconnect-provider/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Product-ID: your-product-id" \

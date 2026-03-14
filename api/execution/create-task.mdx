@@ -4,6 +4,40 @@ description: 'Create a new task in a space to trigger a Voice AI outbound call'
 openapi: 'POST /api/v2/platform/spaces/{space_token}/tasks/create/'
 ---
 
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url https://unpod.ai/api/v2/platform/spaces/{space_token}/tasks/create/ \
+  --header 'Authorization: Token <api-key>' \
+  --header 'Content-Type: application/json' \
+  --header 'Org-Handle: <org-handle>' \
+  --data '{
+    "pilot": "space-agent-f1o3qjm1y7q1avvuynv4vprb1",
+    "context": "Call the lead and discuss the project requirements.",
+    "schedule": { "type": "now" },
+    "documents": [
+      {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "contact_number": "1234567890",
+        "alternate_number": "+919876543210",
+        "occupation": "Sales Manager",
+        "company_name": "Acme Corp",
+        "address": "123 Main St, Mumbai",
+        "about": "Warm lead from webinar",
+        "context": "Follow up on proposal sent last week",
+        "labels": ["warm-lead", "webinar"],
+        "title": "Q1 Outreach",
+        "description": "Lead from Q1 campaign",
+        "document_id": "6902fb5840a736e125e80ebc"
+      }
+    ]
+  }'
+```
+
+</RequestExample>
+
 <ResponseExample>
 
 ```json Success Response (200)
@@ -37,66 +71,114 @@ Create a new task inside a given space using the space's public token. You can a
 **Prerequisites:** Make sure you have your API Token, Space Token, and Agent Handle ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
 
+### Endpoint
+
+```
+POST /api/v2/platform/spaces/{space_token}/tasks/create/
+```
+
 ### Path Parameters
 
-| Name        | Type   | Required | Description                                     |
-|-------------|--------|----------|-------------------------------------------------|
-| space_token | string | Yes      | Public token of the space where task is created |
-
-<Note>
-You can get the `space_token` by hitting the [Get All Spaces](/api/space/get-all-spaces) API. The `token` field in the response is your Space Token.
-</Note>
+<ParamField path="space_token" type="string" required>
+  Public token of the space where the task is created.
+  <Note>Get this from the [Get All Spaces](/api/space/get-all-spaces) API — use the `token` field.</Note>
+</ParamField>
 
 ### Headers
 
-| Name          | Type   | Required | Description                     |
-|---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | API Key format: `Token <token>` |
-| Content-Type  | string | Yes      | `application/json`              |
+<ParamField header="Authorization" type="string" required>
+  API Key in format: `Token <your-api-token>`
+</ParamField>
+
+<ParamField header="Content-Type" type="string" required>
+  Must be `application/json`
+</ParamField>
 
 ### Request Body
 
-| Field     | Type   | Required | Description                                    |
-|-----------|--------|----------|------------------------------------------------|
-| pilot     | string | Yes      | Agent/pilot handle to assign the task          |
-| documents | array  | Yes      | Array of document/contact objects with data    |
-| context   | string | No       | Additional context/objective for the task      |
-| schedule  | object | No       | Schedule configuration (e.g., `{"type": "now"}`) |
+<ParamField body="pilot" type="string" required>
+  Agent/pilot handle to assign the task to.
+</ParamField>
 
-### Document Object Fields
+<ParamField body="documents" type="array" required>
+  Array of document/contact objects. Each document represents one contact to call.
 
-| Field            | Type   | Required | Description                            |
-|------------------|--------|----------|----------------------------------------|
-| name             | string | Yes      | Contact name                           |
-| email            | string | No       | Contact email address                  |
-| contact_number   | string | Yes      | Primary contact phone number           |
-| alternate_number | string | No       | Alternate contact phone number         |
-| occupation       | string | No       | Contact's occupation                   |
-| company_name     | string | No       | Contact's company name                 |
-| address          | string | No       | Contact's address                      |
-| about            | string | No       | Additional info about the contact      |
-| context          | string | No       | Per-contact context for the call       |
-| labels           | array  | No       | Labels/tags associated with the record |
-| title            | string | No       | Document title                         |
-| description      | string | No       | Document description                   |
-| document_id      | string | No       | Unique document identifier             |
+  <Expandable title="Document Object Fields">
+    <ParamField body="name" type="string" required>
+      Contact name
+    </ParamField>
+    <ParamField body="contact_number" type="string" required>
+      Primary contact phone number
+    </ParamField>
+    <ParamField body="email" type="string">
+      Contact email address
+    </ParamField>
+    <ParamField body="alternate_number" type="string">
+      Alternate contact phone number
+    </ParamField>
+    <ParamField body="occupation" type="string">
+      Contact's occupation
+    </ParamField>
+    <ParamField body="company_name" type="string">
+      Contact's company name
+    </ParamField>
+    <ParamField body="address" type="string">
+      Contact's address
+    </ParamField>
+    <ParamField body="about" type="string">
+      Additional info about the contact
+    </ParamField>
+    <ParamField body="context" type="string">
+      Per-contact context for the call
+    </ParamField>
+    <ParamField body="labels" type="array">
+      Labels/tags associated with the record
+    </ParamField>
+    <ParamField body="title" type="string">
+      Document title
+    </ParamField>
+    <ParamField body="description" type="string">
+      Document description
+    </ParamField>
+    <ParamField body="document_id" type="string">
+      Unique document identifier
+    </ParamField>
+  </Expandable>
+</ParamField>
 
+<ParamField body="context" type="string">
+  Additional context/objective for the task (applies to all contacts).
+</ParamField>
+
+<ParamField body="schedule" type="object">
+  Schedule configuration. Example: `{"type": "now"}`
+</ParamField>
 
 ### Response Fields
 
-| Field       | Type    | Description          |
-|-------------|---------|----------------------|
-| status_code | integer | HTTP status code     |
-| message     | string  | Response message     |
-| data        | object  | Created task details |
+<ResponseField name="status_code" type="integer">
+  HTTP status code
+</ResponseField>
 
-### Data Object Fields
+<ResponseField name="message" type="string">
+  Response message
+</ResponseField>
 
-| Field    | Type   | Description                       |
-|----------|--------|-----------------------------------|
-| run_id   | string | Created run identifier            |
-| task_ids | array  | Array of created task identifiers |
-| status   | string | Task status (initially `pending`) |
+<ResponseField name="data" type="object">
+  Created task details
+
+  <Expandable title="Data Object Fields">
+    <ResponseField name="run_id" type="string">
+      Created run identifier — use this to track execution via [Get All Runs](/api/execution/get-all-runs)
+    </ResponseField>
+    <ResponseField name="task_ids" type="array">
+      Array of created task identifiers (one per document/contact)
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Task status — initially `pending`
+    </ResponseField>
+  </Expandable>
+</ResponseField>
 
 ## Common Error Codes
 
@@ -125,7 +207,7 @@ const headers = {
 // Create a task to make a Voice AI call
 const createTask = async (spaceToken, pilot, documents, context) => {
   const response = await axios.post(
-    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/tasks/create/`,
+    `https://unpod.ai/api/v2/platform/spaces/${spaceToken}/tasks/create/`,
     {
       pilot,
       documents,
@@ -165,7 +247,7 @@ headers = {
 
 def create_task(space_token: str, pilot: str, documents: list, context: str):
     """Create a Voice AI call task in a space"""
-    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/tasks/create/'
+    url = f'https://unpod.ai/api/v2/platform/spaces/{space_token}/tasks/create/'
     payload = {
         'pilot': pilot,
         'documents': documents,
@@ -196,7 +278,7 @@ create_task(
 
 ```bash cURL
 # Create a task to trigger a Voice AI call
-curl -X POST "https://unpod.dev/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/create/" \
+curl -X POST "https://unpod.ai/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/create/" \
   -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json" \
   -d '{

@@ -660,7 +660,7 @@ const headers = {
 // Get tasks by agent handle
 const getTasksByAgent = async (agentHandle) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/agents/${agentHandle}/tasks/`,
+    `https://unpod.ai/api/v2/platform/agents/${agentHandle}/tasks/`,
     { headers }
   );
   console.log(`Total tasks: ${response.data.count}`);
@@ -670,7 +670,7 @@ const getTasksByAgent = async (agentHandle) => {
 // Get tasks by space token with pagination
 const getTasksBySpace = async (spaceToken, page = 1, pageSize = 20) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/tasks/?page=${page}&page_size=${pageSize}`,
+    `https://unpod.ai/api/v2/platform/spaces/${spaceToken}/tasks/?page=${page}&page_size=${pageSize}`,
     { headers }
   );
   console.log(`Total tasks: ${response.data.count}`);
@@ -680,7 +680,7 @@ const getTasksBySpace = async (spaceToken, page = 1, pageSize = 20) => {
 // Create a task in a space
 const createTask = async (spaceToken, pilot, documents, context) => {
   const response = await axios.post(
-    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/tasks/`,
+    `https://unpod.ai/api/v2/platform/spaces/${spaceToken}/tasks/`,
     {
       pilot,
       documents,
@@ -707,7 +707,7 @@ headers = {
 
 def get_tasks_by_agent(agent_handle: str):
     """Get tasks by agent handle"""
-    url = f'https://unpod.dev/api/v2/platform/agents/{agent_handle}/tasks/'
+    url = f'https://unpod.ai/api/v2/platform/agents/{agent_handle}/tasks/'
     response = requests.get(url, headers=headers)
     data = response.json()
     print(f"Total tasks: {data['count']}")
@@ -715,7 +715,7 @@ def get_tasks_by_agent(agent_handle: str):
 
 def get_tasks_by_space(space_token: str, page: int = 1, page_size: int = 20):
     """Get tasks by space token with pagination"""
-    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/tasks/'
+    url = f'https://unpod.ai/api/v2/platform/spaces/{space_token}/tasks/'
     params = {'page': page, 'page_size': page_size}
     response = requests.get(url, headers=headers, params=params)
     data = response.json()
@@ -724,7 +724,7 @@ def get_tasks_by_space(space_token: str, page: int = 1, page_size: int = 20):
 
 def create_task(space_token: str, pilot: str, documents: list, context: str):
     """Create a task in a space"""
-    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/tasks/'
+    url = f'https://unpod.ai/api/v2/platform/spaces/{space_token}/tasks/'
     payload = {
         'pilot': pilot,
         'documents': documents,
@@ -742,17 +742,17 @@ get_tasks_by_agent('sales-agent-v1')
 
 ```bash cURL
 # Get tasks by agent handle
-curl -X GET "https://unpod.dev/api/v2/platform/agents/sales-agent-v1/tasks/" \
+curl -X GET "https://unpod.ai/api/v2/platform/agents/sales-agent-v1/tasks/" \
   -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json"
 
 # Get tasks by space token with pagination
-curl -X GET "https://unpod.dev/api/v2/platform/spaces/your-space-token/tasks/?page=1&page_size=20" \
+curl -X GET "https://unpod.ai/api/v2/platform/spaces/your-space-token/tasks/?page=1&page_size=20" \
   -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json"
 
 # Create a task in a space
-curl -X POST "https://unpod.dev/api/v2/platform/spaces/your-space-token/tasks/" \
+curl -X POST "https://unpod.ai/api/v2/platform/spaces/your-space-token/tasks/" \
   -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json" \
   -d '{

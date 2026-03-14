@@ -5,8 +5,8 @@ info:
   version: 2.0.0
 
 servers:
-  - url: http://localhost:3001
-    description: Local Development
+  - url: https://unpod.ai/
+    description: Production
 
 tags:
   - name: Organisation
@@ -38,10 +38,18 @@ paths:
           content:
             application/json:
               example:
-                - id: 1
-                  name: "Unpod Inc"
-                  domain_handle: "unpod"
-                  created_at: "2024-01-01T00:00:00Z"
+                count: 3
+                status_code: 200
+                message: "Organizations fetched successfully"
+                data:
+                  - id: 1
+                    name: "Unpod TV"
+                    domain_handle: "unpod.tv"
+                    created_at: "2024-01-15T10:30:00Z"
+                  - id: 2
+                    name: "Recalll"
+                    domain_handle: "recalll.co"
+                    created_at: "2024-03-20T08:00:00Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -61,10 +69,15 @@ paths:
           content:
             application/json:
               example:
-                - id: 1
-                  name: "Sales Outreach"
-                  token: "8KZRTQP7BNW5XEDLORYUHMJC"
-                  created_at: "2024-01-01T00:00:00Z"
+                count: 207
+                status_code: 200
+                message: "Spaces fetched successfully"
+                data:
+                  - id: "sp_001"
+                    name: "Sales Outreach Q1"
+                    token: "8KZAMRAHSXXXXXXMAYNASMJC"
+                    agent_handle: "space-agent-8qmk42nslp91wrh3dz7btxc4"
+                    created_at: "2026-01-10T08:00:00Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -81,7 +94,7 @@ paths:
           required: true
           schema:
             type: string
-            example: "8KZRTQP7BNW5XEDLORYUHMJC"
+            example: "8KZAMRAHSXXXXXXMAYNASMJC"
         - $ref: '#/components/parameters/OrgHandle'
       responses:
         '200':
@@ -89,10 +102,14 @@ paths:
           content:
             application/json:
               example:
-                id: 1
-                name: "Sales Outreach"
-                token: "8KZRTQP7BNW5XEDLORYUHMJC"
-                agent_handle: "sales-agent"
+                status_code: 200
+                message: "Space fetched successfully"
+                data:
+                  id: "sp_001"
+                  name: "Sales Outreach Q1"
+                  token: "8KZRTQP7BNW5XEDLORYUHMJC"
+                  agent_handle: "space-agent-8qmk42nslp91wrh3dz7btxc4"
+                  created_at: "2026-01-10T08:00:00Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -111,7 +128,17 @@ paths:
           required: true
           schema:
             type: string
-            example: "8KZRTQP7BNW5XEDLORYUHMJC"
+            example: "8KZAMRAHSXXXXXXMAYNASMJC"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            example: 20
         - $ref: '#/components/parameters/OrgHandle'
       responses:
         '200':
@@ -119,10 +146,47 @@ paths:
           content:
             application/json:
               example:
-                - id: 101
-                  status: "completed"
-                  phone_number: "+1234567890"
-                  created_at: "2024-01-01T00:00:00Z"
+                count: 45
+                status_code: 200
+                message: "Tasks Fetched Successfully"
+                data:
+                  - _id: "697debb84c27faa892bfa0cc"
+                    thread_id: "thread_9xkL2mQpR7vNwY4sZ3cJ8hF1"
+                    user_info:
+                      email: "user@example.com"
+                      full_name: "John Doe"
+                    task_id: "T8ff2ccdffe9a11f0878d43cd8a99e069"
+                    run_id: "R8ff2ccdefe9a11f0878d43cd8a99e069"
+                    task:
+                      objective: "Call the lead and discuss the project requirements."
+                    input:
+                      name: "John Doe"
+                      contact_number: "1234567890"
+                      email: "john@example.com"
+                      context: "Follow up on proposal"
+                    output:
+                      call_id: "CALL_7dAb3kR9mXvQ2pLw"
+                      start_time: "2026-02-07T05:57:45Z"
+                      end_time: "2026-02-07T06:02:30Z"
+                      duration: 285
+                      recording_url: "https://cdn.unpod.dev/recordings/CALL_7dAb3kR9mXvQ2pLw.mp3"
+                      transcript:
+                        - role: "agent"
+                          content: "Hello, this is an AI assistant calling on behalf of Unpod. Am I speaking with John Doe?"
+                        - role: "user"
+                          content: "Yes, this is John."
+                      post_call_data:
+                        summary: "The agent successfully connected with John Doe and discussed project requirements."
+                        outcome: "interested"
+                        sentiment: "positive"
+                      call_type: "outbound"
+                      call_status: "completed"
+                    assignee: "space-agent-8qmk42nslp91wrh3dz7btxc4"
+                    status: "completed"
+                    execution_type: "call"
+                    run_mode: "prod"
+                    created: "2026-02-07T05:57:45Z"
+                    modified: "2026-02-07T06:02:35Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -142,11 +206,15 @@ paths:
           content:
             application/json:
               example:
-                - id: 1
-                  name: "Sales Agent"
-                  handle: "sales-agent"
-                  voice: "en-US-Neural2-F"
-                  status: "active"
+                count: 94
+                status_code: 200
+                message: "Agents fetched successfully"
+                data:
+                  - handle: "space-agent-8qmk42nslp91wrh3dz7btxc4"
+                    name: "General Agentic"
+                    type: "Voice"
+                    state: "published"
+                    purpose: "Handle outbound sales calls"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -163,7 +231,7 @@ paths:
           required: true
           schema:
             type: string
-            example: "sales-agent"
+            example: "space-agent-8qmk42nslp91wrh3dz7btxc4"
         - $ref: '#/components/parameters/OrgHandle'
       responses:
         '200':
@@ -171,11 +239,58 @@ paths:
           content:
             application/json:
               example:
-                - id: 101
-                  status: "completed"
-                  phone_number: "+1234567890"
+                count: 1
+                status_code: 200
+                message: "Tasks Fetched Successfully"
+                data:
+                  - _id: "697debb84c27faa892bfa0cc"
+                    thread_id: "thread_9xkL2mQpR7vNwY4sZ3cJ8hF1"
+                    user_info:
+                      email: "user@example.com"
+                      full_name: "John Doe"
+                    task_id: "T8ff2ccdffe9a11f0878d43cd8a99e069"
+                    run_id: "R8ff2ccdefe9a11f0878d43cd8a99e069"
+                    task:
+                      objective: "Call the lead and discuss the project requirements."
+                    input:
+                      name: "John Doe"
+                      contact_number: "1234567890"
+                      email: "john@example.com"
+                      context: "Follow up on proposal"
+                    output:
+                      call_id: "CALL_7dAb3kR9mXvQ2pLw"
+                      call_end_reason: "caller_hangup"
+                      start_time: "2026-02-07T05:57:45Z"
+                      end_time: "2026-02-07T06:02:30Z"
+                      assistant_number: "+911234567890"
+                      call_summary: "The agent successfully connected with John Doe and discussed project requirements."
+                      duration: 285
+                      recording_url: "https://cdn.unpod.dev/recordings/CALL_7dAb3kR9mXvQ2pLw.mp3"
+                      transcript:
+                        - role: "agent"
+                          content: "Hello, this is an AI assistant. Am I speaking with John Doe?"
+                        - role: "user"
+                          content: "Yes, this is John."
+                      post_call_data:
+                        summary: "Agent connected with John Doe and discussed project requirements."
+                        outcome: "interested"
+                        sentiment: "positive"
+                      call_type: "outbound"
+                      call_status: "completed"
+                    attachments: []
+                    assignee: "space-agent-8qmk42nslp91wrh3dz7btxc4"
+                    status: "completed"
+                    execution_type: "call"
+                    ref_id: "6902fb5840a736e125e80ebc"
+                    failure_count: 0
+                    last_failure_reason: null
+                    retry_attempt: 0
+                    last_status_change: "2026-02-07T06:02:35Z"
+                    scheduled_timestamp: null
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /api/v2/platform/agents/{agent_handle}/executions/:
     get:
@@ -190,7 +305,7 @@ paths:
           required: true
           schema:
             type: string
-            example: "sales-agent"
+            example: "space-agent-8qmk42nslp91wrh3dz7btxc4"
         - $ref: '#/components/parameters/OrgHandle'
       responses:
         '200':
@@ -198,12 +313,19 @@ paths:
           content:
             application/json:
               example:
-                - id: "R40fe5eface1511f082ac"
-                  status: "completed"
-                  total_tasks: 50
-                  completed_tasks: 48
+                count: 12
+                status_code: 200
+                message: "Executions fetched successfully"
+                data:
+                  - run_id: "Recac64fe03e911f1878d43cd8a99e069"
+                    status: "completed"
+                    total_tasks: 25
+                    completed_tasks: 23
+                    created: "2026-02-07T05:57:45Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   # ─── Tasks / Make Call ────────────────────────────────────────
   /api/v2/platform/spaces/{space_token}/tasks/create/:
@@ -219,7 +341,7 @@ paths:
           required: true
           schema:
             type: string
-            example: "8KZRTQP7BNW5XEDLORYUHMJC"
+            example: "8KZAMRAHSXXXXXXMAYNASMJC"
         - $ref: '#/components/parameters/OrgHandle'
       requestBody:
         required: true
@@ -228,36 +350,108 @@ paths:
             schema:
               type: object
               required:
-                - phone_number
-                - agent_handle
+                - pilot
+                - documents
               properties:
-                phone_number:
+                pilot:
                   type: string
-                  example: "+1234567890"
-                agent_handle:
-                  type: string
-                  example: "sales-agent"
+                  description: Agent/pilot handle to assign the task
+                  example: "space-agent-f1o3qjm1y7q1avvuynv4vprb1"
+                documents:
+                  type: array
+                  description: Array of contact/document objects
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: "John Doe"
+                      email:
+                        type: string
+                        example: "john@example.com"
+                      contact_number:
+                        type: string
+                        example: "1234567890"
+                      alternate_number:
+                        type: string
+                        example: "+919876543210"
+                      occupation:
+                        type: string
+                        example: "Sales Manager"
+                      company_name:
+                        type: string
+                        example: "Acme Corp"
+                      address:
+                        type: string
+                        example: "123 Main St, Mumbai"
+                      about:
+                        type: string
+                        example: "Warm lead from webinar"
+                      context:
+                        type: string
+                        example: "Follow up on proposal sent last week"
+                      labels:
+                        type: array
+                        items:
+                          type: string
+                        example: ["warm-lead", "webinar"]
+                      title:
+                        type: string
+                        example: "Q1 Outreach"
+                      description:
+                        type: string
+                        example: "Lead from Q1 campaign"
+                      document_id:
+                        type: string
+                        example: "6902fb5840a736e125e80ebc"
                 context:
                   type: string
-                  example: "Follow up on demo request"
-                scheduled_at:
-                  type: string
-                  format: date-time
-                  example: "2024-06-01T10:00:00Z"
+                  description: Additional context for the task
+                  example: "Call the lead and discuss the project requirements."
+                schedule:
+                  type: object
+                  description: Schedule configuration
+                  example:
+                    type: "now"
             example:
-              phone_number: "+1234567890"
-              agent_handle: "sales-agent"
-              context: "Follow up on demo request"
+              pilot: "space-agent-f1o3qjm1y7q1avvuynv4vprb1"
+              context: "Call the lead and discuss the project requirements."
+              schedule:
+                type: "now"
+              documents:
+                - name: "John Doe"
+                  email: "john@example.com"
+                  contact_number: "1234567890"
+                  alternate_number: "+919876543210"
+                  occupation: "Sales Manager"
+                  company_name: "Acme Corp"
+                  address: "123 Main St, Mumbai"
+                  about: "Warm lead from webinar"
+                  context: "Follow up on proposal sent last week"
+                  labels: ["warm-lead", "webinar"]
+                  title: "Q1 Outreach"
+                  description: "Lead from Q1 campaign"
+                  document_id: "6902fb5840a736e125e80ebc"
       responses:
-        '201':
+        '200':
           description: Task created successfully
           content:
             application/json:
               example:
-                id: 101
-                status: "queued"
-                phone_number: "+1234567890"
-                agent_handle: "sales-agent"
+                status_code: 200
+                message: "Task Created Successfully"
+                data:
+                  run_id: "R74802366fe9011f0878d43cd8a99e069"
+                  task_ids:
+                    - "T74802367fe9011f0878d43cd8a99e069"
+                  status: "pending"
+        '206':
+          description: Partial Content - Business logic error
+          content:
+            application/json:
+              example:
+                message: "Task creation failed"
+                errors: "Detailed error description"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -275,7 +469,7 @@ paths:
           required: true
           schema:
             type: string
-            example: "8KZRTQP7BNW5XEDLORYUHMJC"
+            example: "8KZAMRAHSXXXXXXMAYNASMJC"
         - $ref: '#/components/parameters/OrgHandle'
       responses:
         '200':
@@ -283,10 +477,16 @@ paths:
           content:
             application/json:
               example:
-                - id: "R40fe5eface1511f082ac"
-                  status: "completed"
-                  total_tasks: 50
-                  created_at: "2024-01-01T00:00:00Z"
+                count: 9
+                status_code: 200
+                message: "Runs Fetched Successfully"
+                data:
+                  - run_id: "Recac64fe03e911f1878d43cd8a99e069"
+                    collection_ref: "collection_data_SA2W8R6NZRK6C9PO3JSL1J85"
+                    run_mode: "prefect"
+                    status: "completed"
+                    created: "2026-02-07T05:57:45Z"
+                    modified: "2026-02-07T05:57:45Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -303,13 +503,13 @@ paths:
           required: true
           schema:
             type: string
-            example: "8KZRTQP7BNW5XEDLORYUHMJC"
+            example: "8KZAMRAHSXXXXXXMAYNASMJC"
         - name: run_id
           in: path
           required: true
           schema:
             type: string
-            example: "R40fe5eface1511f082ac156368e7acc4"
+            example: "Recac64fe03e911f1878d43cd8a99e069"
         - $ref: '#/components/parameters/OrgHandle'
       responses:
         '200':
@@ -317,11 +517,46 @@ paths:
           content:
             application/json:
               example:
-                - id: 101
-                  status: "completed"
-                  phone_number: "+1234567890"
-                  duration: 120
-                  recording_url: "https://storage.unpod.dev/rec/abc.mp3"
+                count: 9
+                status_code: 200
+                message: "Tasks Fetched Successfully"
+                data:
+                  - _id: "697debb84c27faa892bfa0cc"
+                    thread_id: "thread_9xkL2mQpR7vNwY4sZ3cJ8hF1"
+                    user_info:
+                      email: "user@example.com"
+                      full_name: "John Doe"
+                    task_id: "T8ff2ccdffe9a11f0878d43cd8a99e069"
+                    run_id: "Recac64fe03e911f1878d43cd8a99e069"
+                    task:
+                      objective: "Call the lead and discuss the project requirements."
+                    input:
+                      name: "John Doe"
+                      contact_number: "1234567890"
+                      email: "john@example.com"
+                      context: "Follow up on proposal"
+                    output:
+                      call_id: "CALL_7dAb3kR9mXvQ2pLw"
+                      start_time: "2026-02-07T05:57:45Z"
+                      end_time: "2026-02-07T06:02:30Z"
+                      duration: 285
+                      recording_url: "https://cdn.unpod.dev/recordings/CALL_7dAb3kR9mXvQ2pLw.mp3"
+                      transcript:
+                        - role: "agent"
+                          content: "Hello, this is an AI assistant. Am I speaking with John Doe?"
+                        - role: "user"
+                          content: "Yes, this is John."
+                      post_call_data:
+                        summary: "Agent connected with John Doe and discussed project requirements."
+                        outcome: "interested"
+                        sentiment: "positive"
+                      call_type: "outbound"
+                      call_status: "completed"
+                    assignee: "space-agent-8qmk42nslp91wrh3dz7btxc4"
+                    status: "completed"
+                    execution_type: "call"
+                    created: "2026-02-07T05:57:45Z"
+                    modified: "2026-02-07T06:02:35Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -345,6 +580,16 @@ paths:
           schema:
             type: integer
             example: 20
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            example: "2026-02-01"
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            example: "2026-02-07"
         - name: call_type
           in: query
           schema:
@@ -355,7 +600,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [completed, failed, no-answer]
+            enum: [completed, missed, failed]
             example: completed
       responses:
         '200':
@@ -363,14 +608,19 @@ paths:
           content:
             application/json:
               example:
-                count: 120
-                results:
-                  - id: 1
-                    phone_number: "+1234567890"
-                    duration: 95
-                    status: "completed"
+                count: 150
+                status_code: 200
+                message: "Call logs fetched successfully"
+                data:
+                  - source_number: "+911234567890"
+                    destination_number: "+919876543210"
                     call_type: "outbound"
-                    created_at: "2024-01-01T10:00:00Z"
+                    call_status: "completed"
+                    creation_time: "2026-02-07T05:57:00Z"
+                    start_time: "2026-02-07T05:57:45Z"
+                    end_time: "2026-02-07T06:01:12Z"
+                    call_duration: 207
+                    end_reason: "caller_hangup"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -388,18 +638,26 @@ paths:
           in: query
           schema:
             type: string
-            example: "8KZRTQP7BNW5XEDLORYUHMJC"
+            example: "8KZAMRAHSXXXXXXMAYNASMJC"
       responses:
         '200':
           description: Analytics data
           content:
             application/json:
               example:
-                total_calls: 500
-                completed_calls: 470
-                failed_calls: 30
-                avg_duration: 95
-                total_tasks: 500
+                status_code: 200
+                message: "Analytics fetched successfully"
+                data:
+                  total_calls: 1250
+                  completed_calls: 987
+                  failed_calls: 143
+                  avg_duration_seconds: 145.3
+                  total_tasks: 1350
+                  task_status_breakdown:
+                    pending: 45
+                    running: 12
+                    completed: 1180
+                    failed: 113
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -419,12 +677,15 @@ paths:
           content:
             application/json:
               example:
-                - id: 1
-                  name: "Twilio"
-                  slug: "twilio"
-                - id: 2
-                  name: "Plivo"
-                  slug: "plivo"
+                status_code: 200
+                message: "Voice infra providers fetched successfully."
+                data:
+                  - id: 1
+                    name: "Twilio"
+                    slug: "twilio"
+                  - id: 2
+                    name: "Plivo"
+                    slug: "plivo"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -443,10 +704,17 @@ paths:
           content:
             application/json:
               example:
-                - id: 1
-                  provider: "twilio"
-                  account_sid: "ACxxxxxxxxxxxxxxxx"
-                  created_at: "2024-01-01T00:00:00Z"
+                status_code: 200
+                message: "Provider configurations fetched successfully."
+                data:
+                  - id: 42
+                    provider: "twilio"
+                    account_sid: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    created_at: "2026-02-07T10:00:00Z"
+                  - id: 43
+                    provider: "plivo"
+                    account_sid: "MAyyyyyyyyyyyyyyyyyyyyyyy"
+                    created_at: "2026-02-10T09:00:00Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -474,23 +742,27 @@ paths:
                   example: "twilio"
                 account_sid:
                   type: string
-                  example: "ACxxxxxxxxxxxxxxxx"
+                  example: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                 auth_token:
                   type: string
-                  example: "your_auth_token"
+                  example: "your_auth_token_here"
             example:
               provider: "twilio"
-              account_sid: "ACxxxxxxxxxxxxxxxx"
-              auth_token: "your_auth_token"
+              account_sid: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              auth_token: "your_auth_token_here"
       responses:
         '201':
           description: Provider created
           content:
             application/json:
               example:
-                id: 1
-                provider: "twilio"
-                account_sid: "ACxxxxxxxxxxxxxxxx"
+                status_code: 201
+                message: "Provider configuration created successfully."
+                data:
+                  id: 42
+                  provider: "twilio"
+                  account_sid: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  created_at: "2026-02-07T10:00:00Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -507,7 +779,7 @@ paths:
           required: true
           schema:
             type: integer
-            example: 1
+            example: 42
         - $ref: '#/components/parameters/OrgHandle'
       responses:
         '200':
@@ -515,9 +787,13 @@ paths:
           content:
             application/json:
               example:
-                id: 1
-                provider: "twilio"
-                account_sid: "ACxxxxxxxxxxxxxxxx"
+                status_code: 200
+                message: "Provider configuration fetched successfully."
+                data:
+                  id: 42
+                  provider: "twilio"
+                  account_sid: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  created_at: "2026-02-07T10:00:00Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -535,7 +811,7 @@ paths:
           required: true
           schema:
             type: integer
-            example: 1
+            example: 42
         - $ref: '#/components/parameters/OrgHandle'
       requestBody:
         required: true
@@ -546,20 +822,29 @@ paths:
               properties:
                 auth_token:
                   type: string
-                  example: "new_auth_token"
+                  example: "your_new_auth_token_here"
+                account_sid:
+                  type: string
+                  example: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
             example:
-              auth_token: "new_auth_token"
+              auth_token: "your_new_auth_token_here"
       responses:
         '200':
           description: Provider updated
           content:
             application/json:
               example:
-                id: 1
-                provider: "twilio"
-                account_sid: "ACxxxxxxxxxxxxxxxx"
+                status_code: 200
+                message: "Provider configuration updated successfully."
+                data:
+                  id: 42
+                  provider: "twilio"
+                  account_sid: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  created_at: "2026-02-07T10:00:00Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
     delete:
       operationId: deleteProvider
@@ -573,11 +858,11 @@ paths:
           required: true
           schema:
             type: integer
-            example: 1
+            example: 42
         - $ref: '#/components/parameters/OrgHandle'
       responses:
         '204':
-          description: Provider deleted
+          description: Provider deleted successfully - No Content
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -599,10 +884,19 @@ paths:
           content:
             application/json:
               example:
-                - id: 1
-                  number: "+1234567890"
-                  provider: "twilio"
-                  bridge_slug: "sales-bridge"
+                status_code: 200
+                message: "Numbers fetched successfully."
+                data:
+                  - id: 501
+                    number: "+1234567890"
+                    provider: "twilio"
+                    bridge_slug: "sales-bridge-001"
+                    status: "active"
+                  - id: 502
+                    number: "+0987654321"
+                    provider: "twilio"
+                    bridge_slug: null
+                    status: "inactive"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -622,10 +916,18 @@ paths:
           content:
             application/json:
               example:
-                - id: 1
-                  name: "Sales Bridge"
-                  slug: "sales-bridge"
-                  provider: "twilio"
+                count: 6
+                status_code: 200
+                message: "Bridges fetched successfully."
+                data:
+                  - id: 314
+                    name: "Sales Bridge"
+                    slug: "sales-bridge-001"
+                    provider: "twilio"
+                    numbers:
+                      - id: 501
+                        number: "+1234567890"
+                        status: "active"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -652,19 +954,23 @@ paths:
                   example: "Sales Bridge"
                 slug:
                   type: string
-                  example: "sales-bridge"
+                  example: "sales-bridge-001"
             example:
               name: "Sales Bridge"
-              slug: "sales-bridge"
+              slug: "sales-bridge-001"
       responses:
         '201':
           description: Bridge created
           content:
             application/json:
               example:
-                id: 1
-                name: "Sales Bridge"
-                slug: "sales-bridge"
+                status_code: 201
+                message: "Bridge created successfully."
+                data:
+                  id: 314
+                  name: "Sales Bridge"
+                  slug: "sales-bridge-001"
+                  created_at: "2026-02-07T10:00:00Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -681,7 +987,7 @@ paths:
           required: true
           schema:
             type: string
-            example: "sales-bridge"
+            example: "sales-bridge-001"
         - $ref: '#/components/parameters/OrgHandle'
       responses:
         '200':
@@ -689,11 +995,20 @@ paths:
           content:
             application/json:
               example:
-                id: 1
-                name: "Sales Bridge"
-                slug: "sales-bridge"
-                numbers:
-                  - "+1234567890"
+                status_code: 200
+                message: "Bridge fetched successfully."
+                data:
+                  id: 314
+                  name: "Sales Bridge"
+                  slug: "sales-bridge-001"
+                  numbers:
+                    - id: 501
+                      number_id: 25
+                      number: "+1234567890"
+                      state: "ASSIGNED"
+                      active: true
+                      channels_count: 2
+                      status: "active"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -711,7 +1026,7 @@ paths:
           required: true
           schema:
             type: string
-            example: "sales-bridge"
+            example: "sales-bridge-001"
         - $ref: '#/components/parameters/OrgHandle'
       requestBody:
         required: true
@@ -722,20 +1037,29 @@ paths:
               properties:
                 name:
                   type: string
-                  example: "Updated Sales Bridge"
+                  example: "Sales Bridge — Updated"
             example:
-              name: "Updated Sales Bridge"
+              name: "Sales Bridge — Updated"
       responses:
         '200':
           description: Bridge updated
           content:
             application/json:
               example:
-                id: 1
-                name: "Updated Sales Bridge"
-                slug: "sales-bridge"
+                status_code: 200
+                message: "Bridge updated successfully."
+                data:
+                  id: 314
+                  name: "Sales Bridge — Updated"
+                  slug: "sales-bridge-001"
+                  numbers:
+                    - id: 501
+                      number: "+1234567890"
+                      status: "active"
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
     delete:
       operationId: deleteBridge
@@ -749,11 +1073,11 @@ paths:
           required: true
           schema:
             type: string
-            example: "sales-bridge"
+            example: "sales-bridge-001"
         - $ref: '#/components/parameters/OrgHandle'
       responses:
         '204':
-          description: Bridge deleted
+          description: Bridge deleted successfully - No Content
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -772,7 +1096,7 @@ paths:
           required: true
           schema:
             type: string
-            example: "sales-bridge"
+            example: "sales-bridge-001"
         - $ref: '#/components/parameters/OrgHandle'
       requestBody:
         required: true
@@ -786,12 +1110,12 @@ paths:
               properties:
                 provider_config_id:
                   type: integer
-                  example: 1
+                  example: 42
                 phone_number:
                   type: string
                   example: "+1234567890"
             example:
-              provider_config_id: 1
+              provider_config_id: 42
               phone_number: "+1234567890"
       responses:
         '200':
@@ -799,9 +1123,12 @@ paths:
           content:
             application/json:
               example:
-                message: "Provider connected successfully"
-                bridge_slug: "sales-bridge"
-                phone_number: "+1234567890"
+                status_code: 200
+                message: "Provider connected to bridge successfully."
+                data:
+                  message: "Provider connected successfully"
+                  bridge_slug: "sales-bridge-001"
+                  phone_number: "+1234567890"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -818,7 +1145,7 @@ paths:
           required: true
           schema:
             type: string
-            example: "sales-bridge"
+            example: "sales-bridge-001"
         - $ref: '#/components/parameters/OrgHandle'
       requestBody:
         required: true
@@ -840,8 +1167,11 @@ paths:
           content:
             application/json:
               example:
-                message: "Provider disconnected successfully"
-                bridge_slug: "sales-bridge"
+                status_code: 200
+                message: "Provider disconnected from bridge successfully."
+                data:
+                  message: "Provider disconnected successfully"
+                  bridge_slug: "sales-bridge-001"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -864,20 +1194,22 @@ paths:
           in: query
           schema:
             type: integer
-            example: 10
+            example: 20
       responses:
         '200':
           description: Billing data
           content:
             application/json:
               example:
-                count: 5
+                count: 12
+                status_code: 200
+                message: "Billing data fetched successfully"
                 results:
-                  - id: 1
-                    amount: 49.99
+                  - id: 101
+                    amount: "299.00"
                     currency: "USD"
                     status: "paid"
-                    invoice_date: "2024-01-01"
+                    invoice_date: "2026-02-01T00:00:00Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -896,7 +1228,7 @@ components:
       required: true
       schema:
         type: string
-        example: "unpod"
+        example: "unpod.tv"
       description: "Organization domain handle"
 
   responses:
@@ -905,10 +1237,12 @@ components:
       content:
         application/json:
           example:
-            detail: "Authentication credentials were not provided."
+            status_code: 401
+            message: "Authentication credentials were not provided."
     NotFound:
       description: Resource not found
       content:
         application/json:
           example:
-            detail: "Not found."
+            status_code: 404
+            message: "Not found."

@@ -107,7 +107,7 @@ const headers = {
 // Disconnect a provider from a bridge
 const disconnectProviderFromBridge = async (slug, phoneNumber) => {
   const response = await axios.post(
-    `https://unpod.dev/api/v2/platform/telephony/bridges/${slug}/disconnect-provider/`,
+    `https://unpod.ai/api/v2/platform/telephony/bridges/${slug}/disconnect-provider/`,
     { phone_number: phoneNumber },
     { headers }
   );
@@ -130,7 +130,7 @@ headers = {
 
 def disconnect_provider_from_bridge(slug: str, phone_number: str):
     """Disconnect a provider from a bridge"""
-    url = f'https://unpod.dev/api/v2/platform/telephony/bridges/{slug}/disconnect-provider/'
+    url = f'https://unpod.ai/api/v2/platform/telephony/bridges/{slug}/disconnect-provider/'
     payload = {'phone_number': phone_number}
     response = requests.post(url, headers=headers, json=payload)
     data = response.json()
@@ -143,7 +143,7 @@ disconnect_provider_from_bridge('sales-bridge-001', '+1234567890')
 
 ```bash cURL
 # Disconnect a provider from a bridge
-curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/sales-bridge-001/disconnect-provider/" \
+curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-001/disconnect-provider/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \

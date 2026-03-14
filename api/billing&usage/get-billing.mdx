@@ -105,7 +105,7 @@ const headers = {
 // Get billing data with pagination
 const getBillingData = async (page = 1, pageSize = 20) => {
   const response = await axios.get(
-    'https://unpod.dev/api/v2/platform/organisation/billing/',
+    'https://unpod.ai/api/v2/platform/organisation/billing/',
     {
       headers,
       params: { page, page_size: pageSize }
@@ -132,7 +132,7 @@ headers = {
 
 def get_billing_data(page: int = 1, page_size: int = 20):
     """Get billing invoices with pagination"""
-    url = 'https://unpod.dev/api/v2/platform/organisation/billing/'
+    url = 'https://unpod.ai/api/v2/platform/organisation/billing/'
     params = {'page': page, 'page_size': page_size}
     response = requests.get(url, headers=headers, params=params)
     data = response.json()
@@ -147,7 +147,7 @@ get_billing_data(page=1, page_size=20)
 
 ```bash cURL
 # Get billing data
-curl -X GET "https://unpod.dev/api/v2/platform/organisation/billing/?page=1&page_size=20" \
+curl -X GET "https://unpod.ai/api/v2/platform/organisation/billing/?page=1&page_size=20" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

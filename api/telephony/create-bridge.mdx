@@ -105,7 +105,7 @@ const headers = {
 // Create a new telephony bridge
 const createBridge = async (name, slug) => {
   const response = await axios.post(
-    'https://unpod.dev/api/v2/platform/telephony/bridges/',
+    'https://unpod.ai/api/v2/platform/telephony/bridges/',
     { name, slug },
     { headers }
   );
@@ -128,7 +128,7 @@ headers = {
 
 def create_bridge(name: str, slug: str):
     """Create a new telephony bridge"""
-    url = 'https://unpod.dev/api/v2/platform/telephony/bridges/'
+    url = 'https://unpod.ai/api/v2/platform/telephony/bridges/'
     payload = {'name': name, 'slug': slug}
     response = requests.post(url, headers=headers, json=payload)
     data = response.json()
@@ -141,7 +141,7 @@ create_bridge('Sales Bridge', 'sales-bridge-001')
 
 ```bash cURL
 # Create a new telephony bridge
-curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/" \
+curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \

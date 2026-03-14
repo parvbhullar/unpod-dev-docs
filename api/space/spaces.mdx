@@ -216,7 +216,7 @@ const headers = {
 // Get all spaces
 const getAllSpaces = async () => {
   const response = await axios.get(
-    'https://unpod.dev/api/v2/platform/spaces/',
+    'https://unpod.ai/api/v2/platform/spaces/',
     { headers }
   );
   console.log(`Total spaces: ${response.data.count}`);
@@ -226,7 +226,7 @@ const getAllSpaces = async () => {
 // Get space by token
 const getSpaceByToken = async (spaceToken) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/`,
+    `https://unpod.ai/api/v2/platform/spaces/${spaceToken}/`,
     { headers }
   );
   console.log(`Space name: ${response.data.data.name}`);
@@ -248,7 +248,7 @@ headers = {
 
 def get_all_spaces():
     """Get all spaces in the organization"""
-    url = 'https://unpod.dev/api/v2/platform/spaces/'
+    url = 'https://unpod.ai/api/v2/platform/spaces/'
     response = requests.get(url, headers=headers)
     data = response.json()
     print(f"Total spaces: {data['count']}")
@@ -256,7 +256,7 @@ def get_all_spaces():
 
 def get_space_by_token(space_token: str):
     """Get a specific space by its token"""
-    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/'
+    url = f'https://unpod.ai/api/v2/platform/spaces/{space_token}/'
     response = requests.get(url, headers=headers)
     data = response.json()
     print(f"Space name: {data['data']['name']}")
@@ -269,12 +269,12 @@ get_space_by_token('8KZRTQP7BNW5XEDLORYUHMJC')
 
 ```bash cURL
 # Get all spaces
-curl -X GET "https://unpod.dev/api/v2/platform/spaces/" \
+curl -X GET "https://unpod.ai/api/v2/platform/spaces/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 
 # Get space by token
-curl -X GET "https://unpod.dev/api/v2/platform/spaces/8KZRTQP7BNW5XEDLORYUHMJC/" \
+curl -X GET "https://unpod.ai/api/v2/platform/spaces/8KZRTQP7BNW5XEDLORYUHMJC/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

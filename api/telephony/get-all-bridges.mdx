@@ -110,7 +110,7 @@ const headers = {
 // Get all bridges
 const getAllBridges = async () => {
   const response = await axios.get(
-    'https://unpod.dev/api/v2/platform/telephony/bridges/',
+    'https://unpod.ai/api/v2/platform/telephony/bridges/',
     { headers }
   );
   console.log(`Total bridges: ${response.data.count}`);
@@ -134,7 +134,7 @@ headers = {
 
 def get_all_bridges():
     """Get all telephony bridges"""
-    url = 'https://unpod.dev/api/v2/platform/telephony/bridges/'
+    url = 'https://unpod.ai/api/v2/platform/telephony/bridges/'
     response = requests.get(url, headers=headers)
     data = response.json()
     print(f"Total bridges: {data['count']}")
@@ -148,7 +148,7 @@ get_all_bridges()
 
 ```bash cURL
 # Get all telephony bridges
-curl -X GET "https://unpod.dev/api/v2/platform/telephony/bridges/" \
+curl -X GET "https://unpod.ai/api/v2/platform/telephony/bridges/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

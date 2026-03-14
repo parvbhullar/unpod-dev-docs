@@ -235,7 +235,7 @@ const headers = {
 // Get all runs in a space
 const fetchRuns = async (spaceToken) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/runs/`,
+    `https://unpod.ai/api/v2/platform/spaces/${spaceToken}/runs/`,
     { headers }
   );
 
@@ -249,7 +249,7 @@ const fetchRuns = async (spaceToken) => {
 // Get tasks for a specific run
 const fetchRunTasks = async (spaceToken, runId) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/runs/${runId}/tasks/`,
+    `https://unpod.ai/api/v2/platform/spaces/${spaceToken}/runs/${runId}/tasks/`,
     { headers }
   );
 
@@ -277,7 +277,7 @@ headers = {
 
 def fetch_runs(space_token: str):
     """Get all runs in a space"""
-    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/runs/'
+    url = f'https://unpod.ai/api/v2/platform/spaces/{space_token}/runs/'
 
     response = requests.get(url, headers=headers)
     data = response.json()
@@ -290,7 +290,7 @@ def fetch_runs(space_token: str):
 
 def fetch_run_tasks(space_token: str, run_id: str):
     """Get tasks for a specific run"""
-    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/runs/{run_id}/tasks/'
+    url = f'https://unpod.ai/api/v2/platform/spaces/{space_token}/runs/{run_id}/tasks/'
 
     response = requests.get(url, headers=headers)
     data = response.json()
@@ -309,12 +309,12 @@ fetch_runs('your-space-token')
 
 ```bash cURL
 # Get all runs in a space
-curl -X GET "https://unpod.dev/api/v2/platform/spaces/your-space-token/runs/" \
+curl -X GET "https://unpod.ai/api/v2/platform/spaces/your-space-token/runs/" \
   -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json"
 
 # Get tasks for a specific run
-curl -X GET "https://unpod.dev/api/v2/platform/spaces/your-space-token/runs/R40fe5eface1511f082ac156368e7acc4/tasks/" \
+curl -X GET "https://unpod.ai/api/v2/platform/spaces/your-space-token/runs/R40fe5eface1511f082ac156368e7acc4/tasks/" \
   -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json"
 ```

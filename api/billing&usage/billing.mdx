@@ -22,7 +22,7 @@ GET /api/v2/platform/organisation/billing/
 | Header        | Type   | Required | Description                                  |
 |---------------|--------|----------|----------------------------------------------|
 | Org-Handle    | string | Yes      | Organization domain handle                    |
-| Product-Id    | string | No       | Product identifier (default: `unpod.dev`)     |
+| Product-Id    | string | No       | Product identifier (default: `unpod.ai`)     |
 | Authorization | string | Yes      | `jwt <token>`                                |
 
 ### Example Request
@@ -32,7 +32,7 @@ curl -X GET \
   'http://127.0.0.1:8000/api/v2/platform/organisation/billing/?page=1&page_size=10' \
   -H 'accept: application/json' \
   -H 'Org-Handle: recalll.co' \
-  -H 'Product-Id: unpod.dev' \
+  -H 'Product-Id: unpod.ai' \
   -H 'Authorization: jwt <token>'
 ```
 

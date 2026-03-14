@@ -75,7 +75,7 @@ const headers = {
 // Delete a provider configuration
 const deleteProvider = async (id) => {
   await axios.delete(
-    `https://unpod.dev/api/v2/platform/telephony/providers-configurations/${id}/`,
+    `https://unpod.ai/api/v2/platform/telephony/providers-configurations/${id}/`,
     { headers }
   );
   console.log(`Provider configuration #${id} deleted successfully`);
@@ -95,7 +95,7 @@ headers = {
 
 def delete_provider(config_id: int):
     """Delete a provider configuration"""
-    url = f'https://unpod.dev/api/v2/platform/telephony/providers-configurations/{config_id}/'
+    url = f'https://unpod.ai/api/v2/platform/telephony/providers-configurations/{config_id}/'
     response = requests.delete(url, headers=headers)
     if response.status_code == 204:
         print(f"Provider configuration #{config_id} deleted successfully")
@@ -108,7 +108,7 @@ delete_provider(42)
 
 ```bash cURL
 # Delete a provider configuration
-curl -X DELETE "https://unpod.dev/api/v2/platform/telephony/providers-configurations/42/" \
+curl -X DELETE "https://unpod.ai/api/v2/platform/telephony/providers-configurations/42/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

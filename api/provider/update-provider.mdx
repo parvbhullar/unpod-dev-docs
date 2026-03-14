@@ -111,7 +111,7 @@ const headers = {
 // Update a provider configuration
 const updateProvider = async (id, updates) => {
   const response = await axios.patch(
-    `https://unpod.dev/api/v2/platform/telephony/providers-configurations/${id}/`,
+    `https://unpod.ai/api/v2/platform/telephony/providers-configurations/${id}/`,
     updates,
     { headers }
   );
@@ -134,7 +134,7 @@ headers = {
 
 def update_provider(config_id: int, updates: dict):
     """Partially update a provider configuration"""
-    url = f'https://unpod.dev/api/v2/platform/telephony/providers-configurations/{config_id}/'
+    url = f'https://unpod.ai/api/v2/platform/telephony/providers-configurations/{config_id}/'
     response = requests.patch(url, headers=headers, json=updates)
     data = response.json()
     print(f"Provider #{data['data']['id']} updated successfully")
@@ -146,7 +146,7 @@ update_provider(42, {'auth_token': 'your-new-auth-token-here'})
 
 ```bash cURL
 # Update a provider configuration (rotate auth token)
-curl -X PATCH "https://unpod.dev/api/v2/platform/telephony/providers-configurations/42/" \
+curl -X PATCH "https://unpod.ai/api/v2/platform/telephony/providers-configurations/42/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \

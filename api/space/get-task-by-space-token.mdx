@@ -13,12 +13,53 @@ openapi: 'GET /api/v2/platform/spaces/{space_token}/tasks/'
   "message": "Tasks Fetched Successfully",
   "data": [
     {
+      "_id": "697debb84c27faa892bfa0cc",
+      "thread_id": "thread_9xkL2mQpR7vNwY4sZ3cJ8hF1",
+      "user_info": {
+        "email": "user@example.com",
+        "full_name": "John Doe"
+      },
       "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
       "run_id": "R8ff2ccdefe9a11f0878d43cd8a99e069",
+      "task": {
+        "objective": "Call the lead and discuss the project requirements."
+      },
+      "input": {
+        "name": "John Doe",
+        "contact_number": "1234567890",
+        "email": "john@example.com",
+        "context": "Follow up on proposal"
+      },
+      "output": {
+        "call_id": "CALL_7dAb3kR9mXvQ2pLw",
+        "start_time": "2026-02-07T05:57:45Z",
+        "end_time": "2026-02-07T06:02:30Z",
+        "duration": 285,
+        "recording_url": "https://cdn.unpod.ai/recordings/CALL_7dAb3kR9mXvQ2pLw.mp3",
+        "transcript": [
+          {
+            "role": "agent",
+            "content": "Hello, this is an AI assistant calling on behalf of Unpod. Am I speaking with John Doe?"
+          },
+          {
+            "role": "user",
+            "content": "Yes, this is John."
+          }
+        ],
+        "post_call_data": {
+          "summary": "The agent successfully connected with John Doe and discussed project requirements.",
+          "outcome": "interested",
+          "sentiment": "positive"
+        },
+        "call_type": "outbound",
+        "call_status": "completed"
+      },
       "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
       "status": "completed",
       "execution_type": "call",
-      "created": "2026-02-07T05:57:45"
+      "run_mode": "prod",
+      "created": "2026-02-07T05:57:45Z",
+      "modified": "2026-02-07T06:02:35Z"
     }
   ]
 }
@@ -134,7 +175,7 @@ const headers = {
 // Get tasks by space token with pagination
 const getTasksBySpace = async (spaceToken, page = 1, pageSize = 20) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/tasks/`,
+    `https://unpod.ai/api/v2/platform/spaces/${spaceToken}/tasks/`,
     {
       headers,
       params: { page, page_size: pageSize }
@@ -161,7 +202,7 @@ headers = {
 
 def get_tasks_by_space(space_token: str, page: int = 1, page_size: int = 20):
     """Get tasks by space token with pagination"""
-    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/tasks/'
+    url = f'https://unpod.ai/api/v2/platform/spaces/{space_token}/tasks/'
     params = {'page': page, 'page_size': page_size}
     response = requests.get(url, headers=headers, params=params)
     data = response.json()
@@ -176,7 +217,7 @@ get_tasks_by_space('your-space-token', page=1, page_size=20)
 
 ```bash cURL
 # Get tasks by space token with pagination
-curl -X GET "https://unpod.dev/api/v2/platform/spaces/your-space-token/tasks/?page=1&page_size=20" \
+curl -X GET "https://unpod.ai/api/v2/platform/spaces/your-space-token/tasks/?page=1&page_size=20" \
   -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json"
 ```

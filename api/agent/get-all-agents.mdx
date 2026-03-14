@@ -101,7 +101,7 @@ const headers = {
 // Get all agents
 const getAllAgents = async () => {
   const response = await axios.get(
-    'https://unpod.dev/api/v2/platform/agents/',
+    'https://unpod.ai/api/v2/platform/agents/',
     { headers }
   );
   console.log(`Total agents: ${response.data.count}`);
@@ -125,7 +125,7 @@ headers = {
 
 def get_all_agents():
     """Get all AI agents in the organization"""
-    url = 'https://unpod.dev/api/v2/platform/agents/'
+    url = 'https://unpod.ai/api/v2/platform/agents/'
     response = requests.get(url, headers=headers)
     data = response.json()
     print(f"Total agents: {data['count']}")
@@ -139,7 +139,7 @@ get_all_agents()
 
 ```bash cURL
 # Get all agents
-curl -X GET "https://unpod.dev/api/v2/platform/agents/" \
+curl -X GET "https://unpod.ai/api/v2/platform/agents/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

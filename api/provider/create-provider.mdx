@@ -107,7 +107,7 @@ const headers = {
 // Create a provider configuration
 const createProvider = async (provider, accountSid, authToken) => {
   const response = await axios.post(
-    'https://unpod.dev/api/v2/platform/telephony/providers-configurations/',
+    'https://unpod.ai/api/v2/platform/telephony/providers-configurations/',
     { provider, account_sid: accountSid, auth_token: authToken },
     { headers }
   );
@@ -130,7 +130,7 @@ headers = {
 
 def create_provider(provider: str, account_sid: str, auth_token: str):
     """Create a new telephony provider configuration"""
-    url = 'https://unpod.dev/api/v2/platform/telephony/providers-configurations/'
+    url = 'https://unpod.ai/api/v2/platform/telephony/providers-configurations/'
     payload = {
         'provider': provider,
         'account_sid': account_sid,
@@ -147,7 +147,7 @@ create_provider('twilio', 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'your-auth-token
 
 ```bash cURL
 # Create a provider configuration
-curl -X POST "https://unpod.dev/api/v2/platform/telephony/providers-configurations/" \
+curl -X POST "https://unpod.ai/api/v2/platform/telephony/providers-configurations/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \

@@ -13,11 +13,60 @@ openapi: 'GET /api/v2/platform/agents/{agent_handle}/tasks/'
   "message": "Tasks Fetched Successfully",
   "data": [
     {
+      "_id": "697debb84c27faa892bfa0cc",
+      "thread_id": "thread_9xkL2mQpR7vNwY4sZ3cJ8hF1",
+      "user_info": {
+        "email": "user@example.com",
+        "full_name": "John Doe"
+      },
       "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
       "run_id": "R8ff2ccdefe9a11f0878d43cd8a99e069",
+      "task": {
+        "objective": "Call the lead and discuss the project requirements."
+      },
+      "input": {
+        "name": "John Doe",
+        "contact_number": "1234567890",
+        "email": "john@example.com",
+        "context": "Follow up on proposal"
+      },
+      "output": {
+        "call_id": "CALL_7dAb3kR9mXvQ2pLw",
+        "call_end_reason": "caller_hangup",
+        "start_time": "2026-02-07T05:57:45Z",
+        "end_time": "2026-02-07T06:02:30Z",
+        "assistant_number": "+911234567890",
+        "call_summary": "The agent successfully connected with John Doe and discussed project requirements. Lead expressed interest.",
+        "duration": 285,
+        "recording_url": "https://cdn.unpod.ai/recordings/CALL_7dAb3kR9mXvQ2pLw.mp3",
+        "transcript": [
+          {
+            "role": "agent",
+            "content": "Hello, this is an AI assistant calling on behalf of Unpod. Am I speaking with John Doe?"
+          },
+          {
+            "role": "user",
+            "content": "Yes, this is John."
+          }
+        ],
+        "post_call_data": {
+          "summary": "The agent successfully connected with John Doe and discussed project requirements.",
+          "outcome": "interested",
+          "sentiment": "positive"
+        },
+        "call_type": "outbound",
+        "call_status": "completed"
+      },
+      "attachments": [],
       "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
       "status": "completed",
-      "execution_type": "call"
+      "execution_type": "call",
+      "ref_id": "6902fb5840a736e125e80ebc",
+      "failure_count": 0,
+      "last_failure_reason": null,
+      "retry_attempt": 0,
+      "last_status_change": "2026-02-07T06:02:35Z",
+      "scheduled_timestamp": null
     }
   ]
 }
@@ -136,7 +185,7 @@ const headers = {
 // Get tasks by agent handle
 const getTasksByAgentHandle = async (agentHandle) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/agents/${agentHandle}/tasks/`,
+    `https://unpod.ai/api/v2/platform/agents/${agentHandle}/tasks/`,
     { headers }
   );
   console.log(`Total tasks: ${response.data.count}`);
@@ -160,7 +209,7 @@ headers = {
 
 def get_tasks_by_agent_handle(agent_handle: str):
     """Get all tasks assigned to a specific agent"""
-    url = f'https://unpod.dev/api/v2/platform/agents/{agent_handle}/tasks/'
+    url = f'https://unpod.ai/api/v2/platform/agents/{agent_handle}/tasks/'
     response = requests.get(url, headers=headers)
     data = response.json()
     print(f"Total tasks: {data['count']}")
@@ -174,7 +223,7 @@ get_tasks_by_agent_handle('space-agent-8qmk42nslp91wrh3dz7btxc4')
 
 ```bash cURL
 # Get tasks by agent handle
-curl -X GET "https://unpod.dev/api/v2/platform/agents/space-agent-8qmk42nslp91wrh3dz7btxc4/tasks/" \
+curl -X GET "https://unpod.ai/api/v2/platform/agents/space-agent-8qmk42nslp91wrh3dz7btxc4/tasks/" \
   -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json"
 ```

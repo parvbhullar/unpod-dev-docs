@@ -109,7 +109,7 @@ const headers = {
 // Get all runs in a space
 const getAllRuns = async (spaceToken) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/spaces/${spaceToken}/runs/`,
+    `https://unpod.ai/api/v2/platform/spaces/${spaceToken}/runs/`,
     { headers }
   );
   console.log(`Total runs: ${response.data.count}`);
@@ -133,7 +133,7 @@ headers = {
 
 def get_all_runs(space_token: str):
     """Get all runs in a space"""
-    url = f'https://unpod.dev/api/v2/platform/spaces/{space_token}/runs/'
+    url = f'https://unpod.ai/api/v2/platform/spaces/{space_token}/runs/'
     response = requests.get(url, headers=headers)
     data = response.json()
     print(f"Total runs: {data['count']}")
@@ -147,7 +147,7 @@ get_all_runs('8KZAMRAHSXXXXXXMAYNASMJC')
 
 ```bash cURL
 # Get all runs in a space
-curl -X GET "https://unpod.dev/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/runs/" \
+curl -X GET "https://unpod.ai/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/runs/" \
   -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json"
 ```

@@ -108,7 +108,7 @@ const headers = {
 // Get all executions for an agent
 const getAgentExecutions = async (agentHandle) => {
   const response = await axios.get(
-    `https://unpod.dev/api/v2/platform/agents/${agentHandle}/executions/`,
+    `https://unpod.ai/api/v2/platform/agents/${agentHandle}/executions/`,
     { headers }
   );
   console.log(`Total executions: ${response.data.count}`);
@@ -133,7 +133,7 @@ headers = {
 
 def get_agent_executions(agent_handle: str):
     """Get all executions for a specific agent"""
-    url = f'https://unpod.dev/api/v2/platform/agents/{agent_handle}/executions/'
+    url = f'https://unpod.ai/api/v2/platform/agents/{agent_handle}/executions/'
     response = requests.get(url, headers=headers)
     data = response.json()
     print(f"Total executions: {data['count']}")
@@ -148,7 +148,7 @@ get_agent_executions('space-agent-8qmk42nslp91wrh3dz7btxc4')
 
 ```bash cURL
 # Get all executions for an agent
-curl -X GET "https://unpod.dev/api/v2/platform/agents/space-agent-8qmk42nslp91wrh3dz7btxc4/executions/" \
+curl -X GET "https://unpod.ai/api/v2/platform/agents/space-agent-8qmk42nslp91wrh3dz7btxc4/executions/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```

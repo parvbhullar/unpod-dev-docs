@@ -534,7 +534,7 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-const BASE_URL = 'https://unpod.dev/api/v2/platform/telephony/providers-configurations';
+const BASE_URL = 'https://unpod.ai/api/v2/platform/telephony/providers-configurations';
 
 // Get all provider configurations
 const getConfigurations = async () => {
@@ -589,7 +589,7 @@ headers = {
     'Content-Type': 'application/json'
 }
 
-BASE_URL = 'https://unpod.dev/api/v2/platform/telephony/providers-configurations'
+BASE_URL = 'https://unpod.ai/api/v2/platform/telephony/providers-configurations'
 
 def get_configurations():
     """Get all provider configurations"""
@@ -637,11 +637,11 @@ get_configurations()
 
 ```bash cURL
 # Get all provider configurations
-curl -X GET "https://unpod.dev/api/v2/platform/telephony/providers-configurations/" \
+curl -X GET "https://unpod.ai/api/v2/platform/telephony/providers-configurations/" \
   -H "Authorization: Token your-api-token"
 
 # Create a new provider configuration
-curl -X POST "https://unpod.dev/api/v2/platform/telephony/providers-configurations/" \
+curl -X POST "https://unpod.ai/api/v2/platform/telephony/providers-configurations/" \
   -H "Org-Handle: your-org-handle" \
   -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json" \
@@ -653,12 +653,12 @@ curl -X POST "https://unpod.dev/api/v2/platform/telephony/providers-configuratio
   }'
 
 # Get a specific configuration
-curl -X GET "https://unpod.dev/api/v2/platform/telephony/providers-configurations/1/" \
+curl -X GET "https://unpod.ai/api/v2/platform/telephony/providers-configurations/1/" \
   -H "Org-Handle: your-org-handle" \
   -H "Product-ID: your-product-id"
 
 # Update a configuration
-curl -X PATCH "https://unpod.dev/api/v2/platform/telephony/providers-configurations/1/" \
+curl -X PATCH "https://unpod.ai/api/v2/platform/telephony/providers-configurations/1/" \
   -H "Org-Handle: your-org-handle" \
   -H "Product-ID: your-product-id" \
   -H "Content-Type: application/json" \
@@ -667,7 +667,7 @@ curl -X PATCH "https://unpod.dev/api/v2/platform/telephony/providers-configurati
   }'
 
 # Delete a configuration
-curl -X DELETE "https://unpod.dev/api/v2/platform/telephony/providers-configurations/1/" \
+curl -X DELETE "https://unpod.ai/api/v2/platform/telephony/providers-configurations/1/" \
   -H "Org-Handle: your-org-handle" \
   -H "Product-ID: your-product-id"
 ```

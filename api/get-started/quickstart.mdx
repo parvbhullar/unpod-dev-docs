@@ -10,7 +10,7 @@ Unpod provides two ways to interact with the platform:
 
 | Method | Description | Best For |
 |--------|-------------|----------|
-| **Dashboard** | Visual interface at [unpod.dev](https://unpod.dev) | Manual setup, configuration, monitoring |
+| **Dashboard** | Visual interface at [unpod.ai](https://unpod.ai) | Manual setup, configuration, monitoring |
 | **REST API** | Programmatic access | Automation, integrations, custom workflows |
 
 ## Understand Core Components
@@ -29,7 +29,7 @@ Unpod has 4 core building blocks:
 ### Base URL
 
 ```
-https://unpod.dev/
+https://unpod.ai/
 ```
 
 ### Authentication
@@ -55,7 +55,7 @@ Authorization: Token your-api-token
 ### List All Bridges
 
 ```bash
-curl -X GET "https://unpod.dev/api/v2/platform/telephony/bridges/" \
+curl -X GET "https://unpod.ai/api/v2/platform/telephony/bridges/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Product-ID: your-product-id"
@@ -64,7 +64,7 @@ curl -X GET "https://unpod.dev/api/v2/platform/telephony/bridges/" \
 ### Create a Bridge
 
 ```bash
-curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/" \
+curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \
@@ -78,7 +78,7 @@ curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/" \
 ### Get Call Logs
 
 ```bash
-curl -X GET "https://unpod.dev/api/v2/platform/call-logs/" \
+curl -X GET "https://unpod.ai/api/v2/platform/call-logs/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```
@@ -86,7 +86,7 @@ curl -X GET "https://unpod.dev/api/v2/platform/call-logs/" \
 ### Get Providers
 
 ```bash
-curl -X GET "https://unpod.dev/api/v2/platform/telephony/providers/" \
+curl -X GET "https://unpod.ai/api/v2/platform/telephony/providers/" \
   -H "Authorization: Token your-api-token"
 ```
 
