@@ -1,0 +1,117 @@
+---
+title: "Flows"
+description: "How to build, save, load, and switch between dialog flows."
+---
+
+## What is a Flow?
+
+A `Flow` is a directed graph: nodes (states) connected by edges (transitions), with metadata at each node (prompts, tool references, slot definitions). It's the static definition of what your dialog can do.
+
+The `DialogMachine` executes the flow at runtime - one `turn()` at a time.
+
+## Building from a prompt
+
+The fastest way to get started. `create_dialog_flow` makes one LLM call and generates the graph for you.
+
+```python
+import asyncio
+from superdialog import create_dialog_flow
+
+flow = asyncio.run(create_dialog_flow(
+    prompt="Confirm KYC. Ask the customer for the last 4 digits of their Aadhaar. Confirm their date of birth. Thank them on completion.",
+    llm="openai/gpt-5.1",
+))
+flow.save("kyc.json")
+```
+
+Tips for prompts:
+- Describe the goal and each step in plain language
+- Mention what data you need to collect (slots)
+- Describe any branching logic ("if they decline, escalate to an agent")
+
+## Building by hand
+
+For precise control over graph structure, construct nodes and edges directly:
+
+```python
+from superdialog.flow import Flow, Node, Edge
+
+flow = Flow(
+    nodes=[
+        Node(id="greet", prompt="Greet the customer and ask how you can help."),
+        Node(id="collect_name", prompt="Ask for the customer's full name."),
+        Node(id="done", prompt="Thank the customer and confirm the details.", terminal=True),
+    ],
+    edges=[
+        Edge(from_node="greet", to_node="collect_name", condition="customer_responded"),
+        Edge(from_node="collect_name", to_node="done", condition="name_collected"),
+    ],
+)
+flow.save("manual.json")
+```
+
+## Saving and loading
+
+Flows serialize to JSON - commit them to source control alongside your code.
+
+```python
+# Save
+flow.save("flows/kyc.json")
+
+# Load
+from superdialog import Flow
+flow = Flow.load("flows/kyc.json")
+```
+
+## Multiple flows with FlowSet
+
+A `FlowSet` holds several named flows. Use it when a conversation may branch across distinct sub-flows (e.g. main flow → escalation, billing, or FAQ).
+
+```python
+from superdialog import FlowSet, DialogMachine
+
+flowset = FlowSet({
+    "main": main_flow,
+    "escalation": escalation_flow,
+    "billing": billing_flow,
+})
+
+dm = DialogMachine(flow=flowset, llm="openai/gpt-5.1")
+```
+
+Switch flows at runtime:
+
+```python
+# Reset state on switch (default)
+dm.switch_flow("escalation")
+
+# Keep conversation history
+dm.switch_flow("billing", preserve_memory=True)
+```
+
+## Validating and inspecting flows
+
+Use the CLI to lint and visualise a flow before running it:
+
+```bash
+# Check graph structure for errors
+superdialog flow lint kyc.json
+
+# Render a Mermaid diagram
+superdialog flow draw kyc.json
+
+# Re-generate a flow from a prompt
+superdialog flow generate "Confirm KYC." --llm openai/gpt-5.1 --output kyc.json
+```
+
+## Flow versioning
+
+Because flows are plain JSON files, they work naturally with git:
+
+```bash
+git diff flows/kyc.json      # see what changed
+git log flows/kyc.json       # see history
+git blame flows/kyc.json     # see who changed what
+```
+
+Pin a specific flow version by checking out a commit hash - useful for A/B testing different flow designs against the same eval corpus.

@@ -105,6 +105,49 @@
         ]
       },
       {
+        "tab": "SuperDialog",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "book-open",
+            "pages": [
+              "SuperDialog/introduction",
+              "SuperDialog/quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "icon": "layers",
+            "pages": [
+              "SuperDialog/architecture",
+              "SuperDialog/flows",
+              "SuperDialog/tools",
+              "SuperDialog/sessions"
+            ]
+          },
+          {
+            "group": "Reference",
+            "icon": "code",
+            "pages": [
+              "SuperDialog/api-reference",
+              "SuperDialog/cli"
+            ]
+          },
+          {
+            "group": "Embedding Guides",
+            "icon": "plug",
+            "pages": [
+              "SuperDialog/Embedding Guides/overview",
+              "SuperDialog/Embedding Guides/cli",
+              "SuperDialog/Embedding Guides/livekit",
+              "SuperDialog/Embedding Guides/pipecat",
+              "SuperDialog/Embedding Guides/fastapi",
+"SuperDialog/Embedding Guides/testing"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "API Documentation",
         "groups": [
           {

@@ -1,0 +1,178 @@
+---
+title: "Sessions"
+description: "Manage multiple concurrent conversations, persist state across process restarts, and use non-DM agent brains."
+---
+
+## When do you need sessions?
+
+A bare `DialogMachine` holds its conversation state in memory for the lifetime of the instance. This works perfectly for:
+
+- Voice calls (one machine per call, ephemeral)
+- CLI testing (single conversation, short-lived)
+- Simple single-user demos
+
+You need `SessionWorker` when:
+
+- **Multi-user:** multiple concurrent conversations hit the same process
+- **Multi-worker:** requests are load-balanced across FastAPI workers or pods
+- **Long-lived chat:** conversations span hours or days and must survive restarts
+
+## The Agent Protocol
+
+`SessionWorker` works with any brain that implements this Protocol - not just `DialogMachine`:
+
+```python
+class Agent(Protocol):
+    async def turn(text: str, *, stream: bool = False) -> TurnResult | AsyncIterator[StreamChunk]
+    def assist(text: str) -> None
+    @property
+    def chat_ctx(self) -> ChatContext
+    def load_chat_ctx(ctx: ChatContext) -> None
+```
+
+`DialogMachine`, `LLMAgent`, and `LangChainAgent` all implement this.
+
+## SessionWorker
+
+```python
+from superdialog import DialogMachine, Flow, SessionWorker, InMemorySessionStore
+
+flow = Flow.load("kyc.json")
+
+worker = SessionWorker(
+    agent_factory=lambda: DialogMachine(flow=flow, llm="openai/gpt-5.1"),
+    store=InMemorySessionStore(),
+    max_sessions=1000,               # optional cap
+)
+```
+
+Use it with an async context manager:
+
+```python
+async with worker.acquire("user-42") as h:
+    result = await h.turn("Hello")
+    h.assist("The customer is a VIP - be especially warm.")
+    print(result.text)
+```
+
+What `acquire` does:
+1. Loads or creates the session for `session_id`
+2. Acquires a per-session lock (serialises concurrent requests for the same id)
+3. Yields a `SessionHandle`
+4. On exit: persists state to the store and releases the lock
+
+Requests for **different** `session_id`s run fully in parallel.
+
+## FastAPI multi-user example
+
+```python
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from superdialog import DialogMachine, Flow, SessionWorker, InMemorySessionStore
+
+flow = Flow.load("kyc.json")
+worker: SessionWorker
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global worker
+    worker = SessionWorker(
+        agent_factory=lambda: DialogMachine(flow=flow, llm="openai/gpt-5.1"),
+        store=InMemorySessionStore(),
+    )
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+@app.post("/turn")
+async def turn(payload: dict):
+    async with worker.acquire(payload["session_id"]) as h:
+        result = await h.turn(payload["text"])
+    return {"reply": result.text}
+```
+
+## Session stores
+
+| Store | Status | Use case |
+|---|---|---|
+| `InMemorySessionStore` | ✅ v0.2 | Development, single-process |
+| `NullSessionStore` | ✅ v0.2 | Voice (ephemeral, no persistence) |
+| `RedisSessionStore` | 🔜 v0.3 | Multi-process, distributed |
+| `FileSessionStore` | 🔜 v0.3 | Lightweight persistence |
+| `SQLiteSessionStore` | 🔜 v0.3 | Local single-server |
+
+Switch stores by changing one line - the rest of the code stays the same:
+
+```python
+# Development
+store = InMemorySessionStore()
+
+# Production (v0.3)
+# store = RedisSessionStore(url="redis://localhost:6379")
+```
+
+## Lock backends
+
+| Backend | Status | Use case |
+|---|---|---|
+| `AsyncioLockBackend` | ✅ v0.2 | Single-process (default) |
+| `RedisLockBackend` | 🔜 v0.3 | Multi-process / distributed |
+
+## Non-DM agent brains
+
+When you want sessions and persistence but not the flow/state-machine opinion:
+
+```python
+from superdialog import LLMAgent, SessionWorker, InMemorySessionStore
+
+# Raw chat brain - no flow, no slots
+worker = SessionWorker(
+    agent_factory=lambda: LLMAgent(
+        llm="openai/gpt-5.1",
+        system_prompt="You are a helpful customer support assistant.",
+    ),
+    store=InMemorySessionStore(),
+)
+```
+
+Or with LangChain (requires `pip install superdialog[langchain]`):
+
+```python
+from superdialog import LangChainAgent, SessionWorker, InMemorySessionStore
+
+worker = SessionWorker(
+    agent_factory=lambda: LangChainAgent(runnable=my_langchain_chain),
+    store=InMemorySessionStore(),
+)
+```
+
+## ChatContext and FlowState
+
+Internally, each session stores:
+
+- **`ChatContext`** - message history (LiveKit-aligned)
+  ```python
+  @dataclass
+  class ChatMessage:
+      role: Literal["system", "user", "assistant", "tool"]
+      content: str
+
+  @dataclass
+  class ChatContext:
+      items: list[ChatMessage]
+  ```
+
+- **`FlowState`** - DM-specific runtime state (current node, slot values). Present only when the brain is a `DialogMachine`; `None` for `LLMAgent` / `LangChainAgent`.
+
+## Voice (ephemeral) pattern
+
+For voice calls where each call is a fresh conversation and no persistence is needed:
+
+```python
+worker = SessionWorker(
+    agent_factory=lambda: DialogMachine(flow=flow, llm="anthropic/claude-haiku-4-5"),
+    store=NullSessionStore(),   # writes are dropped; reads always return empty
+)
+```
+
+`NullSessionStore` keeps the single-call lifecycle of a bare `DialogMachine` while still giving you the multiplexing and locking of `SessionWorker`.

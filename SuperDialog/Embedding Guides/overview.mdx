@@ -1,0 +1,60 @@
+---
+title: "Embedding Overview"
+description: "How to plug SuperDialog into any host environment - CLI, LiveKit, PipeCat, FastAPI, Unpod Voice, and more."
+---
+
+## The same pattern everywhere
+
+In every host, three things stay the same:
+
+1. **Construct a `DialogMachine`** with a flow, an LLM URI, and tools
+2. **Route inbound text** to `dialog_machine.turn(text)`
+3. **Send the reply text** back to the host's output channel
+
+The host varies; the SuperDialog code is identical.
+
+```python
+# This object works in every host below
+from superdialog import DialogMachine, Flow
+
+dialog_machine = DialogMachine(
+    flow=Flow.load("kyc.json"),
+    llm="anthropic/claude-haiku-4-5",
+    tools=[...],
+)
+```
+
+## Choose your host
+
+<CardGroup cols={2}>
+  <Card title="CLI chatbot" icon="terminal" href="/SuperDialog/Embedding Guides/cli">
+    Zero infrastructure. Best for testing and prompt tuning.
+  </Card>
+  <Card title="LiveKit" icon="phone" href="/SuperDialog/Embedding Guides/livekit">
+    Voice agent via `Agent(llm=DialogMachineLLM(...))` plugin.
+  </Card>
+  <Card title="PipeCat" icon="microphone" href="/SuperDialog/Embedding Guides/pipecat">
+    Drop-in `FrameProcessor` for PipeCat pipelines.
+  </Card>
+  <Card title="FastAPI" icon="server" href="/SuperDialog/Embedding Guides/fastapi">
+    REST endpoint for text chatbots and web widgets.
+  </Card>
+  <Card title="Unpod Voice" icon="cloud" href="/SuperDialog/Embedding Guides/unpod-voice">
+    Connect to Unpod telephony via `WebSocketRunner`.
+  </Card>
+  <Card title="Unit testing" icon="flask" href="/SuperDialog/Embedding Guides/testing">
+    Because SuperDialog is text-only, every dialog is unit-testable.
+  </Card>
+</CardGroup>
+
+## Lines of code comparison
+
+| Host | Adapter | Extra LoC |
+|---|---|---|
+| CLI | None - direct `input()`/`print()` or `superdialog chat` | ~5 |
+| LiveKit | `DialogMachineLLM` | ~8 |
+| PipeCat | `make_processor` | ~12 |
+| FastAPI | `FastAPIRouter` or direct route | ~6 |
+| Unpod Voice Infra | `WebSocketRunner` | ~6 |
+| Unit test | None - direct calls | ~3 |
+| Custom (Slack, Discord, etc.) | None - direct callback | ~3 |

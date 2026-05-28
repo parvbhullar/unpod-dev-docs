@@ -1,0 +1,131 @@
+---
+title: "CLI Reference"
+description: "All superdialog command-line commands."
+---
+
+## Install
+
+The CLI is included when you install SuperDialog:
+
+```bash
+pip install superdialog
+superdialog --help
+```
+
+---
+
+## `superdialog chat`
+
+Interactive terminal chat against a flow. No infrastructure, no API keys for Unpod, no phone number. The fastest way to test your dialog machine exactly as an end user would experience it.
+
+```bash
+superdialog chat kyc.json
+```
+
+```
+> Hello, I need to verify my KYC.
+Agent: Sure! Could you please provide the last 4 digits of your Aadhaar?
+> 1234
+Agent: Thank you. Could you also confirm your date of birth?
+> 1990-05-15
+Agent: Perfect, your KYC has been verified. Have a great day!
+```
+
+**Options:**
+
+```bash
+superdialog chat kyc.json --llm anthropic/claude-haiku-4-5   # override runtime model
+superdialog chat kyc.json --traversal-dir ./history           # save session JSON on completion
+```
+
+**When to use:** during initial flow design, prompt tuning, and eval dataset collection - before any voice infrastructure is involved.
+
+---
+
+## `superdialog flow lint`
+
+Validate a flow's graph structure. Checks for unreachable nodes, missing edges, undefined slots, and other structural errors.
+
+```bash
+superdialog flow lint kyc.json
+```
+
+```
+✅ kyc.json - no errors found (7 nodes, 9 edges)
+```
+
+**When to use:** after hand-editing a flow JSON, or as a CI check before deployment.
+
+---
+
+## `superdialog flow draw`
+
+Render a Mermaid diagram of the flow graph. Paste the output into any Mermaid renderer.
+
+```bash
+superdialog flow draw kyc.json
+```
+
+```
+graph TD
+  start --> collect_aadhaar
+  collect_aadhaar --> verify_aadhaar
+  verify_aadhaar -- verified --> collect_dob
+  verify_aadhaar -- failed --> retry
+  retry --> collect_aadhaar
+  collect_dob --> done
+```
+
+**When to use:** to visualise and share flow structure, in design reviews, or when debugging unexpected state transitions.
+
+---
+
+## `superdialog flow generate`
+
+Bootstrap a `flow.json` from a plain-language prompt. Equivalent to calling `create_dialog_flow(prompt=..., llm=...)` from Python.
+
+```bash
+superdialog flow generate "Confirm KYC. Ask for Aadhaar last 4. Confirm DOB." \
+  --llm openai/gpt-5.1 \
+  --output kyc.json
+```
+
+**Options:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `--llm` | required | Model URI used to generate the flow |
+| `--output` | `flow.json` | Output file path |
+
+**When to use:** to quickly prototype a new flow, then refine the JSON by hand or re-generate with a better prompt.
+
+---
+
+## `superdialog eval` (v0.3 - planned)
+
+Run an eval harness against a corpus of test cases.
+
+```bash
+superdialog eval kyc.json tests/kyc-corpus.jsonl \
+  --llm openai/gpt-5.1 \
+  --llm anthropic/claude-haiku-4-5 \
+  --metrics accuracy latency_p95
+```
+
+Outputs a per-LLM comparison report.
+
+---
+
+## Traversal history
+
+Any command that runs conversations supports `--traversal-dir`. When set, a timestamped JSON file is written for each completed session capturing:
+
+- Every node visited (in order)
+- Every turn (user text + agent reply)
+- All collected slot values
+
+```bash
+superdialog chat kyc.json --traversal-dir ./traversal_history
+```
+
+Use these files to build eval corpora, debug unexpected flow paths, and audit production conversations.

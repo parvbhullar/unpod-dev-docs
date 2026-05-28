@@ -1,0 +1,85 @@
+---
+title: "CLI Chatbot"
+description: "Test your dialog machine in a terminal - zero infrastructure, zero setup."
+---
+
+## Why start here
+
+Before setting up any voice infrastructure, test your flow in a terminal. You get the full end-to-end dialog experience - same logic, same LLM calls, same tool execution - with nothing but Python.
+
+This is also the recommended eval loop:
+1. Build a flow
+2. Chat with it in the CLI
+3. Iterate on the prompt or flow structure
+4. Only then wire it into LiveKit / PipeCat / Unpod
+
+## Option 1: bundled CLI
+
+If you already have a `flow.json`:
+
+```bash
+superdialog chat kyc.json
+```
+
+That's it. The CLI reads `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` from your environment and runs the flow interactively.
+
+Override the model:
+
+```bash
+superdialog chat kyc.json --llm anthropic/claude-haiku-4-5
+```
+
+## Option 2: Python REPL loop
+
+For more control - custom tool setup, custom model, traversal logging:
+
+```python
+import asyncio
+from superdialog import create_dialog_flow, DialogMachine
+
+async def main():
+    flow = await create_dialog_flow(
+        prompt="Confirm KYC. Ask for Aadhaar last 4. Confirm DOB.",
+        llm="openai/gpt-5.1",
+    )
+
+    dialog_machine = DialogMachine(
+        flow=flow,
+        llm="anthropic/claude-haiku-4-5",
+        traversal_dir="./traversal_history",  # saves a JSON per session on completion
+    )
+
+    while True:
+        user = input("> ")
+        if user.strip() in ("quit", "exit"):
+            break
+        reply = await dialog_machine.turn(user)
+        print(reply.text)
+
+asyncio.run(main())
+```
+
+## Traversal history
+
+Pass `traversal_dir` to save a timestamped JSON file for every completed session. Each file captures:
+
+- Every node visited (in order)
+- Every turn (user text + agent reply)
+- All collected slot values
+
+```python
+dialog_machine = DialogMachine(
+    flow=flow,
+    llm="anthropic/claude-haiku-4-5",
+    traversal_dir="./traversal_history",
+)
+```
+
+Use these files to build eval corpora and inspect unexpected flow paths.
+
+## When to move to the next step
+
+Once your flow behaves correctly in the CLI:
+- Wire it into [LiveKit](/SuperDialog/Embedding%20Guides/livekit) for voice
+- Or add a [FastAPI endpoint](/SuperDialog/Embedding%20Guides/fastapi) for a text chatbot
+- Or connect to [Unpod Voice Infra](/SuperDialog/Embedding%20Guides/unpod-voice) for full telephony

@@ -1,0 +1,158 @@
+---
+title: "Unit Testing"
+description: "Test your dialog flows as pure functions - no audio, no infrastructure, no mocks."
+---
+
+## Why SuperDialog flows are easy to test
+
+SuperDialog is text in, text out. There is no audio to mock, no WebRTC room to spin up, no telephony to stub. Every dialog is a Python function that takes a string and returns a string.
+
+This is the killer feature vs. voice-coupled frameworks where tests need audio fixtures.
+
+## Setup
+
+```bash
+pip install pytest pytest-asyncio
+```
+
+Configure `pytest-asyncio` in `pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+```
+
+Or use `anyio` as specified in the project guidelines.
+
+## Basic test
+
+```python
+import pytest
+from superdialog import DialogMachine, Flow
+
+@pytest.mark.asyncio
+async def test_greets_customer():
+    dm = DialogMachine(
+        flow=Flow.load("kyc.json"),
+        llm="anthropic/claude-haiku-4-5",
+    )
+    reply = await dm.turn("Hello")
+    assert reply.text  # non-empty response
+```
+
+## Testing slot collection
+
+Use `machine.state["slots"]` to assert that the flow collected the right data:
+
+```python
+@pytest.mark.asyncio
+async def test_kyc_collects_aadhaar():
+    dm = DialogMachine(
+        flow=Flow.load("kyc.json"),
+        llm="anthropic/claude-haiku-4-5",
+    )
+
+    await dm.turn("I need to verify my KYC.")
+    reply = await dm.turn("My Aadhaar ends in 1234.")
+
+    assert "1234" in reply.text or dm.state["slots"].get("aadhaar_last_4") == "1234"
+```
+
+## Testing multi-turn flows
+
+```python
+@pytest.mark.asyncio
+async def test_appointment_confirmation_flow():
+    dm = DialogMachine(
+        flow=Flow.load("appointment.json"),
+        llm="anthropic/claude-haiku-4-5",
+    )
+
+    r1 = await dm.turn("I'm calling about my appointment.")
+    assert any(word in r1.text.lower() for word in ["friday", "time", "appointment"])
+
+    r2 = await dm.turn("Friday 4pm works for me.")
+    assert any(word in r2.text.lower() for word in ["confirmed", "great", "see you"])
+```
+
+## Testing with mock tools
+
+```python
+from superdialog import PythonTool
+
+@pytest.mark.asyncio
+async def test_tool_is_called():
+    calls = []
+
+    def lookup_customer(customer_id: str) -> dict:
+        """Look up customer by ID."""
+        calls.append(customer_id)
+        return {"name": "Ravi Kumar", "verified": True}
+
+    dm = DialogMachine(
+        flow=Flow.load("kyc.json"),
+        llm="anthropic/claude-haiku-4-5",
+        tools=[PythonTool.of(lookup_customer)],
+    )
+
+    await dm.turn("My customer ID is CUST-999.")
+    assert "CUST-999" in calls
+```
+
+## Testing flow reset
+
+```python
+@pytest.mark.asyncio
+async def test_reset_clears_state():
+    dm = DialogMachine(flow=Flow.load("kyc.json"), llm="anthropic/claude-haiku-4-5")
+
+    await dm.turn("My Aadhaar ends in 1234.")
+    assert dm.state["slots"].get("aadhaar_last_4") == "1234"
+
+    dm.reset()
+    assert not dm.state["slots"].get("aadhaar_last_4")
+```
+
+## Testing flow switching
+
+```python
+from superdialog import FlowSet
+
+@pytest.mark.asyncio
+async def test_switch_to_escalation():
+    flowset = FlowSet({"main": main_flow, "escalation": escalation_flow})
+    dm = DialogMachine(flow=flowset, llm="anthropic/claude-haiku-4-5")
+
+    dm.switch_flow("escalation")
+    reply = await dm.turn("I want to speak to a manager.")
+    assert "escalat" in reply.text.lower() or "manager" in reply.text.lower()
+```
+
+## Traversal snapshots for eval
+
+Set `traversal_dir` on your test machine to capture every conversation as a JSON file. Use these files as your eval corpus:
+
+```python
+@pytest.mark.asyncio
+async def test_and_capture_traversal(tmp_path):
+    dm = DialogMachine(
+        flow=Flow.load("kyc.json"),
+        llm="anthropic/claude-haiku-4-5",
+        traversal_dir=str(tmp_path),
+    )
+
+    await dm.turn("Start KYC")
+    await dm.turn("1234")
+    await dm.turn("1990-05-15")
+
+    # When dm reaches terminal node, a JSON file is written to tmp_path
+    snapshots = list(tmp_path.glob("*.json"))
+    assert len(snapshots) == 1
+```
+
+## Tips
+
+- Use a cheap model (`claude-haiku-4-5`) in tests to keep costs low and latency fast
+- Use `dm.reset()` between test cases if reusing a machine instance
+- Keep flow JSON files in version control so tests are deterministic
+- Build a corpus from traversal snapshots, then use `superdialog eval` (v0.3) to run regression tests

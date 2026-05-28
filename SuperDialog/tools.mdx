@@ -1,0 +1,153 @@
+---
+title: "Tools"
+description: "Give your dialog machine the ability to call Python functions, HTTP endpoints, and MCP servers."
+---
+
+## Overview
+
+Tools let your `DialogMachine` take actions during a conversation - look up a customer record, book a slot, query a database, call an API. When the LLM decides a tool is needed, SuperDialog executes it automatically and feeds the result back into the conversation.
+
+Three tool shapes, one interface:
+
+| Type | Execution | Best for |
+|---|---|---|
+| `PythonTool` | In-process | Local functions, direct DB calls, any Python code |
+| `HttpTool` | HTTP request | External REST APIs, microservices |
+| `MCPTool` | MCP protocol | Model Context Protocol servers |
+
+## PythonTool
+
+The most common case. Pass any Python callable - SuperDialog infers the id, name, description, and JSON schema from the function signature and docstring.
+
+```python
+from superdialog import PythonTool
+
+def lookup_customer(customer_id: str) -> dict:
+    """Look up customer record by ID."""
+    return crm.get(customer_id)
+
+tool = PythonTool.of(lookup_customer)
+```
+
+Override identity or schema explicitly when needed:
+
+```python
+tool = PythonTool(
+    id="crm-lookup",
+    name="lookup_customer",
+    description="Fetch full customer record from CRM by customer ID",
+    fn=lookup_customer,
+)
+```
+
+## HttpTool
+
+For external REST APIs. SuperDialog POSTs to the URL with the tool's input as a JSON body.
+
+```python
+from superdialog import HttpTool
+import os
+
+tool = HttpTool(
+    id="lookup",
+    name="lookup",
+    description="Look up a customer by partial Aadhaar number",
+    url="https://api.company.io/customer/lookup",
+    method="POST",    # default
+    auth={"type": "bearer", "token": os.environ["COMPANY_KEY"]},
+)
+```
+
+**Auth shapes (v0.2):**
+
+```python
+# Bearer token
+auth={"type": "bearer", "token": "your-token"}
+```
+
+Additional shapes (`basic`, `api_key`, callable) are planned for v0.3.
+
+## MCPTool
+
+For servers that implement the [Model Context Protocol](https://modelcontextprotocol.io).
+
+```python
+from superdialog import MCPTool
+
+tool = MCPTool(
+    id="search",
+    name="search",
+    description="Search the internal knowledge base",
+    server="https://mcp.company.io",
+)
+```
+
+<Note>
+In v0.2, `MCPTool` forwards each `execute(args)` call to `session.call_tool(self.id, args)` against the configured server. Auto-discovery of all tools published by an MCP server is planned for a follow-up release.
+</Note>
+
+## Attaching tools to a machine
+
+Pass tools to `DialogMachine` at construction:
+
+```python
+from superdialog import DialogMachine, Flow, PythonTool, HttpTool
+
+dialog_machine = DialogMachine(
+    flow=Flow.load("kyc.json"),
+    llm="anthropic/claude-haiku-4-5",
+    tools=[
+        PythonTool.of(lookup_customer),
+        HttpTool(id="book_slot", name="book_slot", description="Book an appointment slot",
+                 url="https://api.company.io/slots/book"),
+    ],
+)
+```
+
+## Tool results and flow transitions
+
+Tool execution results are automatically merged into the node's slot values. A tool can also trigger a flow transition by returning a `ToolResult` with a `transition_edge_id`:
+
+```python
+from superdialog.tools import ToolResult
+
+def book_appointment(slot_id: str) -> ToolResult:
+    """Book the appointment for the given slot."""
+    success = calendar.book(slot_id)
+    if success:
+        return ToolResult(
+            output={"booked": True, "slot": slot_id},
+            transition_edge_id="booking_confirmed",
+        )
+    return ToolResult(output={"booked": False})
+```
+
+## Example: full flow with tools
+
+```python
+import asyncio
+from superdialog import create_dialog_flow, DialogMachine, PythonTool
+
+def verify_aadhaar(last_4: str) -> dict:
+    """Verify if Aadhaar last 4 digits match the customer on file."""
+    return {"verified": db.verify_aadhaar(last_4)}
+
+def confirm_dob(dob: str) -> dict:
+    """Confirm date of birth format YYYY-MM-DD."""
+    return {"confirmed": db.verify_dob(dob)}
+
+async def main():
+    flow = await create_dialog_flow(
+        prompt="KYC verification: ask for Aadhaar last 4, verify it, then confirm DOB.",
+        llm="openai/gpt-5.1",
+    )
+    dm = DialogMachine(
+        flow=flow,
+        llm="anthropic/claude-haiku-4-5",
+        tools=[PythonTool.of(verify_aadhaar), PythonTool.of(confirm_dob)],
+    )
+    reply = await dm.turn("I'd like to verify my KYC")
+    print(reply.text)
+
+asyncio.run(main())
+```

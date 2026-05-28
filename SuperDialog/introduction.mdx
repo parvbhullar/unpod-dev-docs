@@ -1,0 +1,64 @@
+---
+title: "What is SuperDialog?"
+description: "A Python library that turns a prompt or flow graph into an executable dialog state machine. Pure text in, pure text out."
+---
+
+## Overview
+
+SuperDialog is the **brain** layer for conversational systems. It takes a prompt or a flow graph and turns it into a running dialog state machine - managing turn-by-turn logic, tool calls, flow transitions, and conversation memory.
+
+```
+User text → DialogMachine.turn() → Agent reply text
+```
+
+It is intentionally narrow in scope. Audio, STT, TTS, telephony, and media servers are all out of scope - those belong to voice infrastructure like LiveKit, PipeCat, or Unpod Voice Platform. SuperDialog ends at text in, text out.
+
+## Why SuperDialog exists
+
+### The brain has natural reuse beyond voice
+
+A dialog state machine that runs a customer-onboarding flow works the same whether the user is on a phone, a WhatsApp thread, an Intercom widget, or a CLI test harness. Coupling it to telephony forecloses every non-voice use case.
+
+### The dependency direction matters
+
+Voice infrastructure should depend on SuperDialog (as one brain option), not the other way around. A modular architecture keeps the framework portable and the platform composable.
+
+## Who it's for
+
+| Audience | Why they care |
+|---|---|
+| **Voice developer using LiveKit / PipeCat** | Drop SuperDialog in as the brain; stop hand-writing turn logic |
+| **Chatbot developer (text-only)** | Use SuperDialog directly with FastAPI; test via CLI |
+| **Enterprise dev with a custom LLM** | Plug any LLM URI and get the full framework for free |
+| **Unpod Voice Platform customer** | SuperDialog is the default brain Unpod offers - same code runs locally and in Unpod cloud |
+
+## How it compares
+
+SuperDialog is to **conversation flow** what n8n is to **integration workflow** - a simple, composable runtime for orchestrating turn-by-turn logic. Where LangChain and LangGraph expose general agent primitives, SuperDialog focuses narrowly on the conversational state machine: who speaks next, what flow to switch to, when to call a tool, when to escalate.
+
+The pitch: *"if your problem is conversation state, this is the right size."*
+
+## What ships today (v0.2)
+
+| Capability | Status |
+|---|---|
+| `create_dialog_flow(prompt, llm)` - prompt → flow graph | ✅ v0.1 |
+| `DialogMachine.turn(text)` - execute one conversation turn | ✅ v0.1 |
+| LLM provider abstraction (model URIs) | ✅ v0.1 |
+| Tools: Python callables, HTTP endpoints, MCP servers | ✅ v0.1 |
+| Multi-flow: `FlowSet` + `switch_flow` | ✅ v0.1 |
+| CLI: `chat`, `flow lint / draw / generate` | ✅ v0.1 |
+| Adapters: LiveKit, PipeCat, FastAPI, WebSocket | ✅ v0.1 |
+| `SessionWorker` - multi-conversation lifecycle + persistence | ✅ v0.2 |
+| `LLMAgent`, `LangChainAgent` - non-DM brains in SessionWorker | ✅ v0.2 |
+| `assist(text)` - mid-conversation system injection | ✅ v0.2 |
+| Distributed stores (Redis, File, SQLite) + RedisLockBackend | 🔜 v0.3 |
+| Eval harness + `superdialog eval` CLI | 🔜 v0.3 |
+| True provider-level streaming inference | 🔜 v0.4 |
+
+## What it explicitly is not
+
+- **Not a UI flow designer** - that belongs to a downstream tool
+- **Not a voice framework** - audio, STT, TTS are out of scope
+- **Not multi-modal** - text only at the interface (vision/audio via tools if needed)
+- **Not a hosted service** - SuperDialog is a library; Unpod Voice Platform provides hosting for those who want it

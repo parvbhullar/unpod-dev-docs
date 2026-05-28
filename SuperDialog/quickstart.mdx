@@ -1,0 +1,124 @@
+---
+title: "Quickstart"
+description: "Install SuperDialog, build a flow from a prompt, and run your first conversation in under 5 minutes."
+---
+
+## Install
+
+```bash
+pip install superdialog
+```
+
+For LangChain agent support:
+
+```bash
+pip install superdialog[langchain]
+```
+
+## Step 1 - Bootstrap a flow from a prompt
+
+`create_dialog_flow` makes a one-shot LLM call and returns a JSON-serializable flow graph. The LLM is used **only at construction** - not at runtime.
+
+```python
+import asyncio
+from superdialog import create_dialog_flow
+
+async def main():
+    flow = await create_dialog_flow(
+        prompt="Confirm customer appointment. Ask if Friday 4pm works; offer 5pm as an alternative if not.",
+        llm="openai/gpt-5.1",
+    )
+    flow.save("appointment.json")   # version-control it
+
+asyncio.run(main())
+```
+
+<Note>
+`create_dialog_flow` is async. From a sync entry point, wrap it in `asyncio.run(...)`.
+</Note>
+
+## Step 2 - Build the runtime machine
+
+```python
+from superdialog import DialogMachine, Flow
+
+flow = Flow.load("appointment.json")
+
+dialog_machine = DialogMachine(
+    flow=flow,
+    llm="anthropic/claude-haiku-4-5",   # runtime model - can differ from the build model
+)
+```
+
+## Step 3 - Run a conversation
+
+```python
+import asyncio
+
+async def chat():
+    reply = await dialog_machine.turn("Hello, I'm calling about my appointment.")
+    print(reply.text)
+
+    reply = await dialog_machine.turn("Friday 4pm works for me.")
+    print(reply.text)
+
+asyncio.run(chat())
+```
+
+Or use the bundled CLI - no Python code needed:
+
+```bash
+superdialog chat appointment.json
+```
+
+## Step 4 - Add a tool
+
+```python
+from superdialog import DialogMachine, Flow, PythonTool
+
+def lookup_customer(phone_number: str) -> dict:
+    """Look up customer record by phone number."""
+    return crm.get_by_phone(phone_number)
+
+dialog_machine = DialogMachine(
+    flow=Flow.load("appointment.json"),
+    llm="anthropic/claude-haiku-4-5",
+    tools=[PythonTool.of(lookup_customer)],  # schema inferred from signature + docstring
+)
+```
+
+## Step 5 - Deploy anywhere
+
+The same `dialog_machine` object drops into every host:
+
+<CardGroup cols={2}>
+  <Card title="LiveKit" icon="phone" href="/SuperDialog/Embedding Guides/livekit">
+    Plug in as an `Agent(llm=...)` plugin
+  </Card>
+  <Card title="PipeCat" icon="microphone" href="/SuperDialog/Embedding Guides/pipecat">
+    Drop in as a `FrameProcessor` in your pipeline
+  </Card>
+  <Card title="FastAPI" icon="server" href="/SuperDialog/Embedding Guides/fastapi">
+    Mount a `/turn` endpoint for text chatbots
+  </Card>
+  <Card title="Unpod Voice" icon="cloud" href="/SuperDialog/Embedding Guides/unpod-voice">
+    Connect via `WebSocketRunner` to Unpod infrastructure
+  </Card>
+</CardGroup>
+
+## What's next
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="diagram-project" href="/SuperDialog/architecture">
+    Understand flows, the machine engine, tools, and sessions
+  </Card>
+  <Card title="API Reference" icon="code" href="/SuperDialog/api-reference">
+    Full reference for every class and method
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/SuperDialog/cli">
+    All `superdialog` commands
+  </Card>
+  <Card title="Embedding Guides" icon="plug" href="/SuperDialog/Embedding Guides/cli">
+    Host-specific integration walkthroughs
+  </Card>
+</CardGroup>

@@ -1,0 +1,188 @@
+---
+title: "Architecture"
+description: "How SuperDialog works internally - flows, the machine engine, tools, sessions, adapters, and the model URI resolver."
+---
+
+## Library shape
+
+One Python package. No services, no daemons. Everything in-process.
+
+```
+superdialog/
+  ├─ flow/                # Flow graph: nodes, edges, serialization
+  ├─ machine/             # DialogStateMachine engine
+  ├─ dialog_machine.py    # Public DialogMachine facade
+  ├─ agent.py             # Agent Protocol + TurnResult
+  ├─ agents/              # LLMAgent, LangChainAgent (non-DM brains)
+  ├─ session/             # Session, SessionHandle, SessionWorker, stores, locks
+  ├─ chat_context.py      # ChatContext, ChatMessage (LiveKit-aligned)
+  ├─ flow_state.py        # FlowState (DM-specific runtime state)
+  ├─ llm/                 # Model URI resolver and provider adapters
+  ├─ tools/               # Python / HTTP / MCP tool wrappers
+  ├─ cli/                 # superdialog chat / flow lint / flow draw / flow generate
+  └─ adapters/            # LiveKit, PipeCat, FastAPI, WebSocket
+```
+
+## Core components
+
+### Flow
+
+A directed graph of `nodes` (states), `edges` (transitions), and `metadata` (prompts, tool calls, branches).
+
+```python
+flow = await create_dialog_flow(
+    prompt="Confirm KYC. Ask for Aadhaar last 4 digits.",
+    llm="openai/gpt-5.1",
+)
+flow.save("kyc.json")            # JSON-serializable, version-controllable
+flow = Flow.load("kyc.json")
+```
+
+**Authoring options:**
+
+| Method | When to use |
+|---|---|
+| `create_dialog_flow(prompt, llm)` | LLM bootstraps the graph for you |
+| Hand-built | Construct nodes and edges directly for precise control |
+| `FlowSet({"main": f1, "escalation": f2})` | Multiple small flows; switch at runtime |
+
+<Note>
+The LLM in `create_dialog_flow` is used **at construction time only** - never at runtime. The runtime model is set on `DialogMachine`.
+</Note>
+
+### DialogMachine
+
+The runtime engine. Owns conversation memory, model URI, and tools.
+
+```python
+dialog_machine = DialogMachine(
+    flow=flow,                # or FlowSet(...)
+    llm="anthropic/claude-haiku-4-5",
+    tools=[...],
+    traversal_dir="./history",   # optional: auto-saves session JSON on completion
+)
+```
+
+One primary method drives all conversation:
+
+```python
+# Non-streaming - returns a complete Turn
+reply = await dialog_machine.turn("hello")
+print(reply.text)
+
+# Streaming - returns an async iterator of StreamChunk
+stream = await dialog_machine.turn("hello", stream=True)
+async for chunk in stream:
+    print(chunk.text, end="")
+```
+
+### Model URI resolver
+
+LiveKit/litellm-style URIs route to any provider:
+
+| URI | Routes to |
+|---|---|
+| `openai/gpt-5.1` | OpenAI |
+| `anthropic/claude-haiku-4-5` | Anthropic |
+| `google/gemini-2.5-pro` | Google |
+| `groq/llama-3.3-70b` | Groq |
+| `bedrock/<model>` | AWS Bedrock |
+| `vllm/<model>@<host>` | Self-hosted vLLM |
+| `ollama/<model>@<host>` | Self-hosted Ollama |
+| `openrouter/<vendor>/<model>` | OpenRouter |
+| `custom/<name>/<model>` | Developer-registered via `register_llm_provider` |
+
+Register a custom provider once, use it anywhere:
+
+```python
+register_llm_provider(
+    name="internal",
+    base_url="https://llm.company.io/v1",
+    api_key=os.environ["INTERNAL_LLM_KEY"],
+    api_style="openai",
+)
+# Use as: "custom/internal/llama-3-70b-tuned"
+```
+
+### Tools
+
+Three shapes, one interface:
+
+```python
+PythonTool.of(my_function)               # infer id/name/schema from signature + docstring
+
+HttpTool(
+    id="lookup", name="lookup",
+    description="Look up customer by Aadhaar",
+    url="https://api.company.io/lookup",
+    auth={"type": "bearer", "token": os.environ["KEY"]},
+)
+
+MCPTool(
+    id="search", name="search",
+    description="Search knowledge base",
+    server="https://mcp.company.io",
+)
+```
+
+Tool results merge into node slots and can trigger an edge transition when the handler returns `ToolResult(transition_edge_id="...")`.
+
+### Sessions
+
+A live `DialogMachine` holds conversation state in-memory for the lifetime of the instance. For workloads where the conversation outlives the process (async HTTP handlers, multi-worker deployments, day-long chats), wrap the DM in a `SessionWorker`:
+
+```python
+worker = SessionWorker(
+    agent_factory=lambda: DialogMachine(flow=flow, llm="openai/gpt-5.1"),
+    store=InMemorySessionStore(),
+)
+
+async with worker.acquire(session_id) as h:
+    reply = await h.turn(text)
+```
+
+The Worker constructs one `DialogMachine` per active session, shares the immutable `Flow` by reference, multiplexes N concurrent sessions, and persists each session's `ChatContext` + `FlowState` to a pluggable `SessionStore`.
+
+## Adapter pattern
+
+Adapters live in `superdialog.adapters` and are thin shims. The same `DialogMachine` passes through all of them.
+
+| Adapter | Use case |
+|---|---|
+| `DialogMachineLLM` (LiveKit) | Plug into `Agent(llm=...)` |
+| `make_processor` (PipeCat) | Factory for `FrameProcessor` in a pipeline |
+| `FastAPIRouter` | Mountable router with `/turn`, `/stream`, `/reset` |
+| `WebSocketRunner` | Standalone WSS server for Unpod Voice Infra |
+
+## Data flow
+
+```
+User text
+    │
+    ▼
+DialogMachine.turn(text)
+    │
+    ├─ Load current node from Flow
+    ├─ Build prompt (system + history + node instructions)
+    ├─ Call LLM (model URI resolver → provider)
+    ├─ Execute tool calls (Python / HTTP / MCP)
+    ├─ Update slots, evaluate edge conditions
+    ├─ Advance to next node
+    │
+    ▼
+Turn(text, tool_calls, metadata)
+    │
+    ▼
+Host (LiveKit / PipeCat / FastAPI / WSS / CLI)
+```
+
+## What lives outside this library
+
+SuperDialog ends at text in, text out. The following are out of scope:
+
+- Audio processing
+- STT, TTS
+- Telephony, SIP, RTP
+- Media servers and WebRTC Rooms
+- Phone numbers, voice profiles
+- Billing
