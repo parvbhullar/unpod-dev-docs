@@ -1,0 +1,494 @@
+---
+title: 'Webhook Integration: Receive Unpod Call Data in Your System'
+sidebarTitle: 'Webhook Integration'
+description: 'Build a webhook receiver to capture Unpod call transcripts, summaries, and analysis data — then push it to your CRM, Slack, or database'
+icon: 'webhook'
+---
+
+**May 27, 2026 · 11 min read**
+
+---
+
+Every Unpod call produces rich structured data: full transcripts, AI-generated summaries, sentiment analysis, call recordings, and extracted lead intelligence. This guide shows you how to pull that data into your own system — whether that's a CRM, database, Slack, or a custom pipeline.
+
+## What Data Is Available After a Call
+
+When an Unpod call completes, the task output contains:
+
+```json
+{
+  "output": {
+    "call_id": "675272289779974401",
+    "call_type": "outbound",
+    "call_status": "completed",
+    "start_time": "2026-01-31 11:47:38.067021",
+    "end_time": "2026-01-31 11:48:11.385745",
+    "duration": 33,
+    "recording_url": "https://storage.example.com/call.ogg",
+    "transcript": [
+      { "role": "assistant", "content": "Hi, this is Aria from Acme...", "timestamp": "..." },
+      { "role": "user", "content": "Yes, I'm interested", "timestamp": "..." }
+    ],
+    "post_call_data": {
+      "summary": {
+        "status": "Connected",
+        "summary": "Prospect expressed interest in the enterprise plan...",
+        "callback_datetime": "2026-02-01T10:00:00"
+      },
+      "profile_summary": {
+        "tone": "Positive",
+        "engagement": "High",
+        "interest_level": "Very Interested",
+        "outcome": "Meeting Scheduled",
+        "next_action": "Send proposal email"
+      },
+      "classification": {
+        "labels": ["Interested", "Decision Maker"]
+      }
+    }
+  }
+}
+```
+
+This is the data you want flowing into your business systems automatically.
+
+---
+
+## Integration Architecture
+
+Unpod uses a **poll + process** model. You poll the API to detect completed calls, then process and forward the data.
+
+```
+Unpod API → Your Polling Service → Your Systems
+                                 ├── CRM (HubSpot, Salesforce)
+                                 ├── Slack notifications
+                                 ├── Your database
+                                 └── Custom webhooks
+```
+
+For high-volume deployments, run the polling service as a background worker. For lower volume, a cron job works fine.
+
+---
+
+## Step 1: Set Up Your Webhook Receiver
+
+Build an HTTP endpoint that receives processed call data. Here's a minimal receiver in Node.js and Python:
+
+<CodeGroup>
+
+```javascript Node.js (Express)
+const express = require('express');
+const app = express();
+app.use(express.json());
+
+app.post('/webhook/unpod-call', (req, res) => {
+  const { task_id, run_id, status, output, input } = req.body;
+
+  if (status !== 'completed') {
+    return res.sendStatus(200); // ignore non-completed
+  }
+
+  const {
+    call_status,
+    duration,
+    recording_url,
+    transcript,
+    post_call_data
+  } = output;
+
+  const summary = post_call_data?.summary;
+  const profile = post_call_data?.profile_summary;
+
+  console.log(`Call completed: ${task_id}`);
+  console.log(`Contact: ${input.name} (${input.contact_number})`);
+  console.log(`Duration: ${duration}s | Outcome: ${profile?.outcome}`);
+  console.log(`Next action: ${profile?.next_action}`);
+
+  // Process further: update CRM, send Slack, write to DB...
+  processCallData({ task_id, input, summary, profile, recording_url, transcript });
+
+  res.sendStatus(200);
+});
+
+app.listen(3000, () => console.log('Webhook receiver running on :3000'));
+```
+
+```python Python (FastAPI)
+from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import Optional, Any
+
+app = FastAPI()
+
+class CallWebhookPayload(BaseModel):
+    task_id: str
+    run_id: str
+    status: str
+    input: dict
+    output: Optional[dict] = None
+
+@app.post("/webhook/unpod-call")
+async def receive_call(payload: CallWebhookPayload):
+    if payload.status != "completed":
+        return {"ok": True}
+
+    output = payload.output or {}
+    post_call = output.get("post_call_data", {})
+    profile = post_call.get("profile_summary", {})
+    summary = post_call.get("summary", {})
+
+    print(f"Call completed: {payload.task_id}")
+    print(f"Contact: {payload.input.get('name')} ({payload.input.get('contact_number')})")
+    print(f"Outcome: {profile.get('outcome')}")
+    print(f"Next action: {profile.get('next_action')}")
+
+    # Process further
+    await process_call_data(payload.task_id, payload.input, output, post_call)
+
+    return {"ok": True}
+```
+
+</CodeGroup>
+
+---
+
+## Step 2: Build the Polling Service
+
+This service runs continuously, detects newly completed calls, and forwards data to your webhook receiver.
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const UNPOD_API = 'https://unpod.ai/api/v2/platform';
+const API_TOKEN = process.env.UNPOD_API_TOKEN;
+const SPACE_TOKEN = process.env.UNPOD_SPACE_TOKEN;
+const WEBHOOK_URL = process.env.WEBHOOK_URL; // your receiver
+
+const headers = {
+  Authorization: `Token ${API_TOKEN}`,
+  'Content-Type': 'application/json'
+};
+
+// Track processed tasks to avoid duplicates
+const processedTasks = new Set();
+
+async function fetchCompletedTasks(page = 1) {
+  const res = await axios.get(
+    `${UNPOD_API}/spaces/${SPACE_TOKEN}/tasks/?page=${page}&page_size=50`,
+    { headers }
+  );
+  return res.data.data;
+}
+
+async function processNewCompletedTasks() {
+  const tasks = await fetchCompletedTasks();
+
+  for (const task of tasks) {
+    if (task.status === 'completed' && !processedTasks.has(task.task_id)) {
+      processedTasks.add(task.task_id);
+
+      // Forward to your webhook receiver
+      await axios.post(WEBHOOK_URL, {
+        task_id: task.task_id,
+        run_id: task.run_id,
+        status: task.status,
+        input: task.input,
+        output: task.output
+      });
+
+      console.log(`Forwarded task ${task.task_id} to webhook`);
+    }
+  }
+}
+
+// Poll every 30 seconds
+setInterval(processNewCompletedTasks, 30_000);
+processNewCompletedTasks(); // run immediately on start
+```
+
+```python Python
+import asyncio
+import httpx
+import os
+from datetime import datetime
+
+UNPOD_API = "https://unpod.ai/api/v2/platform"
+API_TOKEN = os.environ["UNPOD_API_TOKEN"]
+SPACE_TOKEN = os.environ["UNPOD_SPACE_TOKEN"]
+WEBHOOK_URL = os.environ["WEBHOOK_URL"]
+
+HEADERS = {
+    "Authorization": f"Token {API_TOKEN}",
+    "Content-Type": "application/json"
+}
+
+processed_tasks: set[str] = set()
+
+async def fetch_tasks(client: httpx.AsyncClient, page: int = 1) -> list[dict]:
+    url = f"{UNPOD_API}/spaces/{SPACE_TOKEN}/tasks/"
+    r = await client.get(url, params={"page": page, "page_size": 50}, headers=HEADERS)
+    r.raise_for_status()
+    return r.json()["data"]
+
+async def poll_and_forward():
+    async with httpx.AsyncClient() as client:
+        while True:
+            tasks = await fetch_tasks(client)
+
+            for task in tasks:
+                task_id = task["task_id"]
+                if task["status"] == "completed" and task_id not in processed_tasks:
+                    processed_tasks.add(task_id)
+
+                    await client.post(WEBHOOK_URL, json={
+                        "task_id": task_id,
+                        "run_id": task["run_id"],
+                        "status": task["status"],
+                        "input": task.get("input", {}),
+                        "output": task.get("output", {})
+                    })
+                    print(f"Forwarded task {task_id}")
+
+            await asyncio.sleep(30)  # poll every 30s
+
+if __name__ == "__main__":
+    asyncio.run(poll_and_forward())
+```
+
+</CodeGroup>
+
+---
+
+## Step 3: Integrate with Your Business Systems
+
+### Push to HubSpot CRM
+
+After a call, update the contact record with the outcome and schedule follow-up:
+
+```javascript
+const hubspot = require('@hubspot/api-client');
+const client = new hubspot.Client({ accessToken: process.env.HUBSPOT_TOKEN });
+
+async function updateHubspotContact(input, profile, summary) {
+  // Find contact by phone number
+  const searchResult = await client.crm.contacts.searchApi.doSearch({
+    filterGroups: [{
+      filters: [{
+        propertyName: 'phone',
+        operator: 'EQ',
+        value: input.contact_number
+      }]
+    }],
+    properties: ['firstname', 'phone', 'hs_lead_status']
+  });
+
+  if (!searchResult.results.length) return;
+
+  const contactId = searchResult.results[0].id;
+
+  // Update contact with call outcome
+  await client.crm.contacts.basicApi.update(contactId, {
+    properties: {
+      hs_lead_status: mapOutcomeToHubspotStatus(profile.outcome),
+      notes_last_contacted: new Date().toISOString(),
+      hs_sales_email_last_replied: summary.callback_datetime || '',
+    }
+  });
+
+  // Create an activity note
+  await client.crm.objects.notes.basicApi.create({
+    properties: {
+      hs_note_body: `AI Call Summary:\n${summary.summary}\n\nTone: ${profile.tone}\nInterest: ${profile.interest_level}\nNext Action: ${profile.next_action}`,
+      hs_timestamp: new Date().toISOString()
+    },
+    associations: [{
+      to: { id: contactId },
+      types: [{ associationCategory: 'HUBSPOT_DEFINED', associationTypeId: 202 }]
+    }]
+  });
+}
+
+function mapOutcomeToHubspotStatus(outcome) {
+  const map = {
+    'Meeting Scheduled': 'IN_PROGRESS',
+    'Not Interested': 'UNQUALIFIED',
+    'Connected': 'OPEN',
+    'Not Connected': 'OPEN'
+  };
+  return map[outcome] || 'OPEN';
+}
+```
+
+### Send Slack Notification
+
+Alert your sales team when a high-interest call completes:
+
+```python
+import httpx
+import os
+
+SLACK_WEBHOOK = os.environ["SLACK_WEBHOOK_URL"]
+
+async def notify_slack(input: dict, profile: dict, summary: dict, recording_url: str):
+    interest = profile.get("interest_level", "Unknown")
+    outcome = profile.get("outcome", "Unknown")
+    next_action = profile.get("next_action", "Review call")
+
+    # Only alert for high-interest calls
+    if interest not in ("Very Interested", "Interested"):
+        return
+
+    emoji = "🔥" if interest == "Very Interested" else "✅"
+
+    message = {
+        "blocks": [
+            {
+                "type": "header",
+                "text": {"type": "plain_text", "text": f"{emoji} Hot Lead Call Completed"}
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {"type": "mrkdwn", "text": f"*Contact:*\n{input.get('name')} ({input.get('contact_number')})"},
+                    {"type": "mrkdwn", "text": f"*Company:*\n{input.get('company_name', 'N/A')}"},
+                    {"type": "mrkdwn", "text": f"*Interest:*\n{interest}"},
+                    {"type": "mrkdwn", "text": f"*Outcome:*\n{outcome}"}
+                ]
+            },
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": f"*Summary:*\n{summary.get('summary', 'N/A')}"}
+            },
+            {
+                "type": "section",
+                "text": {"type": "mrkdwn", "text": f"*Next Action:* {next_action}"}
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "Listen to Recording"},
+                        "url": recording_url
+                    }
+                ]
+            }
+        ]
+    }
+
+    async with httpx.AsyncClient() as client:
+        await client.post(SLACK_WEBHOOK, json=message)
+```
+
+### Write to PostgreSQL
+
+Persist call data for analytics and reporting:
+
+```python
+import asyncpg
+import json
+from datetime import datetime
+
+async def save_call_to_db(pool: asyncpg.Pool, task: dict, output: dict, post_call: dict):
+    profile = post_call.get("profile_summary", {})
+    summary = post_call.get("summary", {})
+
+    await pool.execute("""
+        INSERT INTO call_records (
+            task_id, run_id, contact_name, contact_phone,
+            company, call_status, duration, outcome,
+            interest_level, tone, next_action,
+            summary_text, recording_url, transcript, created_at
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+        ON CONFLICT (task_id) DO NOTHING
+    """,
+        task["task_id"],
+        task["run_id"],
+        task["input"].get("name"),
+        task["input"].get("contact_number"),
+        task["input"].get("company_name"),
+        output.get("call_status"),
+        output.get("duration"),
+        profile.get("outcome"),
+        profile.get("interest_level"),
+        profile.get("tone"),
+        profile.get("next_action"),
+        summary.get("summary"),
+        output.get("recording_url"),
+        json.dumps(output.get("transcript", [])),
+        datetime.utcnow()
+    )
+```
+
+---
+
+## Step 4: Handle Transcripts
+
+The transcript array gives you the full conversation:
+
+```python
+def extract_transcript_text(transcript: list[dict]) -> str:
+    lines = []
+    for msg in transcript:
+        role = "Agent" if msg["role"] == "assistant" else "Customer"
+        lines.append(f"{role}: {msg['content']}")
+    return "\n".join(lines)
+
+def get_call_duration_seconds(output: dict) -> int:
+    return output.get("duration", 0)
+
+def was_call_answered(output: dict) -> bool:
+    return output.get("call_status") == "completed" and output.get("duration", 0) > 5
+```
+
+---
+
+## Production Checklist
+
+Before going live with your integration:
+
+- [ ] **Idempotency** — Use `task_id` as a deduplication key. Store processed IDs in Redis or DB to prevent double-processing
+- [ ] **Error handling** — Retry failed webhook deliveries with exponential backoff
+- [ ] **Persist cursor** — Store the last processed timestamp or task ID so restarts don't reprocess all history
+- [ ] **Secrets** — Store `UNPOD_API_TOKEN` in environment variables, not in code
+- [ ] **Rate limits** — Unpod API has rate limits; add delays between polling requests if processing large backlogs
+- [ ] **Logging** — Log every task ID processed for audit trail
+- [ ] **Alerting** — Alert if the polling service stops delivering (gap in processed timestamps)
+
+---
+
+## Quick Reference: Key Data Fields
+
+| Field | Path | Use Case |
+|-------|------|----------|
+| Contact name | `input.name` | CRM lookup |
+| Phone number | `input.contact_number` | CRM lookup |
+| Call outcome | `output.post_call_data.profile_summary.outcome` | Lead status |
+| Interest level | `output.post_call_data.profile_summary.interest_level` | Prioritization |
+| Next action | `output.post_call_data.profile_summary.next_action` | Task creation |
+| Call summary | `output.post_call_data.summary.summary` | CRM note |
+| Callback time | `output.post_call_data.summary.callback_datetime` | Schedule follow-up |
+| Recording URL | `output.recording_url` | Audit / QA |
+| Transcript | `output.transcript[]` | Analysis / training |
+| Duration | `output.duration` | Billing / analytics |
+
+---
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Create Task API" icon="phone-call" href="/api/execution/create-task">
+    Trigger outbound calls programmatically.
+  </Card>
+  <Card title="Get Tasks API" icon="list" href="/api/agent/get-tasks-by-agent-handle">
+    Fetch task results and call data.
+  </Card>
+  <Card title="Call Logs API" icon="file-text" href="/api/logs/get-call-logs">
+    Query historical call logs.
+  </Card>
+  <Card title="Analytics API" icon="chart-bar" href="/api/billing&usage/get-analytics">
+    Aggregate usage and performance metrics.
+  </Card>
+</CardGroup>

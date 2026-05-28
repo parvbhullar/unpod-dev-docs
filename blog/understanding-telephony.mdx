@@ -1,0 +1,199 @@
+---
+title: 'Telephony Deep Dive: Bridges, Numbers & Providers'
+sidebarTitle: 'Telephony Deep Dive'
+description: 'How Unpod routes calls through bridges, SIP providers, and phone numbers — and how to configure it for your use case'
+icon: 'phone'
+---
+
+**May 27, 2026 · 7 min read**
+
+---
+
+Telephony is the layer that connects your AI agent to the real phone network. Unpod abstracts away the complexity of SIP, PSTN, and WebRTC — but understanding how the pieces fit together helps you configure it correctly and debug issues faster.
+
+## The Three Components
+
+Unpod telephony has three core concepts:
+
+```
+Phone Number → Bridge → Provider → Agent
+```
+
+| Component | What It Is | Example |
+|-----------|-----------|---------|
+| **Phone Number** | A real PSTN/VoIP number | +1 415 555 0100 |
+| **Bridge** | Routing config linking number + provider + agent | `support-bridge` |
+| **Provider** | Voice infrastructure that handles media | LiveKit, Vapi |
+
+---
+
+## Providers: The Voice Infrastructure
+
+Providers handle the actual audio — WebRTC media servers, transcription, and TTS streaming.
+
+### LiveKit
+
+LiveKit is an open-source, WebRTC-based media server. Unpod's real-time voice pipeline runs on LiveKit.
+
+- Sub-300ms end-to-end latency
+- Can be self-hosted (cost control at scale)
+- Supports SIP trunking for PSTN connectivity
+- Best for: developers who want full control, self-hosted deployments
+
+### Vapi
+
+Vapi is a hosted voice AI infrastructure platform.
+
+- Fully managed — no infrastructure to run
+- Built-in SIP trunking and number management
+- Simplified setup for faster time to production
+- Best for: teams that want managed infra without ops overhead
+
+---
+
+## Bridges: The Routing Layer
+
+A Bridge is a named configuration that connects:
+- **One provider** (LiveKit or Vapi)
+- **One or more agents**
+- **One or more phone numbers**
+
+Think of it as a switchboard. When a call arrives at a number, the bridge decides which agent handles it.
+
+### Creating a Bridge via Dashboard
+
+Go to **Dev Platform → Telephony → Bridges → Create Bridge**:
+
+```json
+{
+  "name": "support-bridge",
+  "provider": "livekit",
+  "agent_handle": "aria-support",
+  "inbound_enabled": true,
+  "outbound_enabled": true
+}
+```
+
+### Creating a Bridge via API
+
+```bash
+curl -X POST https://api.unpod.ai/api/v1/bridges/ \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "support-bridge",
+    "slug": "support-bridge",
+    "provider_id": 1,
+    "agent_handle": "aria-support"
+  }'
+```
+
+---
+
+## Phone Numbers
+
+Unpod provisions real phone numbers through your connected SIP provider. Numbers are then assigned to bridges.
+
+### Number Types
+
+| Type | Description | Use Case |
+|------|-------------|----------|
+| Local DID | Local area code number | Customer support, sales |
+| Toll-Free | 800/888/877 numbers | Enterprise support lines |
+| International | Non-US numbers | Global operations |
+
+### Provisioning a Number
+
+```bash
+curl -X POST https://api.unpod.ai/api/v1/numbers/ \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "country": "US",
+    "area_code": "415",
+    "bridge_slug": "support-bridge"
+  }'
+```
+
+The number is immediately active and routed to your bridge once assigned.
+
+---
+
+## Call Flow: What Happens on an Inbound Call
+
+1. Caller dials your number
+2. SIP provider receives the call, looks up the number's bridge assignment
+3. Bridge routes call to the configured provider (LiveKit/Vapi)
+4. Provider streams audio to the Unpod voice pipeline
+5. Voice pipeline runs: STT → LLM (with your agent config) → TTS
+6. Audio streams back to caller in real time
+7. Call ends, transcript and metadata written to Call Logs
+
+Total setup latency target: **under 300ms** from first word to agent response start.
+
+---
+
+## Outbound Calls
+
+For outbound (agent-initiated) calls, create a Task via API:
+
+```bash
+curl -X POST https://api.unpod.ai/api/v1/tasks/ \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_handle": "aria-support",
+    "phone_number": "+14155550100",
+    "bridge_slug": "support-bridge",
+    "space_token": "sp_abc123"
+  }'
+```
+
+Unpod dials the number, connects it through the bridge, and the agent begins the conversation.
+
+---
+
+## Multi-Agent Routing
+
+One bridge can route to different agents based on custom logic. Use the API to update bridge routing dynamically:
+
+```bash
+curl -X PATCH https://api.unpod.ai/api/v1/bridges/support-bridge/ \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_handle": "billing-agent"
+  }'
+```
+
+Combine this with your own IVR or pre-call webhook to build intelligent call routing before the AI agent picks up.
+
+---
+
+## Debugging Common Issues
+
+| Symptom | Likely Cause | Fix |
+|---------|-------------|-----|
+| Call connects but agent doesn't respond | Provider not reachable or misconfigured | Check LiveKit URL and API key in env |
+| Number provisioning fails | No SIP provider connected to bridge | Connect a provider first |
+| High latency on first word | TTS model cold start | Use a faster TTS model (OpenAI TTS > ElevenLabs for latency) |
+| Call drops after 30s | WebRTC ICE timeout | Check firewall rules for UDP 10000-60000 |
+
+---
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Telephony API Reference" icon="git-branch" href="/api/telephony/bridges-overview">
+    Full API reference for bridges, numbers, and providers.
+  </Card>
+  <Card title="Dev Platform: Telephony" icon="phone" href="/Dev Platform/telephony">
+    Dashboard walkthrough for telephony setup.
+  </Card>
+  <Card title="Providers Overview" icon="server" href="/api/provider/overview">
+    Configure and manage voice infrastructure providers.
+  </Card>
+  <Card title="Create a Task (Outbound Call)" icon="phone-call" href="/api/execution/create-task">
+    Trigger outbound AI calls via API.
+  </Card>
+</CardGroup>
