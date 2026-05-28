@@ -1,26 +1,76 @@
 ---
-title: 'Architecture'
-description: 'Monorepo structure, tech stack, and services overview'
+title: 'Platform Architecture'
+description: 'How the Unpod Open-Source CPAAS Platform is structured and how its components connect.'
 icon: 'layers'
+---
+
+## What This Is
+
+The Unpod Open-Source CPAAS Platform is the fourth pillar of the Unpod stack. It is a full-stack platform for running, managing, and monitoring AI voice agents at scale.
+
+Under the hood it uses `unpod` and `superdialog` to run agents. Those agents connect to the Unpod speech platform, which transcribes caller audio and passes plain text directly into SuperDialog. SuperDialog executes the conversation logic and returns a text reply. Unpod synthesises that into speech and streams it back to the caller.
+
+The platform can be self-hosted on any machine or deployed directly on Unpod cloud.
+
+---
+
+## The Four Pillars
+
+```
+unpod          unpod           SuperDialog          Open-Source
+  |                   |                    |               CPAAS Platform
+  |                   |                    |                    |
+  v                   v                    v                    v
+Communication     Voice Stack         Conversation         Agent Management
+  Infra           (STT/TTS)           Framework            (Platform)
+```
+
+| Pillar | What it is |
+|---|---|
+| Communication Infra | Phone numbers, SIP, PSTN - calling primitives |
+| Voice Stack | STT, TTS, VAD, barge-in, endpointing |
+| SuperDialog | Conversation framework - flow graphs, tools, state |
+| CPAAS Platform | Open-source dashboard, agent studio, analytics, telephony management |
+
+---
+
+## How the Pieces Connect
+
+```
+Caller
+  |
+  v
+[ Unpod Speech Platform ]   <- phone number + voice stack
+  |  transcribed text
+  v
+[ SuperDialog ]             <- conversation framework (your logic)
+  |  text reply
+  v
+[ Unpod Speech Platform ]   <- synthesise + stream back
+  |
+  v
+Caller hears response
+```
+
+The platform manages the full lifecycle around this loop: provisioning agents, attaching numbers and voice profiles, storing transcripts, surfacing analytics, and dispatching runners via `unpod`.
+
 ---
 
 ## Monorepo Structure
 
-Unpod is an NX monorepo with four main applications and a shared library layer.
-
 ```
 unpod/
 ├── apps/
-│   ├── web/              # Next.js 16 frontend (React 19)
-│   ├── backend-core/     # Django 5 REST API
-│   ├── api-services/     # FastAPI microservices
-│   ├── super/            # Voice AI engine (LiveKit + Pipecat)
+│   ├── web/              # Next.js frontend - dashboard, studio, analytics
+│   ├── backend-core/     # Django REST API - auth, orgs, RBAC, agents
+│   ├── api-services/     # FastAPI microservices - search, messaging, tasks
+│   ├── super/            # Voice engine - orchestrator, dispatch, pipeline
 │   └── unpod-tauri/      # Desktop app (Tauri 2)
 ├── libs/
 │   └── nextjs/           # Shared React libraries (@unpod/*)
 ├── infrastructure/
-│   └── docker/           # Dockerfiles & service configs
-└── scripts/              # Setup, migration, and utility scripts
+│   └── docker/           # Dockerfiles + service configs
+└── scripts/              # Setup, migration, utility scripts
 ```
 
 ---
@@ -29,119 +79,71 @@ unpod/
 
 ### Web Frontend (`apps/web/`)
 
-Next.js 16 frontend with App Router, group-based layouts, styled-components, and Ant Design.
-
-- **Key features:** Auth, dashboard, AI Studio, spaces, knowledge bases, settings
-- **Testing:** Playwright for E2E tests
+Next.js frontend with App Router. Provides the agent studio, space management, knowledge bases, call logs, and analytics dashboard.
 
 ```bash
-npx nx dev web              # Dev server at port 3000
-npx nx build web            # Production build
-npx nx e2e web              # Playwright E2E tests
+npx nx dev web          # Dev server at port 3000
+npx nx build web        # Production build
 ```
-
-Environment: copy `apps/web/.env.local.example` to `apps/web/.env.local`.
-
-Desktop app (Tauri): `npm run desktop:dev` / `npm run desktop:build`
 
 ### Backend Core (`apps/backend-core/`)
 
-Django 5 REST API with JWT auth, multi-tenant organizations, RBAC, and background tasks.
+Django 5 REST API. Handles JWT auth, multi-tenant organisations, RBAC, agent configuration, and telephony management.
 
-- **Auth:** JWT authentication + Google OAuth
 - **Storage:** PostgreSQL (relational), MongoDB (documents), Redis (cache)
 - **Endpoints:** All under `/api/v1/`
 
 ```bash
 cd apps/backend-core
-source .venv/bin/activate
-python manage.py runserver        # API at port 8000
-pytest                            # Run tests
+python manage.py runserver    # API at port 8000
 ```
 
 ### API Services (`apps/api-services/`)
 
-FastAPI microservices for messaging, document store, AI search, and task management. MongoDB primary storage.
+FastAPI microservices for document store, AI search, messaging, and task management.
 
 ```bash
 cd apps/api-services
-pip install -r requirements.txt
 uvicorn main:app --host 0.0.0.0 --port 9116 --reload
 ```
 
-Interactive docs at http://localhost:9116/docs.
-
 | Route | Service | Description |
-|-------|---------|-------------|
-| `/api/v1/store` | store_service | Document store & indexing |
-| `/api/v1/connector` | store_service | Data connectors |
-| `/api/v1/voice` | store_service | LiveKit voice/video |
+|---|---|---|
+| `/api/v1/store` | store_service | Document store + indexing |
 | `/api/v1/search` | search_service | AI-powered search |
 | `/api/v1/conversation` | messaging_service | Chat conversations |
 | `/api/v1/agent` | messaging_service | Agent management |
 | `/api/v1/task` | task_service | Task management |
 
-WebSocket: `ws://localhost:9116/ws/v1/conversation/{thread_id}/`
+### Voice Engine (`apps/super/`)
 
-### Voice AI Engine (`apps/super/`)
-
-Voice AI engine built on LiveKit and Pipecat. Orchestrates real-time voice agents with LLM providers, TTS/STT engines, and workflow automation via Prefect.
+Orchestrator and worker dispatch layer. Uses `unpod` to register runners and `superdialog` to execute conversation flows. Connects to the Unpod speech platform for STT/TTS.
 
 ```bash
 cd apps/super
-
-# Install (uv recommended)
-uv pip install -r requirements/super.txt -r requirements/super_services.txt
-
-# Run voice executor
 uv run super_services/orchestration/executors/voice_executor_v3.py start
-
-# Run Prefect worker
-uv run -m prefect worker start --pool call-work-pool
 ```
-
-```bash
-# Testing
-pytest                      # All tests
-pytest -m unit              # Unit tests only
-pytest -m integration       # Integration tests
-```
-
-### Desktop Application (`apps/unpod-tauri/`)
-
-Native cross-platform desktop client built with **Tauri 2** and Rust.
 
 ---
 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 16 / React 19 / styled-components / Ant Design |
-| Monorepo | NX 22 |
-| Desktop | Tauri 2 |
+|---|---|
+| Frontend | Next.js / React / Ant Design |
 | Backend | Django 5 + DRF / FastAPI |
-| Voice AI | LiveKit + Pipecat + LangChain |
+| Voice Engine | unpod + SuperDialog + Pipecat |
 | Databases | PostgreSQL 16, MongoDB 7, Redis 7 |
-| Messaging | Kafka (KRaft), Centrifugo v5 |
+| Messaging | Kafka, Centrifugo |
+| Desktop | Tauri 2 |
 
 ---
 
-## Data Flow
+## Deployment Options
 
-How calls flow through the system:
+**Self-hosted** - Run the full stack on your own infrastructure using Docker Compose. See [Self-Hosting Guide](/blog/self-hosting-unpod).
 
-```mermaid
-graph LR
-    A[Caller] --> B[Phone Number]
-    B --> C[Bridge]
-    C --> D[Voice AI Agent]
-    D --> E[LLM Provider]
-    D --> F[Voice Provider]
-    F --> A
-```
-
-The **Bridge** routes incoming calls to the appropriate **Agent**, which processes speech through the AI pipeline (STT → LLM → TTS) and streams audio back to the caller via the configured **Voice Provider**.
+**Unpod Cloud** - Deploy runners and agents directly on Unpod's managed infrastructure. The speech platform, orchestration, and storage are all handled for you.
 
 ---
 
@@ -149,15 +151,15 @@ The **Bridge** routes incoming calls to the appropriate **Agent**, which process
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Get Unpod running on your machine.
+    Get the platform running on your machine.
   </Card>
-  <Card title="Core Components" icon="layers" href="/core-components">
-    Numbers, Providers, Bridges, and Agents explained.
+  <Card title="Voice Stack" icon="layers" href="/speech/introduction">
+    Numbers, voice profiles, agents, and the SDK.
   </Card>
-  <Card title="Dev Platform" icon="sliders-horizontal" href="/Dev Platform/introduction">
-    Configure telephony and agents via the dashboard.
+  <Card title="SuperDialog" icon="git-branch" href="/SuperDialog/introduction">
+    The conversation framework that runs inside every agent.
   </Card>
   <Card title="API Reference" icon="code" href="/api/get-started/quickstart">
-    Full API documentation.
+    Full REST API documentation.
   </Card>
 </CardGroup>

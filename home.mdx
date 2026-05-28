@@ -1,36 +1,140 @@
 ---
-title: 'Unpod Documentation'
 sidebarTitle: 'Home'
-description: 'Build, deploy, and scale Voice AI agents with Unpod'
 icon: 'house'
 ---
 
-<div style={{maxWidth: '860px', margin: '28px auto 0', textAlign: 'center'}}>
-  <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px'}}>
+<div style={{maxWidth: '860px', margin: '0 auto'}}>
 
-    <a href="/introduction" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '28px 24px', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '16px', textDecoration: 'none', color: 'inherit', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', boxShadow: '0 0 0 1px rgba(0,0,0,0.2) inset', minHeight: '148px'}}>
-      <Icon icon="github" size={28} style={{marginBottom: '12px', color: '#e5e7eb'}} />
-      <div style={{fontSize: '16px', marginBottom: '6px', color: '#6f7a90', fontWeight: 600}}>Open Sources</div>
-      <div style={{fontSize: '13px', color: '#6f7a90', lineHeight: '1.5'}}>Explore the open source codebase, setup guides, and architecture overview.</div>
-    </a>
-
-    <a href="/platform" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '28px 24px', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '16px', textDecoration: 'none', color: 'inherit', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', boxShadow: '0 0 0 1px rgba(0,0,0,0.2) inset', minHeight: '148px'}}>
-      <Icon icon="mic" size={28} style={{marginBottom: '12px', color: '#e5e7eb'}} />
-      <div style={{fontSize: '16px', marginBottom: '6px', color: '#6f7a90', fontWeight: 600}}>Voice AI Platform</div>
-      <div style={{fontSize: '13px', color: '#6f7a90', lineHeight: '1.5'}}>Configure Voice AI agents, spaces, and manage conversations at scale.</div>
-    </a>
-
-    <a href="/Dev Platform/introduction" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '28px 24px', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '16px', textDecoration: 'none', color: 'inherit', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', boxShadow: '0 0 0 1px rgba(0,0,0,0.2) inset', minHeight: '148px'}}>
-      <Icon icon="sliders-horizontal" size={28} style={{marginBottom: '12px', color: '#e5e7eb'}} />
-      <div style={{fontSize: '16px', marginBottom: '6px', color: '#6f7a90', fontWeight: 600}}>Dev Platform</div>
-      <div style={{fontSize: '13px', color: '#6f7a90', lineHeight: '1.5'}}>Set up telephony, bridges, providers, and agents programmatically.</div>
-    </a>
-
-    <a href="/api/get-started/quickstart" style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '28px 24px', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '16px', textDecoration: 'none', color: 'inherit', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', boxShadow: '0 0 0 1px rgba(0,0,0,0.2) inset', minHeight: '148px'}}>
-      <Icon icon="code" size={28} style={{marginBottom: '12px', color: '#e5e7eb'}} />
-      <div style={{fontSize: '16px', marginBottom: '6px', color: '#6f7a90   ', fontWeight: 600}}>API Reference</div>
-      <div style={{fontSize: '13px', color: '#6f7a90', lineHeight: '1.5'}}>Full REST API documentation for integrations and automation.</div>
-    </a>
-
+<div style={{textAlign: 'center', padding: '48px 0 32px'}}>
+  <div style={{fontSize: '13px', fontWeight: 600, letterSpacing: '0.08em', color: '#796cff', textTransform: 'uppercase', marginBottom: '16px'}}>Communication Infrastructure</div>
+  <div style={{display: 'block', fontSize: '36px', fontWeight: 700, lineHeight: '1.2', margin: '0 0 16px', color: 'inherit'}}>Phone Numbers & Speech Infra for AI Agents</div>
+  <p style={{fontSize: '17px', color: '#6f7a90', lineHeight: '1.6', maxWidth: '560px', margin: '0 auto 32px'}}>You bring the agent. Unpod gives it a phone number, fully managed STT/TTS, and a conversation framework - in hours, not months.</p>
+  <div style={{display: 'flex', gap: '12px', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap'}}>
+    <a href="/speech/quickstart" style={{display: 'block', padding: '10px 24px', background: '#796cff', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '14px', lineHeight: '1'}}>Get Started</a>
+    <a href="/why-unpod/introduction" style={{display: 'block', padding: '10px 24px', border: '1px solid #796cff', borderRadius: '8px', textDecoration: 'none', color: '#796cff', fontWeight: 600, fontSize: '14px', lineHeight: '1'}}>Why Unpod</a>
   </div>
+</div>
+
+---
+
+## The Stack
+
+<div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', margin: '24px 0'}}>
+
+  <a href="/speech/introduction" style={{display: 'flex', flexDirection: 'column', padding: '24px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', textDecoration: 'none', color: 'inherit', background: 'rgba(121,108,255,0.04)'}}>
+    <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px'}}>
+      <Icon icon="waveform" size={20} style={{color: '#796cff'}} />
+      <div style={{fontSize: '15px', fontWeight: 600}}>Voice Stack</div>
+    </div>
+    <div style={{fontSize: '13px', color: '#6f7a90', lineHeight: '1.6'}}>Fully managed STT, TTS, VAD, barge-in, and endpointing. Configure once via voice profiles. Automatic failover.</div>
+  </a>
+
+  <a href="/SuperDialog/introduction" style={{display: 'flex', flexDirection: 'column', padding: '24px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', textDecoration: 'none', color: 'inherit', background: 'rgba(121,108,255,0.04)'}}>
+    <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px'}}>
+      <Icon icon="git-branch" size={20} style={{color: '#796cff'}} />
+      <div style={{fontSize: '15px', fontWeight: 600}}>SuperDialog</div>
+    </div>
+    <div style={{fontSize: '13px', color: '#6f7a90', lineHeight: '1.6'}}>Conversation framework. Turns a prompt or flow graph into an executable dialog state machine. Pure text in, pure text out.</div>
+  </a>
+
+  <a href="/speech/numbers" style={{display: 'flex', flexDirection: 'column', padding: '24px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', textDecoration: 'none', color: 'inherit', background: 'rgba(121,108,255,0.04)'}}>
+    <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px'}}>
+      <Icon icon="phone" size={20} style={{color: '#796cff'}} />
+      <div style={{fontSize: '15px', fontWeight: 600}}>Phone Numbers</div>
+    </div>
+    <div style={{fontSize: '13px', color: '#6f7a90', lineHeight: '1.6'}}>Provision numbers directly from Unpod or bring your own. Attach to an agent and accept inbound calls immediately.</div>
+  </a>
+
+  <a href="/speech/websocket" style={{display: 'flex', flexDirection: 'column', padding: '24px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', textDecoration: 'none', color: 'inherit', background: 'rgba(121,108,255,0.04)'}}>
+    <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px'}}>
+      <Icon icon="plug" size={20} style={{color: '#796cff'}} />
+      <div style={{fontSize: '15px', fontWeight: 600}}>WebSocket / Apps</div>
+    </div>
+    <div style={{fontSize: '13px', color: '#6f7a90', lineHeight: '1.6'}}>Your agent is exposed as a WebSocket endpoint. Any browser, mobile app, or client connects to it. Speech processed entirely by Unpod.</div>
+  </a>
+
+</div>
+
+---
+
+## Start Building
+
+<div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', margin: '24px 0'}}>
+
+  <a href="/speech/quickstart" style={{display: 'flex', flexDirection: 'column', padding: '20px', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '10px', textDecoration: 'none', color: 'inherit'}}>
+    <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
+      <Icon icon="bolt" size={16} style={{color: '#796cff'}} />
+      <div style={{fontSize: '14px', fontWeight: 600}}>Voice Stack Quickstart</div>
+    </div>
+    <div style={{fontSize: '12px', color: '#6f7a90', lineHeight: '1.5'}}>Phone number to live agent in under 10 minutes.</div>
+  </a>
+
+  <a href="/SuperDialog/quickstart" style={{display: 'flex', flexDirection: 'column', padding: '20px', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '10px', textDecoration: 'none', color: 'inherit'}}>
+    <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
+      <Icon icon="layers" size={16} style={{color: '#796cff'}} />
+      <div style={{fontSize: '14px', fontWeight: 600}}>SuperDialog Quickstart</div>
+    </div>
+    <div style={{fontSize: '12px', color: '#6f7a90', lineHeight: '1.5'}}>Build a structured conversation flow with tools.</div>
+  </a>
+
+  <a href="/api/get-started/quickstart" style={{display: 'flex', flexDirection: 'column', padding: '20px', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '10px', textDecoration: 'none', color: 'inherit'}}>
+    <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
+      <Icon icon="code" size={16} style={{color: '#796cff'}} />
+      <div style={{fontSize: '14px', fontWeight: 600}}>API Quickstart</div>
+    </div>
+    <div style={{fontSize: '12px', color: '#6f7a90', lineHeight: '1.5'}}>Manage agents, numbers, and calls via REST API.</div>
+  </a>
+
+  <a href="/speech/sdk-setup" style={{display: 'flex', flexDirection: 'column', padding: '20px', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '10px', textDecoration: 'none', color: 'inherit'}}>
+    <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
+      <Icon icon="terminal" size={16} style={{color: '#796cff'}} />
+      <div style={{fontSize: '14px', fontWeight: 600}}>SDK Setup</div>
+    </div>
+    <div style={{fontSize: '12px', color: '#6f7a90', lineHeight: '1.5'}}>Install unpod and run your AgentRunner process.</div>
+  </a>
+
+  <a href="/speech/outbound-calls" style={{display: 'flex', flexDirection: 'column', padding: '20px', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '10px', textDecoration: 'none', color: 'inherit'}}>
+    <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
+      <Icon icon="phone-outgoing" size={16} style={{color: '#796cff'}} />
+      <div style={{fontSize: '14px', fontWeight: 600}}>Outbound Calls</div>
+    </div>
+    <div style={{fontSize: '12px', color: '#6f7a90', lineHeight: '1.5'}}>Programmatically initiate calls from your backend.</div>
+  </a>
+
+  <a href="/quickstart" style={{display: 'flex', flexDirection: 'column', padding: '20px', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '10px', textDecoration: 'none', color: 'inherit'}}>
+    <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
+      <Icon icon="github" size={16} style={{color: '#796cff'}} />
+      <div style={{fontSize: '14px', fontWeight: 600}}>Self-Hosting</div>
+    </div>
+    <div style={{fontSize: '12px', color: '#6f7a90', lineHeight: '1.5'}}>Run the full Unpod stack on your own infrastructure.</div>
+  </a>
+
+</div>
+
+---
+
+## Open-Source Platform
+
+The Unpod CPAAS Platform is open-source. Run it on your own infrastructure or use Unpod's managed cloud.
+
+<div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', margin: '16px 0'}}>
+
+  <a href="/architecture" style={{display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 20px', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '10px', textDecoration: 'none', color: 'inherit'}}>
+    <Icon icon="layers" size={18} style={{color: '#796cff', flexShrink: 0}} />
+    <div>
+      <div style={{fontSize: '14px', fontWeight: 600, marginBottom: '2px'}}>Platform Architecture</div>
+      <div style={{fontSize: '12px', color: '#6f7a90'}}>How the four pillars connect - Voice Stack, SuperDialog, SDK, CPAAS Platform.</div>
+    </div>
+  </a>
+
+  <a href="/blog/self-hosting-unpod" style={{display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 20px', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '10px', textDecoration: 'none', color: 'inherit'}}>
+    <Icon icon="server" size={18} style={{color: '#796cff', flexShrink: 0}} />
+    <div>
+      <div style={{fontSize: '14px', fontWeight: 600, marginBottom: '2px'}}>Self-Hosting Guide</div>
+      <div style={{fontSize: '12px', color: '#6f7a90'}}>Docker Compose setup, config, migrations, and production hardening.</div>
+    </div>
+  </a>
+
+</div>
+
 </div>

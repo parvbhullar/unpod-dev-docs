@@ -1,0 +1,186 @@
+---
+title: 'Unpod vs LiveKit vs Pipecat'
+icon: 'scale'
+description: 'How Unpod compares to audio frameworks on cost, time to production, and what you own.'
+---
+
+## TL;DR
+
+| | Unpod | LiveKit | Pipecat |
+|---|---|---|---|
+| **What it is** | Communication infra for AI agents | Real-time audio infrastructure + agent framework | Open-source voice pipeline framework |
+| **You own** | Your agent logic | Everything | Everything |
+| **They manage** | Phone numbers, STT/TTS, VAD, orchestration | WebRTC rooms (self-hosted or cloud) | Nothing - it's a library |
+| **Phone numbers** | Built-in, no carrier account | Bring your own SIP trunk | Bring your own |
+| **STT/TTS** | Fully managed, automatic failover | You configure and run providers | You configure and run providers |
+| **Time to first call** | ~2 hours | ~4 months | ~4 months |
+| **Cost per minute** | ~$0.02 | ~$0.06 | ~$0.06 |
+| **Scaling** | Automatic | You manage workers | You manage processes |
+| **Your agent format** | Webhook, SDK, LangChain, MCP | LangChain, custom | LangChain, custom |
+| **Best for** | Teams that want calling infra handled | Teams needing full audio control | Teams wanting pipeline flexibility |
+
+---
+
+## The Core Difference
+
+LiveKit and Pipecat are **audio frameworks**. They give you building blocks to construct a voice pipeline. You choose and wire every component - STT provider, TTS provider, VAD, transport, endpointing. Then you deploy it, scale it, and keep it running.
+
+Unpod is **calling infrastructure**. You bring the agent. We give it a phone number and handle all the audio plumbing.
+
+---
+
+## Pipecat
+
+Pipecat gives you components to build a voice pipeline yourself:
+
+```python
+# Pipecat - you wire and run every component
+pipeline = Pipeline([
+    transport.input(),
+    stt,
+    llm,
+    tts,
+    transport.output(),
+])
+runner = PipelineRunner()
+await runner.run(PipelineTask(pipeline))
+```
+
+You pick the STT, the TTS, the transport. You manage the process. You handle failover. Maximum flexibility - maximum setup work.
+
+**Cost:** ~$0.06/min (you pay STT + TTS providers directly)
+
+**Good fit:** Teams with specific provider requirements or non-standard pipeline shapes. Research and experimental systems.
+
+---
+
+## LiveKit
+
+LiveKit provides real-time infrastructure (WebRTC rooms, SIP, TURN) and an agent framework on top:
+
+```python
+# LiveKit - you configure all providers and manage the room
+async def entrypoint(ctx: JobContext):
+    await ctx.connect()
+    agent = VoiceAgent(
+        vad=silero.VAD.load(),
+        stt=deepgram.STT(),
+        llm=openai.LLM(),
+        tts=cartesia.TTS(),
+    )
+    agent.start(ctx.room)
+```
+
+You configure every provider. You deploy and manage the LiveKit server (or pay for LiveKit Cloud). Phone numbers require a SIP trunk from a carrier.
+
+**Cost:** ~$0.06/min (you pay each provider separately) + infrastructure
+
+**Good fit:** Teams already on LiveKit, or needing fine-grained WebRTC control for browser and mobile use cases beyond phone calls.
+
+---
+
+## Unpod
+
+You bring the agent. Unpod gives it a phone number and handles every audio layer:
+
+```python
+# Unpod - you write the logic, we handle the communication stack
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = DialogMachine(flow=flow, llm="anthropic/claude-haiku-4-5")
+    await ctx.session.run()
+
+AgentRunner(entrypoint=handle_call, agent_id="agt_...").start()
+```
+
+Numbers provisioned from Unpod. STT/TTS configured via voice profiles with automatic failover. Orchestration and dispatch handled automatically.
+
+You can also point Unpod at an existing HTTP endpoint or LangChain agent without writing any SDK code.
+
+**Cost:** ~$0.02/min (fully managed, no separate provider accounts)
+
+**Good fit:** Teams that want production voice calls without becoming telephony experts.
+
+---
+
+## When to Choose Each
+
+### Choose Unpod when:
+- You want phone numbers without a carrier account or SIP trunk
+- You have an existing agent and want to give it voice in hours - not months
+- You do not want to manage STT/TTS provider accounts, failover, or audio infrastructure
+- You want Voice + SMS + WhatsApp from one API
+- Your core value is the agent logic - not the communication stack
+
+### Choose LiveKit when:
+- You need granular WebRTC control (custom ICE, codec requirements)
+- You are already running LiveKit infrastructure
+- You need browser or mobile real-time communication beyond phone calls
+- You want full ownership of every infrastructure component
+
+### Choose Pipecat when:
+- You need a highly customised pipeline shape or experimental architecture
+- You want maximum control over every processing step
+- You are comfortable managing deployment, scaling, and provider accounts yourself
+
+---
+
+## Cost Breakdown
+
+The 80% problem: STT + TTS costs about 30x more per minute than the LLM.
+
+| Component | Cost/min | Who runs it |
+|---|---|---|
+| LLM (GPT-4o, Claude, etc.) | ~$0.002 | You choose |
+| STT (Deepgram) | ~$0.024 | Unpod (managed) or you |
+| TTS (Cartesia) | ~$0.036 | Unpod (managed) or you |
+| **Total with Unpod** | **~$0.02** | Unpod handles STT + TTS |
+| **Total self-managed** | **~$0.06** | You manage STT + TTS |
+
+With Unpod you pay one rate that includes managed STT, TTS, failover, and infrastructure. No separate provider accounts.
+
+---
+
+## Feature Comparison
+
+### Telephony
+
+| Feature | Unpod | LiveKit | Pipecat |
+|---|---|---|---|
+| Managed phone numbers | Yes | No | No |
+| SIP trunk required | No | Yes | Yes |
+| Inbound calls | Yes | Yes (with SIP) | Requires setup |
+| Outbound calls | Yes (SDK) | Yes (with SIP) | Requires setup |
+| BYON (bring your own number) | Yes | Yes | Yes |
+
+### Voice Processing
+
+| Feature | Unpod | LiveKit | Pipecat |
+|---|---|---|---|
+| Managed STT/TTS | Yes - voice profiles | No - configure yourself | No - configure yourself |
+| Provider failover | Automatic | Manual | Manual |
+| VAD + barge-in | Managed | You configure | You configure |
+| Deepgram STT | Yes | Yes | Yes |
+| Cartesia TTS | Yes | Yes | Yes |
+| ElevenLabs TTS | Yes | Yes | Yes |
+
+### Developer Experience
+
+| Feature | Unpod | LiveKit | Pipecat |
+|---|---|---|---|
+| Python SDK | Yes | Yes | Yes |
+| HTTP endpoint / webhook | Yes | No | No |
+| Structured flows (SuperDialog) | Yes | No | No |
+| Call recordings | Managed | Self-managed | Self-managed |
+| Transcripts | Managed | Self-managed | Self-managed |
+| Dashboard + UI | Yes | Limited | No |
+| Metrics + analytics | Yes | Limited | No |
+
+---
+
+## Open Source
+
+All three are open source. Unpod's core components - `unpod`, `supervoice`, `superdialog` - are on GitHub. You can self-host the full stack or use Unpod's managed cloud.
+
+<Card title="Self-hosting Unpod" icon="server" href="/blog/self-hosting-unpod">
+  Run the full Unpod communication stack on your own infrastructure.
+</Card>

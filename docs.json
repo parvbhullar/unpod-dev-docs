@@ -94,15 +94,15 @@
             "group": "Getting Started",
             "icon": "rocket",
             "pages": [
-              "sdk/bring-your-agent",
-              "sdk/setup-checklist"
+              "speech/sdk-setup",
+              "sdk/setup-checklist",
+              "sdk/bring-your-agent"
             ]
           },
           {
-            "group": "Reference",
-            "icon": "code",
+            "group": "Session",
+            "icon": "phone",
             "pages": [
-              "speech/sdk-setup",
               "speech/session-controls",
               "speech/hooks-events"
             ]

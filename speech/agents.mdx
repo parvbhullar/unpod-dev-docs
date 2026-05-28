@@ -1,0 +1,211 @@
+---
+title: 'Agents'
+icon: 'bot'
+description: 'Create, configure, and manage voice agents via the Unpod SDK.'
+---
+
+## What Is an Agent?
+
+An **agent** in Unpod ties together a voice profile (STT + TTS), telephony (phone numbers), and your runner logic into a single deployable unit. When a call arrives on a number attached to the agent, the orchestrator dispatches it to your `AgentRunner` process.
+
+```
+  Phone Number
+       │
+       ▼
+    Agent  ──── voice_profile ──► STT/TTS stack
+       │
+       ▼
+  AgentRunner (your Python process)
+       │
+       ▼
+   CallContext → entrypoint()
+```
+
+---
+
+## Creating an Agent
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        agent = await client.agents.create(
+            name="Support Bot",
+            voice_profile="vp_en_female_hd",    # from voice_profiles.list()
+            recording=True,                      # store call recordings
+            max_call_duration_s=600,             # 10-minute hard cap
+        )
+        print("Created:", agent.id, agent.name)
+
+asyncio.run(main())
+```
+
+### `create()` parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `name` | `str` | required | Display name for the agent |
+| `voice_profile` | `str \| None` | `None` | Voice profile ID (`vp_...`) |
+| `runner_agent_id` | `str \| None` | `None` | Override the runner worker target |
+| `agent_endpoint` | `str \| None` | `None` | HTTP endpoint for the dialog brain (HTTPAdapter) |
+| `recording` | `bool` | `False` | Enable call recording |
+| `max_call_duration_s` | `int` | `3600` | Hard cap in seconds (default 1 hour) |
+
+---
+
+## Listing Agents
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        agents = await client.agents.list()
+        for a in agents:
+            print(a.id, a.name, a.voice_profile or "no voice profile")
+
+asyncio.run(main())
+```
+
+### Agent fields
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `str` | Agent ID (`agt_...`) |
+| `name` | `str` | Display name |
+| `voice_profile` | `str \| None` | Voice profile ID |
+| `agent_endpoint` | `str \| None` | HTTP dialog endpoint |
+| `recording` | `bool` | Recording enabled |
+| `max_call_duration_s` | `int` | Call duration hard cap |
+| `created_at` | `datetime` | Creation timestamp |
+
+---
+
+## Getting a Single Agent
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        agent = await client.agents.get("agt_...")
+        print(agent.name, agent.voice_profile, agent.recording)
+
+asyncio.run(main())
+```
+
+---
+
+## Updating an Agent
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        # Update any subset of fields
+        agent = await client.agents.update(
+            "agt_...",
+            name="Premium Support Bot",
+            voice_profile="vp_en_female_hd",
+            recording=True,
+            max_call_duration_s=1200,
+        )
+        print("Updated:", agent.id, agent.name)
+
+asyncio.run(main())
+```
+
+---
+
+## Deleting an Agent
+
+<Warning>
+Deleting an agent does **not** automatically detach phone numbers. Detach all numbers before deleting to avoid orphaned routing.
+</Warning>
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        # Detach numbers first
+        numbers = await client.numbers.list()
+        for n in numbers:
+            if n.agent_id == "agt_...":
+                await client.numbers.detach(n.id)
+
+        # Then delete
+        await client.agents.delete("agt_...")
+        print("Deleted")
+
+asyncio.run(main())
+```
+
+---
+
+## Using an Agent with an HTTP Dialog Endpoint
+
+If you don't want to run your own `AgentRunner` process, you can point the agent at an HTTP endpoint that implements the dialog protocol. The `HTTPAdapter` in the SDK handles this pattern.
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        agent = await client.agents.create(
+            name="Webhook Bot",
+            voice_profile="vp_en_male_std",
+            agent_endpoint="https://your-api.example.com/dialog/turn",
+        )
+        print("Agent with HTTP endpoint:", agent.id)
+
+asyncio.run(main())
+```
+
+The endpoint receives `POST` requests with `{"text": "...", "context": {...}}` and should return `{"text": "..."}`.
+
+---
+
+## Agent + Runner Pattern (Recommended)
+
+The recommended pattern for production is a dedicated `AgentRunner` process:
+
+```python
+from unpod import AgentRunner, CallContext
+
+AGENT_ID = "agt_..."   # must match what you created above
+
+async def handle_call(ctx: CallContext) -> None:
+    await ctx.session.say("Hello, how can I help you?")
+    await ctx.session.run()
+
+runner = AgentRunner(
+    entrypoint=handle_call,
+    agent_id=AGENT_ID,
+    max_concurrent_calls=20,
+)
+runner.start()
+```
+
+The `agent_id` in `AgentRunner` must match the agent's ID in the platform. The orchestrator uses it to route dispatches to the correct runner worker.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SDK Setup" icon="code" href="/speech/sdk-setup">
+    Install and configure the AgentRunner for production.
+  </Card>
+  <Card title="Session Controls" icon="sliders-horizontal" href="/speech/session-controls">
+    Say, transfer, end, and record during live calls.
+  </Card>
+</CardGroup>

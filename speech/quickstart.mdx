@@ -1,0 +1,254 @@
+---
+title: 'Quickstart'
+icon: 'bolt'
+description: 'Get a voice agent running - via phone call or browser/app - in under 10 minutes.'
+---
+
+## Choose Your Path
+
+<CardGroup cols={2}>
+  <Card title="Phone / Telephony" icon="phone" href="#telephony-path">
+    Users call a phone number. Provision a number, attach it to your agent, handle inbound calls.
+  </Card>
+  <Card title="Browser / App" icon="monitor-smartphone" href="#web-app-path">
+    Users connect from a web or mobile app. Embed the Web SDK in your frontend, no phone number needed.
+  </Card>
+</CardGroup>
+
+Both paths share Steps 1-4 (SDK install, API key, voice profile, create agent). They diverge at Step 5.
+
+---
+
+## Step 1 - Install the SDK
+
+```bash
+pip install unpod superdialog
+```
+
+Or with `uv`:
+
+```bash
+uv add unpod superdialog
+```
+
+---
+
+## Step 2 - Set Your API Key
+
+```bash
+export UNPOD_API_KEY="sk-..."
+```
+
+---
+
+## Step 3 - Pick a Voice Profile
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        profiles = await client.voice_profiles.list(language="en")
+        for p in profiles:
+            print(p.id, p.name, p.gender, p.quality)
+
+asyncio.run(main())
+```
+
+Example output:
+```
+vp_en_female_hd   Emma (HD)    female  high
+vp_en_male_std    James (Std)  male    standard
+```
+
+---
+
+## Step 4 - Create an Agent
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        agent = await client.agents.create(
+            name="Support Bot",
+            voice_profile="vp_en_female_hd",
+            recording=True,
+            max_call_duration_s=600,
+        )
+        print("Agent ID:", agent.id)
+
+asyncio.run(main())
+```
+
+<Note>
+Save the `agent.id` - you will use it in the steps below.
+</Note>
+
+---
+
+## Telephony Path {#telephony-path}
+
+### Step 5T - Attach a Phone Number
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+AGENT_ID = "agt_..."
+NUMBER_ID = "num_..."   # from client.numbers.list()
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        number = await client.numbers.attach(NUMBER_ID, AGENT_ID)
+        print("Attached:", number.phone_number, "->", number.agent_id)
+
+asyncio.run(main())
+```
+
+See [Phone Numbers](/speech/numbers) for how to list, provision, or bring your own number.
+
+### Step 6T - Write Your Entrypoint
+
+Create `agent.py`:
+
+```python
+from superdialog import DialogMachine, Flow
+from unpod import AgentRunner, CallContext
+
+flow = Flow.load("support.json")  # see Step 6 below for flow creation
+
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = DialogMachine(
+        flow=flow,
+        llm="anthropic/claude-haiku-4-5",
+    )
+    await ctx.session.say("Hello, thanks for calling!")
+    await ctx.session.run()
+
+AgentRunner(
+    entrypoint=handle_call,
+    agent_id="agt_...",
+    api_key="sk-...",
+    max_concurrent_calls=10,
+).start()
+```
+
+### Step 7T - Run and Call
+
+```bash
+python agent.py
+```
+
+Call the number you attached. The runner connects to the Unpod orchestrator and dispatches inbound calls to your entrypoint.
+
+```
+[Unpod] AgentRunner registered  agent_id=agt_... capacity=10
+[Unpod] Call dispatched         session_id=ses_...
+[Unpod] Call ended              duration=47s
+```
+
+---
+
+## Web / App Path {#web-app-path}
+
+### Step 5W - Create a Session Token
+
+Your backend generates a short-lived session token for each user. The browser uses this token to connect.
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def create_session(agent_id: str, user_id: str) -> str:
+    async with AsyncClient(api_key="sk-...") as client:
+        token = await client.sessions.create_token(
+            agent_id=agent_id,
+            metadata={"user_id": user_id},
+        )
+        return token.token
+
+asyncio.run(create_session("agt_...", "usr_123"))
+```
+
+Return this token to your frontend. Tokens are single-use and expire after 60 seconds.
+
+### Step 6W - Embed the Web SDK
+
+Install the browser SDK:
+
+```bash
+npm install @unpod/web-sdk
+```
+
+Connect from your frontend:
+
+```typescript
+import { UnpodSession } from "@unpod/web-sdk";
+
+const session = new UnpodSession({
+  token: "<token-from-your-backend>",
+});
+
+await session.connect();   // starts microphone + speaker
+session.on("agent_reply", (text) => console.log("Agent:", text));
+session.on("user_turn", (text) => console.log("User:", text));
+
+// End the session
+await session.disconnect();
+```
+
+The same `AgentRunner` entrypoint handles both phone and browser sessions - no changes needed.
+
+### Step 7W - Run Your Agent
+
+```bash
+python agent.py
+```
+
+The runner accepts sessions from both telephony and web SDK connections on the same `agent_id`.
+
+---
+
+## Step 6 - Build a Dialog Flow
+
+Both paths use the same conversation logic. Create a flow once:
+
+```python
+import asyncio
+from superdialog import create_dialog_flow
+
+async def main():
+    flow = await create_dialog_flow(
+        prompt=(
+            "You are Alex, a friendly support agent. "
+            "Greet the user, ask how you can help, resolve their issue, "
+            "and end the conversation when done."
+        ),
+        llm="anthropic/claude-haiku-4-5",
+    )
+    flow.save("support.json")
+
+asyncio.run(main())
+```
+
+---
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Session Controls" icon="sliders-horizontal" href="/speech/session-controls">
+    Transfer, pause recording, inject filler phrases.
+  </Card>
+  <Card title="Hooks & Events" icon="bell" href="/speech/hooks-events">
+    React to turns, interruptions, and call lifecycle.
+  </Card>
+  <Card title="Outbound Calls" icon="phone-outgoing" href="/speech/outbound-calls">
+    Programmatically initiate calls from your backend.
+  </Card>
+  <Card title="SuperDialog Integration" icon="layers" href="/speech/superdialog-integration">
+    Richer flows with tools, branching, and memory.
+  </Card>
+</CardGroup>

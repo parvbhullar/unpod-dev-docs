@@ -1,0 +1,186 @@
+---
+title: 'Phone Numbers'
+icon: 'phone'
+description: 'Get numbers directly from Unpod or bring your own, then attach them to your voice agents.'
+---
+
+## Overview
+
+Phone numbers in Unpod come from two sources:
+
+- **Unpod Numbers** - provision numbers directly through the Unpod platform (no external carrier account needed)
+- **BYON (Bring Your Own Number)** - port or route numbers you already own from any provider
+
+Once a number is in your account, you attach it to an agent. All inbound calls to that number are routed to the agent's `AgentRunner`.
+
+<Note>
+Support for Twilio, Telnyx, and Plivo numbers is coming soon - you will be able to import numbers from these providers directly into Unpod.
+</Note>
+
+---
+
+## Number Sources
+
+| Source | Description |
+|---|---|
+| **Unpod** | Provision numbers directly from the Unpod platform |
+| **BYON** | Bring numbers from your existing provider |
+| **Twilio** | Coming soon |
+| **Telnyx** | Coming soon |
+| **Plivo** | Coming soon |
+
+---
+
+## Getting Numbers from Unpod
+
+Numbers provisioned through Unpod are immediately available in your account. You can browse and acquire them from the dashboard under **Dev Platform -> Numbers**.
+
+Once provisioned, list them via the SDK:
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        numbers = await client.numbers.list()
+        for n in numbers:
+            print(n.id, n.phone_number, n.status, n.agent_id or "unattached")
+
+asyncio.run(main())
+```
+
+---
+
+## Bringing Your Own Number (BYON)
+
+If you already have numbers with a carrier, configure them as a BYON trunk in the Unpod dashboard:
+
+1. Go to **Dev Platform -> Telephony** and click **Add Trunk -> BYO SIP**.
+2. Provide your carrier's SIP server details:
+   - **Termination URI** - e.g. `sip:your-carrier.com`
+   - **Credentials** - auth username and password
+3. At your carrier, set inbound routing to point at the Unpod SIP endpoint shown in the dashboard.
+4. Your numbers will appear in Unpod and can be attached to agents.
+
+---
+
+## Listing Numbers
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        # All numbers
+        numbers = await client.numbers.list()
+
+        # Filter by status or country
+        active = await client.numbers.list(status="active")
+        us_numbers = await client.numbers.list(country="US")
+        byon = await client.numbers.list(trunk_type="byo")
+
+        for n in numbers:
+            print(n.id, n.phone_number, n.status, n.agent_id or "unattached")
+
+asyncio.run(main())
+```
+
+### Number fields
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `str` | Unique number ID (`num_...`) |
+| `phone_number` | `str` | E.164 format, e.g. `+14155550100` |
+| `status` | `str` | `active`, `inactive`, `pending` |
+| `trunk_type` | `str` | `unpod` or `byo` |
+| `agent_id` | `str \| None` | Attached agent, or `None` if free |
+| `country` | `str` | ISO 3166-1 alpha-2 country code |
+
+---
+
+## Attaching a Number to an Agent
+
+A number can be attached to exactly one agent at a time. Inbound calls to that number are routed to the agent's configured runners.
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        number = await client.numbers.attach(
+            number_id="num_...",
+            agent_id="agt_...",
+        )
+        print("Attached:", number.phone_number, "-> agent", number.agent_id)
+
+asyncio.run(main())
+```
+
+---
+
+## Detaching a Number
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        number = await client.numbers.detach("num_...")
+        print("Detached:", number.phone_number)
+
+asyncio.run(main())
+```
+
+---
+
+## Common Patterns
+
+### Find the first free number and attach it
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def attach_first_free(agent_id: str) -> None:
+    async with AsyncClient(api_key="sk-...") as client:
+        numbers = await client.numbers.list(status="active")
+        free = [n for n in numbers if n.agent_id is None]
+        if not free:
+            raise RuntimeError("No free numbers available")
+        await client.numbers.attach(free[0].id, agent_id)
+        print("Attached", free[0].phone_number)
+
+asyncio.run(attach_first_free("agt_..."))
+```
+
+### Rotate numbers across agents
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def rotate(numbers: list[str], agents: list[str]) -> None:
+    async with AsyncClient(api_key="sk-...") as client:
+        for num_id, agt_id in zip(numbers, agents):
+            await client.numbers.attach(num_id, agt_id)
+            print(f"{num_id} -> {agt_id}")
+
+asyncio.run(rotate(["num_a", "num_b"], ["agt_x", "agt_y"]))
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Voice Profiles" icon="waveform" href="/speech/voice-profiles">
+    Choose the STT and TTS stack for your agent.
+  </Card>
+  <Card title="Agents" icon="bot" href="/speech/agents">
+    Create and configure your agent via the SDK.
+  </Card>
+</CardGroup>

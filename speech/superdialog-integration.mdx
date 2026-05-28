@@ -1,0 +1,351 @@
+---
+title: 'SuperDialog Integration'
+icon: 'layers'
+description: 'Drive voice conversations with structured flows, tools, and branching logic using SuperDialog.'
+---
+
+## Overview
+
+SuperDialog provides a structured conversation engine - a **dialog flow** is a graph of states and transitions, and the **DialogMachine** executes it turn-by-turn. When plugged into an Unpod `Session`, the machine automatically receives user speech and generates responses without any manual routing code.
+
+```
+  User speaks
+      │
+      ▼ STT
+  User text  ──────────────────────────────▶ Hook: user_turn
+      │
+      ▼
+  DialogMachine.turn(text)
+      │
+      ▼
+  Agent reply (streaming chunks)  ────────▶ Hook: agent_turn
+      │
+      ▼ TTS
+  Caller hears
+```
+
+---
+
+## Install
+
+```bash
+pip install superdialog unpod
+```
+
+---
+
+## Step 1 - Generate a Flow
+
+`create_dialog_flow` calls an LLM once to build the flow graph from a natural-language prompt. The LLM is **not** invoked at runtime - only when building the flow.
+
+```python
+import asyncio
+from superdialog import create_dialog_flow
+
+async def main():
+    flow = await create_dialog_flow(
+        prompt=(
+            "You are Sarah, a scheduling assistant for PrimeCare clinic. "
+            "Greet the caller, ask for their name, check if they need to book, "
+            "reschedule, or cancel an appointment, collect necessary details, "
+            "confirm the action, and end the call politely."
+        ),
+        llm="anthropic/claude-haiku-4-5",
+    )
+    flow.save("clinic.json")
+
+asyncio.run(main())
+```
+
+---
+
+## Step 2 - Load the Machine
+
+```python
+from superdialog import DialogMachine, Flow
+
+flow = Flow.load("clinic.json")
+
+dialog_machine = DialogMachine(
+    flow=flow,
+    llm="anthropic/claude-haiku-4-5",   # runtime model
+)
+```
+
+<Note>
+The build model (used in `create_dialog_flow`) and the runtime model (`DialogMachine`) can differ. Use a cheap model to build; use a fast model to run.
+</Note>
+
+---
+
+## Step 3 - Plug into the Session
+
+Assign the machine to `ctx.session.dialog_machine`. The SDK auto-detects `DialogMachine` and wraps it in a `SuperDialogAdapter`:
+
+```python
+from superdialog import DialogMachine, Flow
+from unpod import AgentRunner, CallContext
+
+flow = Flow.load("clinic.json")
+
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = DialogMachine(
+        flow=flow,
+        llm="anthropic/claude-haiku-4-5",
+    )
+    await ctx.session.run()  # hands all turns to the dialog machine
+
+runner = AgentRunner(
+    entrypoint=handle_call,
+    agent_id="agt_...",
+)
+runner.start()
+```
+
+That's it. Every user utterance is routed to the machine; every reply is streamed back via TTS.
+
+---
+
+## Adding Tools
+
+Tools are Python functions the dialog machine can call during a turn - CRM lookups, database writes, external APIs:
+
+```python
+from superdialog import DialogMachine, Flow, PythonTool
+from unpod import AgentRunner, CallContext
+
+def check_availability(date: str, time: str) -> dict:
+    """Check appointment availability for a given date and time."""
+    return calendar_api.check(date, time)
+
+def book_appointment(name: str, date: str, time: str) -> str:
+    """Book an appointment and return a confirmation number."""
+    return calendar_api.book(name=name, date=date, time=time)
+
+flow = Flow.load("clinic.json")
+
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = DialogMachine(
+        flow=flow,
+        llm="anthropic/claude-haiku-4-5",
+        tools=[
+            PythonTool.of(check_availability),
+            PythonTool.of(book_appointment),
+        ],
+    )
+    await ctx.session.run()
+```
+
+Or use the `@tool` decorator:
+
+```python
+from superdialog.tools import tool
+
+@tool
+def check_availability(date: str, time: str) -> dict:
+    """Check appointment availability for a given date and time."""
+    return calendar_api.check(date, time)
+
+# Decorated function is already a PythonTool - pass directly:
+ctx.session.dialog_machine = DialogMachine(
+    flow=flow,
+    llm="anthropic/claude-haiku-4-5",
+    tools=[check_availability],
+)
+```
+
+---
+
+## Injecting Call Context into Tools
+
+Pass call metadata to your tools via `ctx.session.data` or closures:
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    caller_number = ctx.user_number
+
+    @tool
+    def lookup_caller() -> dict:
+        """Look up the caller's account by phone number."""
+        return crm.lookup_phone(caller_number)   # uses closure
+
+    ctx.session.dialog_machine = DialogMachine(
+        flow=flow,
+        llm="anthropic/claude-haiku-4-5",
+        tools=[lookup_caller],
+    )
+    await ctx.session.run()
+```
+
+---
+
+## Injecting Assist Directives
+
+Use `assist()` to push a runtime instruction into the machine mid-call - useful for injecting CRM data, escalation signals, etc.:
+
+```python
+@ctx.session.on("user_turn")
+async def on_user_turn(text: str) -> None:
+    if "premium" in ctx.session.data.get("tier", ""):
+        ctx.session.dialog_machine.assist(
+            "This is a premium customer - prioritize quick resolution."
+        )
+```
+
+---
+
+## Switching Flows Mid-Call
+
+You can replace the active flow while a call is in progress:
+
+```python
+from superdialog import Flow
+
+billing_flow = Flow.load("billing.json")
+support_flow = Flow.load("support.json")
+
+@ctx.session.on("user_turn")
+async def on_user_turn(text: str) -> None:
+    if "billing" in text.lower():
+        ctx.session.dialog_machine.switch_flow(
+            billing_flow,
+            preserve_memory=True,   # keep conversation history
+        )
+```
+
+---
+
+## Checking if the Dialog Is Complete
+
+SuperDialog flows have terminal states. When the machine reaches one, `is_complete` returns `True`:
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    machine = DialogMachine(flow=flow, llm="anthropic/claude-haiku-4-5")
+    ctx.session.dialog_machine = machine
+
+    await ctx.session.run()
+
+    if machine.is_complete:
+        print("Dialog reached a terminal state successfully")
+    else:
+        print("Call ended mid-flow (hang up / timeout)")
+```
+
+---
+
+## Dialog Adapters
+
+The SDK ships four dialog adapters. Assign any of them to `session.dialog_machine`:
+
+### SuperDialogAdapter (recommended)
+
+```python
+from unpod.adapters import SuperDialogAdapter
+from superdialog import DialogMachine, Flow
+
+machine = DialogMachine(flow=Flow.load("flow.json"), llm="...")
+ctx.session.dialog_machine = machine  # auto-wrapped as SuperDialogAdapter
+```
+
+### HTTPAdapter
+
+For remote HTTP brain endpoints:
+
+```python
+from unpod.adapters import HTTPAdapter
+
+ctx.session.dialog_machine = HTTPAdapter(
+    url="https://your-brain.example.com/turn",
+    headers={"Authorization": "Bearer token"},
+)
+```
+
+The endpoint receives `POST {"text": "...", "context": {...}}` and should return `{"text": "..."}`.
+
+### LangChainAdapter
+
+```python
+from unpod.adapters import LangChainAdapter
+from langchain.chat_models import ChatOpenAI
+
+chain = your_langchain_chain
+
+ctx.session.dialog_machine = LangChainAdapter(chain=chain)
+```
+
+### MCPAdapter
+
+For Model Context Protocol servers:
+
+```python
+from unpod.adapters import MCPAdapter
+
+ctx.session.dialog_machine = MCPAdapter(server_url="http://localhost:8080")
+```
+
+---
+
+## Full Example: Clinic Booking Bot
+
+```python
+import asyncio
+from superdialog import DialogMachine, Flow, create_dialog_flow
+from superdialog.tools import tool
+from unpod import AgentRunner, CallContext
+
+# --- One-time: build the flow ---
+async def build_flow() -> None:
+    flow = await create_dialog_flow(
+        prompt=(
+            "You are Sarah, a scheduling assistant for PrimeCare clinic. "
+            "Greet the caller, ask for their name, determine if they want to "
+            "book, reschedule, or cancel, collect details, confirm, and end politely."
+        ),
+        llm="anthropic/claude-haiku-4-5",
+    )
+    flow.save("clinic.json")
+
+# --- Runtime ---
+flow = Flow.load("clinic.json")
+
+@tool
+def check_slots(date: str) -> list[str]:
+    """Return available appointment times for a given date (YYYY-MM-DD)."""
+    return ["09:00", "10:30", "14:00", "16:30"]
+
+@tool
+def book_slot(name: str, date: str, time: str) -> str:
+    """Book a slot and return a confirmation code."""
+    code = f"CNF-{abs(hash(name + date + time)) % 10000:04d}"
+    return code
+
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = DialogMachine(
+        flow=flow,
+        llm="anthropic/claude-haiku-4-5",
+        tools=[check_slots, book_slot],
+    )
+    await ctx.session.run()
+
+runner = AgentRunner(
+    entrypoint=handle_call,
+    agent_id="agt_...",
+)
+
+if __name__ == "__main__":
+    runner.start()
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SuperDialog Flows" icon="git-branch" href="/SuperDialog/flows">
+    Deep dive: state machines, branching, memory.
+  </Card>
+  <Card title="Hooks & Events" icon="bell" href="/speech/hooks-events">
+    Intercept every user and agent turn for logging or side effects.
+  </Card>
+</CardGroup>

@@ -1,0 +1,242 @@
+---
+title: 'Session Controls'
+icon: 'sliders-horizontal'
+description: 'Control live calls: speak, interrupt, transfer, record, and end from your Python code.'
+---
+
+## Overview
+
+The `Session` object on `ctx.session` is your interface to the live call. You can speak text, interrupt the agent's current utterance, transfer the caller, pause/resume recording, and end the call - all from within your entrypoint function.
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    session = ctx.session  # Session object
+    await session.say("Hello!")
+    await session.run()    # main event loop
+```
+
+---
+
+## Speaking Text
+
+### `say(text)`
+
+Immediately speak a string via the configured TTS provider:
+
+```python
+await ctx.session.say("Thank you for your patience, let me look into that.")
+```
+
+<Note>
+`say()` dispatches the utterance and returns immediately. The TTS synthesis and playback happen asynchronously on the call. Use `run()` to keep the call alive and process responses.
+</Note>
+
+### `set_filler(text)`
+
+Set a filler phrase hint. The bridge plays it during brief processing silences to keep the call feeling natural:
+
+```python
+await ctx.session.set_filler("One moment please...")
+```
+
+---
+
+## Interrupting the Agent
+
+### `interrupt()`
+
+Stop the current TTS utterance immediately:
+
+```python
+@ctx.session.on("user_turn")
+async def on_user_turn(text: str) -> None:
+    if "stop" in text.lower():
+        await ctx.session.interrupt()
+```
+
+---
+
+## Transferring Calls
+
+### Transfer to a Human Queue
+
+Cold-transfer the caller to a human agent queue:
+
+```python
+await ctx.session.transfer_to_human(queue="tier-2-support")
+```
+
+The `queue` value is the queue identifier in your telephony setup.
+
+### Transfer to Another Agent
+
+Cold-transfer to a different Unpod AI agent:
+
+```python
+await ctx.session.transfer_to_agent(agent_id="agt_billing_agent")
+```
+
+<Tip>
+A **cold transfer** drops your current session immediately when the transfer is initiated. The caller is connected directly to the target without a warm handoff. Use hooks (e.g. `call_end`) to log the reason.
+</Tip>
+
+---
+
+## Ending a Call
+
+### `end(reason)`
+
+Gracefully hang up the call:
+
+```python
+await ctx.session.end(reason="completed")
+```
+
+Common reason values:
+
+| Reason | When to use |
+|---|---|
+| `"completed"` | Normal call resolution |
+| `"no_response"` | User went silent for too long |
+| `"error"` | Unrecoverable error state |
+| `"transferred"` | After a transfer (for logging) |
+| `"max_duration"` | Hard duration cap reached |
+
+---
+
+## Recording Control
+
+### Pause Recording
+
+Pause the call recording, e.g. before collecting sensitive information:
+
+```python
+@ctx.session.on("user_turn")
+async def on_user_turn(text: str) -> None:
+    if "card number" in text.lower():
+        await ctx.session.recording.pause(reason="PII")
+        await ctx.session.say(
+            "I'll collect your card number now. "
+            "This part of the call is not recorded."
+        )
+```
+
+### Resume Recording
+
+```python
+await ctx.session.recording.resume()
+await ctx.session.say("Recording has resumed. How else can I help?")
+```
+
+<Warning>
+Recording pause/resume requires the agent to have `recording=True` set at creation. Calls from agents with recording disabled ignore these controls.
+</Warning>
+
+---
+
+## Per-Call Custom Data
+
+`session.data` is a plain `dict` you can use to store anything scoped to the current call:
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    # Pull caller context from CRM at call start
+    ctx.session.data["customer"] = await crm.lookup(ctx.user_number)
+    ctx.session.data["start_time"] = time.monotonic()
+
+    await ctx.session.run()
+
+@ctx.session.on("call_end")
+async def on_end(final_state: str) -> None:
+    duration = time.monotonic() - ctx.session.data["start_time"]
+    customer = ctx.session.data["customer"]
+    await analytics.log(customer["id"], duration, final_state)
+```
+
+---
+
+## The Main Loop - `run()`
+
+`session.run()` is the event loop that keeps the call alive. It:
+1. Reads events from the bridge (user speech, interruptions, errors)
+2. Fires registered hooks
+3. Routes user text to the dialog adapter if one is set
+4. Streams the adapter's reply back via TTS
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    # Set up dialog adapter
+    ctx.session.dialog_machine = my_dialog_machine
+
+    # Optionally inject a greeting before the loop
+    await ctx.session.say("Hi, I'm Alex. How can I help?")
+
+    # Hand off to the loop
+    await ctx.session.run()  # blocks until call ends
+```
+
+<Note>
+After `run()` returns, the call is over. Any code after the `await session.run()` line runs as a post-call cleanup hook.
+</Note>
+
+---
+
+## Live Metrics
+
+Access per-call metrics inside or after `run()`:
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    await ctx.session.run()
+
+    # After call ends, inspect metrics
+    m = ctx.session.metrics.live()
+    print(f"Turns: {m.turn_count}")
+    print(f"Total cost: ${m.total_cost_usd:.4f}")
+    print(f"Avg LLM latency: {m.avg_llm_ms:.0f}ms")
+```
+
+### `CallMetrics` fields
+
+| Field | Type | Description |
+|---|---|---|
+| `turn_count` | `int` | Number of dialog turns |
+| `total_cost_usd` | `float` | Estimated total cost |
+| `avg_stt_ms` | `float` | Average STT latency per turn |
+| `avg_llm_ms` | `float` | Average LLM latency per turn |
+| `avg_tts_ms` | `float` | Average TTS latency per turn |
+| `tokens_in` | `int` | Total input tokens consumed |
+| `tokens_out` | `int` | Total output tokens generated |
+
+---
+
+## Session API Reference
+
+| Method | Signature | Description |
+|---|---|---|
+| `say` | `async (text: str) → None` | Speak text via TTS |
+| `interrupt` | `async () → None` | Stop current utterance |
+| `set_filler` | `async (text: str) → None` | Set filler phrase |
+| `transfer_to_human` | `async (queue: str) → None` | Cold transfer to human |
+| `transfer_to_agent` | `async (agent_id: str) → None` | Cold transfer to agent |
+| `end` | `async (reason: str) → None` | End the call |
+| `run` | `async () → None` | Main event loop |
+| `on` | `(event: str) → decorator` | Register hook |
+| `recording.pause` | `async (reason: str) → None` | Pause recording |
+| `recording.resume` | `async () → None` | Resume recording |
+| `metrics` | `property → MetricsTracker` | Per-call metrics |
+| `dialog_machine` | `property (get/set)` | Dialog adapter |
+| `data` | `dict[str, Any]` | Per-call scratch space |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Hooks & Events" icon="bell" href="/speech/hooks-events">
+    React to every turn, interruption, silence, and lifecycle event.
+  </Card>
+  <Card title="SuperDialog Integration" icon="layers" href="/speech/superdialog-integration">
+    Plug a dialog flow into session.dialog_machine.
+  </Card>
+</CardGroup>

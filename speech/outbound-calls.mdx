@@ -1,0 +1,269 @@
+---
+title: 'Outbound Calls'
+icon: 'phone-outgoing'
+description: 'Initiate calls programmatically from your backend - campaigns, callbacks, and reminders.'
+---
+
+## Overview
+
+Outbound calls are calls your system initiates - rather than waiting for a caller to ring in. Common use cases:
+- Appointment reminders
+- Sales outreach campaigns
+- Callback queues
+- Alert notifications
+
+Outbound calls use the same agent, voice profile, and `AgentRunner` infrastructure as inbound calls. The difference is you trigger them via the management API.
+
+---
+
+## Prerequisites
+
+- A configured agent with a voice profile - see [Agents](/speech/agents)
+- A phone number attached to that agent - see [Numbers](/speech/numbers)
+- A running `AgentRunner` process for the agent
+
+---
+
+## Initiating an Outbound Call
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        call = await client.calls.create(
+            agent_id="agt_...",
+            to_number="+14155550100",    # E.164 format
+            from_number="+18005551234",  # must be attached to the agent
+            instructions="This is a reminder call for a dental appointment.",
+            data={
+                "patient_name": "Jane Smith",
+                "appointment_date": "2026-06-10",
+                "appointment_time": "09:30 AM",
+                "doctor": "Dr. Patel",
+            },
+        )
+        print("Call initiated:", call.id, call.status)
+
+asyncio.run(main())
+```
+
+### `calls.create()` parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `agent_id` | `str` | Yes | Agent to use for the call |
+| `to_number` | `str` | Yes | Destination number (E.164) |
+| `from_number` | `str` | Yes | Caller ID - must be a number attached to the agent |
+| `instructions` | `str \| None` | No | Runtime instruction override for this call |
+| `data` | `dict \| None` | No | Arbitrary metadata passed to your entrypoint via `ctx.data` |
+
+---
+
+## Accessing Outbound Data in Your Entrypoint
+
+The `data` and `instructions` you pass to `calls.create()` are available on the `CallContext`:
+
+```python
+from superdialog import DialogMachine, Flow
+from unpod import AgentRunner, CallContext
+
+flow = Flow.load("reminder.json")
+
+async def handle_call(ctx: CallContext) -> None:
+    # Available for both inbound and outbound calls
+    print(ctx.direction)        # "outbound"
+    print(ctx.instructions)     # "This is a reminder call..."
+    print(ctx.data)             # {"patient_name": "Jane Smith", ...}
+
+    # Inject context into the dialog machine
+    patient_name = ctx.data.get("patient_name", "there")
+    appt_date = ctx.data.get("appointment_date", "soon")
+    appt_time = ctx.data.get("appointment_time", "")
+
+    ctx.session.dialog_machine = DialogMachine(
+        flow=flow,
+        llm="anthropic/claude-haiku-4-5",
+    )
+    # Inject the personalization as an assist directive
+    ctx.session.dialog_machine.assist(
+        f"You are calling {patient_name}. "
+        f"Their appointment is on {appt_date} at {appt_time}. "
+        f"Confirm they will attend, or reschedule if needed."
+    )
+
+    await ctx.session.run()
+
+runner = AgentRunner(
+    entrypoint=handle_call,
+    agent_id="agt_...",
+)
+runner.start()
+```
+
+---
+
+## Checking Call Status
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        call = await client.calls.get("cal_...")
+        print(call.id, call.status, call.direction)
+        # status: "queued", "ringing", "in_progress", "completed", "failed"
+
+asyncio.run(main())
+```
+
+---
+
+## Listing Calls
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        # All outbound calls for an agent
+        calls = await client.calls.list(
+            agent_id="agt_...",
+            status="completed",
+        )
+        for c in calls:
+            print(c.id, c.to_number, c.status, c.duration_s)
+
+asyncio.run(main())
+```
+
+### `calls.list()` filters
+
+| Parameter | Values | Description |
+|---|---|---|
+| `status` | `queued`, `ringing`, `in_progress`, `completed`, `failed` | Filter by status |
+| `agent_id` | `agt_...` | Filter by agent |
+
+---
+
+## Hanging Up an Active Call
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        await client.calls.hangup("cal_...")
+        print("Call terminated")
+
+asyncio.run(main())
+```
+
+---
+
+## Campaign Pattern: Batch Outbound
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+AGENT_ID = "agt_..."
+FROM_NUMBER = "+18005551234"
+
+contacts = [
+    {"name": "Alice", "phone": "+14155550101", "appt": "June 10 9:30 AM"},
+    {"name": "Bob",   "phone": "+14155550102", "appt": "June 10 2:00 PM"},
+    {"name": "Carol", "phone": "+14155550103", "appt": "June 11 10:00 AM"},
+]
+
+async def dial_all(contacts: list[dict]) -> None:
+    async with AsyncClient(api_key="sk-...") as client:
+        for contact in contacts:
+            call = await client.calls.create(
+                agent_id=AGENT_ID,
+                to_number=contact["phone"],
+                from_number=FROM_NUMBER,
+                instructions=(
+                    f"Call {contact['name']} to confirm their appointment "
+                    f"on {contact['appt']}."
+                ),
+                data=contact,
+            )
+            print(f"Dialing {contact['name']}: {call.id}")
+            await asyncio.sleep(2)  # pace the campaign
+
+asyncio.run(dial_all(contacts))
+```
+
+<Warning>
+Batch dialing at high rates may trigger carrier spam filters. Use a sensible interval between calls and comply with local regulations (TCPA in the US, etc.).
+</Warning>
+
+---
+
+## Callback Queue Pattern
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def process_callback_queue(queue: list[dict]) -> None:
+    async with AsyncClient(api_key="sk-...") as client:
+        for request in queue:
+            # Check if agent is not at capacity before dialing
+            # (AgentRunner handles capacity internally - orchestrator rejects if full)
+            call = await client.calls.create(
+                agent_id="agt_...",
+                to_number=request["phone"],
+                from_number="+18005551234",
+                instructions="This is a callback. The customer requested to be called back.",
+                data={"ticket_id": request["ticket_id"], "reason": request["reason"]},
+            )
+            await db.update_callback_request(
+                request["id"],
+                call_id=call.id,
+                status="dialing",
+            )
+```
+
+---
+
+## Retrieving Transcripts After a Call
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def get_transcript(call_id: str) -> None:
+    async with AsyncClient(api_key="sk-...") as client:
+        # Get the session linked to this call
+        sessions = await client.sessions.list()
+        session = next((s for s in sessions if s.call_id == call_id), None)
+        if not session:
+            print("Session not found")
+            return
+
+        # Get transcript entries
+        transcript = await client.transcripts.get(session.id)
+        for entry in transcript.entries:
+            print(f"[{entry.speaker}] {entry.text}")
+
+asyncio.run(get_transcript("cal_..."))
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Hooks & Events" icon="bell" href="/speech/hooks-events">
+    Log outbound call data and react to call events in real time.
+  </Card>
+  <Card title="Agents" icon="bot" href="/speech/agents">
+    Configure agents and voice profiles for outbound campaigns.
+  </Card>
+</CardGroup>

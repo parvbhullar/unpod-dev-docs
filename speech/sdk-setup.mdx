@@ -1,0 +1,255 @@
+---
+title: 'SDK Reference'
+icon: 'code'
+description: 'Install unpod, configure credentials, and launch your first AgentRunner.'
+---
+
+## Installation
+
+```bash
+pip install unpod
+```
+
+With `uv` (recommended):
+
+```bash
+uv add unpod
+```
+
+Optional extras:
+
+```bash
+uv add unpod[dialog]      # Adds superdialog for structured dialog flows
+uv add unpod[langchain]   # Adds LangChain adapter
+```
+
+Set your API key:
+
+```bash
+export UNPOD_API_KEY="sk-..."
+export UNPOD_ORCHESTRATOR_URL="wss://api.unpod.io"  # optional override
+```
+
+---
+
+## Quick Start
+
+```python
+from unpod import AgentRunner, CallContext
+
+async def handle_call(ctx: CallContext) -> None:
+    await ctx.session.say("Hello, thanks for calling!")
+    await ctx.session.run()  # blocks until the call ends
+
+runner = AgentRunner(
+    entrypoint=handle_call,
+    agent_id="agt_...",  # runner_agent_id from your agent settings
+)
+runner.start()  # blocking
+```
+
+<Note>
+`agent_id` is the **runner agent ID** (a short string name) from your agent's settings, not the UUID shown in the agent list.
+</Note>
+
+---
+
+## AgentRunner
+
+`AgentRunner` is a long-lived process that holds a WebSocket connection to the Unpod orchestrator. When a call is dispatched to your agent, the runner invokes your `entrypoint` with a `CallContext`.
+
+```
+Unpod Orchestrator
+      | WebSocket (wss)
+      v
+AgentRunner  --- heartbeat every N seconds
+      |
+      | on dispatch
+      v
+entrypoint(CallContext)  --- your code
+```
+
+### Constructor
+
+```python
+AgentRunner(
+    entrypoint: Callable[[CallContext], Awaitable[None]],
+    agent_id: str,
+    api_key: str | None = None,          # falls back to UNPOD_API_KEY
+    max_concurrent_calls: int = 50,      # capacity cap
+    permits_per_minute: int = 120,       # rate limit hint
+    drain_timeout_s: int = 60,           # graceful shutdown window
+    dev_mode: bool = False,              # skip TLS, local orchestrator
+    base_url: str | None = None,         # override orchestrator URL
+)
+```
+
+### Configuration options
+
+| Parameter | Description |
+|---|---|
+| `max_concurrent_calls` | Max simultaneous calls this runner accepts. The orchestrator will not dispatch beyond this. |
+| `permits_per_minute` | Rate of new call acceptance. Set lower to protect downstream systems. |
+| `drain_timeout_s` | On shutdown, wait this many seconds for active calls to finish before force-exiting. |
+| `dev_mode` | Skip TLS for local development against a local orchestrator. |
+
+### Lifecycle hooks
+
+React to runner-level events (not individual session events):
+
+```python
+from unpod import AgentRunner, CallContext
+
+runner = AgentRunner(entrypoint=handle_call, agent_id="agt_...")
+
+@runner.on("call_start")
+async def on_call_start(ctx: CallContext) -> None:
+    print(f"New call: {ctx.call_id}")
+
+@runner.on("call_end")
+async def on_call_end(ctx: CallContext, final_state: str) -> None:
+    print(f"Call {ctx.call_id} ended: {final_state}")
+```
+
+| Event | Arguments | When |
+|---|---|---|
+| `call_start` | `ctx: CallContext` | Call is dispatched and connected |
+| `call_end` | `ctx: CallContext, final_state: str` | Call completed or failed |
+
+---
+
+## CallContext
+
+Every call to your `entrypoint` receives a `CallContext`:
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    ctx.call_id       # str: unique call ID
+    ctx.session_id    # str: unique session ID
+    ctx.agent_id      # str: agent that received this call
+    ctx.direction     # str: "inbound" or "outbound"
+    ctx.user_number   # str: caller's E.164 number
+    ctx.instructions  # str | None: per-call override instructions
+    ctx.data          # dict: metadata from dispatch (e.g. CRM data)
+    ctx.session       # Session: call control object
+```
+
+---
+
+## Management Client
+
+`AsyncClient` / `Client` provide access to the Unpod management API - agents, calls, numbers, voice profiles, and more:
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient(api_key="sk-...") as client:
+        agents = await client.agents.list()
+        for a in agents:
+            print(a.id, a.name)
+
+asyncio.run(main())
+```
+
+For scripts and non-async contexts use the sync `Client`:
+
+```python
+from unpod import Client
+
+with Client(api_key="sk-...") as client:
+    profiles = client.voice_profiles.list(language="en")
+    for p in profiles:
+        print(p.id, p.name)
+```
+
+### Available resources
+
+| Attribute | Resource |
+|---|---|
+| `client.agents` | Create, list, get, update, delete agents |
+| `client.calls` | Initiate, list, get, hangup calls |
+| `client.sessions` | List and get call sessions |
+| `client.voice_profiles` | List and get voice profiles |
+| `client.numbers` | List, sync, attach, detach numbers |
+| `client.recordings` | Access call recordings |
+| `client.transcripts` | Access call transcripts |
+
+---
+
+## Advanced
+
+### Monitoring runner health
+
+```python
+import asyncio
+from unpod import AgentRunner, CallContext
+
+runner = AgentRunner(entrypoint=handle_call, agent_id="agt_...")
+
+async def log_stats() -> None:
+    while True:
+        s = runner.stats()
+        print(
+            f"in_flight={s.in_flight} "
+            f"capacity={s.capacity} "
+            f"completed={s.completed_last_hour} "
+            f"failed={s.failed_last_hour} "
+            f"mean_duration={s.mean_call_duration_s:.1f}s"
+        )
+        await asyncio.sleep(30)
+```
+
+`RunnerStats` fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `in_flight` | `int` | Current active calls |
+| `capacity` | `int` | `max_concurrent_calls` setting |
+| `completed_last_hour` | `int` | Total completed since startup |
+| `failed_last_hour` | `int` | Total failed since startup |
+| `mean_call_duration_s` | `float` | Average call length in seconds |
+
+### Graceful shutdown
+
+Send `SIGTERM` to your process (standard for containers and systemd). The runner stops accepting new dispatches, waits up to `drain_timeout_s` for active calls to finish, then exits.
+
+```python
+import signal
+import asyncio
+from unpod import AgentRunner, CallContext
+
+runner = AgentRunner(entrypoint=handle_call, agent_id="agt_...")
+
+def handle_sigterm(signum, frame):
+    asyncio.create_task(runner.shutdown())
+
+signal.signal(signal.SIGTERM, handle_sigterm)
+runner.start()
+```
+
+### Multiple runners
+
+Run multiple `AgentRunner` instances for the same agent across different machines or processes. The orchestrator load-balances across all connected runners using their reported capacity - no shared state required.
+
+```bash
+# Machine 1
+UNPOD_API_KEY=sk-... python agent.py
+
+# Machine 2
+UNPOD_API_KEY=sk-... python agent.py
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Session Controls" icon="sliders-horizontal" href="/speech/session-controls">
+    Use say(), transfer(), end(), and recording controls.
+  </Card>
+  <Card title="SuperDialog Integration" icon="layers" href="/speech/superdialog-integration">
+    Attach a dialog flow to your session.
+  </Card>
+</CardGroup>

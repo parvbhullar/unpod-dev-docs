@@ -1,0 +1,90 @@
+---
+title: 'Voice Stack'
+icon: 'mic'
+description: 'The speech layer for your agent - whether users call by phone or connect from a browser or app.'
+---
+
+## What the Voice Stack Does
+
+The Voice Stack gives your agent voice. It handles everything between the user's audio and your agent's text logic.
+
+Your agent receives plain text. It returns plain text. The Voice Stack handles everything else: transcription, synthesis, VAD, barge-in detection, endpointing, and transport.
+
+---
+
+## Two Ways Users Connect
+
+<CardGroup cols={2}>
+  <Card title="Phone / Telephony" icon="phone">
+    Users dial a phone number. Unpod handles SIP, PSTN, number provisioning, and routing. No carrier account or SIP trunk needed.
+  </Card>
+  <Card title="Browser / App" icon="monitor-smartphone">
+    Users connect from a web app or mobile app via the Unpod Web SDK. Same speech pipeline - no phone number required.
+  </Card>
+</CardGroup>
+
+Both paths run through the same managed speech pipeline (STT, TTS, VAD, barge-in). Your agent code is identical regardless of how the user connects.
+
+---
+
+## How Audio Flows
+
+<Steps>
+  <Step title="User connects">
+    Via a phone number (PSTN/SIP) or directly from a browser/app using the Web SDK.
+  </Step>
+  <Step title="Speech pipeline runs">
+    Unpod transcribes audio (STT), detects turn end (VAD + endpointing), and handles barge-in interruptions. Your agent gets clean text.
+  </Step>
+  <Step title="Your agent responds">
+    The Unpod orchestrator dispatches the session to your `AgentRunner`. Your entrypoint runs, your dialog machine produces a text reply.
+  </Step>
+  <Step title="Reply synthesised">
+    Unpod converts the reply to speech (TTS) and streams it back to the user.
+  </Step>
+  <Step title="Session ends">
+    Transcript, metrics, and recording are stored and queryable via the management API.
+  </Step>
+</Steps>
+
+---
+
+## Core Building Blocks
+
+<CardGroup cols={2}>
+  <Card title="Voice Profiles" icon="waveform" href="/speech/voice-profiles">
+    Choose STT and TTS providers. Pre-built profiles or custom combinations with automatic failover.
+  </Card>
+  <Card title="Agents" icon="bot" href="/speech/agents">
+    Configure your agent's identity, voice profile, recording settings, and connection attachments.
+  </Card>
+  <Card title="Phone Numbers" icon="phone" href="/speech/numbers">
+    Provision numbers directly or bring your own. Attach to an agent for inbound calls.
+  </Card>
+  <Card title="SDK Setup" icon="code" href="/speech/sdk-setup">
+    Install `unpod`, run your `AgentRunner`, and accept sessions from any source.
+  </Card>
+</CardGroup>
+
+---
+
+## Quickstart Paths
+
+| I want to... | Start here |
+|---|---|
+| Handle phone calls | [Telephony Quickstart](/speech/quickstart) - provision a number and attach it to your agent |
+| Add voice to a web app | [Web SDK Quickstart](/speech/quickstart#web-app) - embed the Unpod Web SDK in your frontend |
+| Connect both | Start with telephony, then add the Web SDK - same agent, two entry points |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/speech/quickstart">
+    End-to-end: agent running and accepting sessions in under 10 minutes.
+  </Card>
+  <Card title="SuperDialog Integration" icon="layers" href="/speech/superdialog-integration">
+    Drive conversations with structured flows and tools.
+  </Card>
+</CardGroup>
