@@ -31,6 +31,10 @@ async def entrypoint(ctx: CallContext) -> None:
 
 ## Start Your Runner
 
+<Note>
+`AgentRunner` requires `UNPOD_API_KEY` to be set in your environment. See the [Setup Checklist](/sdk/setup-checklist#environment-variables) for all required variables.
+</Note>
+
 ```python
 AgentRunner(
     entrypoint=entrypoint,
@@ -46,7 +50,7 @@ That's it. Incoming calls to your Unpod number are now routed to your agent.
 |---------|--------|----------|
 | `LangChainAdapter` | `unpod.adapters.langchain` | LangChain chain with `.ainvoke()` / `.astream()` |
 | `HTTPAdapter` | `unpod.adapters.http` | Remote agent API (any language) |
-| `SuperDialogAdapter` | `unpod.adapters.superdialog` | superdialog DialogMachine / LLMAgent |
+| `SuperDialogAdapter` | `unpod.adapters.superdialog` | superdialog DialogMachine / LLMAgent — or assign directly, auto-wrapping handled |
 | Custom | Implement `DialogAdapter` protocol | Any Python object with `turn`, `stream`, `assist` |
 
 ## LangChain Chain Requirements

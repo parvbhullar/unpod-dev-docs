@@ -25,12 +25,20 @@ asyncio.run(list_profiles())
 ## 2. Create an Agent
 
 ```python
-agent = await client.agents.create(
-    name="My Agent",
-    voice_profile="en-female-1",   # from step 1
-    runner_agent_id="my-agent",    # MUST match AgentRunner(agent_id=...)
-)
-print(agent.id)  # UUID — used for REST API calls
+import asyncio
+from unpod import AsyncClient
+
+async def create_agent():
+    client = AsyncClient()
+    agent = await client.agents.create(
+        name="My Agent",
+        voice_profile="en-female-1",   # use a name from step 1
+        runner_agent_id="my-agent",    # MUST match AgentRunner(agent_id=...)
+    )
+    print(agent.id)  # UUID — used for REST API calls
+    return agent
+
+asyncio.run(create_agent())
 ```
 
 <Warning>
@@ -42,11 +50,26 @@ print(agent.id)  # UUID — used for REST API calls
 These are different. Mismatching them is the most common first-run failure.
 </Warning>
 
+<Note>
+Replace `"en-female-1"` with a profile name from Step 1. Run Step 1 first to see available names.
+</Note>
+
 ## 3. Assign a Phone Number
 
 ```python
-numbers = await client.numbers.list()
-await client.numbers.assign(numbers[0].id, agent_id=agent.id)
+import asyncio
+from unpod import AsyncClient
+
+async def assign_number(agent_id: str) -> None:
+    client = AsyncClient()
+    numbers = await client.numbers.list()
+    if not numbers:
+        print("No numbers available. Provision one in the Unpod dashboard first.")
+        return
+    await client.numbers.attach(numbers[0].id, agent_id=agent_id)
+    print(f"Assigned {numbers[0].number}")
+
+asyncio.run(assign_number("YOUR_AGENT_UUID"))
 ```
 
 ## 4. Start Your Runner
@@ -84,7 +107,7 @@ async def setup():
     # Assign first available number
     numbers = await client.numbers.list()
     if numbers:
-        await client.numbers.assign(numbers[0].id, agent_id=agent.id)
+        await client.numbers.attach(numbers[0].id, agent_id=agent.id)
 
     print(f"Agent created: {agent.id}")
     print(f"Number: {numbers[0].number if numbers else 'none assigned'}")
