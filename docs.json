@@ -19,35 +19,151 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Open Source",
+        "tab": "Why Unpod",
         "groups": [
           {
-            "group": "Getting Started",
-            "icon": "book-open",
+            "group": " ",
             "pages": [
-              "home",
-              "introduction"
+              "home"
             ]
           },
           {
-            "group": "Open Source",
-            "icon": "",
+            "group": "Getting Started",
+            "icon": "rocket",
             "pages": [
-              "quickstart",
-              "configuration",
-              "architecture"
+              "why-unpod/introduction",
+              "why-unpod/vs-competition"
+            ]
+          },
+          {
+            "group": "How It Works",
+            "icon": "diagram-project",
+            "pages": [
+              "why-unpod/how-it-works"
             ]
           }
         ]
       },
       {
-        "tab": "Voice AI Platform",
+        "tab": "Voice Stack",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "book-open",
+            "pages": [
+              "speech/introduction",
+              "speech/quickstart"
+            ]
+          },
+          {
+            "group": "Voice Stack",
+            "icon": "waveform",
+            "pages": [
+              "speech/voice-profiles",
+              "speech/agents"
+            ]
+          },
+          {
+            "group": "Connectivity",
+            "icon": "plug",
+            "pages": [
+              "speech/numbers",
+              "speech/websocket"
+            ]
+          },
+          {
+            "group": "SDK",
+            "icon": "code",
+            "pages": [
+              "speech/sdk-setup",
+              "speech/session-controls",
+              "speech/hooks-events"
+            ]
+          },
+          {
+            "group": "Dialog",
+            "icon": "layers",
+            "pages": [
+              "speech/superdialog-integration"
+            ]
+          },
+          {
+            "group": "Calls",
+            "icon": "phone-outgoing",
+            "pages": [
+              "speech/outbound-calls"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "SDK",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "rocket",
+            "pages": [
+              "sdk/bring-your-agent",
+              "sdk/setup-checklist"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "SuperDialog",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "book-open",
+            "pages": [
+              "SuperDialog/introduction",
+              "SuperDialog/quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "icon": "layers",
+            "pages": [
+              "SuperDialog/architecture",
+              "SuperDialog/flows",
+              "SuperDialog/tools",
+              "SuperDialog/sessions"
+            ]
+          },
+          {
+            "group": "Reference",
+            "icon": "code",
+            "pages": [
+              "SuperDialog/api-reference",
+              "SuperDialog/cli"
+            ]
+          },
+          {
+            "group": "Embedding Guides",
+            "icon": "plug",
+            "pages": [
+              "SuperDialog/Embedding Guides/overview",
+              "SuperDialog/Embedding Guides/unpod-voice",
+              "SuperDialog/Embedding Guides/cli",
+              "SuperDialog/Embedding Guides/livekit",
+              "SuperDialog/Embedding Guides/pipecat",
+              "SuperDialog/Embedding Guides/fastapi",
+              "SuperDialog/Embedding Guides/testing"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Open-Source Platform",
         "groups": [
           {
             "group": "Getting Started",
             "icon": "book-open",
             "pages": [
               "platform",
+              "architecture",
+              "quickstart",
+              "configuration",
               "Voice AI/Voice AI Agents Use Case",
               "Voice AI/Register",
               "Voice AI/introduction"
@@ -105,50 +221,7 @@
         ]
       },
       {
-        "tab": "SuperDialog",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "icon": "book-open",
-            "pages": [
-              "SuperDialog/introduction",
-              "SuperDialog/quickstart"
-            ]
-          },
-          {
-            "group": "Core Concepts",
-            "icon": "layers",
-            "pages": [
-              "SuperDialog/architecture",
-              "SuperDialog/flows",
-              "SuperDialog/tools",
-              "SuperDialog/sessions"
-            ]
-          },
-          {
-            "group": "Reference",
-            "icon": "code",
-            "pages": [
-              "SuperDialog/api-reference",
-              "SuperDialog/cli"
-            ]
-          },
-          {
-            "group": "Embedding Guides",
-            "icon": "plug",
-            "pages": [
-              "SuperDialog/Embedding Guides/overview",
-              "SuperDialog/Embedding Guides/cli",
-              "SuperDialog/Embedding Guides/livekit",
-              "SuperDialog/Embedding Guides/pipecat",
-              "SuperDialog/Embedding Guides/fastapi",
-"SuperDialog/Embedding Guides/testing"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API Documentation",
+        "tab": "APIs",
         "groups": [
           {
             "group": "Getting Started",
@@ -273,10 +346,10 @@
         ]
       },
       {
-        "tab": "Guide",
+        "tab": "Guides",
         "groups": [
           {
-            "group": "Guide",
+            "group": "Guides",
             "icon": "newspaper",
             "pages": [
               "blog/index",
@@ -299,7 +372,7 @@
       {
         "label": "GitHub",
         "icon": "github",
-        "href": "https://github.com/parvbhullar/unpod"
+        "href": "https://github.com/geneffic/unpod"
       },
       {
         "label": "Documentation",
@@ -315,7 +388,7 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/parvbhullar/unpod",
+      "github": "https://github.com/geneffic/unpod",
       "twitter": "https://x.com/unpod_ai",
       "youtube": "https://www.youtube.com/@unpod-ai",
       "discord": "https://discord.gg/7kQ4ewNSHZ"
@@ -324,7 +397,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/introduction"
+      "destination": "/why-unpod/introduction"
     }
   ]
 }

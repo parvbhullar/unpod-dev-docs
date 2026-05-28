@@ -1,0 +1,116 @@
+---
+title: "Bring Your Agent"
+description: "Connect your existing LangChain, LlamaIndex, or custom Python agent to Unpod voice infrastructure in 3 steps."
+---
+
+# Bring Your Agent
+
+Already have a working Python agent? Connect it to a phone number in under 15 minutes.
+
+## Install
+
+```bash
+uv add unpod
+```
+
+## Write Your Entrypoint
+
+The entrypoint is an async function called once per call. Set your agent on `ctx.session.dialog_machine` and call `await ctx.session.run()`.
+
+```python
+from unpod import AgentRunner, CallContext
+from unpod.adapters.langchain import LangChainAdapter
+
+# Your existing LangChain chain
+from your_app import chain
+
+async def entrypoint(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = LangChainAdapter(chain)
+    await ctx.session.run()
+```
+
+## Start Your Runner
+
+```python
+AgentRunner(
+    entrypoint=entrypoint,
+    agent_id="my-agent",  # must match runner_agent_id in your Unpod agent config
+).start()
+```
+
+That's it. Incoming calls to your Unpod number are now routed to your agent.
+
+## Supported Adapters
+
+| Adapter | Import | Use when |
+|---------|--------|----------|
+| `LangChainAdapter` | `unpod.adapters.langchain` | LangChain chain with `.ainvoke()` / `.astream()` |
+| `HTTPAdapter` | `unpod.adapters.http` | Remote agent API (any language) |
+| `SuperDialogAdapter` | `unpod.adapters.superdialog` | superdialog DialogMachine / LLMAgent |
+| Custom | Implement `DialogAdapter` protocol | Any Python object with `turn`, `stream`, `assist` |
+
+## LangChain Chain Requirements
+
+`LangChainAdapter` expects your chain to accept `{"messages": [...]}` as input by default. This works with `ChatPromptTemplate | ChatModel` chains.
+
+If your chain uses a different input key, pass `input_key`:
+
+```python
+# Chain expects {"input": "..."}
+LangChainAdapter(chain, input_key="input")
+```
+
+## Using Session Controls
+
+Inside your entrypoint you can react to call events and control the call:
+
+```python
+async def entrypoint(ctx: CallContext) -> None:
+    @ctx.session.on("user_turn")
+    async def _(text: str) -> None:
+        print(f"User said: {text}")
+
+    @ctx.session.on("call_end")
+    async def _(reason: str) -> None:
+        print(f"Call ended: {reason}")
+
+    ctx.session.dialog_machine = LangChainAdapter(chain)
+    await ctx.session.run()
+```
+
+Available hooks: `call_start`, `user_turn`, `agent_turn`, `user_partial`, `interruption`, `call_end`, `error`.
+
+## Writing a Custom Adapter
+
+Implement three methods — no base class required:
+
+```python
+class MyAdapter:
+    async def turn(self, text: str, context: dict | None = None) -> str:
+        """Return complete response. Called for non-streaming use."""
+        return my_agent.respond(text)
+
+    async def stream(self, text: str, context: dict | None = None):
+        """Yield response tokens. THIS is the hot path used by session.run()."""
+        async for token in my_agent.stream(text):
+            yield token
+
+    def assist(self, text: str) -> None:
+        """Inject a system instruction before the next turn."""
+        my_agent.set_instruction(text)
+```
+
+<Warning>
+`stream()` is called on every user turn by `session.run()`. Implement it properly — a single-chunk fallback causes choppy audio.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Setup Checklist" icon="list-check" href="/sdk/setup-checklist">
+    One-time resource provisioning: agent, number, voice profile
+  </Card>
+  <Card title="SuperDialog" icon="diagram-project" href="/superdialog/introduction">
+    Optional state machine framework for structured conversation flows
+  </Card>
+</CardGroup>

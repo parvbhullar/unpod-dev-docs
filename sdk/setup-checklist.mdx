@@ -1,0 +1,111 @@
+---
+title: "Setup Checklist"
+description: "One-time resource provisioning before your first call."
+---
+
+# Setup Checklist
+
+Before your first call routes to your agent, complete these steps once.
+
+## 1. Create a Voice Profile
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def list_profiles():
+    client = AsyncClient()
+    profiles = await client.voice_profiles.list()
+    for p in profiles:
+        print(p.name)
+
+asyncio.run(list_profiles())
+```
+
+## 2. Create an Agent
+
+```python
+agent = await client.agents.create(
+    name="My Agent",
+    voice_profile="en-female-1",   # from step 1
+    runner_agent_id="my-agent",    # MUST match AgentRunner(agent_id=...)
+)
+print(agent.id)  # UUID — used for REST API calls
+```
+
+<Warning>
+**`runner_agent_id` vs `agent.id`**
+
+- `agent.id` — UUID assigned by Unpod, used in REST API calls
+- `runner_agent_id` — string name you choose; must exactly match `AgentRunner(agent_id=...)`
+
+These are different. Mismatching them is the most common first-run failure.
+</Warning>
+
+## 3. Assign a Phone Number
+
+```python
+numbers = await client.numbers.list()
+await client.numbers.assign(numbers[0].id, agent_id=agent.id)
+```
+
+## 4. Start Your Runner
+
+```python
+from unpod import AgentRunner
+
+AgentRunner(
+    entrypoint=entrypoint,
+    agent_id="my-agent",   # must match runner_agent_id above
+).start()
+```
+
+## Full Setup Script
+
+```python
+import asyncio
+from unpod import AsyncClient, AgentRunner, CallContext
+from unpod.adapters.langchain import LangChainAdapter
+
+async def setup():
+    client = AsyncClient()
+
+    # List available voice profiles
+    profiles = await client.voice_profiles.list()
+    profile = profiles[0]
+
+    # Create agent
+    agent = await client.agents.create(
+        name="My Agent",
+        voice_profile=profile.name,
+        runner_agent_id="my-agent",
+    )
+
+    # Assign first available number
+    numbers = await client.numbers.list()
+    if numbers:
+        await client.numbers.assign(numbers[0].id, agent_id=agent.id)
+
+    print(f"Agent created: {agent.id}")
+    print(f"Number: {numbers[0].number if numbers else 'none assigned'}")
+
+asyncio.run(setup())
+```
+
+Then start your runner in a separate process:
+
+```python
+async def entrypoint(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = LangChainAdapter(your_chain)
+    await ctx.session.run()
+
+AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
+```
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `UNPOD_API_KEY` | Yes | Your Unpod API key |
+| `UNPOD_SERVICE_BASE_URL` | No | Default: `http://localhost:8000/platform` |
+| `UNPOD_ORCHESTRATOR_URL` | No | Default: `wss://api.unpod.io` |
