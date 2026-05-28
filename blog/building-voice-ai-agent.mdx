@@ -1,0 +1,180 @@
+---
+title: 'Building Your First Voice AI Agent'
+sidebarTitle: 'Build a Voice Agent'
+description: 'From blank canvas to a live, phone-ready AI agent — identity, persona, voice, knowledge base, and telephony'
+icon: 'bot'
+---
+
+**May 27, 2026 · 10 min read**
+
+---
+
+Voice AI agents are replacing traditional IVR systems and transforming how businesses handle calls. Unpod makes it possible to build a production-ready voice agent in under 30 minutes — no ML background required. This guide walks through every step.
+
+## What We're Building
+
+A customer support agent that:
+- Answers inbound calls for a SaaS product
+- Has a defined persona and voice
+- Can look up information from uploaded docs
+- Hands off to a human when needed
+
+---
+
+## Step 1: Create Your Agent in AI Studio
+
+Log in to [unpod.ai](https://unpod.ai) and open **AI Studio**. Click **New Agent**.
+
+### Identity Tab
+
+Set the core details:
+
+| Field | Example |
+|-------|---------|
+| Name | Aria |
+| Handle | `aria-support` (URL-safe slug, used in API) |
+| Language | English (US) |
+| Timezone | America/New_York |
+
+The **handle** is how you reference this agent in the API and telephony config.
+
+---
+
+## Step 2: Define the Persona
+
+The persona determines how your agent thinks, speaks, and behaves. Open the **Persona** tab.
+
+### System Prompt
+
+Write a clear system prompt that defines:
+- Role and purpose
+- Tone and communication style
+- What the agent should and should not do
+
+Example:
+
+```
+You are Aria, a friendly and professional customer support agent for Acme SaaS. 
+Your goal is to help users resolve issues with their account, billing, and product features.
+
+Rules:
+- Always greet the caller by name if available
+- Be concise — callers are on the phone, not reading
+- If you cannot resolve an issue, offer to connect them with a human agent
+- Never make promises about refunds or SLA violations without checking policy
+```
+
+### Greeting Message
+
+The first thing your agent says when the call connects:
+
+```
+Hi, you've reached Acme support. I'm Aria, your AI assistant. 
+How can I help you today?
+```
+
+---
+
+## Step 3: Configure the Voice Profile
+
+Open the **Voice Profile** tab. Choose:
+
+- **TTS Provider**: ElevenLabs, OpenAI, Azure, or Google
+- **Voice**: Pick from available voices for your chosen provider
+- **Speed**: 0.9–1.0 works well for support calls
+- **Stability / Similarity**: Higher stability = more consistent, lower = more expressive
+
+Test voices using the built-in preview before finalizing.
+
+---
+
+## Step 4: Choose Your AI Model
+
+Under the **Advanced** tab, select the LLM powering your agent:
+
+| Provider | Model | Best For |
+|----------|-------|----------|
+| OpenAI | gpt-4o | General purpose, high accuracy |
+| Groq | llama-3.1-70b | Low latency, cost-efficient |
+| Google | gemini-1.5-flash | Multimodal, long context |
+| Azure OpenAI | gpt-4o | Enterprise compliance |
+
+For support bots, `gpt-4o` or `llama-3.1-70b` via Groq are solid starting points.
+
+---
+
+## Step 5: Add a Knowledge Base
+
+Upload product documentation, FAQs, or policy docs so your agent can answer accurately.
+
+Open **Knowledge Base** → **Upload Document**. Supported formats:
+- PDF, DOCX, TXT, Markdown
+- Web URLs (Unpod crawls and indexes the content)
+
+Unpod uses RAG (Retrieval-Augmented Generation) — the agent searches relevant chunks before generating a response.
+
+**Tips for better retrieval:**
+- Break large PDFs into topic-focused sections
+- Include an FAQ document with exact question phrasing customers use
+- Add a "what not to say" policy document to constrain agent behavior
+
+---
+
+## Step 6: Set Up Telephony
+
+Your agent needs a phone number to receive calls.
+
+### 6a: Create a Bridge
+
+Go to **Telephony → Bridges → Create Bridge**. A bridge connects your agent to a voice infrastructure provider.
+
+- **Name**: `support-bridge`
+- **Provider**: LiveKit or Vapi
+- **Agent**: Select `aria-support`
+
+### 6b: Add a Phone Number
+
+Go to **Numbers → Provision Number**. Select a country and area code. Unpod provisions a real phone number via your connected SIP provider.
+
+### 6c: Link Number to Bridge
+
+Assign the provisioned number to your bridge. Incoming calls to this number will now route to Aria.
+
+---
+
+## Step 7: Test the Agent
+
+1. Click **Preview** in AI Studio to test via the browser interface
+2. Call the provisioned phone number from your mobile
+3. Check **Call Logs** to review the transcript and see how the agent performed
+
+---
+
+## Monitoring & Iteration
+
+After going live:
+
+- **Call Logs**: Review transcripts to find gaps in knowledge base coverage
+- **Analytics**: Track call duration, resolution rate, and sentiment over time
+- **Analysis Tab**: Configure post-call extraction — pull structured data (intent, outcome, customer tier) from each conversation
+
+Iterate on the system prompt and knowledge base based on real call patterns.
+
+---
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Voice AI Platform Docs" icon="layout-dashboard" href="/platform">
+    Full platform guide for business users.
+  </Card>
+  <Card title="API: Create Tasks" icon="phone-call" href="/api/execution/create-task">
+    Trigger outbound calls to your agent via API.
+  </Card>
+  <Card title="Knowledge Base Setup" icon="book" href="/Voice AI/Studio View/knowledge base">
+    Detailed knowledge base configuration guide.
+  </Card>
+  <Card title="Telephony Configuration" icon="phone" href="/Dev Platform/telephony">
+    Advanced telephony and provider setup.
+  </Card>
+</CardGroup>

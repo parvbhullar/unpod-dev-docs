@@ -1,0 +1,227 @@
+---
+title: 'Self-Hosting Unpod: Complete Open Source Guide'
+sidebarTitle: 'Self-Hosting Guide'
+description: 'Deploy the full Unpod stack on your own infrastructure using Docker Compose — config, secrets, migrations, and production hardening'
+icon: 'server'
+---
+
+**May 27, 2026 · 12 min read**
+
+---
+
+Unpod is fully open source under the MIT license. This means you can run the entire platform — frontend, backend, voice pipeline, and all infrastructure — on your own servers. This guide covers everything from local setup to a production-hardened deployment.
+
+## Why Self-Host?
+
+- **Data sovereignty**: Call recordings and transcripts never leave your infrastructure
+- **Compliance**: Meet HIPAA, GDPR, or SOC 2 requirements with full control over data residency
+- **Cost at scale**: For high call volumes, self-hosting can significantly reduce per-minute costs
+- **Customization**: Modify the source, add integrations, and white-label the platform
+
+---
+
+## Architecture Overview
+
+Unpod is a monorepo with these key services:
+
+| Service | Tech | Port |
+|---------|------|------|
+| Frontend | Next.js | 3000 |
+| Backend Core | Django (Python) | 8000 |
+| API Services | FastAPI | 9116 |
+| Real-time | Centrifugo | 8100 |
+| Database | PostgreSQL | 5432 |
+| Cache / Queue | Redis | 6379 |
+| Storage | MongoDB | 27017 |
+
+All services are containerized and orchestrated via Docker Compose.
+
+---
+
+## Prerequisites
+
+Install these before you start:
+
+```bash
+# Check versions
+node --version      # v20+
+python3 --version   # 3.11+
+docker --version    # 24+
+docker compose version  # v2.20+
+git --version
+```
+
+---
+
+## Quick Start (Development)
+
+The fastest path to a running instance:
+
+```bash
+git clone https://github.com/parvbhullar/unpod.git
+cd unpod
+make quick-start    # installs deps, starts Docker, runs migrations
+make dev            # starts all dev servers
+```
+
+Access points after startup:
+
+| Service | URL |
+|---------|-----|
+| App | http://localhost:3000 |
+| API | http://localhost:8000/api/v1/ |
+| Admin | http://localhost:8000/unpod-admin/ |
+| API Docs | http://localhost:9116/docs |
+
+Default credentials: `admin@unpod.ai` / `admin123`
+
+---
+
+## Environment Configuration
+
+Copy the example env file and set your values:
+
+```bash
+cp .env.example .env
+```
+
+Critical variables to configure:
+
+```bash
+# Django
+SECRET_KEY=your-long-random-secret-key
+DEBUG=False
+ALLOWED_HOSTS=your-domain.com,www.your-domain.com
+
+# Database
+POSTGRES_DB=unpod
+POSTGRES_USER=unpod
+POSTGRES_PASSWORD=strong-password-here
+DATABASE_URL=postgresql://unpod:password@postgres:5432/unpod
+
+# Redis
+REDIS_URL=redis://redis:6379/0
+
+# Centrifugo (real-time)
+CENTRIFUGO_SECRET=centrifugo-secret-token
+CENTRIFUGO_API_KEY=centrifugo-api-key
+
+# AI Providers (at least one required)
+OPENAI_API_KEY=sk-...
+GROQ_API_KEY=gsk_...
+
+# Voice Providers
+LIVEKIT_URL=wss://your-livekit-instance.com
+LIVEKIT_API_KEY=API_KEY
+LIVEKIT_SECRET=SECRET
+```
+
+---
+
+## Production Deployment with Docker Compose
+
+Use the production compose file:
+
+```bash
+docker compose -f docker-compose.yml up -d --build
+```
+
+### Run Database Migrations
+
+```bash
+docker compose exec backend python manage.py migrate --no-input
+docker compose exec backend python manage.py collectstatic --no-input
+```
+
+### Create Admin User
+
+```bash
+docker compose exec backend python manage.py createsuperuser
+```
+
+---
+
+## Reverse Proxy Setup (Nginx)
+
+Put Nginx in front of the app for SSL termination and routing:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name your-domain.com;
+
+    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+
+    # Frontend
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # Backend API
+    location /api/ {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # WebSocket (Centrifugo)
+    location /connection/websocket {
+        proxy_pass http://localhost:8100;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+Use Certbot for free SSL: `certbot --nginx -d your-domain.com`
+
+---
+
+## Production Hardening Checklist
+
+Before going live:
+
+- [ ] Change all default passwords and secret keys
+- [ ] Set `DEBUG=False` in all environments
+- [ ] Configure `ALLOWED_HOSTS` to your domain only
+- [ ] Enable PostgreSQL SSL connections
+- [ ] Set up automated database backups (pg_dump to S3 or equivalent)
+- [ ] Configure log rotation for Django and Nginx logs
+- [ ] Set up health check endpoints for uptime monitoring
+- [ ] Restrict Redis to internal network only (no public exposure)
+- [ ] Use Docker secrets or a vault for API keys (not plain .env in production)
+
+---
+
+## Updating Unpod
+
+```bash
+git pull origin main
+docker compose -f docker-compose.yml up -d --build
+docker compose exec backend python manage.py migrate --no-input
+```
+
+Check the [GitHub releases](https://github.com/parvbhullar/unpod/releases) for breaking changes before pulling.
+
+---
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Configuration Reference" icon="wrench" href="/configuration">
+    All environment variables and their defaults.
+  </Card>
+  <Card title="Architecture Docs" icon="layers" href="/architecture">
+    Monorepo structure, service dependencies, and data flow.
+  </Card>
+  <Card title="Developer Quickstart" icon="rocket" href="/quickstart">
+    Step-by-step local setup with all three setup methods.
+  </Card>
+  <Card title="Dev Platform Guide" icon="sliders-horizontal" href="/Dev Platform/introduction">
+    Configure agents and telephony after setup.
+  </Card>
+</CardGroup>

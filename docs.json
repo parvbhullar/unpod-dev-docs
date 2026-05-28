@@ -228,6 +228,23 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "Guide",
+        "groups": [
+          {
+            "group": "Guide",
+            "icon": "newspaper",
+            "pages": [
+              "blog/index",
+              "blog/getting-started-with-unpod-api",
+              "blog/building-voice-ai-agent",
+              "blog/self-hosting-unpod",
+              "blog/understanding-telephony",
+              "blog/webhook-integration"
+            ]
+          }
+        ]
       }
     ],
     "global": {

@@ -1,0 +1,167 @@
+---
+title: 'Getting Started with the Unpod API'
+sidebarTitle: 'Unpod API Guide'
+description: 'Authenticate, create tasks, and trigger AI voice calls via the Unpod REST API — with real curl examples'
+icon: 'code'
+---
+
+**May 27, 2026 · 8 min read**
+
+---
+
+Unpod exposes a full REST API so you can build, automate, and integrate AI voice agents into any system — CRMs, helpdesks, internal tools, or custom workflows. This guide walks you through everything from getting your API key to making your first outbound call.
+
+## Prerequisites
+
+- An Unpod account at [unpod.ai](https://unpod.ai)
+- At least one configured AI agent
+- A telephony bridge with a phone number assigned
+- Your API key (from **AI Studio → API Keys**)
+
+---
+
+## Step 1: Authenticate
+
+All Unpod API requests use Bearer token authentication. Add your API key to every request header:
+
+```bash
+curl https://api.unpod.ai/api/v1/organizations/ \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+A successful response returns your organization details. Keep your key secret — it has full access to your workspace.
+
+---
+
+## Step 2: Get Your Space Token
+
+Spaces are the core organizational unit in Unpod. Most API calls are scoped to a space.
+
+```bash
+curl https://api.unpod.ai/api/v1/spaces/ \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+Response:
+
+```json
+{
+  "results": [
+    {
+      "id": 1,
+      "name": "My Workspace",
+      "token": "sp_abc123xyz",
+      "domain": "mycompany"
+    }
+  ]
+}
+```
+
+Save the `token` value — you'll use it to scope agent and task lookups.
+
+---
+
+## Step 3: List Your Agents
+
+Fetch all agents configured in your space:
+
+```bash
+curl "https://api.unpod.ai/api/v1/agents/?space_token=sp_abc123xyz" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+Note the `handle` field of the agent you want to use for calls.
+
+---
+
+## Step 4: Create a Task (Outbound Call)
+
+A **Task** triggers an outbound voice call from your AI agent to a phone number.
+
+```bash
+curl -X POST https://api.unpod.ai/api/v1/tasks/ \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_handle": "support-agent",
+    "phone_number": "+14155552671",
+    "space_token": "sp_abc123xyz",
+    "metadata": {
+      "customer_name": "Jane Doe",
+      "reason": "appointment_reminder"
+    }
+  }'
+```
+
+The API returns a task ID. The agent will call the number within seconds.
+
+---
+
+## Step 5: Track the Run
+
+Once a task is created, Unpod creates a **Run** — the actual call execution. Poll it to track status:
+
+```bash
+curl "https://api.unpod.ai/api/v1/runs/?task_id=TASK_ID" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+Run statuses: `queued` → `in_progress` → `completed` | `failed`
+
+---
+
+## Step 6: Fetch Call Logs
+
+After a call completes, retrieve the transcript and metadata:
+
+```bash
+curl "https://api.unpod.ai/api/v1/call-logs/?space_token=sp_abc123xyz" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+Call logs include: duration, transcript, sentiment, outcome, and any extracted data from your agent's analysis config.
+
+---
+
+## Passing Context to Your Agent
+
+Use the `metadata` field to pass call-specific context. Your agent's system prompt can reference this data via template variables — useful for personalizing conversations:
+
+```json
+{
+  "metadata": {
+    "customer_name": "Jane",
+    "account_tier": "premium",
+    "last_order": "2026-05-20"
+  }
+}
+```
+
+---
+
+## Rate Limits
+
+| Plan | Calls per minute | Tasks per day |
+|------|-----------------|---------------|
+| Free | 5 | 50 |
+| Pro | 60 | 5,000 |
+| Enterprise | Custom | Unlimited |
+
+---
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book" href="/api/get-started/quickstart">
+    Full endpoint reference with request/response schemas.
+  </Card>
+  <Card title="Authentication Guide" icon="key" href="/api/get-started/authentication">
+    API key management and security best practices.
+  </Card>
+  <Card title="Agents API" icon="bot" href="/api/agent/overview">
+    List, inspect, and manage agents programmatically.
+  </Card>
+  <Card title="Runs & Executions" icon="activity" href="/api/execution/runs-overview">
+    Track call execution status and outcomes.
+  </Card>
+</CardGroup>
