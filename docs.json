@@ -72,15 +72,6 @@
             ]
           },
           {
-            "group": "SDK",
-            "icon": "code",
-            "pages": [
-              "speech/sdk-setup",
-              "speech/session-controls",
-              "speech/hooks-events"
-            ]
-          },
-          {
             "group": "Dialog",
             "icon": "layers",
             "pages": [
@@ -105,6 +96,15 @@
             "pages": [
               "sdk/bring-your-agent",
               "sdk/setup-checklist"
+            ]
+          },
+          {
+            "group": "Reference",
+            "icon": "code",
+            "pages": [
+              "speech/sdk-setup",
+              "speech/session-controls",
+              "speech/hooks-events"
             ]
           }
         ]
