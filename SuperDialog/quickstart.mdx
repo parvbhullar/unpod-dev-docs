@@ -9,10 +9,15 @@ description: "Install SuperDialog, build a flow from a prompt, and run your firs
 pip install superdialog
 ```
 
-For LangChain agent support:
+Install only the extras you need:
 
 ```bash
-pip install superdialog[langchain]
+pip install superdialog[livekit]    # LiveKit adapter
+pip install superdialog[pipecat]    # PipeCat adapter
+pip install superdialog[fastapi]    # FastAPI adapter + uvicorn
+pip install superdialog[ws]         # WebSocket runner
+pip install superdialog[mcp]        # MCP tool support
+pip install superdialog[langchain]  # LangChainAgent
 ```
 
 ## Step 1 - Bootstrap a flow from a prompt
@@ -84,6 +89,23 @@ dialog_machine = DialogMachine(
     flow=Flow.load("appointment.json"),
     llm="anthropic/claude-haiku-4-5",
     tools=[PythonTool.of(lookup_customer)],  # schema inferred from signature + docstring
+)
+```
+
+Or use the `@tool` decorator shorthand:
+
+```python
+from superdialog.tools import tool
+
+@tool
+def lookup_customer(phone_number: str) -> dict:
+    """Look up customer record by phone number."""
+    return crm.get_by_phone(phone_number)
+
+dialog_machine = DialogMachine(
+    flow=Flow.load("appointment.json"),
+    llm="anthropic/claude-haiku-4-5",
+    tools=[lookup_customer],  # decorated function is already a PythonTool
 )
 ```
 

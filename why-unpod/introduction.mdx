@@ -1,0 +1,123 @@
+---
+title: 'Why Unpod'
+icon: 'rocket'
+description: 'Phone Numbers & Speech Infra for AI Agents. You bring the agent - we handle the communication stack.'
+---
+
+## The Problem Nobody Talks About
+
+You have an AI agent. It works great in a chat window. You want to give it a phone number.
+
+That should take an afternoon. Instead it takes months.
+
+Here is why: **80% of the voice AI dollar burns on speech infrastructure - not on the AI itself.**
+
+| Cost | Per minute |
+|---|---|
+| LLM (your AI logic) | ~$0.002 |
+| STT + TTS (speech infra) | ~$0.060 |
+
+The speech layer - transcription, synthesis, VAD, barge-in detection, endpointing, carrier connections - costs 30x more than the model and takes 10x longer to build. Most teams spend 3-4 months wiring this up before their agent takes a single real call.
+
+**Your team should ship product - not run a speech infra company.**
+
+---
+
+## What Unpod Is
+
+Unpod is **communication infrastructure for AI agents**. We own the entire communication stack so you don't have to.
+
+<CardGroup cols={3}>
+  <Card title="Phone Numbers" icon="phone">
+    Provision numbers directly from Unpod or bring your own. No SIP trunk setup, no carrier account.
+  </Card>
+  <Card title="Fully Managed Speech" icon="waveform">
+    STT, TTS, VAD, barge-in, endpointing - all configured, monitored, and failed over automatically.
+  </Card>
+  <Card title="One Webhook" icon="webhook">
+    Your agent receives transcribed text and returns text. Audio never leaves Unpod.
+  </Card>
+</CardGroup>
+
+---
+
+## How It Works
+
+You already have an agent. It could be LangChain, a FastAPI endpoint, n8n, SuperDialog - anything that accepts text and returns text.
+
+Unpod gives it a phone number and handles everything between the caller and your logic.
+
+```
+Caller speaks
+    -> Unpod transcribes (Deepgram)
+    -> Your agent receives text: "I need help with my order"
+    -> Your agent returns text: "I can help with that..."
+    -> Unpod synthesises (Cartesia)
+    -> Caller hears the response
+```
+
+Your endpoint never touches audio. It never touches SIP. It never manages a carrier.
+
+---
+
+## What This Looks Like in Code
+
+This is a complete production voice agent using the Unpod SDK:
+
+```python
+from superdialog import DialogMachine, Flow
+from unpod import AgentRunner, CallContext
+
+flow = Flow.load("support.json")
+
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = DialogMachine(flow=flow, llm="anthropic/claude-haiku-4-5")
+    await ctx.session.run()
+
+AgentRunner(entrypoint=handle_call, agent_id="agt_...").start()
+```
+
+No pipeline configuration. No WebRTC. No SIP setup. No carrier account. No audio handling.
+
+You can also point Unpod at any HTTP endpoint or LangChain agent you already have - no SDK required.
+
+---
+
+## Where Unpod Sits in the Stack
+
+```
+Layer 3 - Agent Platforms    Vapi, Retell, Bland
+                                   ^
+                                   |   (they use us)
+Layer 2 - Communication Infra [ Unpod ]  <-- we are here
+                                   |
+                                   |   (we use them)
+                                   v
+Layer 1 - Raw Telephony      Twilio, Plivo, Bandwidth
+```
+
+Unpod sits between raw carriers (Layer 1) and agent platforms (Layer 3). We are the communication stack that agent builders rely on - and that you can use directly.
+
+---
+
+## Who Unpod Is For
+
+| You have... | Unpod gives you... |
+|---|---|
+| A Python agent | A phone number and fully managed speech in 2 hours |
+| An HTTP endpoint | Inbound calls routed to it - no code changes |
+| A LangChain chain | Drop-in adapter - voice in, voice out |
+| A product to ship | Production voice in days - not months |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Unpod vs LiveKit vs Pipecat" icon="scale" href="/why-unpod/vs-competition">
+    How Unpod compares to audio frameworks on cost, time, and ownership.
+  </Card>
+  <Card title="How It Works" icon="diagram-project" href="/why-unpod/how-it-works">
+    The communication stack - from caller to your agent and back.
+  </Card>
+</CardGroup>

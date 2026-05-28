@@ -1,0 +1,126 @@
+---
+title: 'How It Works'
+icon: 'diagram-project'
+description: 'The Unpod communication stack - from caller to your agent and back.'
+---
+
+## The Model: Audio In, Text Out
+
+Unpod sits between the caller and your agent. Your agent never touches audio.
+
+```
+Caller speaks
+    -> Unpod: receive audio, transcribe (STT), detect turn end
+    -> Your agent: receives plain text
+    -> Your agent: returns plain text
+    -> Unpod: synthesise speech (TTS), stream to caller
+Caller hears response
+```
+
+Your endpoint is a simple text-in / text-out webhook. Everything involving audio, carriers, and real-time streaming is handled by Unpod.
+
+---
+
+## The Communication Stack
+
+<Steps>
+  <Step title="Phone Numbers">
+    A number provisioned through Unpod (or BYON) receives the inbound call. Unpod handles SIP, PSTN connectivity, and routing. You never configure a carrier or SIP trunk.
+  </Step>
+  <Step title="Speech Pipeline">
+    Audio from the caller is transcribed by the configured STT provider (Deepgram). VAD detects when the caller finishes speaking. Barge-in detection interrupts the agent if the caller speaks mid-response. Agent replies are synthesised by the TTS provider (Cartesia or ElevenLabs). The voice profile on your agent sets which providers are used - with automatic failover if a provider goes down.
+  </Step>
+  <Step title="Orchestration">
+    The Unpod orchestrator receives the session and dispatches it to the least-loaded AgentRunner worker registered for that agent. Worker heartbeats, capacity tracking, and load balancing are automatic.
+  </Step>
+  <Step title="Your Agent">
+    Your AgentRunner process accepts the dispatch and calls your entrypoint with a CallContext. The Session object gives you controls: say, transfer, end, pause recording. session.run() keeps the call alive and routes transcribed turns to your dialog machine.
+  </Step>
+  <Step title="Dialog">
+    Transcribed text is routed to whatever dialog handler you set. Use SuperDialog for structured flows with tools and branching. Use any HTTP endpoint, LangChain chain, or custom logic - whatever your agent already is.
+  </Step>
+</Steps>
+
+---
+
+## What You Own vs What Unpod Owns
+
+```
+  [ Caller ]
+      |
+      v
+  [ Phone Number ]      <- Unpod manages
+      |
+      v
+  [ Speech Pipeline ]   <- Unpod manages (STT, VAD, barge-in, TTS)
+      |
+      v
+  [ Orchestration ]     <- Unpod manages (dispatch, load balancing)
+      |
+      v
+  [ AgentRunner ]       <- You deploy (one Python process)
+      |
+      v
+  [ Session ]           <- You use (say, transfer, end, hooks)
+      |
+      v
+  [ Your Agent ]        <- You write (SuperDialog, LangChain, HTTP, custom)
+```
+
+The line is clear: **you own everything from AgentRunner down**. Everything above it is managed.
+
+---
+
+## Core Concepts
+
+### Numbers
+Phone numbers attached to your agent. Inbound calls arrive on a number and are routed to the agent it is attached to. Numbers come from Unpod directly or via BYON. See [Voice Stack - Numbers](/speech/numbers).
+
+### Voice Profiles
+A bundle of STT + TTS provider configuration. Defines which providers handle speech recognition and synthesis, which language, and the failover order. See [Voice Stack - Voice Profiles](/speech/voice-profiles).
+
+### Agents
+A configuration entity: name, voice profile, recording settings, call duration limits. The agent is the anchor point for numbers, voice profiles, and runner workers. See [Voice Stack - Agents](/speech/agents).
+
+### AgentRunner
+A long-lived Python process that registers with the Unpod orchestrator over WebSocket. It advertises capacity, receives dispatch frames, and calls your entrypoint for each call. See [Voice Stack - SDK Setup](/speech/sdk-setup).
+
+### CallContext
+The object passed to your entrypoint for every call. Contains `call_id`, `session_id`, `direction`, `user_number`, `instructions`, `data`, and the `session` object. Read-only metadata plus the live session handle.
+
+### Session
+Your control interface for a live call. `say()`, `transfer_to_human()`, `end()`, `recording.pause()`, hooks, metrics, and the `dialog_machine` property. See [Voice Stack - Session Controls](/speech/session-controls).
+
+### SuperDialog
+The conversation engine. A `DialogMachine` executes a structured `Flow` turn-by-turn, calls tools, and manages state. Plugs into any Session via `session.dialog_machine = machine`. See [SuperDialog](/SuperDialog/introduction).
+
+---
+
+## A Complete Call, End to End
+
+```
+1. Caller dials +1 415 555 0100
+2. Unpod routes to agent "agt_support"
+3. Orchestrator dispatches to your AgentRunner
+4. AgentRunner calls handle_call(ctx)
+5. You set ctx.session.dialog_machine = DialogMachine(flow, llm)
+6. session.run() starts the loop
+7. Caller speaks -> Deepgram transcribes -> DialogMachine.turn()
+8. Reply text -> Cartesia synthesises -> Caller hears
+9. Call ends -> transcript + metrics stored -> hooks fire
+```
+
+Your code runs from step 4 onward. Steps 1-3 are Unpod.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Voice Stack" icon="layers" href="/speech/introduction">
+    Numbers, voice profiles, agents, and the AgentRunner SDK.
+  </Card>
+  <Card title="SuperDialog" icon="git-branch" href="/SuperDialog/introduction">
+    Build structured conversation flows with tools and branching.
+  </Card>
+</CardGroup>

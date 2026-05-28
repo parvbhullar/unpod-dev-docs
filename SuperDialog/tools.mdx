@@ -5,9 +5,9 @@ description: "Give your dialog machine the ability to call Python functions, HTT
 
 ## Overview
 
-Tools let your `DialogMachine` take actions during a conversation - look up a customer record, book a slot, query a database, call an API. When the LLM decides a tool is needed, SuperDialog executes it automatically and feeds the result back into the conversation.
+Tools let your `DialogMachine` take actions during a conversation — look up a customer record, book a slot, query a database, call an API. When the LLM decides a tool is needed, SuperDialog executes it automatically and feeds the result back into the conversation.
 
-Three tool shapes, one interface:
+Three tool types, one interface:
 
 | Type | Execution | Best for |
 |---|---|---|
@@ -15,23 +15,119 @@ Three tool shapes, one interface:
 | `HttpTool` | HTTP request | External REST APIs, microservices |
 | `MCPTool` | MCP protocol | Model Context Protocol servers |
 
+---
+
+## Registering Python tools
+
+There are three ways to register a Python function as a tool.
+
+### 1. `@tool` decorator
+
+The fastest way. Schema is inferred from type hints and description from the docstring.
+
+```python
+from superdialog.tools import tool
+
+@tool
+async def lookup_customer(customer_id: str) -> dict:
+    """Look up customer record by ID."""
+    return await crm.get(customer_id)
+
+dialog_machine = DialogMachine(flow=flow, llm="...", tools=[lookup_customer])
+```
+
+Override the name or description when the function name or docstring isn't suitable:
+
+```python
+@tool(name="check_stock", description="Check inventory availability by SKU")
+async def check_inventory(sku: str, qty: int) -> dict:
+    return await inventory_api.check(sku, qty)
+```
+
+### 2. Plain functions in `tools=[]`
+
+No decorator needed — pass any function directly. SuperDialog wraps it automatically using the function name as the tool id and the docstring as the description.
+
+```python
+async def lookup_customer(customer_id: str) -> dict:
+    """Look up customer record by ID."""
+    return await crm.get(customer_id)
+
+async def check_inventory(sku: str) -> dict:
+    """Check inventory levels."""
+    return await inventory_api.check(sku)
+
+dialog_machine = DialogMachine(
+    flow=flow,
+    llm="...",
+    tools=[lookup_customer, check_inventory],   # plain functions, no wrapping
+)
+```
+
+### 3. Function references on the flow model
+
+Attach functions directly to `ConversationFlow.tools` or `FlowNode.tools` when building flows in Python. This gives you **scoping** — flow-level tools are available on every node, node-level tools only on that node.
+
+```python
+from superdialog.flow.models import ConversationFlow, FlowNode, Edge
+
+async def search_kb(query: str) -> dict:
+    """Search the knowledge base."""
+    return await kb.search(query)
+
+async def check_availability(date: str) -> dict:
+    """Check appointment availability."""
+    return await calendar.slots(date)
+
+flow = ConversationFlow(
+    system_prompt="You are an appointment assistant.",
+    initial_node="greeting",
+    tools=[search_kb],                        # flow-level: available on every node
+    nodes=[
+        FlowNode(
+            id="collect",
+            name="Collect Info",
+            instruction="Collect patient name and preferred date.",
+            tools=[check_availability],       # node-level: only on this node
+            edges=[
+                Edge(id="e_confirm", condition="All info collected", target_node_id="confirm")
+            ],
+        ),
+        ...
+    ],
+)
+
+# No tool_handlers dict required — functions are bound directly
+machine = await DialogStateMachine.from_flow(flow, adapter)
+```
+
+`@tool`-decorated functions work here too:
+
+```python
+@tool
+async def lookup_customer(customer_id: str) -> dict:
+    """Look up a customer."""
+    ...
+
+flow = ConversationFlow(
+    tools=[lookup_customer],
+    ...
+)
+```
+
+---
+
 ## PythonTool
 
-The most common case. Pass any Python callable - SuperDialog infers the id, name, description, and JSON schema from the function signature and docstring.
+For explicit control over the tool's id, name, description, or schema:
 
 ```python
 from superdialog import PythonTool
 
-def lookup_customer(customer_id: str) -> dict:
-    """Look up customer record by ID."""
-    return crm.get(customer_id)
-
+# Convenience constructor — infers id, name, description, schema from the function
 tool = PythonTool.of(lookup_customer)
-```
 
-Override identity or schema explicitly when needed:
-
-```python
+# Explicit constructor
 tool = PythonTool(
     id="crm-lookup",
     name="lookup_customer",
@@ -39,6 +135,8 @@ tool = PythonTool(
     fn=lookup_customer,
 )
 ```
+
+---
 
 ## HttpTool
 
@@ -58,18 +156,18 @@ tool = HttpTool(
 )
 ```
 
-**Auth shapes (v0.2):**
+**Auth shapes:**
 
 ```python
 # Bearer token
 auth={"type": "bearer", "token": "your-token"}
 ```
 
-Additional shapes (`basic`, `api_key`, callable) are planned for v0.3.
+---
 
 ## MCPTool
 
-For servers that implement the [Model Context Protocol](https://modelcontextprotocol.io).
+For servers that implement the [Model Context Protocol](https://modelcontextprotocol.io). Requires `pip install superdialog[mcp]`.
 
 ```python
 from superdialog import MCPTool
@@ -83,71 +181,105 @@ tool = MCPTool(
 ```
 
 <Note>
-In v0.2, `MCPTool` forwards each `execute(args)` call to `session.call_tool(self.id, args)` against the configured server. Auto-discovery of all tools published by an MCP server is planned for a follow-up release.
+`MCPTool` connects lazily on first use via SSE. Auto-discovery of all tools published by an MCP server is planned for a follow-up release.
 </Note>
 
-## Attaching tools to a machine
+---
 
-Pass tools to `DialogMachine` at construction:
+## `Tool.from_dict`
+
+Deserialize a tool from a plain dict — useful when loading tool specs from JSON config files:
 
 ```python
-from superdialog import DialogMachine, Flow, PythonTool, HttpTool
+from superdialog import Tool
 
-dialog_machine = DialogMachine(
-    flow=Flow.load("kyc.json"),
-    llm="anthropic/claude-haiku-4-5",
-    tools=[
-        PythonTool.of(lookup_customer),
-        HttpTool(id="book_slot", name="book_slot", description="Book an appointment slot",
-                 url="https://api.company.io/slots/book"),
-    ],
+# HTTP tool from config
+tool = Tool.from_dict({
+    "type": "http",
+    "id": "lookup",
+    "name": "lookup",
+    "description": "Look up customer",
+    "url": "https://api.company.io/lookup",
+})
+
+# Python tool from config (pass handler_registry to resolve function by name)
+tool = Tool.from_dict(
+    {"type": "python", "id": "verify", "name": "verify", "description": "...", "handler_id": "verify_fn"},
+    handler_registry={"verify_fn": verify_customer},
 )
 ```
 
+---
+
 ## Tool results and flow transitions
 
-Tool execution results are automatically merged into the node's slot values. A tool can also trigger a flow transition by returning a `ToolResult` with a `transition_edge_id`:
+Tool results are automatically merged into node slot values and made available in the conversation context. A tool can also trigger a flow transition by returning a `ToolResult` with a `transition_edge_id`:
 
 ```python
-from superdialog.tools import ToolResult
+from superdialog.machine.models import ToolResult
 
-def book_appointment(slot_id: str) -> ToolResult:
+async def book_appointment(slot_id: str) -> ToolResult:
     """Book the appointment for the given slot."""
-    success = calendar.book(slot_id)
+    success = await calendar.book(slot_id)
     if success:
         return ToolResult(
-            output={"booked": True, "slot": slot_id},
-            transition_edge_id="booking_confirmed",
+            data={"booked": True, "slot": slot_id},
+            transition_edge_id="booking_confirmed",   # triggers edge transition
         )
-    return ToolResult(output={"booked": False})
+    return ToolResult(data={"booked": False})
 ```
 
-## Example: full flow with tools
+---
+
+## Example: full flow with scoped tools
 
 ```python
 import asyncio
-from superdialog import create_dialog_flow, DialogMachine, PythonTool
+from superdialog.flow.models import ConversationFlow, FlowNode, Edge
+from superdialog.machine.machine import DialogStateMachine
+from superdialog.tools import tool
 
-def verify_aadhaar(last_4: str) -> dict:
-    """Verify if Aadhaar last 4 digits match the customer on file."""
-    return {"verified": db.verify_aadhaar(last_4)}
+# Flow-level tool — available on every node
+@tool
+async def search_kb(query: str) -> dict:
+    """Search the knowledge base for answers."""
+    return {"results": await kb.search(query)}
 
-def confirm_dob(dob: str) -> dict:
-    """Confirm date of birth format YYYY-MM-DD."""
-    return {"confirmed": db.verify_dob(dob)}
+# Node-level tool — only available on the collect_info node
+async def check_availability(date: str) -> dict:
+    """Check available appointment slots for a date."""
+    return {"slots": await calendar.get_slots(date)}
 
-async def main():
-    flow = await create_dialog_flow(
-        prompt="KYC verification: ask for Aadhaar last 4, verify it, then confirm DOB.",
-        llm="openai/gpt-5.1",
-    )
-    dm = DialogMachine(
-        flow=flow,
-        llm="anthropic/claude-haiku-4-5",
-        tools=[PythonTool.of(verify_aadhaar), PythonTool.of(confirm_dob)],
-    )
-    reply = await dm.turn("I'd like to verify my KYC")
-    print(reply.text)
+async def verify_insurance(policy_number: str) -> dict:
+    """Verify patient insurance coverage."""
+    return {"verified": await insurance_api.verify(policy_number)}
 
-asyncio.run(main())
+flow = ConversationFlow(
+    system_prompt="You are an appointment booking assistant.",
+    initial_node="greeting",
+    tools=[search_kb],                        # available everywhere
+    nodes=[
+        FlowNode(
+            id="greeting",
+            name="Greeting",
+            static_text="Hello! I can help you book an appointment.",
+            edges=[Edge(id="e_start", condition="User ready", target_node_id="collect_info")],
+        ),
+        FlowNode(
+            id="collect_info",
+            name="Collect Info",
+            instruction="Collect patient name, date, and insurance policy number.",
+            tools=[check_availability, verify_insurance],   # node-scoped
+            edges=[Edge(id="e_confirm", condition="All info collected", target_node_id="confirm")],
+        ),
+        FlowNode(
+            id="confirm",
+            name="Confirm",
+            static_text="Your appointment is confirmed!",
+            is_final=True,
+        ),
+    ],
+)
+
+machine = await DialogStateMachine.from_flow(flow, adapter)
 ```

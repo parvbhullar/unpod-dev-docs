@@ -34,9 +34,16 @@ Agent: Perfect, your KYC has been verified. Have a great day!
 **Options:**
 
 ```bash
-superdialog chat kyc.json --llm anthropic/claude-haiku-4-5   # override runtime model
-superdialog chat kyc.json --traversal-dir ./history           # save session JSON on completion
+superdialog chat kyc.json --llm anthropic/claude-haiku-4-5     # override runtime model
+superdialog chat kyc.json --traversal-dir ./history             # save session JSON on completion
+superdialog chat kyc.json --adapter toolcall                    # "toolcall" (default) or "llm"
 ```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--flow` | `flow.json` | Path to flow file (JSON or YAML) |
+| `--llm` | `openai/gpt-4o-mini` | Model URI for runtime |
+| `--adapter` | `toolcall` | `toolcall` (1 LLM call/turn) or `llm` (2 calls/turn, useful for debugging) |
 
 **When to use:** during initial flow design, prompt tuning, and eval dataset collection - before any voice infrastructure is involved.
 
@@ -94,8 +101,14 @@ superdialog flow generate "Confirm KYC. Ask for Aadhaar last 4. Confirm DOB." \
 
 | Flag | Default | Description |
 |---|---|---|
-| `--llm` | required | Model URI used to generate the flow |
+| `--llm` | `openai/gpt-4o-mini` | Model URI used to generate the flow |
 | `--output` | `flow.json` | Output file path |
+| `--from` | - | Read prompt from a file instead of inline |
+
+```bash
+# Prompt from a file
+superdialog flow generate --from prompt.txt --llm openai/gpt-5.1 --output kyc.json
+```
 
 **When to use:** to quickly prototype a new flow, then refine the JSON by hand or re-generate with a better prompt.
 

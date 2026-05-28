@@ -68,10 +68,25 @@ DialogMachine(
     memory: Memory | None = None,                # default: in-memory
     config: dict | None = None,                  # max_tokens, temperature, etc.
     traversal_dir: str | Path | None = None,     # auto-save traversal JSON on completion
+    adapter: str = "toolcall",                   # "toolcall" (1 LLM call/turn) or "llm" (2 calls/turn)
 )
 ```
 
-Set `traversal_dir` to a directory path and the machine writes a timestamped JSON file on each completed session recording every node visited, every turn, and all collected slot values. Useful for debugging flows, building eval datasets, and production auditing.
+- **`traversal_dir`** - Writes a timestamped JSON file on each completed session recording every node visited, every turn, and all slot values. Useful for debugging, building eval datasets, and auditing.
+- **`adapter`** - `"toolcall"` (default, production) uses one LLM call per turn. `"llm"` uses two calls per turn and can be useful for debugging flow traversal logic.
+
+### `start`
+
+```python
+async start() -> Turn
+```
+
+Generate the agent's opening message without any user input. Call this at the start of a voice call or chat session to have the agent greet first.
+
+```python
+opening = await dialog_machine.start()
+print(opening.text)   # "Hello! I'm here to help verify your KYC. Could you provide..."
+```
 
 ### `turn`
 
@@ -228,6 +243,22 @@ worker = SessionWorker(
 
 ## Tools
 
+### `@tool` decorator
+
+The quickest way to define a tool — decorate any function and it becomes a `PythonTool` with schema inferred from type hints and docstring:
+
+```python
+from superdialog.tools import tool
+
+@tool
+def lookup_customer(customer_id: str) -> dict:
+    """Look up customer record by ID."""
+    return crm.get(customer_id)
+
+# Use directly in DialogMachine
+dialog_machine = DialogMachine(flow=flow, llm="...", tools=[lookup_customer])
+```
+
 ### `PythonTool`
 
 ```python
@@ -240,6 +271,20 @@ tool = PythonTool(
     name="lookup",
     description="Look up customer by ID",
     fn=lookup_customer,
+)
+```
+
+### `Tool.from_dict`
+
+Deserialize a tool spec from a plain dict (e.g. loaded from JSON config). Routes to `PythonTool`, `HttpTool`, or `MCPTool` based on the `type` field:
+
+```python
+from superdialog import Tool
+
+tool = Tool.from_dict(
+    {"type": "http", "id": "lookup", "name": "lookup",
+     "description": "...", "url": "https://api.company.io/lookup"},
+    handler_registry={"my_fn": my_python_fn},  # optional, for type=python
 )
 ```
 

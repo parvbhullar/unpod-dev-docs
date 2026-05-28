@@ -52,15 +52,37 @@ flow.save("manual.json")
 
 ## Saving and loading
 
-Flows serialize to JSON - commit them to source control alongside your code.
+Flows support JSON and YAML formats — commit them to source control alongside your code.
 
 ```python
-# Save
+from superdialog import Flow
+
+# Save as JSON
 flow.save("flows/kyc.json")
 
-# Load
-from superdialog import Flow
+# Load — auto-detects format from extension
 flow = Flow.load("flows/kyc.json")
+flow = Flow.load("flows/kyc.yaml")
+
+# Explicit format loaders
+flow = Flow.from_json_file("flows/kyc.json")
+flow = Flow.from_yaml_file("flows/kyc.yaml")
+
+# Load from string
+flow = Flow.from_json_string(json_str)
+flow = Flow.from_yaml_string(yaml_str)
+
+# Load from dict
+flow = Flow.from_config(config_dict)
+```
+
+### React Flow editor support
+
+Flows exported from the React Flow visual editor (camelCase JSON) are automatically detected and normalized:
+
+```python
+# Works directly - no manual conversion needed
+flow = Flow.load("flows/kyc-react-flow-export.json")
 ```
 
 ## Multiple flows with FlowSet
