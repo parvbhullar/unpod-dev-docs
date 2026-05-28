@@ -116,6 +116,7 @@
             "group": "Getting Started",
             "icon": "book-open",
             "pages": [
+              "SuperDialog/thinking-in-flows",
               "SuperDialog/introduction",
               "SuperDialog/quickstart"
             ]

@@ -1,0 +1,151 @@
+---
+title: "Thinking in Flows"
+description: "The mental model shift from writing prompts to designing state graphs - and why it makes complex conversations reliable."
+---
+
+# Thinking in Flows
+
+If you have built LLM chatbots before, SuperDialog requires one shift in thinking:
+
+| Traditional bot | SuperDialog |
+|----------------|-------------|
+| Write a long system prompt | Design a node graph |
+| LLM decides everything | Developer defines topology; LLM fills gaps |
+| No structure - LLM can go anywhere | Explicit states - LLM can only traverse defined edges |
+
+## The Core Model
+
+A flow is a **directed graph** of nodes connected by edges.
+
+- **Node** - one step in the conversation (collect a name, confirm a booking, handle an objection)
+- **Edge** - a condition that moves the conversation to the next node
+- **Criteria** - what data must be collected before an edge can fire
+
+```
+[greet] -> (user_ready) -> [collect_name] -> (name_given) -> [confirm] -> (confirmed) -> [done]
+```
+
+## Start With the Topology
+
+Before writing any prompts, map your conversation:
+
+1. What are the distinct **steps** in this conversation?
+2. What **data** needs to be collected at each step?
+3. What **conditions** cause the conversation to move forward?
+4. What can **go wrong** at each step? (user refuses, unclear answer)
+
+For an appointment booking bot:
+
+```
+[greet]
+  -> user wants to book    -> [collect: name, doctor, date, time]
+  -> user wants to reschedule -> [collect: booking_ref, new_date]
+  -> [confirm]
+  -> [done]
+```
+
+## Then Generate It
+
+```bash
+superdialog flow generate "Book appointments. Collect patient name, doctor, date, time. Confirm before saving." --output booking.json
+superdialog flow lint booking.json    # always lint after generate
+superdialog flow draw booking.json    # visualise the graph
+```
+
+## Test It - No Infrastructure Needed
+
+```bash
+superdialog chat booking.json
+```
+
+Full interactive REPL against your flow. No Unpod account, no phone number, no voice setup required.
+
+```
+> I want to book an appointment
+Certainly! May I have your full name?
+> John Smith
+Thank you, John. Which doctor would you like to see?
+[42ms]
+```
+
+Iterate on `booking.json`, re-run `chat` - the full loop takes seconds.
+
+## Understanding Criteria and Edges
+
+A node has two separate concerns:
+
+**Criteria** - what this node needs to collect:
+```json
+"completion_criteria": [
+  {"key": "name", "description": "Patient full name", "required": true},
+  {"key": "date", "description": "Appointment date (e.g. 'May 25', 'next Friday')", "required": true}
+]
+```
+
+**Edges** - where to go next and what to extract:
+```json
+"edges": [
+  {
+    "condition": "Patient provided both name and appointment date",
+    "target_node_id": "collect_time",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string", "description": "Full name"},
+        "date": {"type": "string", "description": "Appointment date"}
+      }
+    }
+  },
+  {
+    "condition": "Patient did not provide all required information",
+    "target_node_id": "collect_details",
+    "is_fallback": true
+  }
+]
+```
+
+<Warning>
+Criteria and edges are evaluated **independently** by the LLM at runtime. You can write criteria that say one thing and edges that say another - the system does not automatically check they are consistent. Always run `flow lint` to catch the most common mismatches.
+</Warning>
+
+<Tip>
+Be explicit in descriptions. `"User gave a date"` is vague. `"Appointment date (e.g. 'May 25', 'next Friday', '2026-05-25')"` tells the LLM exactly what counts.
+</Tip>
+
+## Two LLM Calls Per Turn
+
+By default, each user turn makes **two LLM calls**:
+
+1. **Criteria judge** - evaluates which edge fires and extracts slot data
+2. **Response generator** - generates what the agent says next
+
+For voice, this adds 400-800 ms latency before TTS starts.
+
+To collapse to one call (requires a function-calling model like GPT-4o or Claude Haiku):
+
+```python
+DialogMachine(flow=flow, llm="openai/gpt-4o-mini", adapter="toolcall")
+```
+
+Or test it in the CLI:
+
+```bash
+superdialog chat booking.json --adapter toolcall
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/SuperDialog/quickstart">
+    Bootstrap your first flow in 5 minutes
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/SuperDialog/architecture">
+    Component breakdown and data flow
+  </Card>
+  <Card title="Tools" icon="wrench" href="/SuperDialog/tools">
+    Connect your backend APIs as flow tools
+  </Card>
+  <Card title="Sessions" icon="users" href="/SuperDialog/sessions">
+    Multi-user and persistent sessions
+  </Card>
+</CardGroup>
