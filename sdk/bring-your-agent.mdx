@@ -50,7 +50,7 @@ That's it. Incoming calls to your Unpod number are now routed to your agent.
 |---------|--------|----------|
 | `LangChainAdapter` | `unpod.adapters.langchain` | LangChain chain with `.ainvoke()` / `.astream()` |
 | `HTTPAdapter` | `unpod.adapters.http` | Remote agent API (any language) |
-| `SuperDialogAdapter` | `unpod.adapters.superdialog` | superdialog DialogMachine / LLMAgent — or assign directly, auto-wrapping handled |
+| `SuperDialogAdapter` | `unpod.adapters.superdialog` | superdialog DialogMachine / LLMAgent - or assign directly, auto-wrapping handled |
 | Custom | Implement `DialogAdapter` protocol | Any Python object with `turn`, `stream`, `assist` |
 
 ## LangChain Chain Requirements
@@ -86,7 +86,7 @@ Available hooks: `call_start`, `user_turn`, `agent_turn`, `user_partial`, `inter
 
 ## Writing a Custom Adapter
 
-Implement three methods — no base class required:
+Implement three methods - no base class required:
 
 ```python
 class MyAdapter:
@@ -105,7 +105,7 @@ class MyAdapter:
 ```
 
 <Warning>
-`stream()` is called on every user turn by `session.run()`. Implement it properly — a single-chunk fallback causes choppy audio.
+`stream()` is called on every user turn by `session.run()`. Implement it properly - a single-chunk fallback causes choppy audio.
 </Warning>
 
 ## Next Steps
