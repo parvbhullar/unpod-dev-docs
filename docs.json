@@ -230,10 +230,10 @@
         ]
       },
       {
-        "tab": "Guide",
+        "tab": "Guides",
         "groups": [
           {
-            "group": "Guide",
+            "group": "Guides",
             "icon": "newspaper",
             "pages": [
               "blog/index",
