@@ -6,7 +6,7 @@ description: "One-time resource provisioning before your first call."
 
 # Setup Checklist
 
-Before your first call routes to your agent, complete these steps once.
+Before your first call routes to your Speech Pipe, complete these steps once.
 
 ## 1. Create a Voice Profile
 
@@ -23,30 +23,30 @@ async def list_profiles():
 asyncio.run(list_profiles())
 ```
 
-## 2. Create an Agent
+## 2. Create a Speech Pipe
 
 ```python
 import asyncio
 from unpod import AsyncClient
 
-async def create_agent():
+async def create_pipe():
     client = AsyncClient()
-    agent = await client.agents.create(
+    pipe = await client.pipes.create(
         name="My Agent",
         voice_profile="en-female-1",   # use a name from step 1
-        runner_agent_id="my-agent",    # MUST match AgentRunner(agent_id=...)
+        agent_id="my-agent",           # MUST match AgentRunner(agent_id=...)
     )
-    print(agent.agent_id)  # UUID - used for REST API calls
-    return agent
+    print(pipe.pipe_id)  # UUID - used for REST API calls
+    return pipe
 
-asyncio.run(create_agent())
+asyncio.run(create_pipe())
 ```
 
 <Warning>
-**`runner_agent_id` vs `agent.agent_id`**
+**`agent_id` vs `pipe.pipe_id`**
 
-- `agent.agent_id` - UUID assigned by Unpod, used in REST API calls
-- `runner_agent_id` - string name you choose; must exactly match `AgentRunner(agent_id=...)`
+- `pipe.pipe_id` - UUID assigned by Unpod, used in REST API calls
+- `agent_id` - string name you choose; must exactly match `AgentRunner(agent_id=...)`
 
 These are different. Mismatching them is the most common first-run failure.
 </Warning>
@@ -61,16 +61,16 @@ Replace `"en-female-1"` with a profile name from Step 1. Run Step 1 first to see
 import asyncio
 from unpod import AsyncClient
 
-async def assign_number(agent_id: str) -> None:
+async def assign_number(pipe_id: str) -> None:
     client = AsyncClient()
     numbers = await client.numbers.list()
     if not numbers:
         print("No numbers available. Provision one in the Unpod dashboard first.")
         return
-    await client.numbers.attach(numbers[0].id, agent_id=agent_id)
+    await client.numbers.attach(numbers[0].id, pipe_id=pipe_id)
     print(f"Assigned {numbers[0].number}")
 
-asyncio.run(assign_number("YOUR_AGENT_UUID"))
+asyncio.run(assign_number("YOUR_PIPE_UUID"))
 ```
 
 ## 4. Start Your Runner
@@ -80,7 +80,7 @@ from unpod import AgentRunner
 
 AgentRunner(
     entrypoint=entrypoint,
-    agent_id="my-agent",   # must match runner_agent_id above
+    agent_id="my-agent",   # must match the pipe's agent_id above
 ).start()
 ```
 
@@ -98,19 +98,19 @@ async def setup():
     profiles = await client.voice_profiles.list()
     profile = profiles[0]
 
-    # Create agent
-    agent = await client.agents.create(
+    # Create Speech Pipe
+    pipe = await client.pipes.create(
         name="My Agent",
         voice_profile=profile.profile_id,
-        runner_agent_id="my-agent",
+        agent_id="my-agent",
     )
 
     # Assign first available number
     numbers = await client.numbers.list()
     if numbers:
-        await client.numbers.attach(numbers[0].id, agent_id=agent.agent_id)
+        await client.numbers.attach(numbers[0].id, pipe_id=pipe.pipe_id)
 
-    print(f"Agent created: {agent.agent_id}")
+    print(f"Speech Pipe created: {pipe.pipe_id}")
     print(f"Number: {numbers[0].number if numbers else 'none assigned'}")
 
 asyncio.run(setup())

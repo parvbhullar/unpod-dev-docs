@@ -12,15 +12,15 @@ Outbound calls are calls your system initiates - rather than waiting for a calle
 - Callback queues
 - Alert notifications
 
-Outbound calls use the same agent, voice profile, and `AgentRunner` infrastructure as inbound calls. The difference is you trigger them via the management API.
+Outbound calls use the same Speech Pipe, voice profile, and `AgentRunner` infrastructure as inbound calls. The difference is you trigger them via the management API.
 
 ---
 
 ## Prerequisites
 
-- A configured agent with a voice profile - see [Agents](/speech/agents)
-- A phone number attached to that agent - see [Numbers](/speech/numbers)
-- A running `AgentRunner` process for the agent
+- A configured Speech Pipe with a voice profile - see [Speech Pipe](/speech/pipes)
+- A phone number attached to that Speech Pipe - see [Numbers](/speech/numbers)
+- A running `AgentRunner` process for the Speech Pipe
 
 ---
 
@@ -33,9 +33,9 @@ from unpod import AsyncClient
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
         call = await client.calls.create(
-            agent_id="agt_...",
+            pipe_id="pipe_...",
             to_number="+14155550100",    # E.164 format
-            from_number="+18005551234",  # must be attached to the agent
+            from_number="+18005551234",  # must be attached to the Speech Pipe
             instructions="This is a reminder call for a dental appointment.",
             data={
                 "patient_name": "Jane Smith",
@@ -53,9 +53,9 @@ asyncio.run(main())
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `agent_id` | `str` | Yes | Agent to use for the call |
+| `pipe_id` | `str` | Yes | Speech Pipe to use for the call |
 | `to_number` | `str` | Yes | Destination number (E.164) |
-| `from_number` | `str` | Yes | Caller ID - must be a number attached to the agent |
+| `from_number` | `str` | Yes | Caller ID - must be a number attached to the Speech Pipe |
 | `instructions` | `str \| None` | No | Runtime instruction override for this call |
 | `data` | `dict \| None` | No | Arbitrary metadata passed to your entrypoint via `ctx.data` |
 
@@ -129,9 +129,9 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
-        # All outbound calls for an agent
+        # All outbound calls for a Speech Pipe
         calls = await client.calls.list(
-            agent_id="agt_...",
+            pipe_id="pipe_...",
             status="completed",
         )
         for c in calls:
@@ -145,7 +145,7 @@ asyncio.run(main())
 | Parameter | Values | Description |
 |---|---|---|
 | `status` | `queued`, `ringing`, `in_progress`, `completed`, `failed` | Filter by status |
-| `agent_id` | `agt_...` | Filter by agent |
+| `pipe_id` | `pipe_...` | Filter by Speech Pipe |
 
 ---
 
@@ -171,7 +171,7 @@ asyncio.run(main())
 import asyncio
 from unpod import AsyncClient
 
-AGENT_ID = "agt_..."
+PIPE_ID = "pipe_..."
 FROM_NUMBER = "+18005551234"
 
 contacts = [
@@ -184,7 +184,7 @@ async def dial_all(contacts: list[dict]) -> None:
     async with AsyncClient(api_key="sk-...") as client:
         for contact in contacts:
             call = await client.calls.create(
-                agent_id=AGENT_ID,
+                pipe_id=PIPE_ID,
                 to_number=contact["phone"],
                 from_number=FROM_NUMBER,
                 instructions=(
@@ -214,10 +214,10 @@ from unpod import AsyncClient
 async def process_callback_queue(queue: list[dict]) -> None:
     async with AsyncClient(api_key="sk-...") as client:
         for request in queue:
-            # Check if agent is not at capacity before dialing
+            # Check if the Speech Pipe is not at capacity before dialing
             # (AgentRunner handles capacity internally - orchestrator rejects if full)
             call = await client.calls.create(
-                agent_id="agt_...",
+                pipe_id="pipe_...",
                 to_number=request["phone"],
                 from_number="+18005551234",
                 instructions="This is a callback. The customer requested to be called back.",
@@ -263,7 +263,7 @@ asyncio.run(get_transcript("cal_..."))
   <Card title="Hooks & Events" icon="bell" href="/speech/hooks-events">
     Log outbound call data and react to call events in real time.
   </Card>
-  <Card title="Agents" icon="bot" href="/speech/agents">
-    Configure agents and voice profiles for outbound campaigns.
+  <Card title="Speech Pipe" icon="bot" href="/speech/pipes">
+    Configure Speech Pipes and voice profiles for outbound campaigns.
   </Card>
 </CardGroup>

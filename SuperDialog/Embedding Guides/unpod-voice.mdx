@@ -66,7 +66,7 @@ AgentRunner(
 
 ---
 
-## Step 3 — Create and register your agent
+## Step 3 — Create and register your Speech Pipe
 
 ```python
 import asyncio
@@ -75,18 +75,18 @@ from unpod import AsyncClient
 async def setup():
     async with AsyncClient() as client:
         profiles = await client.voice_profiles.list(language="en")
-        agent = await client.agents.create(
+        pipe = await client.pipes.create(
             name="KYC Bot",
             voice_profile=profiles[0].profile_id,
-            runner_agent_id="kyc-bot",    # must match AgentRunner(agent_id=...)
+            agent_id="kyc-bot",    # must match AgentRunner(agent_id=...)
             recording=True,
         )
 
         numbers = await client.numbers.list()
         if numbers:
-            await client.numbers.attach(numbers[0].id, agent_id=agent.agent_id)
+            await client.numbers.attach(numbers[0].id, pipe_id=pipe.pipe_id)
 
-        print(f"Agent: {agent.agent_id}, Number: {numbers[0].number if numbers else 'none'}")
+        print(f"Speech Pipe: {pipe.pipe_id}, Number: {numbers[0].number if numbers else 'none'}")
 
 asyncio.run(setup())
 ```
@@ -106,15 +106,15 @@ from unpod import AgentRunner, AsyncClient, CallContext
 async def setup():
     async with AsyncClient() as client:
         profiles = await client.voice_profiles.list(language="en")
-        agent = await client.agents.create(
+        pipe = await client.pipes.create(
             name="KYC Bot",
             voice_profile=profiles[0].profile_id,
-            runner_agent_id="kyc-bot",
+            agent_id="kyc-bot",
             recording=True,
         )
         numbers = await client.numbers.list()
         if numbers:
-            await client.numbers.attach(numbers[0].id, agent_id=agent.agent_id)
+            await client.numbers.attach(numbers[0].id, pipe_id=pipe.pipe_id)
 
 # asyncio.run(setup())   # Run once to provision
 

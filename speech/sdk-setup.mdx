@@ -43,13 +43,13 @@ async def handle_call(ctx: CallContext) -> None:
 
 runner = AgentRunner(
     entrypoint=handle_call,
-    agent_id="agt_...",  # runner_agent_id from your agent settings
+    agent_id="agt_...",  # the agent_id from your Speech Pipe settings
 )
 runner.start()  # blocking
 ```
 
 <Note>
-`agent_id` is the **runner agent ID** (a short string name) from your agent's settings, not the UUID shown in the agent list.
+`agent_id` is the **runner agent ID** (a short string name) from your Speech Pipe's settings, not the UUID shown in the Speech Pipe list.
 </Note>
 
 ---
@@ -138,7 +138,7 @@ async def handle_call(ctx: CallContext) -> None:
 
 ## Management Client
 
-`AsyncClient` / `Client` provide access to the Unpod management API - agents, calls, numbers, voice profiles, and more:
+`AsyncClient` / `Client` provide access to the Unpod management API - Speech Pipes, calls, numbers, voice profiles, and more:
 
 ```python
 import asyncio
@@ -146,9 +146,9 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
-        agents = await client.agents.list()
-        for a in agents:
-            print(a.agent_id, a.name)
+        pipes = await client.pipes.list()
+        for p in pipes:
+            print(p.pipe_id, p.name)
 
 asyncio.run(main())
 ```
@@ -168,7 +168,7 @@ with Client(api_key="sk-...") as client:
 
 | Attribute | Resource |
 |---|---|
-| `client.agents` | Create, list, get, update, delete agents |
+| `client.pipes` | Create, list, get, update, delete Speech Pipes |
 | `client.calls` | Initiate, list, get, hangup calls |
 | `client.sessions` | List and get call sessions |
 | `client.voice_profiles` | List and get voice profiles |

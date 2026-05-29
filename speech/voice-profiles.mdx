@@ -1,7 +1,7 @@
 ---
 title: 'Voice Profiles'
 icon: 'audio-waveform'
-description: 'Browse and select the speech stack for your voice agents.'
+description: 'Browse and select the speech stack for your Speech Pipes.'
 ---
 
 ## What Is a Voice Profile?
@@ -12,7 +12,7 @@ A voice profile bundles three things into a single reusable configuration:
 - **Text-to-Speech (TTS)** — converts agent text into natural-sounding audio
 - **Voice** — the specific voice identity (gender, accent, character) used for TTS output
 
-When you attach a voice profile to an agent, every call that agent handles uses that configuration automatically — including failover if a provider goes down.
+When you attach a voice profile to a Speech Pipe, every call that Speech Pipe handles uses that configuration automatically — including failover if a provider goes down.
 
 <Frame>
   <img src="/images/diagrams/voice-profile-pipeline.svg" alt="Voice profile pipeline diagram showing caller speech passing through STT, dialog machine text handling, TTS plus voice, and caller playback." />
@@ -52,7 +52,7 @@ asyncio.run(main())
 
 | Field | Type | Description |
 |---|---|---|
-| `profile_id` | `str` | Profile ID to pass when creating an agent |
+| `profile_id` | `str` | Profile ID to pass when creating a Speech Pipe |
 | `name` | `str` | Human-readable name, e.g. `"Emma (HD)"` |
 | `gender` | `str` | `male`, `female`, or `neutral` |
 | `quality` | `str` | `standard` or `high` |
@@ -100,9 +100,9 @@ Total call latency has three components: STT transcription + LLM thinking + TTS 
 
 ---
 
-## Using a Profile When Creating an Agent
+## Using a Profile When Creating a Speech Pipe
 
-Pass `profile_id` directly when creating or updating an agent:
+Pass `profile_id` directly when creating or updating a Speech Pipe:
 
 ```python
 import asyncio
@@ -116,19 +116,19 @@ async def main():
             p for p in profiles if p.quality == "high" and p.gender == "female"
         )
 
-        # Create agent with that profile
-        agent = await client.agents.create(
+        # Create Speech Pipe with that profile
+        pipe = await client.pipes.create(
             name="Support Bot",
             voice_profile=hd_female.profile_id,
         )
-        print("Created agent with profile:", hd_female.name)
+        print("Created Speech Pipe with profile:", hd_female.name)
 
 asyncio.run(main())
 ```
 
 ---
 
-## Switching a Profile on an Existing Agent
+## Switching a Profile on an Existing Speech Pipe
 
 ```python
 import asyncio
@@ -136,11 +136,11 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
-        agent = await client.agents.update(
-            "agt_...",
+        pipe = await client.pipes.update(
+            "pipe_...",
             voice_profile="vp_es_male_std",   # switch to Spanish male
         )
-        print("Updated voice profile:", agent.voice_profile_id)
+        print("Updated voice profile:", pipe.voice_profile_id)
 
 asyncio.run(main())
 ```
@@ -150,8 +150,8 @@ asyncio.run(main())
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Agents" icon="bot" href="/speech/agents">
-    Attach a voice profile when creating or updating an agent.
+  <Card title="Speech Pipe" icon="bot" href="/speech/pipes">
+    Attach a voice profile when creating or updating a Speech Pipe.
   </Card>
   <Card title="SDK Setup" icon="code" href="/speech/sdk-setup">
     Install the SDK and configure your runner process.

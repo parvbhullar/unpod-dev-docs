@@ -51,13 +51,13 @@ The line is clear: **you own everything from AgentRunner down**. Everything abov
 ## Core Concepts
 
 ### Numbers
-Phone numbers attached to your agent. Inbound calls arrive on a number and are routed to the agent it is attached to. Numbers come from Unpod directly or via BYON. See [Voice Stack - Numbers](/speech/numbers).
+Phone numbers attached to your Speech Pipe. Inbound calls arrive on a number and are routed to the Speech Pipe it is attached to. Numbers come from Unpod directly or via BYON. See [Voice Stack - Numbers](/speech/numbers).
 
 ### Voice Profiles
 A bundle of STT + TTS provider configuration. Defines which providers handle speech recognition and synthesis, which language, and the failover order. See [Voice Stack - Voice Profiles](/speech/voice-profiles).
 
-### Agents
-A configuration entity: name, voice profile, recording settings, call duration limits. The agent is the anchor point for numbers, voice profiles, and runner workers. See [Voice Stack - Agents](/speech/agents).
+### Speech Pipe
+A configuration entity: name, voice profile, recording settings, call duration limits. The Speech Pipe is the anchor point for numbers, voice profiles, and runner workers. See [Voice Stack - Speech Pipe](/speech/pipes).
 
 ### AgentRunner
 A long-lived Python process that registers with the Unpod orchestrator over WebSocket. It advertises capacity, receives dispatch frames, and calls your entrypoint for each call. See [Voice Stack - SDK Setup](/speech/sdk-setup).
@@ -77,7 +77,7 @@ The conversation engine. A `DialogMachine` executes a structured `Flow` turn-by-
 
 ```
 1. Caller dials +1 415 555 0100
-2. Unpod routes to agent "agt_support"
+2. Unpod routes to pipe "pipe_support"
 3. Orchestrator dispatches to your AgentRunner
 4. AgentRunner calls handle_call(ctx)
 5. You set ctx.session.dialog_machine = DialogMachine(flow, llm)

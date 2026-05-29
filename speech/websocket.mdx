@@ -6,14 +6,14 @@ description: 'Unpod exposes your agent as a WebSocket endpoint. Any browser, app
 
 ## How It Works
 
-When you create an agent on Unpod, it is automatically available as a WebSocket endpoint. Any client - browser, mobile app, desktop, IoT device - can connect to that endpoint and have a real-time voice conversation.
+When you create a Speech Pipe on Unpod, it is automatically available as a WebSocket endpoint. Any client - browser, mobile app, desktop, IoT device - can connect to that endpoint and have a real-time voice conversation.
 
 Your agent code does not change. Speech processing (STT, VAD, barge-in, endpointing, TTS) all happens on Unpod's side. Your AgentRunner just receives text and returns text, exactly as it does for phone calls.
 
 ```
 Browser / App / Any Client
     |
-    | wss://api.unpod.dev/v1/agents/{agent_id}/connect
+    | wss://api.unpod.dev/v1/pipes/{pipe_id}/connect
     |
     v
 [ Unpod Speech Pipeline ]   <- audio in, STT, VAD, barge-in, TTS
@@ -26,7 +26,7 @@ Browser / App / Any Client
 
 ## Connecting a Client
 
-Unpod exposes a standard WebSocket URL per agent. Your client connects with a short-lived token:
+Unpod exposes a standard WebSocket URL per Speech Pipe. Your client connects with a short-lived token:
 
 ```typescript
 import { UnpodSession } from "@unpod/web-sdk";

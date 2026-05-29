@@ -72,19 +72,19 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
-        agent = await client.agents.create(
+        pipe = await client.pipes.create(
             name="Support Bot",
             voice_profile="vp_en_female_hd",
             recording=True,
             max_call_duration_s=600,
         )
-        print("Agent ID:", agent.id)
+        print("Pipe ID:", pipe.id)
 
 asyncio.run(main())
 ```
 
 <Note>
-Save the `agent.id` - you will use it in the steps below.
+Save the `pipe.id` - you will use it in the steps below.
 </Note>
 
 ---
@@ -97,13 +97,13 @@ Save the `agent.id` - you will use it in the steps below.
 import asyncio
 from unpod import AsyncClient
 
-AGENT_ID = "agt_..."
+PIPE_ID = "pipe_..."
 NUMBER_ID = "num_..."   # from client.numbers.list()
 
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
-        number = await client.numbers.attach(NUMBER_ID, AGENT_ID)
-        print("Attached:", number.phone_number, "->", number.agent_id)
+        number = await client.numbers.attach(NUMBER_ID, PIPE_ID)
+        print("Attached:", number.phone_number, "->", number.pipe_id)
 
 asyncio.run(main())
 ```
