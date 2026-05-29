@@ -1,144 +1,173 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="CALL LIFECYCLE">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 900 460" width="900" height="460">
+  <style>text { font-family: 'Courier New', Courier, monospace; }</style>
   <defs>
-    <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
-    </pattern>
-    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8d75ff"/>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00d4d4"/>
     </marker>
-    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d8e8"/>
+    <marker id="arr-p" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/>
     </marker>
-    <style>
-      svg { background: #020303; }
-      .title { font: 700 44px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 9px; }
-      .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
-      .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
-      .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
-      .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
-      .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
-      .purple { stroke: #8d75ff; }
-      .cyan { stroke: #00d8e8; }
-      .purpleText { fill: #8d75ff; }
-      .cyanText { fill: #00d8e8; }
-      .flow { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 22; animation: dash 1.8s linear infinite; }
-      .flow.fast { animation-duration: 1.35s; }
-      .flow.slow { animation-duration: 2.4s; }
-      .dim { opacity: 0.72; }
-      .pulse { filter: url(#glow); animation: pulse 1.7s ease-in-out infinite; transform-origin: center; }
-      @keyframes dash { to { stroke-dashoffset: -36; } }
-      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
-      @media (prefers-reduced-motion: reduce) {
-        .flow, .pulse { animation: none; }
-      }
-    </style>
+    <marker id="arr-r" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto">
+      <polygon points="10 0, 0 3.5, 10 7" fill="#00d4d4"/>
+    </marker>
   </defs>
-  <rect width="1672" height="941" fill="#020303"/>
-  <text x="836" y="70" text-anchor="middle" class="title">CALL LIFECYCLE</text>
-  
-  <rect x="28" y="150" width="214" height="574" rx="18" class="panel purple"/>
-  <text x="135" y="194" text-anchor="middle" class="label purpleText">
-    <tspan x="135" dy="0">CALLER</tspan>
-  </text>
-  <rect x="56" y="242" width="160" height="82" rx="16" class="box purple "/>
-  <text x="136" y="291" text-anchor="middle" class="label">
-    <tspan x="136" dy="0">USER</tspan>
-  </text>
-  <rect x="380" y="150" width="320" height="574" rx="18" class="panel cyan"/>
-  <text x="540" y="194" text-anchor="middle" class="label cyanText">
-    <tspan x="540" dy="0">UNPOD MANAGED</tspan>
-  </text>
-  <rect x="422" y="242" width="236" height="82" rx="16" class="box cyan "/>
-  <text x="540" y="291" text-anchor="middle" class="label">
-    <tspan x="540" dy="0">NUMBER</tspan>
-  </text>
-  <rect x="422" y="400" width="236" height="92" rx="16" class="box cyan "/>
-  <text x="540" y="439" text-anchor="middle" class="label">
-    <tspan x="540" dy="0">SPEECH</tspan>
-    <tspan x="540" dy="30">PIPELINE</tspan>
-  </text>
-  <rect x="422" y="586" width="236" height="82" rx="16" class="box cyan "/>
-  <text x="540" y="635" text-anchor="middle" class="label">
-    <tspan x="540" dy="0">ORCHESTRATOR</tspan>
-  </text>
-  <rect x="902" y="150" width="332" height="574" rx="18" class="panel purple"/>
-  <text x="1068" y="194" text-anchor="middle" class="label purpleText">
-    <tspan x="1068" dy="0">YOUR SERVER</tspan>
-  </text>
-  <rect x="948" y="242" width="240" height="82" rx="16" class="box purple "/>
-  <text x="1068" y="276" text-anchor="middle" class="label">
-    <tspan x="1068" dy="0">AGENT</tspan>
-    <tspan x="1068" dy="30">RUNNER</tspan>
-  </text>
-  <rect x="948" y="400" width="240" height="82" rx="16" class="box purple "/>
-  <text x="1068" y="449" text-anchor="middle" class="label">
-    <tspan x="1068" dy="0">SESSION</tspan>
-  </text>
-  <rect x="948" y="586" width="240" height="82" rx="16" class="box purple "/>
-  <text x="1068" y="620" text-anchor="middle" class="label">
-    <tspan x="1068" dy="0">DIALOG</tspan>
-    <tspan x="1068" dy="30">MACHINE</tspan>
-  </text>
-  <rect x="1370" y="150" width="270" height="574" rx="18" class="panel gray"/>
-  <text x="1505" y="179" text-anchor="middle" class="label purpleText">
-    <tspan x="1505" dy="0">STORAGE</tspan>
-    <tspan x="1505" dy="30">+ HOOKS</tspan>
-  </text>
-  <rect x="1406" y="242" width="198" height="82" rx="16" class="box  "/>
-  <text x="1505" y="291" text-anchor="middle" class="label">
-    <tspan x="1505" dy="0">TRANSCRIPT</tspan>
-  </text>
-  <rect x="1406" y="404" width="198" height="82" rx="16" class="box  "/>
-  <text x="1505" y="453" text-anchor="middle" class="label">
-    <tspan x="1505" dy="0">METRICS</tspan>
-  </text>
-  <rect x="1406" y="586" width="198" height="82" rx="16" class="box  "/>
-  <text x="1505" y="635" text-anchor="middle" class="label">
-    <tspan x="1505" dy="0">WEBHOOKS</tspan>
-  </text>
-  <path d="M216 282 H412" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <rect x="258" y="260" width="170" height="42" rx="21" fill="#111318" stroke="#00d8e8" stroke-width="2"/>
-  <text x="343" y="287" text-anchor="middle" class="small cyanText">
-    <tspan x="343" dy="0">1 CALL START</tspan>
-  </text>
-  <path d="M658 446 H938" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <rect x="708" y="424" width="192" height="42" rx="21" fill="#111318" stroke="#00d8e8" stroke-width="2"/>
-  <text x="804" y="451" text-anchor="middle" class="small cyanText">
-    <tspan x="804" dy="0">2 AUDIO TO TEXT</tspan>
-  </text>
-  <path d="M658 627 H938" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <rect x="734" y="605" width="144" height="42" rx="21" fill="#111318" stroke="#00d8e8" stroke-width="2"/>
-  <text x="806" y="632" text-anchor="middle" class="small cyanText">
-    <tspan x="806" dy="0">3 DISPATCH</tspan>
-  </text>
-  <path d="M1068 482 V576" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
-  <rect x="1094" y="520" width="92" height="42" rx="21" fill="#111318" stroke="#8d75ff" stroke-width="2"/>
-  <text x="1140" y="547" text-anchor="middle" class="small purpleText">
-    <tspan x="1140" dy="0">4 TURN</tspan>
-  </text>
-  <path d="M948 627 C790 627 790 446 668 446" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
-  <rect x="734" y="526" width="160" height="42" rx="21" fill="#111318" stroke="#8d75ff" stroke-width="2"/>
-  <text x="814" y="553" text-anchor="middle" class="small purpleText">
-    <tspan x="814" dy="0">5 REPLY TEXT</tspan>
-  </text>
-  <path d="M1188 442 H1396" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
-  <rect x="1244" y="420" width="138" height="42" rx="21" fill="#111318" stroke="#8d75ff" stroke-width="2"/>
-  <text x="1313" y="447" text-anchor="middle" class="small purpleText">
-    <tspan x="1313" dy="0">6 CALL END</tspan>
-  </text>
-  <line x1="722" y1="748" x2="722" y2="868" stroke="#4a4d55" stroke-width="2" stroke-dasharray="8 10"/>
-  <rect x="904" y="784" width="298" height="50" rx="25" fill="#111318" stroke="#8d75ff" stroke-width="2"/>
-  <text x="1053" y="815" text-anchor="middle" class="small purpleText">
-    <tspan x="1053" dy="0">YOU OWN THIS SIDE</tspan>
-  </text>
-  <path d="M1202 809 H1406" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
 
+  <rect width="900" height="460" fill="#0a0a0a"/>
+  <text x="450" y="35" text-anchor="middle" fill="#fff" font-size="13" letter-spacing="3">CALL LIFECYCLE</text>
+
+  <!-- Column headers -->
+  <text x="65" y="65" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">CALLER</text>
+  <text x="255" y="65" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">UNPOD MANAGED</text>
+  <text x="530" y="65" text-anchor="middle" fill="#a78bfa" font-size="8" letter-spacing="1">YOUR SERVER</text>
+  <text x="800" y="65" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">STORAGE + HOOKS</text>
+
+  <!-- Column dividers (subtle) -->
+  <line x1="155" y1="70" x2="155" y2="430" stroke="#1a1a2e" stroke-width="1"/>
+  <line x1="400" y1="70" x2="400" y2="430" stroke="#1a1a2e" stroke-width="1"/>
+  <line x1="660" y1="70" x2="660" y2="430" stroke="#1a1a2e" stroke-width="1"/>
+
+  <!-- YOU OWN THIS SIDE label (bottom) -->
+  <line x1="400" y1="420" x2="660" y2="420" stroke="#6b7a90" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="530" y="437" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="2">YOU OWN THIS SIDE</text>
+
+  <!-- CALLER: USER box -->
+  <rect x="20" y="120" width="90" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="65" y="145" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">USER</text>
+
+  <!-- UNPOD MANAGED boxes -->
+  <rect x="175" y="90" width="115" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="232" y="115" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">NUMBER</text>
+
+  <rect x="175" y="175" width="115" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="232" y="192" text-anchor="middle" fill="#fff" font-size="8" letter-spacing="1">SPEECH</text>
+  <text x="232" y="206" text-anchor="middle" fill="#fff" font-size="8" letter-spacing="1">PIPELINE</text>
+
+  <rect x="175" y="290" width="115" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="232" y="315" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">ORCHESTRATOR</text>
+
+  <!-- YOUR SERVER boxes (purple tint) -->
+  <rect x="420" y="90" width="115" height="40" rx="4" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="477" y="115" text-anchor="middle" fill="#a78bfa" font-size="9" letter-spacing="1">AGENTRUNNER</text>
+
+  <rect x="420" y="175" width="115" height="40" rx="4" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="477" y="200" text-anchor="middle" fill="#a78bfa" font-size="9" letter-spacing="1">SESSION</text>
+
+  <rect x="420" y="290" width="115" height="40" rx="4" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="477" y="308" text-anchor="middle" fill="#a78bfa" font-size="8" letter-spacing="1">DIALOG</text>
+  <text x="477" y="323" text-anchor="middle" fill="#a78bfa" font-size="8" letter-spacing="1">MACHINE</text>
+
+  <!-- STORAGE + HOOKS boxes -->
+  <rect x="720" y="90" width="150" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.2"/>
+  <text x="795" y="115" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">TRANSCRIPT</text>
+
+  <rect x="720" y="175" width="150" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.2"/>
+  <text x="795" y="200" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">METRICS</text>
+
+  <rect x="720" y="290" width="150" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.2"/>
+  <text x="795" y="315" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">WEBHOOKS</text>
+
+  <!-- Arrows -->
+  <!-- USER → NUMBER (call start) -->
+  <path id="p1" d="M 111,135 L 174,110" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr)"/>
+  <text x="142" y="117" text-anchor="middle" fill="#6b7a90" font-size="7">call start</text>
+
+  <!-- NUMBER → AGENTRUNNER -->
+  <path id="p2" d="M 291,110 L 419,110" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr)"/>
+
+  <!-- AGENTRUNNER → SESSION -->
+  <path id="p3" d="M 477,131 L 477,174" stroke="#a78bfa" stroke-width="1.3" fill="none" marker-end="url(#arr-p)"/>
+
+  <!-- SPEECH PIPELINE ↔ SESSION (audio to text, reply text) -->
+  <path id="p4" d="M 291,190 L 419,190" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr)"/>
+  <text x="355" y="184" text-anchor="middle" fill="#6b7a90" font-size="7">audio to text</text>
+
+  <path id="p5" d="M 419,205 L 291,205" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr-r)"/>
+  <text x="355" y="218" text-anchor="middle" fill="#6b7a90" font-size="7">reply text</text>
+
+  <!-- SESSION → DIALOG MACHINE (turn) -->
+  <path id="p6" d="M 477,216 L 477,289" stroke="#a78bfa" stroke-width="1.3" fill="none" marker-end="url(#arr-p)"/>
+  <text x="492" y="255" fill="#8b7fa0" font-size="7">turn</text>
+
+  <!-- ORCHESTRATOR → DIALOG MACHINE (dispatch) -->
+  <path id="p7" d="M 291,310 L 419,310" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr)"/>
+  <text x="355" y="304" text-anchor="middle" fill="#6b7a90" font-size="7">dispatch</text>
+
+  <!-- SESSION → TRANSCRIPT/METRICS (call end storage) -->
+  <path id="p8" d="M 536,195 Q 620,195 719,195" stroke="#6b7a90" stroke-width="1.2" stroke-dasharray="4,2" fill="none" marker-end="url(#arr)"/>
+  <text x="627" y="188" text-anchor="middle" fill="#6b7a90" font-size="7">call end</text>
+
+  <!-- SESSION → WEBHOOKS -->
+  <path id="p9" d="M 536,205 Q 620,250 719,295" stroke="#6b7a90" stroke-width="1.2" stroke-dasharray="4,2" fill="none" marker-end="url(#arr)"/>
+
+  <!-- ANIMATED DOTS -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath xlink:href="#p1"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" begin="0.3s"><mpath xlink:href="#p3"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="1.5s" repeatCount="indefinite" begin="0.3s"/>
+  </circle>
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" begin="1.05s"><mpath xlink:href="#p3"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="1.5s" repeatCount="indefinite" begin="1.05s"/>
+  </circle>
+
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.4s"><mpath xlink:href="#p4"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.4s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.4s"><mpath xlink:href="#p4"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.4s"/>
+  </circle>
+
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.8s"><mpath xlink:href="#p5"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.8s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.8s"><mpath xlink:href="#p5"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.8s"/>
+  </circle>
+
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.6s"><mpath xlink:href="#p6"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2s" repeatCount="indefinite" begin="0.6s"/>
+  </circle>
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.6s"><mpath xlink:href="#p6"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2s" repeatCount="indefinite" begin="1.6s"/>
+  </circle>
+
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.5s"><mpath xlink:href="#p7"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.5s"><mpath xlink:href="#p7"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.5s"/>
+  </circle>
+
+  <circle r="3" fill="#6b7a90" filter="url(#glow)">
+    <animateMotion dur="3s" repeatCount="indefinite" begin="1s"><mpath xlink:href="#p8"/></animateMotion>
+    <animate attributeName="opacity" values="0;0.7;0.7;0" keyTimes="0;0.05;0.9;1" dur="3s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+  <circle r="3" fill="#6b7a90" filter="url(#glow)">
+    <animateMotion dur="3s" repeatCount="indefinite" begin="2.5s"><mpath xlink:href="#p9"/></animateMotion>
+    <animate attributeName="opacity" values="0;0.7;0.7;0" keyTimes="0;0.05;0.9;1" dur="3s" repeatCount="indefinite" begin="2.5s"/>
+  </circle>
 </svg>

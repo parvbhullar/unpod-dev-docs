@@ -1,109 +1,110 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="SUPERDIALOG + SESSION">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 900 360" width="900" height="360">
+  <style>text { font-family: 'Courier New', Courier, monospace; }</style>
   <defs>
-    <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
-    </pattern>
-    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8d75ff"/>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00d4d4"/>
     </marker>
-    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d8e8"/>
+    <marker id="arr-p" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/>
     </marker>
-    <style>
-      svg { background: #020303; }
-      .title { font: 700 44px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 9px; }
-      .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
-      .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
-      .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
-      .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
-      .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
-      .purple { stroke: #8d75ff; }
-      .cyan { stroke: #00d8e8; }
-      .purpleText { fill: #8d75ff; }
-      .cyanText { fill: #00d8e8; }
-      .flow { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 22; animation: dash 1.8s linear infinite; }
-      .flow.fast { animation-duration: 1.35s; }
-      .flow.slow { animation-duration: 2.4s; }
-      .dim { opacity: 0.72; }
-      .pulse { filter: url(#glow); animation: pulse 1.7s ease-in-out infinite; transform-origin: center; }
-      @keyframes dash { to { stroke-dashoffset: -36; } }
-      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
-      @media (prefers-reduced-motion: reduce) {
-        .flow, .pulse { animation: none; }
-      }
-    </style>
   </defs>
-  <rect width="1672" height="941" fill="#020303"/>
-  <text x="836" y="70" text-anchor="middle" class="title">SUPERDIALOG + SESSION</text>
-  
-  <rect x="28" y="436" width="172" height="112" rx="12" class="box "/>
-  <text x="114" y="483" text-anchor="middle" class="small">
-    <tspan x="114" dy="0">USER</tspan>
-    <tspan x="114" dy="30">SPEAKS</tspan>
-  </text>
-  <rect x="244" y="374" width="224" height="256" rx="18" class="panel cyan"/>
-  <text x="356" y="418" text-anchor="middle" class="label cyanText">
-    <tspan x="356" dy="0">VOICE STACK</tspan>
-  </text>
-  <rect x="268" y="452" width="176" height="120" rx="16" class="box cyan "/>
-  <text x="356" y="520" text-anchor="middle" class="label">
-    <tspan x="356" dy="0">STT</tspan>
-  </text>
-  <rect x="508" y="436" width="170" height="112" rx="12" class="box "/>
-  <text x="593" y="498" text-anchor="middle" class="small">
-    <tspan x="593" dy="0">USER TEXT</tspan>
-  </text>
-  <rect x="720" y="374" width="272" height="256" rx="18" class="panel purple"/>
-  <text x="856" y="418" text-anchor="middle" class="label purpleText">
-    <tspan x="856" dy="0">SUPERDIALOG</tspan>
-  </text>
-  <rect x="736" y="452" width="240" height="120" rx="16" class="box purple "/>
-  <text x="856" y="490" text-anchor="middle" class="label">
-    <tspan x="856" dy="0">DIALOG</tspan>
-    <tspan x="856" dy="30">MACHINE</tspan>
-    <tspan x="856" dy="30">TURN</tspan>
-  </text>
-  <rect x="1032" y="436" width="170" height="112" rx="12" class="box "/>
-  <text x="1117" y="483" text-anchor="middle" class="small">
-    <tspan x="1117" dy="0">AGENT</tspan>
-    <tspan x="1117" dy="30">REPLY</tspan>
-  </text>
-  <rect x="1236" y="374" width="222" height="256" rx="18" class="panel cyan"/>
-  <text x="1347" y="418" text-anchor="middle" class="label cyanText">
-    <tspan x="1347" dy="0">VOICE STACK</tspan>
-  </text>
-  <rect x="1260" y="452" width="174" height="120" rx="16" class="box cyan "/>
-  <text x="1347" y="520" text-anchor="middle" class="label">
-    <tspan x="1347" dy="0">TTS</tspan>
-  </text>
-  <rect x="1474" y="436" width="170" height="112" rx="12" class="box "/>
-  <text x="1559" y="483" text-anchor="middle" class="small">
-    <tspan x="1559" dy="0">CALLER</tspan>
-    <tspan x="1559" dy="30">HEARS</tspan>
-  </text>
-  <rect x="450" y="254" width="288" height="44" rx="22" fill="#111318" stroke="#00d8e8" stroke-width="2"/>
-  <text x="594" y="282" text-anchor="middle" class="small cyanText">
-    <tspan x="594" dy="0">HOOK: USER_TURN</tspan>
-  </text>
-  <rect x="978" y="254" width="288" height="44" rx="22" fill="#111318" stroke="#00d8e8" stroke-width="2"/>
-  <text x="1122" y="282" text-anchor="middle" class="small cyanText">
-    <tspan x="1122" dy="0">HOOK: AGENT_TURN</tspan>
-  </text>
-  <path d="M200 492 H244" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M468 492 H508" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M678 492 H710" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
-  <path d="M992 492 H1022" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
-  <path d="M1202 492 H1236" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M1458 492 H1474" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M594 298 V436" class="flow cyan slow" stroke="#00d8e8" />
-  <path d="M1120 298 V436" class="flow cyan slow" stroke="#00d8e8" />
 
+  <rect width="900" height="360" fill="#0a0a0a"/>
+  <text x="450" y="35" text-anchor="middle" fill="#fff" font-size="13" letter-spacing="3">SUPERDIALOG + SESSION</text>
+
+  <!-- VOICE STACK group (left): x=85 y=80 w=165 h=200 -->
+  <rect x="85" y="80" width="165" height="200" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="167" y="98" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">VOICE STACK</text>
+
+  <!-- STT box inside left VOICE STACK group -->
+  <rect x="115" y="155" width="105" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="167" y="180" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">STT</text>
+
+  <!-- SUPERDIALOG group (center) -->
+  <rect x="340" y="80" width="220" height="200" rx="6" fill="none" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="450" y="98" text-anchor="middle" fill="#a78bfa" font-size="8" letter-spacing="1">SUPERDIALOG</text>
+
+  <!-- DIALOGMACHINE.TURN box inside SUPERDIALOG -->
+  <rect x="365" y="145" width="170" height="45" rx="4" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="450" y="165" text-anchor="middle" fill="#a78bfa" font-size="9" letter-spacing="1">DIALOGMACHINE</text>
+  <text x="450" y="180" text-anchor="middle" fill="#a78bfa" font-size="9" letter-spacing="1">.TURN</text>
+
+  <!-- VOICE STACK group (right): x=650 y=80 w=165 h=200 -->
+  <rect x="650" y="80" width="165" height="200" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="732" y="98" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">VOICE STACK</text>
+
+  <!-- TTS box inside right VOICE STACK group -->
+  <rect x="680" y="155" width="105" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="732" y="180" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">TTS</text>
+
+  <!-- HOOK: USER_TURN (dashed vertical, above left section) -->
+  <line x1="252" y1="78" x2="252" y2="120" stroke="#6b7a90" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="252" y="73" text-anchor="middle" fill="#6b7a90" font-size="8">HOOK: USER_TURN</text>
+
+  <!-- HOOK: AGENT_TURN (dashed vertical, above right section) -->
+  <line x1="648" y1="78" x2="648" y2="120" stroke="#6b7a90" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="648" y="73" text-anchor="middle" fill="#6b7a90" font-size="8">HOOK: AGENT_TURN</text>
+
+  <!-- External labels: USER SPEAKS, CALLER HEARS -->
+  <text x="30" y="178" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">USER</text>
+  <text x="30" y="191" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">SPEAKS</text>
+
+  <text x="868" y="178" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">CALLER</text>
+  <text x="868" y="191" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">HEARS</text>
+
+  <!-- Arrow paths -->
+  <!-- USER SPEAKS → STT -->
+  <path id="p1" d="M 52,175 L 114,175" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- STT → USER TEXT (to SUPERDIALOG) -->
+  <path id="p2" d="M 221,175 L 364,175" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <text x="292" y="168" text-anchor="middle" fill="#6b7a90" font-size="8">USER TEXT</text>
+
+  <!-- DIALOGMACHINE → AGENT REPLY -->
+  <path id="p3" d="M 536,175 L 649,175" stroke="#a78bfa" stroke-width="1.5" fill="none" marker-end="url(#arr-p)"/>
+  <text x="592" y="168" text-anchor="middle" fill="#8b7fa0" font-size="8">AGENT REPLY</text>
+
+  <!-- TTS → CALLER HEARS -->
+  <path id="p4" d="M 786,175 L 848,175" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- ANIMATED DOTS -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" begin="0s"><mpath xlink:href="#p1"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="1.5s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" begin="0.75s"><mpath xlink:href="#p1"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="1.5s" repeatCount="indefinite" begin="0.75s"/>
+  </circle>
+
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.2s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2s" repeatCount="indefinite" begin="0.2s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.2s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2s" repeatCount="indefinite" begin="1.2s"/>
+  </circle>
+
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.5s"><mpath xlink:href="#p3"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+  </circle>
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.5s"><mpath xlink:href="#p3"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2s" repeatCount="indefinite" begin="1.5s"/>
+  </circle>
+
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" begin="0.8s"><mpath xlink:href="#p4"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="1.5s" repeatCount="indefinite" begin="0.8s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" begin="1.55s"><mpath xlink:href="#p4"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="1.5s" repeatCount="indefinite" begin="1.55s"/>
+  </circle>
 </svg>

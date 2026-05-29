@@ -1,90 +1,70 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="VOICE PROFILE PIPELINE">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 480 580" width="480" height="580">
+  <style>text { font-family: 'Courier New', Courier, monospace; }</style>
   <defs>
-    <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
-    </pattern>
-    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8d75ff"/>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00d4d4"/>
     </marker>
-    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d8e8"/>
-    </marker>
-    <style>
-      svg { background: #020303; }
-      .title { font: 700 44px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 9px; }
-      .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
-      .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
-      .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
-      .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
-      .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
-      .purple { stroke: #8d75ff; }
-      .cyan { stroke: #00d8e8; }
-      .purpleText { fill: #8d75ff; }
-      .cyanText { fill: #00d8e8; }
-      .flow { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 22; animation: dash 1.8s linear infinite; }
-      .flow.fast { animation-duration: 1.35s; }
-      .flow.slow { animation-duration: 2.4s; }
-      .dim { opacity: 0.72; }
-      .pulse { filter: url(#glow); animation: pulse 1.7s ease-in-out infinite; transform-origin: center; }
-      @keyframes dash { to { stroke-dashoffset: -36; } }
-      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
-      @media (prefers-reduced-motion: reduce) {
-        .flow, .pulse { animation: none; }
-      }
-    </style>
   </defs>
-  <rect width="1672" height="941" fill="#020303"/>
-  <text x="836" y="70" text-anchor="middle" class="title">VOICE PROFILE PIPELINE</text>
-  
-  <rect x="640" y="108" width="392" height="72" rx="16" class="box purple "/>
-  <text x="836" y="152" text-anchor="middle" class="label">
-    <tspan x="836" dy="0">CALLER SPEAKS</tspan>
-  </text>
-  <rect x="616" y="220" width="440" height="142" rx="18" class="panel cyan"/>
-  <text x="836" y="264" text-anchor="middle" class="label cyanText">
-    <tspan x="836" dy="0">VOICE PROFILE</tspan>
-  </text>
-  <rect x="650" y="274" width="372" height="62" rx="12" class="box cyan"/>
-  <text x="836" y="311" text-anchor="middle" class="small">
-    <tspan x="836" dy="0">STT</tspan>
-  </text>
-  <rect x="640" y="392" width="392" height="72" rx="16" class="box purple "/>
-  <text x="836" y="436" text-anchor="middle" class="label">
-    <tspan x="836" dy="0">USER TEXT</tspan>
-  </text>
-  <rect x="640" y="502" width="392" height="72" rx="16" class="box purple "/>
-  <text x="836" y="546" text-anchor="middle" class="label">
-    <tspan x="836" dy="0">DIALOG MACHINE</tspan>
-  </text>
-  <rect x="640" y="602" width="392" height="72" rx="16" class="box purple "/>
-  <text x="836" y="646" text-anchor="middle" class="label">
-    <tspan x="836" dy="0">AGENT TEXT</tspan>
-  </text>
-  <rect x="616" y="710" width="440" height="132" rx="18" class="panel cyan"/>
-  <text x="836" y="754" text-anchor="middle" class="label cyanText">
-    <tspan x="836" dy="0">VOICE PROFILE</tspan>
-  </text>
-  <rect x="650" y="760" width="372" height="58" rx="12" class="box cyan"/>
-  <text x="836" y="795" text-anchor="middle" class="small">
-    <tspan x="836" dy="0">TTS + VOICE</tspan>
-  </text>
-  <rect x="640" y="866" width="392" height="64" rx="16" class="box purple"/>
-  <text x="836" y="905" text-anchor="middle" class="label">
-    <tspan x="836" dy="0">CALLER HEARS</tspan>
-  </text>
-  <path d="M836 180 V220" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M836 362 V392" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M836 464 V502" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M836 574 V602" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M836 674 V710" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M836 842 V866" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
 
+  <rect width="480" height="580" fill="#0a0a0a"/>
+  <text x="240" y="35" text-anchor="middle" fill="#fff" font-size="13" letter-spacing="3">VOICE PROFILE PIPELINE</text>
+
+  <!-- VOICE PROFILE group 1 (wraps STT) -->
+  <rect x="80" y="95" width="320" height="120" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="240" y="113" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="2">VOICE PROFILE</text>
+
+  <!-- VOICE PROFILE group 2 (wraps TTS+VOICE) -->
+  <rect x="80" y="390" width="320" height="110" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="240" y="408" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="2">VOICE PROFILE</text>
+
+  <!-- Boxes (centered, x=140, w=200, h=38) -->
+  <rect x="140" y="50" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="74" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">CALLER SPEAKS</text>
+
+  <rect x="140" y="122" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="146" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">STT</text>
+
+  <rect x="140" y="212" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="236" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">USER TEXT</text>
+
+  <rect x="140" y="282" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="306" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">DIALOG MACHINE</text>
+
+  <rect x="140" y="352" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="376" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">AGENT TEXT</text>
+
+  <rect x="140" y="418" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="434" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">TTS + VOICE</text>
+
+  <rect x="140" y="505" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="529" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">CALLER HEARS</text>
+
+  <!-- Arrow paths -->
+  <path id="p1" d="M 240,89 L 240,121" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path id="p2" d="M 240,161 L 240,211" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path id="p3" d="M 240,251 L 240,281" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path id="p4" d="M 240,321 L 240,351" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path id="p5" d="M 240,391 L 240,417" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path id="p6" d="M 240,457 L 240,504" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- Full vertical path for continuous dot travel -->
+  <path id="pfull" d="M 240,50 L 240,543" stroke="none" fill="none"/>
+
+  <!-- ANIMATED DOTS (continuous vertical stream) -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="5s" repeatCount="indefinite" begin="0s"><mpath xlink:href="#pfull"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.95;1" dur="5s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="5s" repeatCount="indefinite" begin="1.67s"><mpath xlink:href="#pfull"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.95;1" dur="5s" repeatCount="indefinite" begin="1.67s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="5s" repeatCount="indefinite" begin="3.33s"><mpath xlink:href="#pfull"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.95;1" dur="5s" repeatCount="indefinite" begin="3.33s"/>
+  </circle>
 </svg>

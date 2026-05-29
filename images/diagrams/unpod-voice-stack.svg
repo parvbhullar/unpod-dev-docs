@@ -1,119 +1,183 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="UNPOD VOICE STACK">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 900 460" width="900" height="460">
+  <style>text { font-family: 'Courier New', Courier, monospace; }</style>
   <defs>
-    <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
-    </pattern>
-    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8d75ff"/>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00d4d4"/>
     </marker>
-    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d8e8"/>
+    <marker id="arr-r" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto">
+      <polygon points="10 0, 0 3.5, 10 7" fill="#00d4d4"/>
     </marker>
-    <style>
-      svg { background: #020303; }
-      .title { font: 700 44px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 9px; }
-      .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
-      .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
-      .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
-      .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
-      .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
-      .purple { stroke: #8d75ff; }
-      .cyan { stroke: #00d8e8; }
-      .purpleText { fill: #8d75ff; }
-      .cyanText { fill: #00d8e8; }
-      .flow { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 22; animation: dash 1.8s linear infinite; }
-      .flow.fast { animation-duration: 1.35s; }
-      .flow.slow { animation-duration: 2.4s; }
-      .dim { opacity: 0.72; }
-      .pulse { filter: url(#glow); animation: pulse 1.7s ease-in-out infinite; transform-origin: center; }
-      @keyframes dash { to { stroke-dashoffset: -36; } }
-      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
-      @media (prefers-reduced-motion: reduce) {
-        .flow, .pulse { animation: none; }
-      }
-    </style>
+    <marker id="arr-p" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/>
+    </marker>
+    <marker id="arr-pr" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto">
+      <polygon points="10 0, 0 3.5, 10 7" fill="#a78bfa"/>
+    </marker>
   </defs>
-  <rect width="1672" height="941" fill="#020303"/>
-  <text x="836" y="70" text-anchor="middle" class="title">UNPOD VOICE STACK</text>
-  
-  <rect x="44" y="118" width="392" height="760" rx="18" class="panel purple"/>
-  <text x="240" y="162" text-anchor="middle" class="label purpleText">
-    <tspan x="240" dy="0">USER ENTRYPOINTS</tspan>
-  </text>
-  <rect x="622" y="118" width="430" height="760" rx="18" class="panel gray"/>
-  <text x="837" y="162" text-anchor="middle" class="label purpleText">
-    <tspan x="837" dy="0">UNPOD MANAGED LAYER</tspan>
-  </text>
-  <rect x="1234" y="118" width="394" height="760" rx="18" class="panel cyan"/>
-  <text x="1431" y="162" text-anchor="middle" class="label cyanText">
-    <tspan x="1431" dy="0">YOUR AGENT</tspan>
-  </text>
-  <rect x="98" y="225" width="280" height="132" rx="16" class="box purple "/>
-  <text x="238" y="299" text-anchor="middle" class="label">
-    <tspan x="238" dy="0">PHONE</tspan>
-  </text>
-  <rect x="98" y="424" width="280" height="132" rx="16" class="box purple "/>
-  <text x="238" y="498" text-anchor="middle" class="label">
-    <tspan x="238" dy="0">BROWSER</tspan>
-  </text>
-  <rect x="98" y="624" width="280" height="132" rx="16" class="box purple "/>
-  <text x="238" y="698" text-anchor="middle" class="label">
-    <tspan x="238" dy="0">MOBILE</tspan>
-  </text>
-  <rect x="672" y="220" width="326" height="124" rx="16" class="box  "/>
-  <text x="835" y="290" text-anchor="middle" class="label">
-    <tspan x="835" dy="0">PSTN / WEBRTC</tspan>
-  </text>
-  <rect x="672" y="398" width="326" height="124" rx="16" class="box  "/>
-  <text x="835" y="468" text-anchor="middle" class="label">
-    <tspan x="835" dy="0">STT + VAD</tspan>
-  </text>
-  <rect x="672" y="576" width="326" height="124" rx="16" class="box  "/>
-  <text x="835" y="646" text-anchor="middle" class="label">
-    <tspan x="835" dy="0">ORCHESTRATOR</tspan>
-  </text>
-  <rect x="672" y="746" width="326" height="96" rx="16" class="box  "/>
-  <text x="835" y="802" text-anchor="middle" class="label">
-    <tspan x="835" dy="0">TTS + STREAMING</tspan>
-  </text>
-  <rect x="1292" y="220" width="286" height="124" rx="16" class="box cyan "/>
-  <text x="1435" y="290" text-anchor="middle" class="label">
-    <tspan x="1435" dy="0">AGENTRUNNER</tspan>
-  </text>
-  <rect x="1292" y="422" width="286" height="124" rx="16" class="box cyan "/>
-  <text x="1435" y="477" text-anchor="middle" class="label">
-    <tspan x="1435" dy="0">DIALOG</tspan>
-    <tspan x="1435" dy="30">MACHINE</tspan>
-  </text>
-  <rect x="1292" y="626" width="286" height="124" rx="16" class="box cyan "/>
-  <text x="1435" y="696" text-anchor="middle" class="label">
-    <tspan x="1435" dy="0">TOOLS / APIS</tspan>
-  </text>
-  <path d="M378 291 H662" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
-  <path d="M378 490 H662" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
-  <path d="M378 690 H662" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
-  <path d="M998 282 H1282" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M998 460 H1282" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M998 638 H1282" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M1282 318 H1010" class="flow cyan slow" stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M1282 520 H1010" class="flow cyan slow" stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M1282 724 H1010" class="flow cyan slow" stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <text x="520" y="262" text-anchor="middle" class="tiny purpleText">
-    <tspan x="520" dy="0">AUDIO IN</tspan>
-  </text>
-  <text x="1140" y="252" text-anchor="middle" class="tiny cyanText">
-    <tspan x="1140" dy="0">TEXT TURN</tspan>
-  </text>
-  <text x="1140" y="332" text-anchor="middle" class="tiny cyanText">
-    <tspan x="1140" dy="0">REPLY TEXT</tspan>
-  </text>
 
+  <rect width="900" height="460" fill="#0a0a0a"/>
+  <text x="450" y="35" text-anchor="middle" fill="#fff" font-size="13" letter-spacing="3">UNPOD VOICE STACK</text>
+
+  <!-- Column headers -->
+  <text x="110" y="65" text-anchor="middle" fill="#6b7a90" font-size="9" letter-spacing="2">USER ENTRYPOINTS</text>
+  <text x="450" y="65" text-anchor="middle" fill="#6b7a90" font-size="9" letter-spacing="2">UNPOD MANAGED LAYER</text>
+  <text x="800" y="65" text-anchor="middle" fill="#a78bfa" font-size="9" letter-spacing="2">YOUR AGENT</text>
+
+  <!-- Left group border -->
+  <rect x="20" y="75" width="180" height="340" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.2" stroke-dasharray="5,3"/>
+
+  <!-- Center group border -->
+  <rect x="260" y="75" width="380" height="340" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.2" stroke-dasharray="5,3"/>
+
+  <!-- Right group border -->
+  <rect x="700" y="75" width="180" height="340" rx="6" fill="none" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="5,3"/>
+
+  <!-- Left: PHONE, BROWSER, MOBILE -->
+  <rect x="45" y="110" width="130" height="48" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="110" y="139" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">PHONE</text>
+
+  <rect x="45" y="205" width="130" height="48" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="110" y="234" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">BROWSER</text>
+
+  <rect x="45" y="300" width="130" height="48" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="110" y="329" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">MOBILE</text>
+
+  <!-- Center: PSTN/WEBRTC, STT+VAD, ORCHESTRATOR, TTS+STREAMING -->
+  <rect x="290" y="110" width="150" height="48" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="365" y="132" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">PSTN /</text>
+  <text x="365" y="147" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">WEBRTC</text>
+
+  <rect x="290" y="190" width="150" height="48" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="365" y="212" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">STT + VAD</text>
+
+  <rect x="290" y="270" width="150" height="48" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="365" y="299" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">ORCHESTRATOR</text>
+
+  <rect x="290" y="350" width="150" height="48" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="365" y="372" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">TTS +</text>
+  <text x="365" y="387" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">STREAMING</text>
+
+  <!-- Right: AGENTRUNNER, DIALOG MACHINE, TOOLS/APIS -->
+  <rect x="720" y="110" width="140" height="48" rx="4" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="790" y="132" text-anchor="middle" fill="#a78bfa" font-size="9" letter-spacing="1">AGENT</text>
+  <text x="790" y="147" text-anchor="middle" fill="#a78bfa" font-size="9" letter-spacing="1">RUNNER</text>
+
+  <rect x="720" y="205" width="140" height="48" rx="4" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="790" y="227" text-anchor="middle" fill="#a78bfa" font-size="9" letter-spacing="1">DIALOG</text>
+  <text x="790" y="242" text-anchor="middle" fill="#a78bfa" font-size="9" letter-spacing="1">MACHINE</text>
+
+  <rect x="720" y="300" width="140" height="48" rx="4" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="790" y="322" text-anchor="middle" fill="#a78bfa" font-size="9" letter-spacing="1">TOOLS /</text>
+  <text x="790" y="337" text-anchor="middle" fill="#a78bfa" font-size="9" letter-spacing="1">APIS</text>
+
+  <!-- ARROWS: Left ↔ Center (audio in/out) -->
+  <!-- PHONE → PSTN/WEBRTC (audio in) -->
+  <path id="pa_in" d="M 176,125 L 289,125" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr)"/>
+  <text x="232" y="120" text-anchor="middle" fill="#6b7a90" font-size="7">audio in</text>
+
+  <!-- PSTN/WEBRTC → PHONE (audio out) -->
+  <path id="pa_out" d="M 289,148 L 176,148" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr-r)"/>
+  <text x="232" y="162" text-anchor="middle" fill="#6b7a90" font-size="7">audio out</text>
+
+  <!-- BROWSER → PSTN (audio in) -->
+  <path id="pb_in" d="M 176,218 L 289,218" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr)"/>
+  <text x="232" y="213" text-anchor="middle" fill="#6b7a90" font-size="7">audio in</text>
+
+  <!-- PSTN → BROWSER (audio out) -->
+  <path id="pb_out" d="M 289,240 L 176,240" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr-r)"/>
+  <text x="232" y="254" text-anchor="middle" fill="#6b7a90" font-size="7">audio out</text>
+
+  <!-- MOBILE → ORCHESTRATOR (audio in) -->
+  <path id="pc_in" d="M 176,314 L 289,314" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr)"/>
+  <text x="232" y="309" text-anchor="middle" fill="#6b7a90" font-size="7">audio in</text>
+
+  <!-- ORCHESTRATOR → MOBILE (audio out) -->
+  <path id="pc_out" d="M 289,334 L 176,334" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr-r)"/>
+  <text x="232" y="348" text-anchor="middle" fill="#6b7a90" font-size="7">audio out</text>
+
+  <!-- ARROWS: Center ↔ Right (text turn / reply text) -->
+  <!-- STT+VAD → AGENTRUNNER (text turn) -->
+  <path id="pd_tt" d="M 441,210 L 719,134" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr)"/>
+  <text x="590" y="165" text-anchor="middle" fill="#6b7a90" font-size="7">text turn</text>
+
+  <!-- AGENTRUNNER → STT+VAD (reply text) -->
+  <path id="pd_rt" d="M 719,145 L 441,225" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr)"/>
+  <text x="590" y="205" text-anchor="middle" fill="#6b7a90" font-size="7">reply text</text>
+
+  <!-- ORCHESTRATOR → DIALOG MACHINE (text turn) -->
+  <path id="pe_tt" d="M 441,294 L 719,224" stroke="#a78bfa" stroke-width="1.3" fill="none" marker-end="url(#arr-p)"/>
+  <text x="590" y="252" text-anchor="middle" fill="#8b7fa0" font-size="7">text turn</text>
+
+  <!-- DIALOG MACHINE → ORCHESTRATOR (reply text) -->
+  <path id="pe_rt" d="M 719,235 L 441,310" stroke="#a78bfa" stroke-width="1.3" fill="none" marker-end="url(#arr-p)"/>
+  <text x="590" y="292" text-anchor="middle" fill="#8b7fa0" font-size="7">reply text</text>
+
+  <!-- ANIMATED DOTS -->
+  <!-- audio in: Left → Center -->
+  <circle r="3.5" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath xlink:href="#pa_in"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle r="3.5" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.5s"><mpath xlink:href="#pa_in"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+  </circle>
+  <circle r="3.5" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.2s"><mpath xlink:href="#pb_in"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.2s"/>
+  </circle>
+  <circle r="3.5" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.4s"><mpath xlink:href="#pc_in"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.4s"/>
+  </circle>
+
+  <!-- audio out: Center → Left -->
+  <circle r="3.5" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1s"><mpath xlink:href="#pa_out"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+  <circle r="3.5" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.2s"><mpath xlink:href="#pb_out"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.2s"/>
+  </circle>
+  <circle r="3.5" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.4s"><mpath xlink:href="#pc_out"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.4s"/>
+  </circle>
+
+  <!-- text turn: Center → Right (cyan) -->
+  <circle r="3.5" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.3s"><mpath xlink:href="#pd_tt"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2.5s" repeatCount="indefinite" begin="0.3s"/>
+  </circle>
+  <circle r="3.5" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.5s"><mpath xlink:href="#pd_tt"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2.5s" repeatCount="indefinite" begin="1.5s"/>
+  </circle>
+
+  <!-- reply text: Center ← Right (cyan) -->
+  <circle r="3.5" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.8s"><mpath xlink:href="#pd_rt"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2.5s" repeatCount="indefinite" begin="0.8s"/>
+  </circle>
+
+  <!-- text turn: Center → Right (purple) -->
+  <circle r="3.5" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.6s"><mpath xlink:href="#pe_tt"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2.5s" repeatCount="indefinite" begin="0.6s"/>
+  </circle>
+  <circle r="3.5" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.8s"><mpath xlink:href="#pe_tt"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2.5s" repeatCount="indefinite" begin="1.8s"/>
+  </circle>
+
+  <!-- reply text: Center ← Right (purple) -->
+  <circle r="3.5" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.1s"><mpath xlink:href="#pe_rt"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2.5s" repeatCount="indefinite" begin="1.1s"/>
+  </circle>
 </svg>

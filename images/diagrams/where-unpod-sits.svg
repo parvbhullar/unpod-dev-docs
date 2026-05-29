@@ -1,89 +1,73 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="WHERE UNPOD SITS">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 520 460" width="520" height="460">
+  <style>text { font-family: 'Courier New', Courier, monospace; }</style>
   <defs>
-    <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
-    </pattern>
-    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8d75ff"/>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00d4d4"/>
     </marker>
-    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d8e8"/>
+    <marker id="arr-d" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/>
     </marker>
-    <style>
-      svg { background: #020303; }
-      .title { font: 700 44px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 9px; }
-      .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
-      .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
-      .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
-      .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
-      .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
-      .purple { stroke: #8d75ff; }
-      .cyan { stroke: #00d8e8; }
-      .purpleText { fill: #8d75ff; }
-      .cyanText { fill: #00d8e8; }
-      .flow { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 22; animation: dash 1.8s linear infinite; }
-      .flow.fast { animation-duration: 1.35s; }
-      .flow.slow { animation-duration: 2.4s; }
-      .dim { opacity: 0.72; }
-      .pulse { filter: url(#glow); animation: pulse 1.7s ease-in-out infinite; transform-origin: center; }
-      @keyframes dash { to { stroke-dashoffset: -36; } }
-      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
-      @media (prefers-reduced-motion: reduce) {
-        .flow, .pulse { animation: none; }
-      }
-    </style>
   </defs>
-  <rect width="1672" height="941" fill="#020303"/>
-  <text x="836" y="70" text-anchor="middle" class="title">WHERE UNPOD SITS</text>
-  
-  <rect x="476" y="116" width="742" height="186" rx="18" class="panel purple"/>
-  <text x="847" y="160" text-anchor="middle" class="label purpleText">
-    <tspan x="847" dy="0">LAYER 3</tspan>
-  </text>
-  <rect x="534" y="152" width="626" height="96" rx="16" class="box purple "/>
-  <text x="847" y="208" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">AGENT PLATFORMS</tspan>
-  </text>
-  <text x="846" y="262" text-anchor="middle" class="small purpleText">
-    <tspan x="846" dy="0">VAPI / RETELL / BLAND</tspan>
-  </text>
-  <rect x="476" y="380" width="742" height="202" rx="18" class="panel cyan"/>
-  <text x="847" y="424" text-anchor="middle" class="label cyanText">
-    <tspan x="847" dy="0">LAYER 2</tspan>
-  </text>
-  <rect x="534" y="418" width="626" height="100" rx="16" class="box cyan "/>
-  <text x="847" y="476" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">UNPOD</tspan>
-  </text>
-  <text x="846" y="536" text-anchor="middle" class="small cyanText">
-    <tspan x="846" dy="0">COMMUNICATION INFRA</tspan>
-  </text>
-  <rect x="476" y="668" width="742" height="190" rx="18" class="panel purple"/>
-  <text x="847" y="712" text-anchor="middle" class="label purpleText">
-    <tspan x="847" dy="0">LAYER 1</tspan>
-  </text>
-  <rect x="534" y="704" width="626" height="96" rx="16" class="box purple "/>
-  <text x="847" y="760" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">RAW TELEPHONY</tspan>
-  </text>
-  <text x="846" y="815" text-anchor="middle" class="small purpleText">
-    <tspan x="846" dy="0">TWILIO / PLIVO / BANDWIDTH</tspan>
-  </text>
-  <path d="M846 380 V312" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M846 582 V660" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <text x="936" y="350" text-anchor="middle" class="tiny cyanText">
-    <tspan x="936" dy="0">USED BY</tspan>
-  </text>
-  <text x="946" y="636" text-anchor="middle" class="tiny cyanText">
-    <tspan x="946" dy="0">BUILDS ON</tspan>
-  </text>
 
+  <rect width="520" height="460" fill="#0a0a0a"/>
+  <text x="260" y="35" text-anchor="middle" fill="#fff" font-size="13" letter-spacing="3">WHERE UNPOD SITS</text>
+
+  <!-- Layer labels on left -->
+  <text x="55" y="122" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">LAYER 3</text>
+  <line x1="75" y1="118" x2="95" y2="118" stroke="#6b7a90" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <text x="55" y="232" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">LAYER 2</text>
+  <line x1="75" y1="228" x2="95" y2="228" stroke="#6b7a90" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <text x="55" y="342" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">LAYER 1</text>
+  <line x1="75" y1="338" x2="95" y2="338" stroke="#6b7a90" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- LAYER 3: AGENT PLATFORMS box -->
+  <rect x="100" y="82" width="380" height="80" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="290" y="115" text-anchor="middle" fill="#fff" font-size="11" letter-spacing="2">AGENT PLATFORMS</text>
+  <text x="290" y="135" text-anchor="middle" fill="#6b7a90" font-size="9">VAPI  ·  RETELL  ·  BLAND</text>
+
+  <!-- LAYER 2: UNPOD box (highlighted) -->
+  <rect x="100" y="192" width="380" height="80" rx="6" fill="none" stroke="#a78bfa" stroke-width="2"/>
+  <text x="290" y="228" text-anchor="middle" fill="#a78bfa" font-size="13" letter-spacing="3">UNPOD</text>
+  <text x="290" y="248" text-anchor="middle" fill="#8b7fa0" font-size="8" letter-spacing="2">COMMUNICATION INFRA</text>
+
+  <!-- LAYER 1: RAW TELEPHONY box -->
+  <rect x="100" y="302" width="380" height="80" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="290" y="335" text-anchor="middle" fill="#fff" font-size="11" letter-spacing="2">RAW TELEPHONY</text>
+  <text x="290" y="355" text-anchor="middle" fill="#6b7a90" font-size="9">TWILIO  ·  PLIVO  ·  BANDWIDTH</text>
+
+  <!-- Arrows -->
+  <!-- AGENT PLATFORMS → UNPOD (used by) -->
+  <path id="p1" d="M 290,163 L 290,191" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <text x="310" y="180" fill="#6b7a90" font-size="7" letter-spacing="1">USED BY</text>
+
+  <!-- UNPOD → RAW TELEPHONY (builds on) -->
+  <path id="p2" d="M 290,273 L 290,301" stroke="#a78bfa" stroke-width="1.5" fill="none" marker-end="url(#arr-d)"/>
+  <text x="310" y="290" fill="#8b7fa0" font-size="7" letter-spacing="1">BUILDS ON</text>
+
+  <!-- ANIMATED DOTS -->
+  <!-- AGENT PLATFORMS → UNPOD (downward) -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath xlink:href="#p1"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.88;1" dur="2s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1s"><mpath xlink:href="#p1"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.88;1" dur="2s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+
+  <!-- UNPOD → RAW TELEPHONY (downward, purple) -->
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.3s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.88;1" dur="2s" repeatCount="indefinite" begin="0.3s"/>
+  </circle>
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.3s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.88;1" dur="2s" repeatCount="indefinite" begin="1.3s"/>
+  </circle>
 </svg>
