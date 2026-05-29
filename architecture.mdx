@@ -16,14 +16,9 @@ The platform can be self-hosted on any machine or deployed directly on Unpod clo
 
 ## The Four Pillars
 
-```
-unpod          unpod           SuperDialog          Open-Source
-  |                   |                    |               CPAAS Platform
-  |                   |                    |                    |
-  v                   v                    v                    v
-Communication     Voice Stack         Conversation         Agent Management
-  Infra           (STT/TTS)           Framework            (Platform)
-```
+<Frame>
+  <img src="/images/diagrams/unpod-four-pillars.png" alt="Unpod four pillars diagram showing communication infrastructure, voice stack, SuperDialog conversation framework, and the open-source CPAAS platform." />
+</Frame>
 
 | Pillar | What it is |
 |---|---|
@@ -36,21 +31,9 @@ Communication     Voice Stack         Conversation         Agent Management
 
 ## How the Pieces Connect
 
-```
-Caller
-  |
-  v
-[ Unpod Speech Platform ]   <- phone number + voice stack
-  |  transcribed text
-  v
-[ SuperDialog ]             <- conversation framework (your logic)
-  |  text reply
-  v
-[ Unpod Speech Platform ]   <- synthesise + stream back
-  |
-  v
-Caller hears response
-```
+<Frame>
+  <img src="/images/diagrams/unpod-voice-stack.png" alt="Unpod voice stack diagram showing user entrypoints, the Unpod managed layer, and your agent connected by audio and text turns." />
+</Frame>
 
 The platform manages the full lifecycle around this loop: provisioning agents, attaching numbers and voice profiles, storing transcripts, surfacing analytics, and dispatching runners via `unpod`.
 

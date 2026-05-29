@@ -21,10 +21,6 @@ A flow is a **directed graph** of nodes connected by edges.
 - **Edge** - a condition that moves the conversation to the next node
 - **Criteria** - what data must be collected before an edge can fire
 
-```
-[greet] -> (user_ready) -> [collect_name] -> (name_given) -> [confirm] -> (confirmed) -> [done]
-```
-
 ## Start With the Topology
 
 Before writing any prompts, map your conversation:
@@ -36,13 +32,9 @@ Before writing any prompts, map your conversation:
 
 For an appointment booking bot:
 
-```
-[greet]
-  -> user wants to book    -> [collect: name, doctor, date, time]
-  -> user wants to reschedule -> [collect: booking_ref, new_date]
-  -> [confirm]
-  -> [done]
-```
+<Frame>
+  <img src="/images/diagrams/superdialog-flow-graph.png" alt="Appointment-style SuperDialog flow graph showing greeting, detail collection, availability checks, confirmation, completion, missing information fallback, and retry paths." />
+</Frame>
 
 ## Then Generate It
 

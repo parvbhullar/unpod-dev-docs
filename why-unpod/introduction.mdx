@@ -42,14 +42,9 @@ You already have an agent. It could be LangChain, a FastAPI endpoint, n8n, Super
 
 Unpod gives it a phone number and handles everything between the caller and your logic.
 
-```
-Caller speaks
-    -> Unpod transcribes (STT)
-    -> Your agent receives text: "I need help with my order"
-    -> Your agent returns text: "I can help with that..."
-    -> Unpod synthesises (TTS)
-    -> Caller hears the response
-```
+<Frame>
+  <img src="/images/diagrams/unpod-voice-stack.png" alt="Unpod voice stack diagram showing callers, browser users, and mobile users connecting through the managed speech layer to your agent." />
+</Frame>
 
 Your endpoint never touches audio. It never touches SIP. It never manages a carrier.
 
@@ -80,16 +75,9 @@ You can also point Unpod at any HTTP endpoint or LangChain agent you already hav
 
 ## Where Unpod Sits in the Stack
 
-```
-Layer 3 - Agent Platforms    Vapi, Retell, Bland
-                                   ^
-                                   |   (they use us)
-Layer 2 - Communication Infra [ Unpod ]  <-- we are here
-                                   |
-                                   |   (we use them)
-                                   v
-Layer 1 - Raw Telephony      Twilio, Plivo, Bandwidth
-```
+<Frame>
+  <img src="/images/diagrams/where-unpod-sits.png" alt="Layered diagram showing Unpod as communication infrastructure between raw telephony providers and agent platforms." />
+</Frame>
 
 Unpod sits between raw carriers (Layer 1) and agent platforms (Layer 3). We are the communication stack that agent builders rely on - and that you can use directly.
 

@@ -8,21 +8,9 @@ description: 'Drive voice conversations with structured flows, tools, and branch
 
 SuperDialog provides a structured conversation engine - a **dialog flow** is a graph of states and transitions, and the **DialogMachine** executes it turn-by-turn. When plugged into an Unpod `Session`, the machine automatically receives user speech and generates responses without any manual routing code.
 
-```
-  User speaks
-      │
-      ▼ STT
-  User text  ──────────────────────────────▶ Hook: user_turn
-      │
-      ▼
-  DialogMachine.turn(text)
-      │
-      ▼
-  Agent reply (streaming chunks)  ────────▶ Hook: agent_turn
-      │
-      ▼ TTS
-  Caller hears
-```
+<Frame>
+  <img src="/images/diagrams/superdialog-session-integration.png" alt="SuperDialog session integration diagram showing user speech passing through STT, user_turn hooks, DialogMachine.turn, agent_turn hooks, TTS, and caller playback." />
+</Frame>
 
 ---
 

@@ -156,25 +156,9 @@ Adapters live in `superdialog.adapters` and are thin shims. The same `DialogMach
 
 ## Data flow
 
-```
-User text
-    │
-    ▼
-DialogMachine.turn(text)
-    │
-    ├─ Load current node from Flow
-    ├─ Build prompt (system + history + node instructions)
-    ├─ Call LLM (model URI resolver → provider)
-    ├─ Execute tool calls (Python / HTTP / MCP)
-    ├─ Update slots, evaluate edge conditions
-    ├─ Advance to next node
-    │
-    ▼
-Turn(text, tool_calls, metadata)
-    │
-    ▼
-Host (LiveKit / PipeCat / FastAPI / WSS / CLI)
-```
+<Frame>
+  <img src="/images/diagrams/superdialog-runtime.png" alt="SuperDialog runtime diagram showing user text entering DialogMachine.turn, loading nodes, building prompts, calling the LLM, running tools, updating state, advancing edges, and returning a turn result to the host." />
+</Frame>
 
 ## What lives outside this library
 
