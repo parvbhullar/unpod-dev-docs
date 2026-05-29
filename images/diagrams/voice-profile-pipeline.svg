@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="VOICE PROFILE PIPELINE">
+  <defs>
+    <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
+    </pattern>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8d75ff"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d8e8"/>
+    </marker>
+    <style>
+      svg { background: #020303; }
+      .title { font: 700 44px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 9px; }
+      .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
+      .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
+      .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
+      .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
+      .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
+      .purple { stroke: #8d75ff; }
+      .cyan { stroke: #00d8e8; }
+      .purpleText { fill: #8d75ff; }
+      .cyanText { fill: #00d8e8; }
+      .flow { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 22; animation: dash 1.8s linear infinite; }
+      .flow.fast { animation-duration: 1.35s; }
+      .flow.slow { animation-duration: 2.4s; }
+      .dim { opacity: 0.72; }
+      .pulse { filter: url(#glow); animation: pulse 1.7s ease-in-out infinite; transform-origin: center; }
+      @keyframes dash { to { stroke-dashoffset: -36; } }
+      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .flow, .pulse { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="1672" height="941" fill="#020303"/>
+  <text x="836" y="70" text-anchor="middle" class="title">VOICE PROFILE PIPELINE</text>
+  
+  <rect x="640" y="108" width="392" height="72" rx="16" class="box purple "/>
+  <text x="836" y="152" text-anchor="middle" class="label">
+    <tspan x="836" dy="0">CALLER SPEAKS</tspan>
+  </text>
+  <rect x="616" y="220" width="440" height="142" rx="18" class="panel cyan"/>
+  <text x="836" y="264" text-anchor="middle" class="label cyanText">
+    <tspan x="836" dy="0">VOICE PROFILE</tspan>
+  </text>
+  <rect x="650" y="274" width="372" height="62" rx="12" class="box cyan"/>
+  <text x="836" y="311" text-anchor="middle" class="small">
+    <tspan x="836" dy="0">STT</tspan>
+  </text>
+  <rect x="640" y="392" width="392" height="72" rx="16" class="box purple "/>
+  <text x="836" y="436" text-anchor="middle" class="label">
+    <tspan x="836" dy="0">USER TEXT</tspan>
+  </text>
+  <rect x="640" y="502" width="392" height="72" rx="16" class="box purple "/>
+  <text x="836" y="546" text-anchor="middle" class="label">
+    <tspan x="836" dy="0">DIALOG MACHINE</tspan>
+  </text>
+  <rect x="640" y="602" width="392" height="72" rx="16" class="box purple "/>
+  <text x="836" y="646" text-anchor="middle" class="label">
+    <tspan x="836" dy="0">AGENT TEXT</tspan>
+  </text>
+  <rect x="616" y="710" width="440" height="132" rx="18" class="panel cyan"/>
+  <text x="836" y="754" text-anchor="middle" class="label cyanText">
+    <tspan x="836" dy="0">VOICE PROFILE</tspan>
+  </text>
+  <rect x="650" y="760" width="372" height="58" rx="12" class="box cyan"/>
+  <text x="836" y="795" text-anchor="middle" class="small">
+    <tspan x="836" dy="0">TTS + VOICE</tspan>
+  </text>
+  <rect x="640" y="866" width="392" height="64" rx="16" class="box purple"/>
+  <text x="836" y="905" text-anchor="middle" class="label">
+    <tspan x="836" dy="0">CALLER HEARS</tspan>
+  </text>
+  <path d="M836 180 V220" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M836 362 V392" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M836 464 V502" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M836 574 V602" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M836 674 V710" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M836 842 V866" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+
+</svg>

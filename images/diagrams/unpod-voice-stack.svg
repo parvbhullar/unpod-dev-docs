@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="UNPOD VOICE STACK">
+  <defs>
+    <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
+    </pattern>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8d75ff"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d8e8"/>
+    </marker>
+    <style>
+      svg { background: #020303; }
+      .title { font: 700 44px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 9px; }
+      .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
+      .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
+      .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
+      .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
+      .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
+      .purple { stroke: #8d75ff; }
+      .cyan { stroke: #00d8e8; }
+      .purpleText { fill: #8d75ff; }
+      .cyanText { fill: #00d8e8; }
+      .flow { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 22; animation: dash 1.8s linear infinite; }
+      .flow.fast { animation-duration: 1.35s; }
+      .flow.slow { animation-duration: 2.4s; }
+      .dim { opacity: 0.72; }
+      .pulse { filter: url(#glow); animation: pulse 1.7s ease-in-out infinite; transform-origin: center; }
+      @keyframes dash { to { stroke-dashoffset: -36; } }
+      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .flow, .pulse { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="1672" height="941" fill="#020303"/>
+  <text x="836" y="70" text-anchor="middle" class="title">UNPOD VOICE STACK</text>
+  
+  <rect x="44" y="118" width="392" height="760" rx="18" class="panel purple"/>
+  <text x="240" y="162" text-anchor="middle" class="label purpleText">
+    <tspan x="240" dy="0">USER ENTRYPOINTS</tspan>
+  </text>
+  <rect x="622" y="118" width="430" height="760" rx="18" class="panel gray"/>
+  <text x="837" y="162" text-anchor="middle" class="label purpleText">
+    <tspan x="837" dy="0">UNPOD MANAGED LAYER</tspan>
+  </text>
+  <rect x="1234" y="118" width="394" height="760" rx="18" class="panel cyan"/>
+  <text x="1431" y="162" text-anchor="middle" class="label cyanText">
+    <tspan x="1431" dy="0">YOUR AGENT</tspan>
+  </text>
+  <rect x="98" y="225" width="280" height="132" rx="16" class="box purple "/>
+  <text x="238" y="299" text-anchor="middle" class="label">
+    <tspan x="238" dy="0">PHONE</tspan>
+  </text>
+  <rect x="98" y="424" width="280" height="132" rx="16" class="box purple "/>
+  <text x="238" y="498" text-anchor="middle" class="label">
+    <tspan x="238" dy="0">BROWSER</tspan>
+  </text>
+  <rect x="98" y="624" width="280" height="132" rx="16" class="box purple "/>
+  <text x="238" y="698" text-anchor="middle" class="label">
+    <tspan x="238" dy="0">MOBILE</tspan>
+  </text>
+  <rect x="672" y="220" width="326" height="124" rx="16" class="box  "/>
+  <text x="835" y="290" text-anchor="middle" class="label">
+    <tspan x="835" dy="0">PSTN / WEBRTC</tspan>
+  </text>
+  <rect x="672" y="398" width="326" height="124" rx="16" class="box  "/>
+  <text x="835" y="468" text-anchor="middle" class="label">
+    <tspan x="835" dy="0">STT + VAD</tspan>
+  </text>
+  <rect x="672" y="576" width="326" height="124" rx="16" class="box  "/>
+  <text x="835" y="646" text-anchor="middle" class="label">
+    <tspan x="835" dy="0">ORCHESTRATOR</tspan>
+  </text>
+  <rect x="672" y="746" width="326" height="96" rx="16" class="box  "/>
+  <text x="835" y="802" text-anchor="middle" class="label">
+    <tspan x="835" dy="0">TTS + STREAMING</tspan>
+  </text>
+  <rect x="1292" y="220" width="286" height="124" rx="16" class="box cyan "/>
+  <text x="1435" y="290" text-anchor="middle" class="label">
+    <tspan x="1435" dy="0">AGENTRUNNER</tspan>
+  </text>
+  <rect x="1292" y="422" width="286" height="124" rx="16" class="box cyan "/>
+  <text x="1435" y="477" text-anchor="middle" class="label">
+    <tspan x="1435" dy="0">DIALOG</tspan>
+    <tspan x="1435" dy="30">MACHINE</tspan>
+  </text>
+  <rect x="1292" y="626" width="286" height="124" rx="16" class="box cyan "/>
+  <text x="1435" y="696" text-anchor="middle" class="label">
+    <tspan x="1435" dy="0">TOOLS / APIS</tspan>
+  </text>
+  <path d="M378 291 H662" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <path d="M378 490 H662" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <path d="M378 690 H662" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <path d="M998 282 H1282" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M998 460 H1282" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M998 638 H1282" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M1282 318 H1010" class="flow cyan slow" stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M1282 520 H1010" class="flow cyan slow" stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M1282 724 H1010" class="flow cyan slow" stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <text x="520" y="262" text-anchor="middle" class="tiny purpleText">
+    <tspan x="520" dy="0">AUDIO IN</tspan>
+  </text>
+  <text x="1140" y="252" text-anchor="middle" class="tiny cyanText">
+    <tspan x="1140" dy="0">TEXT TURN</tspan>
+  </text>
+  <text x="1140" y="332" text-anchor="middle" class="tiny cyanText">
+    <tspan x="1140" dy="0">REPLY TEXT</tspan>
+  </text>
+
+</svg>

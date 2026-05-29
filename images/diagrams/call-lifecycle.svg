@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="CALL LIFECYCLE">
+  <defs>
+    <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
+    </pattern>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8d75ff"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d8e8"/>
+    </marker>
+    <style>
+      svg { background: #020303; }
+      .title { font: 700 44px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 9px; }
+      .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
+      .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
+      .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
+      .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
+      .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
+      .purple { stroke: #8d75ff; }
+      .cyan { stroke: #00d8e8; }
+      .purpleText { fill: #8d75ff; }
+      .cyanText { fill: #00d8e8; }
+      .flow { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 22; animation: dash 1.8s linear infinite; }
+      .flow.fast { animation-duration: 1.35s; }
+      .flow.slow { animation-duration: 2.4s; }
+      .dim { opacity: 0.72; }
+      .pulse { filter: url(#glow); animation: pulse 1.7s ease-in-out infinite; transform-origin: center; }
+      @keyframes dash { to { stroke-dashoffset: -36; } }
+      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .flow, .pulse { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="1672" height="941" fill="#020303"/>
+  <text x="836" y="70" text-anchor="middle" class="title">CALL LIFECYCLE</text>
+  
+  <rect x="28" y="150" width="214" height="574" rx="18" class="panel purple"/>
+  <text x="135" y="194" text-anchor="middle" class="label purpleText">
+    <tspan x="135" dy="0">CALLER</tspan>
+  </text>
+  <rect x="56" y="242" width="160" height="82" rx="16" class="box purple "/>
+  <text x="136" y="291" text-anchor="middle" class="label">
+    <tspan x="136" dy="0">USER</tspan>
+  </text>
+  <rect x="380" y="150" width="320" height="574" rx="18" class="panel cyan"/>
+  <text x="540" y="194" text-anchor="middle" class="label cyanText">
+    <tspan x="540" dy="0">UNPOD MANAGED</tspan>
+  </text>
+  <rect x="422" y="242" width="236" height="82" rx="16" class="box cyan "/>
+  <text x="540" y="291" text-anchor="middle" class="label">
+    <tspan x="540" dy="0">NUMBER</tspan>
+  </text>
+  <rect x="422" y="400" width="236" height="92" rx="16" class="box cyan "/>
+  <text x="540" y="439" text-anchor="middle" class="label">
+    <tspan x="540" dy="0">SPEECH</tspan>
+    <tspan x="540" dy="30">PIPELINE</tspan>
+  </text>
+  <rect x="422" y="586" width="236" height="82" rx="16" class="box cyan "/>
+  <text x="540" y="635" text-anchor="middle" class="label">
+    <tspan x="540" dy="0">ORCHESTRATOR</tspan>
+  </text>
+  <rect x="902" y="150" width="332" height="574" rx="18" class="panel purple"/>
+  <text x="1068" y="194" text-anchor="middle" class="label purpleText">
+    <tspan x="1068" dy="0">YOUR SERVER</tspan>
+  </text>
+  <rect x="948" y="242" width="240" height="82" rx="16" class="box purple "/>
+  <text x="1068" y="276" text-anchor="middle" class="label">
+    <tspan x="1068" dy="0">AGENT</tspan>
+    <tspan x="1068" dy="30">RUNNER</tspan>
+  </text>
+  <rect x="948" y="400" width="240" height="82" rx="16" class="box purple "/>
+  <text x="1068" y="449" text-anchor="middle" class="label">
+    <tspan x="1068" dy="0">SESSION</tspan>
+  </text>
+  <rect x="948" y="586" width="240" height="82" rx="16" class="box purple "/>
+  <text x="1068" y="620" text-anchor="middle" class="label">
+    <tspan x="1068" dy="0">DIALOG</tspan>
+    <tspan x="1068" dy="30">MACHINE</tspan>
+  </text>
+  <rect x="1370" y="150" width="270" height="574" rx="18" class="panel gray"/>
+  <text x="1505" y="179" text-anchor="middle" class="label purpleText">
+    <tspan x="1505" dy="0">STORAGE</tspan>
+    <tspan x="1505" dy="30">+ HOOKS</tspan>
+  </text>
+  <rect x="1406" y="242" width="198" height="82" rx="16" class="box  "/>
+  <text x="1505" y="291" text-anchor="middle" class="label">
+    <tspan x="1505" dy="0">TRANSCRIPT</tspan>
+  </text>
+  <rect x="1406" y="404" width="198" height="82" rx="16" class="box  "/>
+  <text x="1505" y="453" text-anchor="middle" class="label">
+    <tspan x="1505" dy="0">METRICS</tspan>
+  </text>
+  <rect x="1406" y="586" width="198" height="82" rx="16" class="box  "/>
+  <text x="1505" y="635" text-anchor="middle" class="label">
+    <tspan x="1505" dy="0">WEBHOOKS</tspan>
+  </text>
+  <path d="M216 282 H412" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <rect x="258" y="260" width="170" height="42" rx="21" fill="#111318" stroke="#00d8e8" stroke-width="2"/>
+  <text x="343" y="287" text-anchor="middle" class="small cyanText">
+    <tspan x="343" dy="0">1 CALL START</tspan>
+  </text>
+  <path d="M658 446 H938" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <rect x="708" y="424" width="192" height="42" rx="21" fill="#111318" stroke="#00d8e8" stroke-width="2"/>
+  <text x="804" y="451" text-anchor="middle" class="small cyanText">
+    <tspan x="804" dy="0">2 AUDIO TO TEXT</tspan>
+  </text>
+  <path d="M658 627 H938" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <rect x="734" y="605" width="144" height="42" rx="21" fill="#111318" stroke="#00d8e8" stroke-width="2"/>
+  <text x="806" y="632" text-anchor="middle" class="small cyanText">
+    <tspan x="806" dy="0">3 DISPATCH</tspan>
+  </text>
+  <path d="M1068 482 V576" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <rect x="1094" y="520" width="92" height="42" rx="21" fill="#111318" stroke="#8d75ff" stroke-width="2"/>
+  <text x="1140" y="547" text-anchor="middle" class="small purpleText">
+    <tspan x="1140" dy="0">4 TURN</tspan>
+  </text>
+  <path d="M948 627 C790 627 790 446 668 446" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <rect x="734" y="526" width="160" height="42" rx="21" fill="#111318" stroke="#8d75ff" stroke-width="2"/>
+  <text x="814" y="553" text-anchor="middle" class="small purpleText">
+    <tspan x="814" dy="0">5 REPLY TEXT</tspan>
+  </text>
+  <path d="M1188 442 H1396" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <rect x="1244" y="420" width="138" height="42" rx="21" fill="#111318" stroke="#8d75ff" stroke-width="2"/>
+  <text x="1313" y="447" text-anchor="middle" class="small purpleText">
+    <tspan x="1313" dy="0">6 CALL END</tspan>
+  </text>
+  <line x1="722" y1="748" x2="722" y2="868" stroke="#4a4d55" stroke-width="2" stroke-dasharray="8 10"/>
+  <rect x="904" y="784" width="298" height="50" rx="25" fill="#111318" stroke="#8d75ff" stroke-width="2"/>
+  <text x="1053" y="815" text-anchor="middle" class="small purpleText">
+    <tspan x="1053" dy="0">YOU OWN THIS SIDE</tspan>
+  </text>
+  <path d="M1202 809 H1406" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+
+</svg>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="CORE COMPONENT DATA FLOW">
+  <defs>
+    <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
+    </pattern>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8d75ff"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d8e8"/>
+    </marker>
+    <style>
+      svg { background: #020303; }
+      .title { font: 700 44px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 9px; }
+      .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
+      .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
+      .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
+      .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
+      .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
+      .purple { stroke: #8d75ff; }
+      .cyan { stroke: #00d8e8; }
+      .purpleText { fill: #8d75ff; }
+      .cyanText { fill: #00d8e8; }
+      .flow { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 22; animation: dash 1.8s linear infinite; }
+      .flow.fast { animation-duration: 1.35s; }
+      .flow.slow { animation-duration: 2.4s; }
+      .dim { opacity: 0.72; }
+      .pulse { filter: url(#glow); animation: pulse 1.7s ease-in-out infinite; transform-origin: center; }
+      @keyframes dash { to { stroke-dashoffset: -36; } }
+      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .flow, .pulse { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="1672" height="941" fill="#020303"/>
+  <text x="836" y="70" text-anchor="middle" class="title">CORE COMPONENT DATA FLOW</text>
+  
+  <rect x="24" y="388" width="224" height="144" rx="12" class="box purple"/>
+  <text x="136" y="466" text-anchor="middle" class="small">
+    <tspan x="136" dy="0">NUMBER</tspan>
+  </text>
+  <rect x="346" y="360" width="242" height="200" rx="18" class="panel purple"/>
+  <text x="467" y="404" text-anchor="middle" class="label purpleText">
+    <tspan x="467" dy="0">ROUTING</tspan>
+  </text>
+  <rect x="370" y="448" width="194" height="72" rx="16" class="box purple "/>
+  <text x="467" y="492" text-anchor="middle" class="label">
+    <tspan x="467" dy="0">BRIDGE</tspan>
+  </text>
+  <rect x="704" y="280" width="262" height="444" rx="18" class="panel cyan"/>
+  <text x="835" y="324" text-anchor="middle" class="label cyanText">
+    <tspan x="835" dy="0">AI LOGIC</tspan>
+  </text>
+  <rect x="734" y="328" width="202" height="112" rx="16" class="box cyan "/>
+  <text x="835" y="392" text-anchor="middle" class="label">
+    <tspan x="835" dy="0">AGENT 1</tspan>
+  </text>
+  <rect x="734" y="560" width="202" height="112" rx="16" class="box cyan "/>
+  <text x="835" y="624" text-anchor="middle" class="label">
+    <tspan x="835" dy="0">AGENT 2</tspan>
+  </text>
+  <rect x="1092" y="358" width="242" height="306" rx="18" class="panel cyan"/>
+  <text x="1213" y="402" text-anchor="middle" class="label cyanText">
+    <tspan x="1213" dy="0">CARRIER</tspan>
+  </text>
+  <rect x="1120" y="452" width="190" height="112" rx="16" class="box cyan "/>
+  <text x="1215" y="516" text-anchor="middle" class="label">
+    <tspan x="1215" dy="0">PROVIDER</tspan>
+  </text>
+  <rect x="1424" y="408" width="224" height="144" rx="12" class="box purple"/>
+  <text x="1536" y="486" text-anchor="middle" class="small">
+    <tspan x="1536" dy="0">ENDPOINT</tspan>
+  </text>
+  <path d="M248 460 H346" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <path d="M588 484 C650 484 650 384 724 384" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <path d="M588 484 C650 484 650 616 724 616" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <path d="M936 384 C1044 384 1044 508 1110 508" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M936 616 C1044 616 1044 508 1110 508" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M1310 508 H1414" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+
+</svg>
