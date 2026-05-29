@@ -1,0 +1,173 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 900 460" width="900" height="460">
+  <style>text { font-family: 'Courier New', Courier, monospace; }</style>
+  <defs>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00d4d4"/>
+    </marker>
+    <marker id="arr-p" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/>
+    </marker>
+    <marker id="arr-r" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto">
+      <polygon points="10 0, 0 3.5, 10 7" fill="#00d4d4"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="460" fill="#0a0a0a"/>
+  <text x="450" y="35" text-anchor="middle" fill="#fff" font-size="13" letter-spacing="3">CALL LIFECYCLE</text>
+
+  <!-- Column headers -->
+  <text x="65" y="65" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">CALLER</text>
+  <text x="255" y="65" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">UNPOD MANAGED</text>
+  <text x="530" y="65" text-anchor="middle" fill="#a78bfa" font-size="8" letter-spacing="1">YOUR SERVER</text>
+  <text x="800" y="65" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">STORAGE + HOOKS</text>
+
+  <!-- Column dividers (subtle) -->
+  <line x1="155" y1="70" x2="155" y2="430" stroke="#1a1a2e" stroke-width="1"/>
+  <line x1="400" y1="70" x2="400" y2="430" stroke="#1a1a2e" stroke-width="1"/>
+  <line x1="660" y1="70" x2="660" y2="430" stroke="#1a1a2e" stroke-width="1"/>
+
+  <!-- YOU OWN THIS SIDE label (bottom) -->
+  <line x1="400" y1="420" x2="660" y2="420" stroke="#6b7a90" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="530" y="437" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="2">YOU OWN THIS SIDE</text>
+
+  <!-- CALLER: USER box -->
+  <rect x="20" y="120" width="90" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="65" y="145" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">USER</text>
+
+  <!-- UNPOD MANAGED boxes -->
+  <rect x="175" y="90" width="115" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="232" y="115" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">NUMBER</text>
+
+  <rect x="175" y="175" width="115" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="232" y="192" text-anchor="middle" fill="#fff" font-size="8" letter-spacing="1">SPEECH</text>
+  <text x="232" y="206" text-anchor="middle" fill="#fff" font-size="8" letter-spacing="1">PIPELINE</text>
+
+  <rect x="175" y="290" width="115" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="232" y="315" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">ORCHESTRATOR</text>
+
+  <!-- YOUR SERVER boxes (purple tint) -->
+  <rect x="420" y="90" width="115" height="40" rx="4" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="477" y="115" text-anchor="middle" fill="#a78bfa" font-size="9" letter-spacing="1">AGENTRUNNER</text>
+
+  <rect x="420" y="175" width="115" height="40" rx="4" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="477" y="200" text-anchor="middle" fill="#a78bfa" font-size="9" letter-spacing="1">SESSION</text>
+
+  <rect x="420" y="290" width="115" height="40" rx="4" fill="none" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="477" y="308" text-anchor="middle" fill="#a78bfa" font-size="8" letter-spacing="1">DIALOG</text>
+  <text x="477" y="323" text-anchor="middle" fill="#a78bfa" font-size="8" letter-spacing="1">MACHINE</text>
+
+  <!-- STORAGE + HOOKS boxes -->
+  <rect x="720" y="90" width="150" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.2"/>
+  <text x="795" y="115" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">TRANSCRIPT</text>
+
+  <rect x="720" y="175" width="150" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.2"/>
+  <text x="795" y="200" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">METRICS</text>
+
+  <rect x="720" y="290" width="150" height="40" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.2"/>
+  <text x="795" y="315" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">WEBHOOKS</text>
+
+  <!-- Arrows -->
+  <!-- USER → NUMBER (call start) -->
+  <path id="p1" d="M 111,135 L 174,110" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr)"/>
+  <text x="142" y="117" text-anchor="middle" fill="#6b7a90" font-size="7">call start</text>
+
+  <!-- NUMBER → AGENTRUNNER -->
+  <path id="p2" d="M 291,110 L 419,110" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr)"/>
+
+  <!-- AGENTRUNNER → SESSION -->
+  <path id="p3" d="M 477,131 L 477,174" stroke="#a78bfa" stroke-width="1.3" fill="none" marker-end="url(#arr-p)"/>
+
+  <!-- SPEECH PIPELINE ↔ SESSION (audio to text, reply text) -->
+  <path id="p4" d="M 291,190 L 419,190" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr)"/>
+  <text x="355" y="184" text-anchor="middle" fill="#6b7a90" font-size="7">audio to text</text>
+
+  <path id="p5" d="M 419,205 L 291,205" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr-r)"/>
+  <text x="355" y="218" text-anchor="middle" fill="#6b7a90" font-size="7">reply text</text>
+
+  <!-- SESSION → DIALOG MACHINE (turn) -->
+  <path id="p6" d="M 477,216 L 477,289" stroke="#a78bfa" stroke-width="1.3" fill="none" marker-end="url(#arr-p)"/>
+  <text x="492" y="255" fill="#8b7fa0" font-size="7">turn</text>
+
+  <!-- ORCHESTRATOR → DIALOG MACHINE (dispatch) -->
+  <path id="p7" d="M 291,310 L 419,310" stroke="#00d4d4" stroke-width="1.3" fill="none" marker-end="url(#arr)"/>
+  <text x="355" y="304" text-anchor="middle" fill="#6b7a90" font-size="7">dispatch</text>
+
+  <!-- SESSION → TRANSCRIPT/METRICS (call end storage) -->
+  <path id="p8" d="M 536,195 Q 620,195 719,195" stroke="#6b7a90" stroke-width="1.2" stroke-dasharray="4,2" fill="none" marker-end="url(#arr)"/>
+  <text x="627" y="188" text-anchor="middle" fill="#6b7a90" font-size="7">call end</text>
+
+  <!-- SESSION → WEBHOOKS -->
+  <path id="p9" d="M 536,205 Q 620,250 719,295" stroke="#6b7a90" stroke-width="1.2" stroke-dasharray="4,2" fill="none" marker-end="url(#arr)"/>
+
+  <!-- ANIMATED DOTS -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath xlink:href="#p1"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" begin="0.3s"><mpath xlink:href="#p3"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="1.5s" repeatCount="indefinite" begin="0.3s"/>
+  </circle>
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" begin="1.05s"><mpath xlink:href="#p3"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="1.5s" repeatCount="indefinite" begin="1.05s"/>
+  </circle>
+
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.4s"><mpath xlink:href="#p4"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.4s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.4s"><mpath xlink:href="#p4"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.4s"/>
+  </circle>
+
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.8s"><mpath xlink:href="#p5"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.8s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.8s"><mpath xlink:href="#p5"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.8s"/>
+  </circle>
+
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.6s"><mpath xlink:href="#p6"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2s" repeatCount="indefinite" begin="0.6s"/>
+  </circle>
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.6s"><mpath xlink:href="#p6"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2s" repeatCount="indefinite" begin="1.6s"/>
+  </circle>
+
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.5s"><mpath xlink:href="#p7"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.5s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.5s"><mpath xlink:href="#p7"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.5s"/>
+  </circle>
+
+  <circle r="3" fill="#6b7a90" filter="url(#glow)">
+    <animateMotion dur="3s" repeatCount="indefinite" begin="1s"><mpath xlink:href="#p8"/></animateMotion>
+    <animate attributeName="opacity" values="0;0.7;0.7;0" keyTimes="0;0.05;0.9;1" dur="3s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+  <circle r="3" fill="#6b7a90" filter="url(#glow)">
+    <animateMotion dur="3s" repeatCount="indefinite" begin="2.5s"><mpath xlink:href="#p9"/></animateMotion>
+    <animate attributeName="opacity" values="0;0.7;0.7;0" keyTimes="0;0.05;0.9;1" dur="3s" repeatCount="indefinite" begin="2.5s"/>
+  </circle>
+</svg>

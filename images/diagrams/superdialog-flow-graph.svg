@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 900 400" width="900" height="400">
+  <style>
+    text { font-family: 'Courier New', Courier, monospace; }
+  </style>
+  <defs>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00d4d4"/>
+    </marker>
+    <marker id="arr-g" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00ff88"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="400" fill="#0a0a0a"/>
+  <text x="450" y="38" text-anchor="middle" fill="#fff" font-size="13" letter-spacing="3">SUPERDIALOG FLOW GRAPH</text>
+
+  <!-- nodes -->
+  <rect x="30" y="150" width="90" height="50" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="75" y="180" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">GREET</text>
+
+  <rect x="175" y="150" width="130" height="50" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="173" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">COLLECT</text>
+  <text x="240" y="188" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">DETAILS</text>
+
+  <rect x="360" y="150" width="150" height="50" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="435" y="173" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">CHECK</text>
+  <text x="435" y="188" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">AVAILABILITY</text>
+
+  <rect x="565" y="150" width="100" height="50" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="615" y="180" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">CONFIRM</text>
+
+  <rect x="725" y="150" width="80" height="50" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="765" y="180" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">DONE</text>
+
+  <!-- main arrows -->
+  <path id="p1" d="M 121,175 L 174,175" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <text x="147" y="168" text-anchor="middle" fill="#6b7a90" font-size="8">ready</text>
+
+  <path id="p2" d="M 306,175 L 359,175" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <text x="332" y="166" text-anchor="middle" fill="#6b7a90" font-size="8">details</text>
+  <text x="332" y="175" text-anchor="middle" fill="#6b7a90" font-size="8">provided</text>
+
+  <path id="p3" d="M 511,175 L 564,175" stroke="#00ff88" stroke-width="1.5" fill="none" marker-end="url(#arr-g)"/>
+  <text x="537" y="166" text-anchor="middle" fill="#00ff88" font-size="8">slot</text>
+  <text x="537" y="175" text-anchor="middle" fill="#00ff88" font-size="8">avail</text>
+
+  <path id="p4" d="M 666,175 L 724,175" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <text x="695" y="168" text-anchor="middle" fill="#6b7a90" font-size="8">confirmed</text>
+
+  <!-- fallback: missing info self-loop on COLLECT DETAILS -->
+  <path id="p5" d="M 240,201 L 240,272 L 163,272 L 163,176 L 174,176"
+        stroke="#00d4d4" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#arr)"/>
+  <text x="202" y="285" text-anchor="middle" fill="#6b7a90" font-size="8">missing info</text>
+
+  <!-- fallback: try another time from CHECK AVAILABILITY back to COLLECT DETAILS -->
+  <path id="p6" d="M 435,201 L 435,312 L 240,312 L 240,273"
+        stroke="#00d4d4" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#arr)"/>
+  <text x="337" y="326" text-anchor="middle" fill="#6b7a90" font-size="8">try another time</text>
+
+  <!-- legend -->
+  <rect x="695" y="330" width="90" height="20" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="740" y="344" text-anchor="middle" fill="#6b7a90" font-size="8">NODE = STATE</text>
+  <line x1="695" y1="365" x2="783" y2="365" stroke="#00d4d4" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="740" y="378" text-anchor="middle" fill="#6b7a90" font-size="8">EDGE = CONDITION</text>
+
+  <!-- dots on p1 -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath xlink:href="#p1"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.67s"><mpath xlink:href="#p1"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.67s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.33s"><mpath xlink:href="#p1"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.33s"/>
+  </circle>
+
+  <!-- dots on p2 -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.2s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.2s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.87s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.87s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.53s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.53s"/>
+  </circle>
+
+  <!-- dots on p3 (green) -->
+  <circle r="4" fill="#00ff88" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.4s"><mpath xlink:href="#p3"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.4s"/>
+  </circle>
+  <circle r="4" fill="#00ff88" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.07s"><mpath xlink:href="#p3"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.07s"/>
+  </circle>
+  <circle r="4" fill="#00ff88" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.73s"><mpath xlink:href="#p3"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.73s"/>
+  </circle>
+
+  <!-- dots on p4 -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.6s"><mpath xlink:href="#p4"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.6s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.27s"><mpath xlink:href="#p4"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.27s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.93s"><mpath xlink:href="#p4"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.93s"/>
+  </circle>
+
+  <!-- dot on fallback p5 -->
+  <circle r="3" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="4s" repeatCount="indefinite" begin="1s"><mpath xlink:href="#p5"/></animateMotion>
+    <animate attributeName="opacity" values="0;0.8;0.8;0" keyTimes="0;0.05;0.9;1" dur="4s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+
+  <!-- dot on fallback p6 -->
+  <circle r="3" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="5s" repeatCount="indefinite" begin="3s"><mpath xlink:href="#p6"/></animateMotion>
+    <animate attributeName="opacity" values="0;0.8;0.8;0" keyTimes="0;0.05;0.9;1" dur="5s" repeatCount="indefinite" begin="3s"/>
+  </circle>
+</svg>

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 480 580" width="480" height="580">
+  <style>text { font-family: 'Courier New', Courier, monospace; }</style>
+  <defs>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00d4d4"/>
+    </marker>
+  </defs>
+
+  <rect width="480" height="580" fill="#0a0a0a"/>
+  <text x="240" y="35" text-anchor="middle" fill="#fff" font-size="13" letter-spacing="3">VOICE PROFILE PIPELINE</text>
+
+  <!-- VOICE PROFILE group 1 (wraps STT) -->
+  <rect x="80" y="95" width="320" height="120" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="240" y="113" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="2">VOICE PROFILE</text>
+
+  <!-- VOICE PROFILE group 2 (wraps TTS+VOICE) -->
+  <rect x="80" y="390" width="320" height="110" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="240" y="408" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="2">VOICE PROFILE</text>
+
+  <!-- Boxes (centered, x=140, w=200, h=38) -->
+  <rect x="140" y="50" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="74" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">CALLER SPEAKS</text>
+
+  <rect x="140" y="122" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="146" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">STT</text>
+
+  <rect x="140" y="212" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="236" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">USER TEXT</text>
+
+  <rect x="140" y="282" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="306" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">DIALOG MACHINE</text>
+
+  <rect x="140" y="352" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="376" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">AGENT TEXT</text>
+
+  <rect x="140" y="418" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="434" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">TTS + VOICE</text>
+
+  <rect x="140" y="505" width="200" height="38" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="240" y="529" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">CALLER HEARS</text>
+
+  <!-- Arrow paths -->
+  <path id="p1" d="M 240,89 L 240,121" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path id="p2" d="M 240,161 L 240,211" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path id="p3" d="M 240,251 L 240,281" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path id="p4" d="M 240,321 L 240,351" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path id="p5" d="M 240,391 L 240,417" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path id="p6" d="M 240,457 L 240,504" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- Full vertical path for continuous dot travel -->
+  <path id="pfull" d="M 240,50 L 240,543" stroke="none" fill="none"/>
+
+  <!-- ANIMATED DOTS (continuous vertical stream) -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="5s" repeatCount="indefinite" begin="0s"><mpath xlink:href="#pfull"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.95;1" dur="5s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="5s" repeatCount="indefinite" begin="1.67s"><mpath xlink:href="#pfull"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.95;1" dur="5s" repeatCount="indefinite" begin="1.67s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="5s" repeatCount="indefinite" begin="3.33s"><mpath xlink:href="#pfull"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.95;1" dur="5s" repeatCount="indefinite" begin="3.33s"/>
+  </circle>
+</svg>

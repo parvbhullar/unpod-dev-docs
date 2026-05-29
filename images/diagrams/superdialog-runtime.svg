@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 900 460" width="900" height="460">
+  <style>text { font-family: 'Courier New', Courier, monospace; }</style>
+  <defs>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00d4d4"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="460" fill="#0a0a0a"/>
+  <text x="450" y="35" text-anchor="middle" fill="#fff" font-size="13" letter-spacing="3">SUPERDIALOG RUNTIME</text>
+
+  <!-- USER TEXT box -->
+  <rect x="20" y="185" width="90" height="50" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="65" y="207" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">USER</text>
+  <text x="65" y="221" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">TEXT</text>
+
+  <!-- DIALOGMACHINE TURN outer dashed box -->
+  <rect x="160" y="60" width="290" height="320" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.2" stroke-dasharray="6,3"/>
+  <text x="305" y="80" text-anchor="middle" fill="#00d4d4" font-size="9" letter-spacing="2">DIALOGMACHINE TURN</text>
+
+  <!-- Internal step boxes (stacked) -->
+  <rect x="195" y="95" width="220" height="32" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="305" y="116" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">LOAD NODE</text>
+
+  <rect x="195" y="140" width="220" height="32" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="305" y="161" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">BUILD PROMPT</text>
+
+  <rect x="195" y="185" width="220" height="32" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="305" y="206" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">CALL LLM</text>
+
+  <rect x="195" y="230" width="220" height="32" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="305" y="251" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">RUN TOOLS</text>
+
+  <rect x="195" y="275" width="220" height="32" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="305" y="296" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">UPDATE STATE</text>
+
+  <rect x="195" y="320" width="220" height="32" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="305" y="341" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">ADVANCE EDGE</text>
+
+  <!-- Vertical connector arrows inside DIALOGMACHINE box -->
+  <line x1="305" y1="128" x2="305" y2="139" stroke="#00d4d4" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="305" y1="173" x2="305" y2="184" stroke="#00d4d4" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="305" y1="218" x2="305" y2="229" stroke="#00d4d4" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="305" y1="263" x2="305" y2="274" stroke="#00d4d4" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="305" y1="308" x2="305" y2="319" stroke="#00d4d4" stroke-width="1" marker-end="url(#arr)"/>
+
+  <!-- TURN RESULT outer box -->
+  <rect x="510" y="100" width="145" height="180" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.2" stroke-dasharray="6,3"/>
+  <text x="582" y="120" text-anchor="middle" fill="#00d4d4" font-size="9" letter-spacing="2">TURN RESULT</text>
+
+  <rect x="530" y="130" width="105" height="30" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="582" y="150" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">REPLY</text>
+
+  <rect x="530" y="172" width="105" height="30" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="582" y="192" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">TOOLS</text>
+
+  <rect x="530" y="214" width="105" height="30" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="582" y="234" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">METADATA</text>
+
+  <!-- Adapters (far right) -->
+  <rect x="720" y="90" width="90" height="28" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="765" y="109" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">HOST</text>
+
+  <rect x="720" y="128" width="90" height="28" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="765" y="147" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">CLI</text>
+
+  <rect x="720" y="166" width="90" height="28" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="765" y="185" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">FASTAPI</text>
+
+  <rect x="720" y="204" width="90" height="28" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="765" y="223" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">LIVEKIT</text>
+
+  <rect x="720" y="242" width="90" height="28" rx="3" fill="none" stroke="#00d4d4" stroke-width="1"/>
+  <text x="765" y="261" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">UNPOD</text>
+
+  <!-- Bottom input boxes -->
+  <rect x="180" y="410" width="80" height="30" rx="3" fill="none" stroke="#00d4d4" stroke-width="1.2"/>
+  <text x="220" y="430" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">FLOW</text>
+
+  <rect x="285" y="410" width="100" height="30" rx="3" fill="none" stroke="#00d4d4" stroke-width="1.2"/>
+  <text x="335" y="430" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">MODEL URI</text>
+
+  <rect x="410" y="410" width="80" height="30" rx="3" fill="none" stroke="#00d4d4" stroke-width="1.2"/>
+  <text x="450" y="430" text-anchor="middle" fill="#fff" font-size="9" letter-spacing="1">TOOLS</text>
+
+  <!-- Arrows -->
+  <!-- USER TEXT → DIALOGMACHINE -->
+  <path id="pa" d="M 111,210 L 159,210" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- DIALOGMACHINE → TURN RESULT -->
+  <path id="pb" d="M 451,190 L 509,190" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- TURN RESULT → adapters (one arrow to right side area) -->
+  <path id="pc" d="M 656,145 L 719,145" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path id="pd" d="M 656,190 L 719,190" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <path id="pe" d="M 656,229 L 719,229" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- Bottom inputs → DIALOGMACHINE (upward arrows) -->
+  <path id="pf" d="M 220,409 L 220,381" stroke="#00d4d4" stroke-width="1.2" fill="none" marker-end="url(#arr)"/>
+  <path id="pg" d="M 335,409 L 335,381" stroke="#00d4d4" stroke-width="1.2" fill="none" marker-end="url(#arr)"/>
+  <path id="ph" d="M 450,409 L 450,381" stroke="#00d4d4" stroke-width="1.2" fill="none" marker-end="url(#arr)"/>
+
+  <!-- Vertical flow inside DIALOGMACHINE (for dot travel) -->
+  <path id="pi" d="M 305,95 L 305,352" stroke="none" fill="none"/>
+
+  <!-- ANIMATED DOTS -->
+  <!-- USER TEXT → DIALOGMACHINE -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath xlink:href="#pa"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.8s"><mpath xlink:href="#pa"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.8s"/>
+  </circle>
+
+  <!-- Vertical travel through DIALOGMACHINE steps -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="3s" repeatCount="indefinite" begin="0.3s"><mpath xlink:href="#pi"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.95;1" dur="3s" repeatCount="indefinite" begin="0.3s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="3s" repeatCount="indefinite" begin="1.3s"><mpath xlink:href="#pi"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.95;1" dur="3s" repeatCount="indefinite" begin="1.3s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="3s" repeatCount="indefinite" begin="2.3s"><mpath xlink:href="#pi"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.95;1" dur="3s" repeatCount="indefinite" begin="2.3s"/>
+  </circle>
+
+  <!-- DIALOGMACHINE → TURN RESULT -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" begin="0.5s"><mpath xlink:href="#pb"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="1.5s" repeatCount="indefinite" begin="0.5s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" begin="1.7s"><mpath xlink:href="#pb"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="1.5s" repeatCount="indefinite" begin="1.7s"/>
+  </circle>
+
+  <!-- TURN RESULT → adapters -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" begin="0.7s"><mpath xlink:href="#pc"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="1.5s" repeatCount="indefinite" begin="0.7s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" begin="0.9s"><mpath xlink:href="#pd"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="1.5s" repeatCount="indefinite" begin="0.9s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="1.5s" repeatCount="indefinite" begin="1.1s"><mpath xlink:href="#pe"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="1.5s" repeatCount="indefinite" begin="1.1s"/>
+  </circle>
+
+  <!-- Bottom inputs rising up -->
+  <circle r="3" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1s"><mpath xlink:href="#pf"/></animateMotion>
+    <animate attributeName="opacity" values="0;0.7;0.7;0" keyTimes="0;0.05;0.9;1" dur="2s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+  <circle r="3" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.4s"><mpath xlink:href="#pg"/></animateMotion>
+    <animate attributeName="opacity" values="0;0.7;0.7;0" keyTimes="0;0.05;0.9;1" dur="2s" repeatCount="indefinite" begin="1.4s"/>
+  </circle>
+  <circle r="3" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.8s"><mpath xlink:href="#ph"/></animateMotion>
+    <animate attributeName="opacity" values="0;0.7;0.7;0" keyTimes="0;0.05;0.9;1" dur="2s" repeatCount="indefinite" begin="1.8s"/>
+  </circle>
+</svg>

@@ -9,7 +9,7 @@ description: 'The Unpod communication stack - from caller to your agent and back
 Unpod sits between the caller and your agent. Your agent never touches audio.
 
 <Frame>
-  <img src="/images/diagrams/unpod-voice-stack.png" alt="Unpod voice stack diagram showing audio entering the managed layer, text turns reaching the agent, and audio streaming back to the user." />
+  <img src="/images/diagrams/unpod-voice-stack.svg" alt="Unpod voice stack diagram showing audio entering the managed layer, text turns reaching the agent, and audio streaming back to the user." />
 </Frame>
 
 Your endpoint is a simple text-in / text-out webhook. Everything involving audio, carriers, and real-time streaming is handled by Unpod.
@@ -41,7 +41,7 @@ Your endpoint is a simple text-in / text-out webhook. Everything involving audio
 ## What You Own vs What Unpod Owns
 
 <Frame>
-  <img src="/images/diagrams/call-lifecycle.png" alt="Call lifecycle diagram showing the boundary between Unpod managed infrastructure and the server-side AgentRunner, Session, and DialogMachine that you own." />
+  <img src="/images/diagrams/call-lifecycle.svg" alt="Call lifecycle diagram showing the boundary between Unpod managed infrastructure and the server-side AgentRunner, Session, and DialogMachine that you own." />
 </Frame>
 
 The line is clear: **you own everything from AgentRunner down**. Everything above it is managed.

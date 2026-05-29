@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 520 460" width="520" height="460">
+  <style>text { font-family: 'Courier New', Courier, monospace; }</style>
+  <defs>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00d4d4"/>
+    </marker>
+    <marker id="arr-d" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa"/>
+    </marker>
+  </defs>
+
+  <rect width="520" height="460" fill="#0a0a0a"/>
+  <text x="260" y="35" text-anchor="middle" fill="#fff" font-size="13" letter-spacing="3">WHERE UNPOD SITS</text>
+
+  <!-- Layer labels on left -->
+  <text x="55" y="122" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">LAYER 3</text>
+  <line x1="75" y1="118" x2="95" y2="118" stroke="#6b7a90" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <text x="55" y="232" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">LAYER 2</text>
+  <line x1="75" y1="228" x2="95" y2="228" stroke="#6b7a90" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <text x="55" y="342" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="1">LAYER 1</text>
+  <line x1="75" y1="338" x2="95" y2="338" stroke="#6b7a90" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- LAYER 3: AGENT PLATFORMS box -->
+  <rect x="100" y="82" width="380" height="80" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="290" y="115" text-anchor="middle" fill="#fff" font-size="11" letter-spacing="2">AGENT PLATFORMS</text>
+  <text x="290" y="135" text-anchor="middle" fill="#6b7a90" font-size="9">VAPI  ·  RETELL  ·  BLAND</text>
+
+  <!-- LAYER 2: UNPOD box (highlighted) -->
+  <rect x="100" y="192" width="380" height="80" rx="6" fill="none" stroke="#a78bfa" stroke-width="2"/>
+  <text x="290" y="228" text-anchor="middle" fill="#a78bfa" font-size="13" letter-spacing="3">UNPOD</text>
+  <text x="290" y="248" text-anchor="middle" fill="#8b7fa0" font-size="8" letter-spacing="2">COMMUNICATION INFRA</text>
+
+  <!-- LAYER 1: RAW TELEPHONY box -->
+  <rect x="100" y="302" width="380" height="80" rx="6" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="290" y="335" text-anchor="middle" fill="#fff" font-size="11" letter-spacing="2">RAW TELEPHONY</text>
+  <text x="290" y="355" text-anchor="middle" fill="#6b7a90" font-size="9">TWILIO  ·  PLIVO  ·  BANDWIDTH</text>
+
+  <!-- Arrows -->
+  <!-- AGENT PLATFORMS → UNPOD (used by) -->
+  <path id="p1" d="M 290,163 L 290,191" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+  <text x="310" y="180" fill="#6b7a90" font-size="7" letter-spacing="1">USED BY</text>
+
+  <!-- UNPOD → RAW TELEPHONY (builds on) -->
+  <path id="p2" d="M 290,273 L 290,301" stroke="#a78bfa" stroke-width="1.5" fill="none" marker-end="url(#arr-d)"/>
+  <text x="310" y="290" fill="#8b7fa0" font-size="7" letter-spacing="1">BUILDS ON</text>
+
+  <!-- ANIMATED DOTS -->
+  <!-- AGENT PLATFORMS → UNPOD (downward) -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath xlink:href="#p1"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.88;1" dur="2s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1s"><mpath xlink:href="#p1"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.88;1" dur="2s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+
+  <!-- UNPOD → RAW TELEPHONY (downward, purple) -->
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.3s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.88;1" dur="2s" repeatCount="indefinite" begin="0.3s"/>
+  </circle>
+  <circle r="4" fill="#a78bfa" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.3s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.88;1" dur="2s" repeatCount="indefinite" begin="1.3s"/>
+  </circle>
+</svg>

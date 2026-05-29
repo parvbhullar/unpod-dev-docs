@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 900 380" width="900" height="380">
+  <style>text { font-family: 'Courier New', Courier, monospace; }</style>
+  <defs>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00d4d4"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="380" fill="#0a0a0a"/>
+  <text x="450" y="35" text-anchor="middle" fill="#fff" font-size="13" letter-spacing="3">CORE COMPONENT DATA FLOW</text>
+
+  <!-- Group labels -->
+  <text x="205" y="70" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="2">ROUTING</text>
+  <text x="450" y="70" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="2">AI LOGIC</text>
+  <text x="680" y="70" text-anchor="middle" fill="#6b7a90" font-size="8" letter-spacing="2">CARRIER</text>
+
+  <!-- Dashed group borders -->
+  <rect x="155" y="78" width="100" height="195" rx="5" fill="none" stroke="#6b7a90" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="330" y="78" width="240" height="195" rx="5" fill="none" stroke="#6b7a90" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="640" y="78" width="110" height="195" rx="5" fill="none" stroke="#6b7a90" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- NUMBER box -->
+  <rect x="25" y="148" width="110" height="48" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="80" y="177" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">NUMBER</text>
+
+  <!-- BRIDGE box -->
+  <rect x="170" y="148" width="110" height="48" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="225" y="177" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">BRIDGE</text>
+
+  <!-- AGENT 1 and AGENT 2 boxes (parallel) -->
+  <rect x="352" y="110" width="110" height="48" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="407" y="139" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">AGENT 1</text>
+
+  <rect x="352" y="210" width="110" height="48" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="407" y="239" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">AGENT 2</text>
+
+  <!-- PROVIDER box -->
+  <rect x="652" y="148" width="110" height="48" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="707" y="177" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">PROVIDER</text>
+
+  <!-- ENDPOINT box -->
+  <rect x="800" y="148" width="90" height="48" rx="4" fill="none" stroke="#00d4d4" stroke-width="1.5"/>
+  <text x="845" y="177" text-anchor="middle" fill="#fff" font-size="10" letter-spacing="1">ENDPOINT</text>
+
+  <!-- Arrows -->
+  <!-- NUMBER → BRIDGE -->
+  <path id="p1" d="M 136,172 L 169,172" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- BRIDGE → AGENT 1 -->
+  <path id="p2" d="M 281,165 Q 316,155 351,140" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- BRIDGE → AGENT 2 -->
+  <path id="p3" d="M 281,185 Q 316,210 351,225" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- AGENT 1 → PROVIDER -->
+  <path id="p4" d="M 463,140 Q 560,155 651,165" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- AGENT 2 → PROVIDER -->
+  <path id="p5" d="M 463,225 Q 560,210 651,185" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- PROVIDER → ENDPOINT -->
+  <path id="p6" d="M 763,172 L 799,172" stroke="#00d4d4" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+
+  <!-- ANIMATED DOTS -->
+  <!-- NUMBER → BRIDGE -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0s"><mpath xlink:href="#p1"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.88;1" dur="2s" repeatCount="indefinite" begin="0s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1s"><mpath xlink:href="#p1"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.88;1" dur="2s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+
+  <!-- BRIDGE → AGENT 1 -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.3s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.3s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.3s"><mpath xlink:href="#p2"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.3s"/>
+  </circle>
+
+  <!-- BRIDGE → AGENT 2 -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.6s"><mpath xlink:href="#p3"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="0.6s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.6s"><mpath xlink:href="#p3"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.88;1" dur="2s" repeatCount="indefinite" begin="1.6s"/>
+  </circle>
+
+  <!-- AGENT 1 → PROVIDER -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.4s"><mpath xlink:href="#p4"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2.5s" repeatCount="indefinite" begin="0.4s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.65s"><mpath xlink:href="#p4"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2.5s" repeatCount="indefinite" begin="1.65s"/>
+  </circle>
+
+  <!-- AGENT 2 → PROVIDER -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2.5s" repeatCount="indefinite" begin="0.7s"><mpath xlink:href="#p5"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2.5s" repeatCount="indefinite" begin="0.7s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2.5s" repeatCount="indefinite" begin="1.95s"><mpath xlink:href="#p5"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.9;1" dur="2.5s" repeatCount="indefinite" begin="1.95s"/>
+  </circle>
+
+  <!-- PROVIDER → ENDPOINT -->
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="0.8s"><mpath xlink:href="#p6"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.88;1" dur="2s" repeatCount="indefinite" begin="0.8s"/>
+  </circle>
+  <circle r="4" fill="#00d4d4" filter="url(#glow)">
+    <animateMotion dur="2s" repeatCount="indefinite" begin="1.8s"><mpath xlink:href="#p6"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.88;1" dur="2s" repeatCount="indefinite" begin="1.8s"/>
+  </circle>
+</svg>
