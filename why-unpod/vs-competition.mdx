@@ -1,7 +1,7 @@
 ---
 title: 'Unpod vs LiveKit vs Pipecat'
 icon: 'scale'
-description: 'How Unpod compares to audio frameworks on cost, time to production, and what you own.'
+description: 'How Unpod compares to audio frameworks on time to production and what you own.'
 ---
 
 ## TL;DR
@@ -14,7 +14,6 @@ description: 'How Unpod compares to audio frameworks on cost, time to production
 | **Phone numbers** | Built-in, no carrier account | Bring your own SIP trunk | Bring your own |
 | **STT/TTS** | Fully managed, automatic failover | You configure and run providers | You configure and run providers |
 | **Time to first call** | ~2 hours | ~4 months | ~4 months |
-| **Cost per minute** | ~$0.02 | ~$0.06 | ~$0.06 |
 | **Scaling** | Automatic | You manage workers | You manage processes |
 | **Your agent format** | Webhook, SDK, LangChain, MCP | LangChain, custom | LangChain, custom |
 | **Best for** | Teams that want calling infra handled | Teams needing full audio control | Teams wanting pipeline flexibility |
@@ -48,8 +47,6 @@ await runner.run(PipelineTask(pipeline))
 
 You pick the STT, the TTS, the transport. You manage the process. You handle failover. Maximum flexibility - maximum setup work.
 
-**Cost:** ~$0.06/min (you pay STT + TTS providers directly)
-
 **Good fit:** Teams with specific provider requirements or non-standard pipeline shapes. Research and experimental systems.
 
 ---
@@ -73,8 +70,6 @@ async def entrypoint(ctx: JobContext):
 
 You configure every provider. You deploy and manage the LiveKit server (or pay for LiveKit Cloud). Phone numbers require a SIP trunk from a carrier.
 
-**Cost:** ~$0.06/min (you pay each provider separately) + infrastructure
-
 **Good fit:** Teams already on LiveKit, or needing fine-grained WebRTC control for browser and mobile use cases beyond phone calls.
 
 ---
@@ -95,8 +90,6 @@ AgentRunner(entrypoint=handle_call, agent_id="agt_...").start()
 Numbers provisioned from Unpod. STT/TTS configured via voice profiles with automatic failover. Orchestration and dispatch handled automatically.
 
 You can also point Unpod at an existing HTTP endpoint or LangChain agent without writing any SDK code.
-
-**Cost:** ~$0.02/min (fully managed, no separate provider accounts)
 
 **Good fit:** Teams that want production voice calls without becoming telephony experts.
 
@@ -121,22 +114,6 @@ You can also point Unpod at an existing HTTP endpoint or LangChain agent without
 - You need a highly customised pipeline shape or experimental architecture
 - You want maximum control over every processing step
 - You are comfortable managing deployment, scaling, and provider accounts yourself
-
----
-
-## Cost Breakdown
-
-The 80% problem: STT + TTS costs about 30x more per minute than the LLM.
-
-| Component | Cost/min | Who runs it |
-|---|---|---|
-| LLM (GPT-4o, Claude, etc.) | ~$0.002 | You choose |
-| STT (Deepgram) | ~$0.024 | Unpod (managed) or you |
-| TTS (Cartesia) | ~$0.036 | Unpod (managed) or you |
-| **Total with Unpod** | **~$0.02** | Unpod handles STT + TTS |
-| **Total self-managed** | **~$0.06** | You manage STT + TTS |
-
-With Unpod you pay one rate that includes managed STT, TTS, failover, and infrastructure. No separate provider accounts.
 
 ---
 

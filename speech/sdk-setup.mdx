@@ -76,7 +76,7 @@ AgentRunner(
     entrypoint: Callable[[CallContext], Awaitable[None]],
     agent_id: str,
     api_key: str | None = None,          # falls back to UNPOD_API_KEY
-    max_concurrent_calls: int = 50,      # capacity cap
+    max_sessions: int = 50,               # max concurrent sessions
     permits_per_minute: int = 120,       # rate limit hint
     drain_timeout_s: int = 60,           # graceful shutdown window
     dev_mode: bool = False,              # skip TLS, local orchestrator
@@ -88,7 +88,7 @@ AgentRunner(
 
 | Parameter | Description |
 |---|---|
-| `max_concurrent_calls` | Max simultaneous calls this runner accepts. The orchestrator will not dispatch beyond this. |
+| `max_sessions` | Max simultaneous sessions this runner accepts. The orchestrator will not dispatch beyond this. |
 | `permits_per_minute` | Rate of new call acceptance. Set lower to protect downstream systems. |
 | `drain_timeout_s` | On shutdown, wait this many seconds for active calls to finish before force-exiting. |
 | `dev_mode` | Skip TLS for local development against a local orchestrator. |
@@ -148,7 +148,7 @@ async def main():
     async with AsyncClient(api_key="sk-...") as client:
         agents = await client.agents.list()
         for a in agents:
-            print(a.id, a.name)
+            print(a.agent_id, a.name)
 
 asyncio.run(main())
 ```
@@ -161,7 +161,7 @@ from unpod import Client
 with Client(api_key="sk-...") as client:
     profiles = client.voice_profiles.list(language="en")
     for p in profiles:
-        print(p.id, p.name)
+        print(p.profile_id, p.name)
 ```
 
 ### Available resources
@@ -206,7 +206,7 @@ async def log_stats() -> None:
 | Field | Type | Description |
 |---|---|---|
 | `in_flight` | `int` | Current active calls |
-| `capacity` | `int` | `max_concurrent_calls` setting |
+| `capacity` | `int` | `max_sessions` setting |
 | `completed_last_hour` | `int` | Total completed since startup |
 | `failed_last_hour` | `int` | Total failed since startup |
 | `mean_call_duration_s` | `float` | Average call length in seconds |

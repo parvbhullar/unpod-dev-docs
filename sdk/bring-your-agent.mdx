@@ -1,6 +1,6 @@
 ---
 title: "Bring Your Agent"
-description: "Connect your existing LangChain, LlamaIndex, or custom Python agent to Unpod voice infrastructure in 3 steps."
+description: "Connect your existing LangChain, OpenAI, Anthropic, or custom Python agent to Unpod voice infrastructure in 3 steps."
 ---
 
 # Bring Your Agent
@@ -48,10 +48,52 @@ That's it. Incoming calls to your Unpod number are now routed to your agent.
 
 | Adapter | Import | Use when |
 |---------|--------|----------|
+| `OpenAIAdapter` | `unpod.adapters.openai` | OpenAI `AsyncOpenAI` client — `gpt-4o`, `gpt-4o-mini`, etc. |
+| `AnthropicAdapter` | `unpod.adapters.anthropic` | Anthropic `AsyncAnthropic` client — Claude models |
 | `LangChainAdapter` | `unpod.adapters.langchain` | LangChain chain with `.ainvoke()` / `.astream()` |
 | `HTTPAdapter` | `unpod.adapters.http` | Remote agent API (any language) |
-| `SuperDialogAdapter` | `unpod.adapters.superdialog` | superdialog DialogMachine / LLMAgent - or assign directly, auto-wrapping handled |
+| `SuperDialogAdapter` | `unpod.adapters.superdialog` | superdialog `DialogMachine` / `LLMAgent` — or assign directly, auto-wrapping handled |
 | Custom | Implement `DialogAdapter` protocol | Any Python object with `turn`, `stream`, `assist` |
+
+## OpenAI
+
+```python
+from openai import AsyncOpenAI
+from unpod import AgentRunner, CallContext
+from unpod.adapters.openai import OpenAIAdapter
+
+client = AsyncOpenAI()
+
+async def entrypoint(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = OpenAIAdapter(
+        client=client,
+        model="gpt-4o-mini",
+        system_prompt="You are a helpful support agent. Be concise.",
+    )
+    await ctx.session.run()
+
+AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
+```
+
+## Anthropic (Claude)
+
+```python
+import anthropic
+from unpod import AgentRunner, CallContext
+from unpod.adapters.anthropic import AnthropicAdapter
+
+client = anthropic.AsyncAnthropic()
+
+async def entrypoint(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = AnthropicAdapter(
+        client=client,
+        model="claude-haiku-4-5-20251001",
+        system_prompt="You are a helpful support agent. Be concise.",
+    )
+    await ctx.session.run()
+
+AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
+```
 
 ## LangChain Chain Requirements
 
@@ -114,7 +156,13 @@ class MyAdapter:
   <Card title="Setup Checklist" icon="list-check" href="/sdk/setup-checklist">
     One-time resource provisioning: agent, number, voice profile
   </Card>
+  <Card title="Session Controls" icon="sliders-horizontal" href="/speech/session-controls">
+    say(), transfer(), recording controls during live calls
+  </Card>
   <Card title="SuperDialog" icon="diagram-project" href="/SuperDialog/introduction">
-    Optional state machine framework for structured conversation flows
+    State machine framework for structured conversation flows
+  </Card>
+  <Card title="SuperDialog + Voice" icon="plug" href="/SuperDialog/Embedding Guides/unpod-voice">
+    Plug a DialogMachine directly into your AgentRunner session
   </Card>
 </CardGroup>

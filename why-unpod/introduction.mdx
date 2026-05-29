@@ -10,14 +10,9 @@ You have an AI agent. It works great in a chat window. You want to give it a pho
 
 That should take an afternoon. Instead it takes months.
 
-Here is why: **80% of the voice AI dollar burns on speech infrastructure - not on the AI itself.**
+Here is why: **80% of the engineering effort burns on speech infrastructure - not on the AI itself.**
 
-| Cost | Per minute |
-|---|---|
-| LLM (your AI logic) | ~$0.002 |
-| STT + TTS (speech infra) | ~$0.060 |
-
-The speech layer - transcription, synthesis, VAD, barge-in detection, endpointing, carrier connections - costs 30x more than the model and takes 10x longer to build. Most teams spend 3-4 months wiring this up before their agent takes a single real call.
+The speech layer — transcription, synthesis, VAD, barge-in detection, endpointing, carrier connections — takes 10x longer to build than the agent logic. Most teams spend 3–4 months wiring this up before their agent takes a single real call.
 
 **Your team should ship product - not run a speech infra company.**
 
@@ -49,10 +44,10 @@ Unpod gives it a phone number and handles everything between the caller and your
 
 ```
 Caller speaks
-    -> Unpod transcribes (Deepgram)
+    -> Unpod transcribes (STT)
     -> Your agent receives text: "I need help with my order"
     -> Your agent returns text: "I can help with that..."
-    -> Unpod synthesises (Cartesia)
+    -> Unpod synthesises (TTS)
     -> Caller hears the response
 ```
 
@@ -115,7 +110,7 @@ Unpod sits between raw carriers (Layer 1) and agent platforms (Layer 3). We are 
 
 <CardGroup cols={2}>
   <Card title="Unpod vs LiveKit vs Pipecat" icon="scale" href="/why-unpod/vs-competition">
-    How Unpod compares to audio frameworks on cost, time, and ownership.
+    How Unpod compares to audio frameworks on time to production and ownership.
   </Card>
   <Card title="How It Works" icon="diagram-project" href="/why-unpod/how-it-works">
     The communication stack - from caller to your agent and back.

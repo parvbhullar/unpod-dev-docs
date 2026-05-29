@@ -40,7 +40,7 @@ dialog_machine = DialogMachine(
     REST endpoint for text chatbots and web widgets.
   </Card>
   <Card title="Unpod Voice" icon="cloud" href="/SuperDialog/Embedding Guides/unpod-voice">
-    Connect to Unpod telephony via `WebSocketRunner`.
+    Plug your `DialogMachine` into an Unpod `AgentRunner` session — no extra server needed.
   </Card>
   <Card title="Unit testing" icon="flask" href="/SuperDialog/Embedding Guides/testing">
     Because SuperDialog is text-only, every dialog is unit-testable.
@@ -55,6 +55,6 @@ dialog_machine = DialogMachine(
 | LiveKit | `DialogMachineLLM` | ~8 |
 | PipeCat | `make_processor` | ~12 |
 | FastAPI | `FastAPIRouter` or direct route | ~6 |
-| Unpod Voice Infra | `WebSocketRunner` | ~6 |
+| Unpod Voice (SDK) | `unpod.AgentRunner` + `session.dialog_machine` | ~6 |
 | Unit test | None - direct calls | ~3 |
 | Custom (Slack, Discord, etc.) | None - direct callback | ~3 |

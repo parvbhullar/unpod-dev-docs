@@ -37,7 +37,7 @@ async def main():
             recording=True,                      # store call recordings
             max_call_duration_s=600,             # 10-minute hard cap
         )
-        print("Created:", agent.id, agent.name)
+        print("Created:", agent.agent_id, agent.name)
 
 asyncio.run(main())
 ```
@@ -65,7 +65,7 @@ async def main():
     async with AsyncClient(api_key="sk-...") as client:
         agents = await client.agents.list()
         for a in agents:
-            print(a.id, a.name, a.voice_profile or "no voice profile")
+            print(a.agent_id, a.name, a.voice_profile_id or "no voice profile")
 
 asyncio.run(main())
 ```
@@ -74,13 +74,14 @@ asyncio.run(main())
 
 | Field | Type | Description |
 |---|---|---|
-| `id` | `str` | Agent ID (`agt_...`) |
+| `agent_id` | `str` | Agent ID (`agt_...`) |
 | `name` | `str` | Display name |
-| `voice_profile` | `str \| None` | Voice profile ID |
+| `voice_profile_id` | `str \| None` | Voice profile ID |
 | `agent_endpoint` | `str \| None` | HTTP dialog endpoint |
 | `recording` | `bool` | Recording enabled |
 | `max_call_duration_s` | `int` | Call duration hard cap |
-| `created_at` | `datetime` | Creation timestamp |
+| `created` | `datetime` | Creation timestamp |
+| `modified` | `datetime` | Last modified timestamp |
 
 ---
 
@@ -93,7 +94,7 @@ from unpod import AsyncClient
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
         agent = await client.agents.get("agt_...")
-        print(agent.name, agent.voice_profile, agent.recording)
+        print(agent.name, agent.voice_profile_id, agent.recording)
 
 asyncio.run(main())
 ```
@@ -116,7 +117,7 @@ async def main():
             recording=True,
             max_call_duration_s=1200,
         )
-        print("Updated:", agent.id, agent.name)
+        print("Updated:", agent.agent_id, agent.name)
 
 asyncio.run(main())
 ```
@@ -152,7 +153,7 @@ asyncio.run(main())
 
 ## Using an Agent with an HTTP Dialog Endpoint
 
-If you don't want to run your own `AgentRunner` process, you can point the agent at an HTTP endpoint that implements the dialog protocol. The `HTTPAdapter` in the SDK handles this pattern.
+If you already have a chatbot or API (in any language) and want to make it voice-enabled, point the agent at an HTTP endpoint. Unpod calls your endpoint on every user turn, you return the reply.
 
 ```python
 import asyncio
@@ -165,12 +166,58 @@ async def main():
             voice_profile="vp_en_male_std",
             agent_endpoint="https://your-api.example.com/dialog/turn",
         )
-        print("Agent with HTTP endpoint:", agent.id)
+        print("Agent with HTTP endpoint:", agent.agent_id)
 
 asyncio.run(main())
 ```
 
-The endpoint receives `POST` requests with `{"text": "...", "context": {...}}` and should return `{"text": "..."}`.
+### HTTP Protocol
+
+Unpod sends a `POST` request on every user turn:
+
+```
+POST https://your-api.example.com/dialog/turn
+Content-Type: application/json
+
+{
+  "text": "I'd like to reschedule my appointment",
+  "context": {
+    "call_id": "call_abc123",
+    "session_id": "sess_xyz789",
+    "turn_number": 3,
+    "direction": "inbound",
+    "user_number": "+919876543210",
+    "data": {}
+  }
+}
+```
+
+Your endpoint must respond with:
+
+```json
+{
+  "text": "Sure, I can help with that. What date works for you?"
+}
+```
+
+<Note>
+This protocol is **not** OpenAI-compatible. It is a simple text-in / text-out interface — your endpoint owns all LLM or chatbot logic. You can forward to OpenAI, Gemini, a rules engine, or anything else under the hood.
+</Note>
+
+Alternatively, use the `HTTPAdapter` inside an `AgentRunner` entrypoint to call a remote endpoint from within the SDK:
+
+```python
+from unpod import AgentRunner, CallContext
+from unpod.adapters.http import HTTPAdapter
+
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = HTTPAdapter(
+        url="https://your-api.example.com/dialog/turn",
+    )
+    await ctx.session.run()
+
+AgentRunner(entrypoint=handle_call, agent_id="my-bot").start()
+```
 
 ---
 
@@ -190,7 +237,7 @@ async def handle_call(ctx: CallContext) -> None:
 runner = AgentRunner(
     entrypoint=handle_call,
     agent_id=AGENT_ID,
-    max_concurrent_calls=20,
+    max_sessions=20,
 )
 runner.start()
 ```

@@ -192,7 +192,6 @@ async def handle_call(ctx: CallContext) -> None:
     # After call ends, inspect metrics
     m = ctx.session.metrics.live()
     print(f"Turns: {m.turn_count}")
-    print(f"Total cost: ${m.total_cost_usd:.4f}")
     print(f"Avg LLM latency: {m.avg_llm_ms:.0f}ms")
 ```
 
@@ -201,7 +200,6 @@ async def handle_call(ctx: CallContext) -> None:
 | Field | Type | Description |
 |---|---|---|
 | `turn_count` | `int` | Number of dialog turns |
-| `total_cost_usd` | `float` | Estimated total cost |
 | `avg_stt_ms` | `float` | Average STT latency per turn |
 | `avg_llm_ms` | `float` | Average LLM latency per turn |
 | `avg_tts_ms` | `float` | Average TTS latency per turn |

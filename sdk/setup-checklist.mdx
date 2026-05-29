@@ -35,16 +35,16 @@ async def create_agent():
         voice_profile="en-female-1",   # use a name from step 1
         runner_agent_id="my-agent",    # MUST match AgentRunner(agent_id=...)
     )
-    print(agent.id)  # UUID - used for REST API calls
+    print(agent.agent_id)  # UUID - used for REST API calls
     return agent
 
 asyncio.run(create_agent())
 ```
 
 <Warning>
-**`runner_agent_id` vs `agent.id`**
+**`runner_agent_id` vs `agent.agent_id`**
 
-- `agent.id` - UUID assigned by Unpod, used in REST API calls
+- `agent.agent_id` - UUID assigned by Unpod, used in REST API calls
 - `runner_agent_id` - string name you choose; must exactly match `AgentRunner(agent_id=...)`
 
 These are different. Mismatching them is the most common first-run failure.
@@ -100,16 +100,16 @@ async def setup():
     # Create agent
     agent = await client.agents.create(
         name="My Agent",
-        voice_profile=profile.name,
+        voice_profile=profile.profile_id,
         runner_agent_id="my-agent",
     )
 
     # Assign first available number
     numbers = await client.numbers.list()
     if numbers:
-        await client.numbers.attach(numbers[0].id, agent_id=agent.id)
+        await client.numbers.attach(numbers[0].id, agent_id=agent.agent_id)
 
-    print(f"Agent created: {agent.id}")
+    print(f"Agent created: {agent.agent_id}")
     print(f"Number: {numbers[0].number if numbers else 'none assigned'}")
 
 asyncio.run(setup())

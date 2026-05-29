@@ -132,7 +132,6 @@ async def on_call_end(final_state: str) -> None:
     await db.save_call_summary(
         call_id=ctx.call_id,
         turns=metrics.turn_count,
-        cost=metrics.total_cost_usd,
         final_state=final_state,
     )
 ```
@@ -267,7 +266,6 @@ async def runner_end(ctx: CallContext, final_state: str) -> None:
         ctx.call_id,
         final_state=final_state,
         turns=m.turn_count,
-        cost_usd=m.total_cost_usd,
         tokens_in=m.tokens_in,
         tokens_out=m.tokens_out,
     )

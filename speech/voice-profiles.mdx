@@ -1,46 +1,36 @@
 ---
 title: 'Voice Profiles'
 icon: 'waveform'
-description: 'Browse and select the speech stack - STT and TTS - for your voice agents.'
+description: 'Browse and select the speech stack for your voice agents.'
 ---
 
 ## What Is a Voice Profile?
 
-A voice profile bundles a **Speech-to-Text (STT)** provider and a **Text-to-Speech (TTS)** provider into a single reusable configuration. When you attach a voice profile to an agent, every call that agent handles will use those providers automatically - including automatic failover if a primary provider goes down.
+A voice profile bundles three things into a single reusable configuration:
+
+- **Speech-to-Text (STT)** — transcribes the caller's audio into text
+- **Text-to-Speech (TTS)** — converts agent text into natural-sounding audio
+- **Voice** — the specific voice identity (gender, accent, character) used for TTS output
+
+When you attach a voice profile to an agent, every call that agent handles uses that configuration automatically — including failover if a provider goes down.
 
 ```
   Caller speaks
        │
-       ▼  STT (e.g. Deepgram)
+       ▼  STT
   User text
        │
        ▼  Your dialog machine
   Agent text
        │
-       ▼  TTS (e.g. Cartesia)
+       ▼  TTS + Voice
   Synthesized audio
        │
        ▼
   Caller hears
 ```
 
----
-
-## Supported Providers
-
-### STT (Speech-to-Text)
-
-| Provider | Key strengths |
-|---|---|
-| `deepgram` | Low latency, high accuracy, multilingual |
-| `cartesia` | Cartesia combined STT/TTS stack |
-
-### TTS (Text-to-Speech)
-
-| Provider | Key strengths |
-|---|---|
-| `cartesia` | Ultra-low latency, natural voices |
-| `elevenlabs` | High-quality, expressive, voice cloning |
+Voice profiles are managed by Unpod. You browse and select from the available list — you do not configure STT/TTS providers directly.
 
 ---
 
@@ -61,11 +51,10 @@ async def main():
 
         for p in profiles:
             print(
-                p.id,
+                p.profile_id,
                 p.name,
                 f"gender={p.gender}",
                 f"quality={p.quality}",
-                f"language={p.language}",
             )
 
 asyncio.run(main())
@@ -75,13 +64,14 @@ asyncio.run(main())
 
 | Field | Type | Description |
 |---|---|---|
-| `id` | `str` | Profile ID to use in agent creation (`vp_...`) |
+| `profile_id` | `str` | Profile ID to pass when creating an agent |
 | `name` | `str` | Human-readable name, e.g. `"Emma (HD)"` |
 | `gender` | `str` | `male`, `female`, or `neutral` |
 | `quality` | `str` | `standard` or `high` |
-| `language` | `str` | BCP-47 language tag, e.g. `"en"`, `"es"`, `"de"` |
-| `stt_provider` | `str` | Active STT provider |
-| `tts_provider` | `str` | Active TTS provider |
+| `languages` | `list[str]` | Supported language codes, e.g. `["en", "hi"]` |
+| `description` | `str \| None` | Short description of the voice character |
+| `latency_ms` | `int \| None` | Expected end-to-end latency in milliseconds |
+| `greeting_message` | `str \| None` | Default greeting for this profile |
 
 ---
 
@@ -94,7 +84,7 @@ from unpod import AsyncClient
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
         profile = await client.voice_profiles.get("vp_en_female_hd")
-        print(profile.name, profile.stt_provider, profile.tts_provider)
+        print(profile.name, profile.quality, profile.languages)
 
 asyncio.run(main())
 ```
@@ -105,34 +95,26 @@ asyncio.run(main())
 
 ### By use case
 
-| Use case | Recommended profile qualities |
+| Use case | Recommended qualities |
 |---|---|
-| Customer support | High quality, natural female or male, low latency |
-| Sales outreach | Expressive, high quality, brand-matched voice |
-| Appointment booking | Standard quality is fine - cost efficient |
-| Multilingual | Match language to caller's region |
+| Customer support | High quality, natural voice, low latency |
+| Sales outreach | Expressive, high quality, brand-matched |
+| Appointment booking | Standard quality — lower latency |
+| Multilingual | Match language codes to caller's region |
 
-### By latency requirements
+### By latency
 
-Voice latency has three components: STT transcription + LLM thinking + TTS synthesis. Profiles using Deepgram + Cartesia typically achieve the lowest total end-to-end latency.
+Total call latency has three components: STT transcription + LLM thinking + TTS synthesis.
 
-```
-Total latency = STT_ms + LLM_ms + TTS_ms
-
-Deepgram STT:   ~150ms
-Cartesia TTS:   ~80ms
-Elevenlabs TTS: ~200ms
-```
-
-<Tip>
-For latency-sensitive applications, choose profiles with `deepgram` STT and `cartesia` TTS. Check `profile.quality == "high"` only if voice naturalness matters more than speed.
-</Tip>
+- Choose `quality == "high"` when voice naturalness matters more than speed
+- Choose `quality == "standard"` for latency-sensitive or high-volume deployments
+- Check `latency_ms` on the profile object for the estimated end-to-end figure
 
 ---
 
 ## Using a Profile When Creating an Agent
 
-Pass the profile `id` directly when creating or updating an agent:
+Pass `profile_id` directly when creating or updating an agent:
 
 ```python
 import asyncio
@@ -140,7 +122,7 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
-        # List to find the right ID
+        # List to find the right profile
         profiles = await client.voice_profiles.list(language="en")
         hd_female = next(
             p for p in profiles if p.quality == "high" and p.gender == "female"
@@ -149,7 +131,7 @@ async def main():
         # Create agent with that profile
         agent = await client.agents.create(
             name="Support Bot",
-            voice_profile=hd_female.id,
+            voice_profile=hd_female.profile_id,
         )
         print("Created agent with profile:", hd_female.name)
 
@@ -170,7 +152,7 @@ async def main():
             "agt_...",
             voice_profile="vp_es_male_std",   # switch to Spanish male
         )
-        print("Updated voice profile:", agent.voice_profile)
+        print("Updated voice profile:", agent.voice_profile_id)
 
 asyncio.run(main())
 ```

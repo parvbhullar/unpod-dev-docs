@@ -274,6 +274,36 @@ chain = your_langchain_chain
 ctx.session.dialog_machine = LangChainAdapter(chain=chain)
 ```
 
+### OpenAIAdapter
+
+Direct OpenAI integration without a full chain:
+
+```python
+from openai import AsyncOpenAI
+from unpod.adapters import OpenAIAdapter
+
+ctx.session.dialog_machine = OpenAIAdapter(
+    client=AsyncOpenAI(),
+    model="gpt-4o-mini",
+    system_prompt="You are a helpful support agent.",
+)
+```
+
+### AnthropicAdapter
+
+Direct Claude integration:
+
+```python
+import anthropic
+from unpod.adapters import AnthropicAdapter
+
+ctx.session.dialog_machine = AnthropicAdapter(
+    client=anthropic.AsyncAnthropic(),
+    model="claude-haiku-4-5-20251001",
+    system_prompt="You are a helpful support agent.",
+)
+```
+
 ### MCPAdapter
 
 For Model Context Protocol servers:
@@ -347,5 +377,11 @@ if __name__ == "__main__":
   </Card>
   <Card title="Hooks & Events" icon="bell" href="/speech/hooks-events">
     Intercept every user and agent turn for logging or side effects.
+  </Card>
+  <Card title="Embedding Guide: Unpod Voice" icon="plug" href="/SuperDialog/Embedding Guides/unpod-voice">
+    Full example: DialogMachine inside an AgentRunner session.
+  </Card>
+  <Card title="Bring Your Agent" icon="box" href="/sdk/bring-your-agent">
+    Use OpenAI, Anthropic, or LangChain adapters instead of SuperDialog.
   </Card>
 </CardGroup>

@@ -1,20 +1,23 @@
 ---
 title: "Unpod Voice Infrastructure"
-description: "Connect a SuperDialog agent to Unpod telephony via WebSocketRunner."
+description: "Connect a SuperDialog dialog machine to Unpod voice calls via the unpod SDK."
 ---
 
 ## How it works
 
-SuperDialog runs on your infrastructure. Unpod's Voice Platform connects to it over a WebSocket connection when a call arrives. Your code handles the dialog logic; Unpod handles STT, TTS, telephony, numbers, and recording.
+The `unpod` SDK connects your `AgentRunner` to Unpod's voice platform over WebSocket. Unpod handles STT, TTS, telephony, numbers, and recording — your code handles dialog logic using a SuperDialog `DialogMachine` or `LLMAgent`.
 
 ```
-Caller → Phone number (Unpod) → STT → Your SuperDialog WSS endpoint → TTS → Caller
+Caller → Phone number (Unpod) → STT → AgentRunner → DialogMachine → TTS → Caller
 ```
 
-## Step 1 - Build your dialog machine
+Your dialog machine runs inside your process, in the same call as the rest of your agent logic. No separate WebSocket server needed.
+
+---
+
+## Step 1 — Build your dialog machine
 
 ```python
-import os
 from superdialog import DialogMachine, Flow, PythonTool
 
 def lookup_customer(phone: str) -> dict:
@@ -23,90 +26,203 @@ def lookup_customer(phone: str) -> dict:
 
 dialog_machine = DialogMachine(
     flow=Flow.load("kyc.json"),
-    llm="anthropic/claude-opus-4-7",
+    llm="anthropic/claude-haiku-4-5",
     tools=[PythonTool.of(lookup_customer)],
-    traversal_dir="./logs",              # optional: save session JSON per call
 )
 ```
 
-## Step 2 - Start the WebSocket runner
+See [SuperDialog Quickstart](/SuperDialog/quickstart) to generate and save a flow file.
+
+---
+
+## Step 2 — Plug the machine into your session
+
+Assign `dialog_machine` to `ctx.session.dialog_machine` inside your `AgentRunner` entrypoint. The SDK auto-wraps it — no adapter import needed.
 
 ```python
-from superdialog.adapters.websocket import WebSocketRunner
+from unpod import AgentRunner, CallContext
+from superdialog import DialogMachine, Flow, PythonTool
 
-WebSocketRunner(
-    dialog_machine=dialog_machine,
-    agent_id="kyc-bot",                  # register this name in the Unpod portal
-    api_key=os.environ["UNPOD_API_KEY"],
-).serve(port=8080)
+def lookup_customer(phone: str) -> dict:
+    """Look up customer by phone number."""
+    return crm.get_by_phone(phone)
+
+async def handle_call(ctx: CallContext) -> None:
+    # Build (or re-use) the machine per call
+    machine = DialogMachine(
+        flow=Flow.load("kyc.json"),
+        llm="anthropic/claude-haiku-4-5",
+        tools=[PythonTool.of(lookup_customer)],
+    )
+    ctx.session.dialog_machine = machine   # auto-wrapped by SuperDialogAdapter
+    await ctx.session.run()                # blocks until the call ends
+
+AgentRunner(
+    entrypoint=handle_call,
+    agent_id="kyc-bot",
+).start()
 ```
 
-Your agent is now listening on `ws://0.0.0.0:8080`.
+---
 
-## Step 3 - Register in the Unpod portal
+## Step 3 — Create and register your agent
 
-1. Go to **Studio → Agents** in the Unpod portal
-2. Set the agent's **Endpoint** to your WSS URL (e.g. `wss://kyc.company.io:8080`)
-3. Bind the agent to a **phone number** under **Telephony**
+```python
+import asyncio
+from unpod import AsyncClient
 
-When a call lands on that number, Unpod connects to your endpoint, streams transcribed text in, and reads agent text back via TTS.
+async def setup():
+    async with AsyncClient() as client:
+        profiles = await client.voice_profiles.list(language="en")
+        agent = await client.agents.create(
+            name="KYC Bot",
+            voice_profile=profiles[0].profile_id,
+            runner_agent_id="kyc-bot",    # must match AgentRunner(agent_id=...)
+            recording=True,
+        )
+
+        numbers = await client.numbers.list()
+        if numbers:
+            await client.numbers.attach(numbers[0].id, agent_id=agent.agent_id)
+
+        print(f"Agent: {agent.agent_id}, Number: {numbers[0].number if numbers else 'none'}")
+
+asyncio.run(setup())
+```
+
+---
 
 ## Complete example
 
 ```python
-import os
 import asyncio
-from superdialog import create_dialog_flow, DialogMachine, PythonTool
-from superdialog.adapters.websocket import WebSocketRunner
+import os
+from superdialog import DialogMachine, Flow, PythonTool
+from unpod import AgentRunner, AsyncClient, CallContext
 
-async def build():
-    flow = await create_dialog_flow(
-        prompt="Verify KYC. Ask for Aadhaar last 4. Confirm DOB. Thank on completion.",
-        llm="openai/gpt-5.1",
-    )
-    flow.save("kyc.json")
+# --- One-time setup (run once) ---
 
-# Build the flow once (or load if already saved)
-# asyncio.run(build())
+async def setup():
+    async with AsyncClient() as client:
+        profiles = await client.voice_profiles.list(language="en")
+        agent = await client.agents.create(
+            name="KYC Bot",
+            voice_profile=profiles[0].profile_id,
+            runner_agent_id="kyc-bot",
+            recording=True,
+        )
+        numbers = await client.numbers.list()
+        if numbers:
+            await client.numbers.attach(numbers[0].id, agent_id=agent.agent_id)
 
-def lookup_customer(aadhaar_last_4: str) -> dict:
+# asyncio.run(setup())   # Run once to provision
+
+# --- Load flow (built with superdialog CLI or create_dialog_flow) ---
+
+def lookup_aadhaar(partial: str) -> dict:
     """Look up customer by partial Aadhaar."""
-    return crm.lookup_by_partial_aadhaar(aadhaar_last_4)
+    return crm.lookup_by_partial_aadhaar(partial)
 
-dialog_machine = DialogMachine(
-    flow=Flow.load("kyc.json"),
-    llm="anthropic/claude-haiku-4-5",
-    tools=[PythonTool.of(lookup_customer)],
-)
+# --- Runner (long-lived process) ---
 
-WebSocketRunner(
-    dialog_machine=dialog_machine,
-    agent_id="kerali-kyc-bot",
-    api_key=os.environ["UNPOD_API_KEY"],
-).serve(port=8080)
+async def handle_call(ctx: CallContext) -> None:
+    machine = DialogMachine(
+        flow=Flow.load("kyc.json"),
+        llm="anthropic/claude-haiku-4-5",
+        tools=[PythonTool.of(lookup_aadhaar)],
+    )
+    ctx.session.dialog_machine = machine
+    await ctx.session.run()
+
+AgentRunner(
+    entrypoint=handle_call,
+    agent_id="kyc-bot",
+).start()
 ```
+
+---
+
+## Using pre-call data in the flow
+
+Data passed when triggering an outbound call (or injected by the platform) is available on `ctx.data`:
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    machine = DialogMachine(
+        flow=Flow.load("onboarding.json"),
+        llm="anthropic/claude-haiku-4-5",
+    )
+    # Inject caller context before the first turn
+    if customer_name := ctx.data.get("customer_name"):
+        machine.assist(f"The customer's name is {customer_name}. Address them by name.")
+
+    ctx.session.dialog_machine = machine
+    await ctx.session.run()
+```
+
+---
 
 ## Mid-call context injection
 
-Inject system instructions at any point during an active call:
+Inject system instructions at any point during an active call from your own business logic:
 
 ```python
-# From your own business logic (sentiment analysis, CRM event, etc.)
-dialog_machine.assist("The customer's account is flagged. Escalate to a human agent.")
+async def handle_call(ctx: CallContext) -> None:
+    machine = DialogMachine(flow=Flow.load("support.json"), llm="openai/gpt-4o-mini")
+
+    @ctx.session.on("user_turn")
+    async def _(text: str) -> None:
+        sentiment = await analyze_sentiment(text)
+        if sentiment == "frustrated":
+            machine.assist("The customer seems frustrated. Be empathetic and offer escalation.")
+
+    ctx.session.dialog_machine = machine
+    await ctx.session.run()
 ```
 
-## When to use this
+---
 
-- You want voice + numbers + speech without writing telephony code
-- You want to keep your dialog logic on your own infrastructure
-- You need to plug custom tools, custom LLMs, or custom flow logic into a voice channel
-- You're building on top of Unpod Voice Platform
+## Switching flows mid-call
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    machine = DialogMachine(flow=Flow.load("triage.json"), llm="openai/gpt-4o-mini")
+
+    @ctx.session.on("user_turn")
+    async def _(text: str) -> None:
+        if "billing" in text.lower():
+            machine.switch_flow(Flow.load("billing.json"), preserve_memory=True)
+
+    ctx.session.dialog_machine = machine
+    await ctx.session.run()
+```
+
+---
 
 ## vs. LiveKit / PipeCat adapters
 
-| | Unpod Voice (WebSocketRunner) | LiveKit | PipeCat |
+| | Unpod Voice (SDK) | LiveKit adapter | PipeCat adapter |
 |---|---|---|---|
 | **Who handles STT/TTS** | Unpod | You (via LiveKit plugins) | You (via PipeCat services) |
 | **Who handles telephony** | Unpod | You / LiveKit SIP | You / Twilio / etc. |
-| **Infrastructure ownership** | Unpod cloud | Your stack | Your stack |
-| **Best for** | Fastest path to production voice | Full control of the media layer | Existing PipeCat pipelines |
+| **Dialog runs in** | Your AgentRunner process | Your LiveKit agent | Your PipeCat pipeline |
+| **Best for** | Fastest path to production voice | Full media layer control | Existing PipeCat pipelines |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="SDK Setup" icon="code" href="/speech/sdk-setup">
+    AgentRunner constructor, credentials, and lifecycle.
+  </Card>
+  <Card title="Session Controls" icon="sliders-horizontal" href="/speech/session-controls">
+    say(), transfer(), recording controls during live calls.
+  </Card>
+  <Card title="SuperDialog Flows" icon="diagram-project" href="/SuperDialog/flows">
+    Build and save conversation flows.
+  </Card>
+  <Card title="SuperDialog Tools" icon="wrench" href="/SuperDialog/tools">
+    Add Python, HTTP, and MCP tools to your machine.
+  </Card>
+</CardGroup>
