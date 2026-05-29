@@ -60,7 +60,7 @@
             "icon": "audio-waveform",
             "pages": [
               "speech/voice-profiles",
-              "speech/agents"
+              "speech/pipes"
             ]
           },
           {

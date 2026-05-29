@@ -1,18 +1,18 @@
 ---
-title: 'Agents'
+title: 'Speech Pipe'
 icon: 'bot'
-description: 'Create, configure, and manage voice agents via the Unpod SDK.'
+description: 'Create, configure, and manage Speech Pipes via the Unpod SDK.'
 ---
 
-## What Is an Agent?
+## What Is a Speech Pipe?
 
-An **agent** in Unpod ties together a voice profile (STT + TTS), telephony (phone numbers), and your runner logic into a single deployable unit. When a call arrives on a number attached to the agent, the orchestrator dispatches it to your `AgentRunner` process.
+A **Speech Pipe** in Unpod ties together a voice profile (STT + TTS), telephony (phone numbers), and a pointer to your agent brain into a single deployable unit. When a call arrives on a number attached to the pipe, the orchestrator dispatches it to your `AgentRunner` process.
 
 ```
   Phone Number
        │
        ▼
-    Agent  ──── voice_profile ──► STT/TTS stack
+  Speech Pipe  ──── voice_profile ──► STT/TTS stack
        │
        ▼
   AgentRunner (your Python process)
@@ -23,7 +23,7 @@ An **agent** in Unpod ties together a voice profile (STT + TTS), telephony (phon
 
 ---
 
-## Creating an Agent
+## Creating a Pipe
 
 ```python
 import asyncio
@@ -31,13 +31,14 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
-        agent = await client.agents.create(
+        pipe = await client.pipes.create(
             name="Support Bot",
             voice_profile="vp_en_female_hd",    # from voice_profiles.list()
+            agent_id="my-bot",                   # links to your AgentRunner
             recording=True,                      # store call recordings
             max_call_duration_s=600,             # 10-minute hard cap
         )
-        print("Created:", agent.agent_id, agent.name)
+        print("Created:", pipe.pipe_id, pipe.name)
 
 asyncio.run(main())
 ```
@@ -46,16 +47,16 @@ asyncio.run(main())
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `name` | `str` | required | Display name for the agent |
+| `name` | `str` | required | Display name for the pipe |
 | `voice_profile` | `str \| None` | `None` | Voice profile ID (`vp_...`) |
-| `runner_agent_id` | `str \| None` | `None` | Override the runner worker target |
+| `agent_id` | `str \| None` | `None` | ID of your `AgentRunner` brain — links the pipe to your runner worker |
 | `agent_endpoint` | `str \| None` | `None` | HTTP endpoint for the dialog brain (HTTPAdapter) |
 | `recording` | `bool` | `False` | Enable call recording |
 | `max_call_duration_s` | `int` | `3600` | Hard cap in seconds (default 1 hour) |
 
 ---
 
-## Listing Agents
+## Listing Pipes
 
 ```python
 import asyncio
@@ -63,20 +64,21 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
-        agents = await client.agents.list()
-        for a in agents:
-            print(a.agent_id, a.name, a.voice_profile_id or "no voice profile")
+        pipes = await client.pipes.list()
+        for p in pipes:
+            print(p.pipe_id, p.name, p.voice_profile_id or "no voice profile")
 
 asyncio.run(main())
 ```
 
-### Agent fields
+### Pipe fields
 
 | Field | Type | Description |
 |---|---|---|
-| `agent_id` | `str` | Agent ID (`agt_...`) |
+| `pipe_id` | `str` | Speech Pipe ID (`pipe_...`) |
 | `name` | `str` | Display name |
 | `voice_profile_id` | `str \| None` | Voice profile ID |
+| `agent_id` | `str \| None` | Your `AgentRunner` brain ID |
 | `agent_endpoint` | `str \| None` | HTTP dialog endpoint |
 | `recording` | `bool` | Recording enabled |
 | `max_call_duration_s` | `int` | Call duration hard cap |
@@ -85,7 +87,7 @@ asyncio.run(main())
 
 ---
 
-## Getting a Single Agent
+## Getting a Single Pipe
 
 ```python
 import asyncio
@@ -93,15 +95,15 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
-        agent = await client.agents.get("agt_...")
-        print(agent.name, agent.voice_profile_id, agent.recording)
+        pipe = await client.pipes.get("pipe_...")
+        print(pipe.name, pipe.voice_profile_id, pipe.recording)
 
 asyncio.run(main())
 ```
 
 ---
 
-## Updating an Agent
+## Updating a Pipe
 
 ```python
 import asyncio
@@ -110,24 +112,24 @@ from unpod import AsyncClient
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
         # Update any subset of fields
-        agent = await client.agents.update(
-            "agt_...",
+        pipe = await client.pipes.update(
+            "pipe_...",
             name="Premium Support Bot",
             voice_profile="vp_en_female_hd",
             recording=True,
             max_call_duration_s=1200,
         )
-        print("Updated:", agent.agent_id, agent.name)
+        print("Updated:", pipe.pipe_id, pipe.name)
 
 asyncio.run(main())
 ```
 
 ---
 
-## Deleting an Agent
+## Deleting a Pipe
 
 <Warning>
-Deleting an agent does **not** automatically detach phone numbers. Detach all numbers before deleting to avoid orphaned routing.
+Deleting a pipe does **not** automatically detach phone numbers. Detach all numbers before deleting to avoid orphaned routing.
 </Warning>
 
 ```python
@@ -139,11 +141,11 @@ async def main():
         # Detach numbers first
         numbers = await client.numbers.list()
         for n in numbers:
-            if n.agent_id == "agt_...":
+            if n.pipe_id == "pipe_...":
                 await client.numbers.detach(n.id)
 
         # Then delete
-        await client.agents.delete("agt_...")
+        await client.pipes.delete("pipe_...")
         print("Deleted")
 
 asyncio.run(main())
@@ -151,9 +153,9 @@ asyncio.run(main())
 
 ---
 
-## Using an Agent with an HTTP Dialog Endpoint
+## Using a Pipe with an HTTP Dialog Endpoint
 
-If you already have a chatbot or API (in any language) and want to make it voice-enabled, point the agent at an HTTP endpoint. Unpod calls your endpoint on every user turn, you return the reply.
+If you already have a chatbot or API (in any language) and want to make it voice-enabled, point the pipe at an HTTP endpoint. Unpod calls your endpoint on every user turn, you return the reply.
 
 ```python
 import asyncio
@@ -161,12 +163,12 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
-        agent = await client.agents.create(
+        pipe = await client.pipes.create(
             name="Webhook Bot",
             voice_profile="vp_en_male_std",
             agent_endpoint="https://your-api.example.com/dialog/turn",
         )
-        print("Agent with HTTP endpoint:", agent.agent_id)
+        print("Pipe with HTTP endpoint:", pipe.pipe_id)
 
 asyncio.run(main())
 ```
@@ -221,14 +223,14 @@ AgentRunner(entrypoint=handle_call, agent_id="my-bot").start()
 
 ---
 
-## Agent + Runner Pattern (Recommended)
+## Pipe + Runner Pattern (Recommended)
 
 The recommended pattern for production is a dedicated `AgentRunner` process:
 
 ```python
 from unpod import AgentRunner, CallContext
 
-AGENT_ID = "agt_..."   # must match what you created above
+AGENT_ID = "my-bot"   # must match the pipe's agent_id
 
 async def handle_call(ctx: CallContext) -> None:
     await ctx.session.say("Hello, how can I help you?")
@@ -242,7 +244,7 @@ runner = AgentRunner(
 runner.start()
 ```
 
-The `agent_id` in `AgentRunner` must match the agent's ID in the platform. The orchestrator uses it to route dispatches to the correct runner worker.
+The `agent_id` in `AgentRunner` must match the pipe's `agent_id` in the platform. The orchestrator uses it to route dispatches to the correct runner worker.
 
 ---
 
