@@ -37,7 +37,7 @@
           },
           {
             "group": "How It Works",
-            "icon": "diagram-project",
+            "icon": "workflow",
             "pages": [
               "why-unpod/how-it-works"
             ]
@@ -57,7 +57,7 @@
           },
           {
             "group": "Voice Stack",
-            "icon": "waveform",
+            "icon": "audio-waveform",
             "pages": [
               "speech/voice-profiles",
               "speech/agents"
