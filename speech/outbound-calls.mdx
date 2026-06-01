@@ -35,7 +35,7 @@ async def main():
         call = await client.calls.create(
             pipe_id="pipe_...",
             to_number="+14155550100",    # E.164 format
-            from_number="+18005551234",  # must be attached to the Speech Pipe
+            from_number="+18005551234",  # optional if a number is attached to the Speech Pipe
             instructions="This is a reminder call for a dental appointment.",
             data={
                 "patient_name": "Jane Smith",
@@ -44,10 +44,21 @@ async def main():
                 "doctor": "Dr. Patel",
             },
         )
-        print("Call initiated:", call.id, call.status)
+        print("Call initiated:", call.call_id, call.status)
+        # status is "pending" - calls.create() enqueues the call and returns
+        # immediately. The call is dispatched asynchronously once the account
+        # has free concurrency. Poll GET /calls/{id} (or use hooks) to watch
+        # it advance to ringing -> active -> completed. See Call Lifecycle.
 
 asyncio.run(main())
 ```
+
+<Note>
+`calls.create()` is asynchronous: it enqueues the call and returns a record
+with `status="pending"`. The call is dispatched on a worker as soon as your
+account has free concurrency. See [Call Lifecycle](/speech/call-lifecycle) for
+the full status progression and how to poll for completion.
+</Note>
 
 ### `calls.create()` parameters
 
@@ -55,7 +66,7 @@ asyncio.run(main())
 |---|---|---|---|
 | `pipe_id` | `str` | Yes | Speech Pipe to use for the call |
 | `to_number` | `str` | Yes | Destination number (E.164) |
-| `from_number` | `str` | Yes | Caller ID - must be a number attached to the Speech Pipe |
+| `from_number` | `str` | No | Caller ID. If omitted, Unpod uses a number attached to the Speech Pipe |
 | `instructions` | `str \| None` | No | Runtime instruction override for this call |
 | `data` | `dict \| None` | No | Arbitrary metadata passed to your entrypoint via `ctx.data` |
 
@@ -113,8 +124,8 @@ from unpod import AsyncClient
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
         call = await client.calls.get("cal_...")
-        print(call.id, call.status, call.direction)
-        # status: "queued", "ringing", "in_progress", "completed", "failed"
+        print(call.call_id, call.status, call.direction)
+        # status: "pending", "ringing", "active", "completed", "failed", "cancelled"
 
 asyncio.run(main())
 ```
@@ -144,7 +155,7 @@ asyncio.run(main())
 
 | Parameter | Values | Description |
 |---|---|---|
-| `status` | `queued`, `ringing`, `in_progress`, `completed`, `failed` | Filter by status |
+| `status` | `pending`, `ringing`, `active`, `completed`, `failed`, `cancelled` | Filter by status |
 | `pipe_id` | `pipe_...` | Filter by Speech Pipe |
 
 ---
@@ -193,7 +204,7 @@ async def dial_all(contacts: list[dict]) -> None:
                 ),
                 data=contact,
             )
-            print(f"Dialing {contact['name']}: {call.id}")
+            print(f"Dialing {contact['name']}: {call.call_id}")
             await asyncio.sleep(2)  # pace the campaign
 
 asyncio.run(dial_all(contacts))
@@ -225,7 +236,7 @@ async def process_callback_queue(queue: list[dict]) -> None:
             )
             await db.update_callback_request(
                 request["id"],
-                call_id=call.id,
+                call_id=call.call_id,
                 status="dialing",
             )
 ```
@@ -240,17 +251,9 @@ from unpod import AsyncClient
 
 async def get_transcript(call_id: str) -> None:
     async with AsyncClient(api_key="sk-...") as client:
-        # Get the session linked to this call
-        sessions = await client.sessions.list()
-        session = next((s for s in sessions if s.call_id == call_id), None)
-        if not session:
-            print("Session not found")
-            return
-
-        # Get transcript entries
-        transcript = await client.transcripts.get(session.id)
-        for entry in transcript.entries:
-            print(f"[{entry.speaker}] {entry.text}")
+        transcript = await client.transcripts.get(call_id)
+        for turn in transcript.turns:
+            print(f"[{turn.speaker}] {turn.text}")
 
 asyncio.run(get_transcript("cal_..."))
 ```
