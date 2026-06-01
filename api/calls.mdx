@@ -223,6 +223,7 @@ GET /v1/calls/{call_sid}/recordings
 | 404         | not_found            | Call not found                           |
 | 409         | call_already_ended   | Call has already ended                   |
 | 429         | too_many_requests    | Rate limit exceeded                      |
+| 503         | media_unavailable    | No healthy media backend could serve the call; the session is finalized `failed` with `end_reason="media_unavailable"` |
 
 ## Webhooks
 

@@ -162,15 +162,15 @@ Your backend generates a short-lived session token for each user. The browser us
 import asyncio
 from unpod import AsyncClient
 
-async def create_session(agent_id: str, user_id: str) -> str:
+async def create_session(pipe_id: str, user_id: str) -> str:
     async with AsyncClient(api_key="sk-...") as client:
         token = await client.sessions.create_token(
-            agent_id=agent_id,
+            pipe_id=pipe_id,
             metadata={"user_id": user_id},
         )
         return token.token
 
-asyncio.run(create_session("agt_...", "usr_123"))
+asyncio.run(create_session("PIPE_...", "usr_123"))
 ```
 
 Return this token to your frontend. Tokens are single-use and expire after 60 seconds.

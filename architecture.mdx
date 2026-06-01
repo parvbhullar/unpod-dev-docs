@@ -107,6 +107,28 @@ cd apps/super
 uv run super_services/orchestration/executors/voice_executor_v3.py start
 ```
 
+#### Media plane (the `RoomEngine` seam)
+
+Every voice session has an infra-level **media session** owned by a
+backend-agnostic **`RoomEngine`** — the orchestrator never speaks a specific
+media vendor's vocabulary, so the backend is a swap, not a rewrite.
+
+- **Today:** self-hosted **LiveKit OSS** (`LiveKitRoomEngine`) provides the SFU,
+  SIP/PSTN, egress/recording, simulcast, and transfer. An in-process engine
+  backs dev and tests.
+- **Backend selection:** at dispatch the orchestrator calls
+  `pick_engine(required={sip})`, which skips any engine that lacks the required
+  capabilities (`sip`, `egress`, `simulcast`, `transfer`) or reports unhealthy.
+- **Self-healing:** `create_room` is idempotent per session, `destroy_room` is a
+  no-op on an already-gone room, and a reaper sweeps orphaned rooms left behind
+  by a dead worker.
+- **Failure mode:** if no healthy, SIP-capable backend exists, dispatch returns
+  **`503`** and the session is finalized `status=failed`,
+  `end_reason=media_unavailable`.
+- **Scale path:** a future `mediasoup` engine registers behind the same seam
+  (advertising no `sip`), so `pick_engine` keeps PSTN on LiveKit and routes
+  WebRTC-only traffic to mediasoup — no orchestrator change.
+
 ---
 
 ## Tech Stack
