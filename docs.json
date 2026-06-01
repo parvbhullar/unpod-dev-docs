@@ -82,6 +82,7 @@
             "group": "Calls",
             "icon": "phone-outgoing",
             "pages": [
+              "speech/call-lifecycle",
               "speech/outbound-calls"
             ]
           }
