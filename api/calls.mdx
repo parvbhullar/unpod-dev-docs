@@ -5,104 +5,137 @@ icon: 'phone'
 
 # Calls API
 
-The Calls API allows you to make and manage phone calls programmatically. This documentation covers all available endpoints for call management.
+Create and manage voice calls. A call binds a [Speech Pipe](/speech/pipes) to a
+phone number and an `AgentRunner`: outbound calls are initiated through this
+API, inbound calls are created automatically when someone dials an attached
+number.
 
-## Make a Call
+All endpoints require a Bearer API key:
 
-Initiate a new outbound call.
+```http
+Authorization: Bearer sk-...
+```
+
+---
+
+## Create an Outbound Call
+
+Enqueue a new outbound call.
 
 ```http
 POST /v1/calls
 ```
 
+<Note>
+`POST /v1/calls` is **asynchronous**. It records the call, returns `201` with
+`status="pending"`, and enqueues it. The call is dispatched on a worker once
+your account has a free concurrency slot, then advances
+`pending → ringing → active → completed`. Poll `GET /v1/calls/{call_id}` or use
+[hooks](/speech/hooks-events) to track progress. See
+[Call Lifecycle](/speech/call-lifecycle) for the full state model.
+</Note>
+
 ### Request Body
 
-| Parameter           | Type    | Required | Description                                                                 |
-|---------------------|---------|----------|-----------------------------------------------------------------------------|
-| to                  | string  | Yes      | The phone number or SIP address to call                                    |
-| from                | string  | Yes      | Your Unpod phone number or SIP address                                     |
-| answer_url          | string  | Yes      | URL to fetch TwiML when the call is answered                               |
-| answer_method       | string  | No       | HTTP method for answer_url (default: "POST")                              |
-| timeout             | integer | No       | Seconds to wait for answer (default: 60, max: 300)                         |
-| record              | boolean | No       | Whether to record the call (default: false)                                |
-| recording_channels  | string  | No       | "mono" or "dual" (default: "mono")                                      |
-| recording_status_callback | string | No | URL for recording status updates                                      |
-| status_callback     | string  | No       | URL for call status updates                                                |
-| status_events       | array   | No       | List of status changes to receive (e.g., ["initiated", "answered"])        |
-| machine_detection   | string  | No       | "Enable" or "DetectMessageEnd" for answering machine detection            |
-| machine_detection_timeout | integer | No | Max seconds to wait for machine detection (default: 30)            |
-| send_digits         | string  | No       | DTMF tones to play when the call is answered                                |
-| sip_auth_username   | string  | No       | Username for SIP authentication                                            |
-| sip_auth_password   | string  | No       | Password for SIP authentication                                            |
+| Parameter      | Type     | Required | Description                                                                 |
+|----------------|----------|----------|-----------------------------------------------------------------------------|
+| `pipe_id`      | `string` | Yes      | Speech Pipe to run the call on (`pipe_...`)                                 |
+| `to_number`    | `string` | Yes      | Destination number in E.164 format                                         |
+| `from_number`  | `string` | No       | Caller ID. Defaults to the number attached to the Speech Pipe. `400` if neither is set |
+| `instructions` | `string` | No       | Per-call instruction override, surfaced to the agent as `ctx.instructions` |
+| `data`         | `object` | No       | Arbitrary per-call metadata, surfaced to the agent as `ctx.data`           |
+
+Number resolution order: `from_number` override → the Speech Pipe's attached
+number → `400 no_from_number`.
 
 ### Example Request
 
 ```http
 POST /v1/calls
+Authorization: Bearer sk-...
 Content-Type: application/json
 
 {
-  "to": "+14155551234",
-  "from": "+14155556789",
-  "answer_url": "https://your-app.com/answer",
-  "status_callback": "https://your-app.com/status",
-  "record": true,
-  "timeout": 45
+  "pipe_id": "pipe_xyz",
+  "to_number": "+14155551234",
+  "from_number": "+18005551234",
+  "instructions": "Customer prefers Hindi. Confirm the appointment.",
+  "data": { "customer_id": "C123", "appointment": "2026-06-10 09:30" }
 }
 ```
 
-### Response
+### Response — `201 Created`
 
 ```json
 {
-  "sid": "CA1234567890abcdef1234567890abcdef",
-  "status": "queued",
-  "direction": "outbound-api",
-  "from": "+14155556789",
-  "to": "+14155551234",
-  "start_time": null,
-  "price": null,
-  "price_unit": "USD",
-  "duration": null,
-  "date_created": "2023-06-15T12:00:00Z",
-  "date_updated": "2023-06-15T12:00:00Z"
+  "call_id": "SCL_abc123def456",
+  "project_id": "proj_123",
+  "pipe_id": "pipe_xyz",
+  "direction": "outbound",
+  "from_number": "+18005551234",
+  "to_number": "+14155551234",
+  "number_id": "num_001",
+  "trunk_id": "trunk_001",
+  "session_id": null,
+  "room_name": null,
+  "instructions": "Customer prefers Hindi. Confirm the appointment.",
+  "data": { "customer_id": "C123", "appointment": "2026-06-10 09:30" },
+  "started_at": "2026-06-15T12:00:00Z",
+  "ended_at": null,
+  "duration_s": null,
+  "status": "pending",
+  "end_reason": null,
+  "created": "2026-06-15T12:00:00Z",
+  "modified": "2026-06-15T12:00:00Z"
 }
 ```
 
-## Get Call Details
+`session_id` and `room_name` are `null` at creation; they are populated once
+the call is dispatched and reaches `ringing`.
 
-Retrieve information about a specific call.
+---
+
+## Get a Call
+
+Retrieve a single call by ID.
 
 ```http
-GET /v1/calls/{sid}
+GET /v1/calls/{call_id}
 ```
 
-### Response
+### Response — `200 OK`
+
+Returns the same call object as the create response, reflecting the current
+`status`, `session_id`/`room_name` (once dispatched), and `duration_s`/
+`end_reason` (once ended).
 
 ```json
 {
-  "sid": "CA1234567890abcdef1234567890abcdef",
-  "status": "completed",
-  "direction": "outbound-api",
-  "from": "+14155556789",
-  "to": "+14155551234",
-  "start_time": "2023-06-15T12:00:05Z",
-  "end_time": "2023-06-15T12:01:30Z",
-  "duration": "85",
-  "price": "0.0125",
-  "price_unit": "USD",
-  "answered_by": "human",
-  "forwarded_from": null,
-  "caller_name": null,
-  "recording_sid": "RE1234567890abcdef1234567890abcdef",
-  "date_created": "2023-06-15T12:00:00Z",
-  "date_updated": "2023-06-15T12:01:30Z"
+  "call_id": "SCL_abc123def456",
+  "project_id": "proj_123",
+  "pipe_id": "pipe_xyz",
+  "direction": "outbound",
+  "from_number": "+18005551234",
+  "to_number": "+14155551234",
+  "session_id": "sess_789",
+  "room_name": "pipe_xyz-3f9a1c2b",
+  "status": "active",
+  "started_at": "2026-06-15T12:00:05Z",
+  "ended_at": null,
+  "duration_s": null,
+  "end_reason": null,
+  "created": "2026-06-15T12:00:00Z",
+  "modified": "2026-06-15T12:00:07Z"
 }
 ```
+
+Returns `404 call_not_found` if no call matches the ID in your project.
+
+---
 
 ## List Calls
 
-Retrieve a list of calls. Results are paginated and can be filtered.
+List calls for your project, optionally filtered.
 
 ```http
 GET /v1/calls
@@ -110,175 +143,120 @@ GET /v1/calls
 
 ### Query Parameters
 
-| Parameter  | Type    | Required | Description                                    |
-|------------|---------|----------|------------------------------------------------|
-| to         | string  | No       | Filter by recipient's number                   |
-| from       | string  | No       | Filter by caller's number                      |
-| status     | string  | No       | Filter by call status (queued, ringing, in-progress, completed, etc.) |
-| start_time | string  | No       | Filter calls that started on or after this ISO 8601 timestamp |
-| end_time   | string  | No       | Filter calls that started before this ISO 8601 timestamp |
-| page_size  | integer | No       | Number of results per page (default: 20, max: 100) |
-| page_token | string  | No       | Token for pagination                           |
+| Parameter     | Type     | Required | Description                                                              |
+|---------------|----------|----------|--------------------------------------------------------------------------|
+| `call_status` | `string` | No       | Filter by status: `pending`, `ringing`, `active`, `completed`, `failed`, `cancelled` |
+| `pipe_id`     | `string` | No       | Filter by Speech Pipe                                                    |
 
-### Response
+### Response — `200 OK`
+
+Returns a JSON array of call objects (most recent first, up to 500).
 
 ```json
-{
-  "calls": [
-    {
-      "sid": "CA1234567890abcdef1234567890abcdef",
-      "status": "completed",
-      "direction": "outbound-api",
-      "from": "+14155556789",
-      "to": "+14155551234",
-      "start_time": "2023-06-15T12:00:05Z",
-      "end_time": "2023-06-15T12:01:30Z",
-      "duration": "85",
-      "price": "0.0125",
-      "price_unit": "USD"
-    }
-  ],
-  "meta": {
-    "page_size": 20,
-    "next_page_token": "abc123",
-    "has_more": true
+[
+  {
+    "call_id": "SCL_abc123def456",
+    "pipe_id": "pipe_xyz",
+    "direction": "outbound",
+    "to_number": "+14155551234",
+    "status": "completed",
+    "duration_s": 85,
+    "end_reason": "hangup",
+    "started_at": "2026-06-15T12:00:05Z",
+    "ended_at": "2026-06-15T12:01:30Z"
   }
-}
+]
 ```
 
-## Update a Call
+---
 
-Modify an in-progress call.
+## Hang Up a Call
+
+End an in-progress call. Valid only while the call is `pending`, `ringing`, or
+`active`.
 
 ```http
-POST /v1/calls/{sid}
+POST /v1/calls/{call_id}/hangup
 ```
 
-### Request Body
-
-| Parameter     | Type    | Required | Description                                 |
-|---------------|---------|----------|---------------------------------------------|
-| status        | string  | No       | Either "completed" to end the call or "canceled" to cancel a queued or ringing call |
-| url           | string  | No       | New TwiML URL to fetch for the call         |
-| method        | string  | No       | HTTP method to use when requesting the URL  |
-| status_callback | string | No       | New status callback URL                     |
-
-### Example: End a Call
-
-```http
-POST /v1/calls/CA1234567890abcdef1234567890abcdef
-Content-Type: application/json
-
-{
-  "status": "completed"
-}
-```
-
-### Response
+### Response — `200 OK`
 
 ```json
 {
-  "sid": "CA1234567890abcdef1234567890abcdef",
+  "call_id": "SCL_abc123def456",
   "status": "completed",
-  "date_updated": "2023-06-15T12:02:00Z"
+  "end_reason": "hangup",
+  "ended_at": "2026-06-15T12:02:00Z",
+  "modified": "2026-06-15T12:02:00Z"
 }
 ```
 
-## Get Call Recordings
+Returns `409 call_not_active` if the call has already ended, or
+`404 call_not_found` if no call matches the ID in your project.
 
-Retrieve recordings for a specific call.
+---
 
-```http
-GET /v1/calls/{call_sid}/recordings
-```
+## Call Statuses
 
-### Response
+| Status      | Meaning                                                        |
+|-------------|----------------------------------------------------------------|
+| `pending`   | Enqueued; waiting for a free concurrency slot (outbound only). |
+| `ringing`   | Dispatched; the SIP leg is dialing/ringing.                    |
+| `active`    | Connected; audio is flowing between caller and agent.          |
+| `completed` | Ended normally.                                                |
+| `failed`    | Ended due to an error (see `end_reason`).                      |
+| `cancelled` | Cancelled before connecting.                                   |
 
-```json
-{
-  "recordings": [
-    {
-      "sid": "RE1234567890abcdef1234567890abcdef",
-      "call_sid": "CA1234567890abcdef1234567890abcdef",
-      "status": "completed",
-      "source": "DialVerb",
-      "channels": 1,
-      "duration": "85",
-      "price": "0.0025",
-      "price_unit": "USD",
-      "media_url": "https://api.unpod.ai/v1/Recordings/RE1234567890abcdef1234567890abcdef/Media",
-      "date_created": "2023-06-15T12:00:10Z",
-      "date_updated": "2023-06-15T12:01:35Z"
-    }
-  ]
-}
-```
+---
 
 ## Error Responses
 
-| Status Code | Error Code           | Description                              |
-|-------------|----------------------|------------------------------------------|
-| 400         | invalid_parameters   | Missing or invalid parameters            |
-| 403         | unauthorized         | Invalid credentials or permissions       |
-| 404         | not_found            | Call not found                           |
-| 409         | call_already_ended   | Call has already ended                   |
-| 429         | too_many_requests    | Rate limit exceeded                      |
-| 503         | media_unavailable    | No healthy media backend could serve the call; the session is finalized `failed` with `end_reason="media_unavailable"` |
+| Status | Error Code         | Description                                                                 |
+|--------|--------------------|-----------------------------------------------------------------------------|
+| 400    | `no_from_number`   | No `from_number` provided and the Speech Pipe has no attached number        |
+| 401    | `invalid_api_key`  | Missing or invalid Bearer API key                                           |
+| 404    | `pipe_not_found`   | `pipe_id` does not exist in your project                                    |
+| 404    | `call_not_found`   | No call matches the given `call_id` in your project                         |
+| 409    | `call_not_active`  | Hangup requested on a call that has already ended                           |
+| 503    | `media_unavailable`| No healthy media backend could serve the call; the call is finalized `failed` with `end_reason="media_unavailable"` |
 
-## Webhooks
+---
 
-Call-related webhook events:
+## SDK Equivalents
 
-- `call.initiated`: A new call was initiated
-- `call.ringing`: The call is ringing
-- `call.answered`: The call was answered
-- `call.completed`: The call ended
-- `call.failed`: The call failed
-- `recording.completed`: Call recording is available
-- `recording.failed`: Recording failed
-
-## Code Examples
-
-### Make a Call (Node.js)
-
-```javascript
-const call = await unpod.calls.create({
-  to: '+14155551234',
-  from: '+14155556789',
-  answerUrl: 'https://your-app.com/answer',
-  statusCallback: 'https://your-app.com/status',
-  record: true,
-  timeout: 45
-});
-
-console.log(`Call SID: ${call.sid}`);
-```
-
-### List Recent Calls (Python)
+The [Python SDK](/sdk/setup-checklist) wraps these endpoints:
 
 ```python
-from datetime import datetime, timedelta
+from unpod import AsyncClient
 
-# Get calls from the last 24 hours
-end_time = datetime.utcnow()
-start_time = end_time - timedelta(days=1)
+async with AsyncClient(api_key="sk-...") as client:
+    # Create (enqueues; returns status="pending")
+    call = await client.calls.create(
+        pipe_id="pipe_xyz",
+        to_number="+14155551234",
+        instructions="Confirm the appointment.",
+        data={"customer_id": "C123"},
+    )
 
-calls = unpod.calls.list(
-    start_time=start_time.isoformat() + 'Z',
-    end_time=end_time.isoformat() + 'Z',
-    status='completed',
-    page_size=10
-)
+    # Poll for status
+    call = await client.calls.get(call.call_id)
 
-for call in calls:
-    print(f"Call to {call.to}: {call.duration} seconds")
+    # List
+    active = await client.calls.list(status="active", pipe_id="pipe_xyz")
+
+    # Hang up
+    await client.calls.hangup(call.call_id)
 ```
 
-## Best Practices
+---
 
-1. **Error Handling**: Always handle potential errors and timeouts
-2. **Webhooks**: Use webhooks for real-time call status updates
-3. **Retry Logic**: Implement retry logic for transient failures
-4. **Caller ID**: Register your Caller ID to improve answer rates
-5. **Monitoring**: Monitor call quality and success rates
-6. **Cost Control**: Set spending limits and monitor usage
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Outbound Calls" icon="phone-arrow-up-right" href="/speech/outbound-calls">
+    Full outbound guide: campaigns, callbacks, and per-call data.
+  </Card>
+  <Card title="Call Lifecycle" icon="timeline" href="/speech/call-lifecycle">
+    The async enqueue model and how statuses advance.
+  </Card>
+</CardGroup>
