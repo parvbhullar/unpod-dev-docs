@@ -21,15 +21,33 @@ Both paths share Steps 1-4 (SDK install, API key, voice profile, create Speech P
 
 ## Step 1 - Install the SDK
 
+<Warning>
+`unpod` is not yet on PyPI. Install it from source under **Python 3.12**. `anthropic` and `python-dotenv` install normally via pip.
+</Warning>
+
+**1. Clone and install `unpod` from source (Python 3.12 required):**
+
 ```bash
-pip install unpod superdialog python-dotenv
+git clone <unpod-sdk-repo>
+python3.12 -m pip install -e ./unpod-sdk
 ```
 
-Or with `uv`:
+**2. Install remaining packages:**
 
-```bash
-uv add unpod superdialog python-dotenv
-```
+<Tabs>
+  <Tab title="pip">
+    ```bash
+    python3.12 -m pip install anthropic python-dotenv
+    ```
+  </Tab>
+  <Tab title="uv">
+    [uv](https://astral.sh/uv) is a fast Python package manager.
+
+    ```bash
+    uv add anthropic python-dotenv
+    ```
+  </Tab>
+</Tabs>
 
 ---
 
@@ -37,7 +55,13 @@ uv add unpod superdialog python-dotenv
 
 <Tabs>
   <Tab title="Local Dev">
-    Run this in the project root to generate a key:
+    `task` is the [go-task](https://taskfile.dev) runner. Install it once:
+
+    ```bash
+    go install github.com/go-task/task/v3/cmd/task@latest
+    ```
+
+    Then generate a key:
 
     ```bash
     task create-api-key
@@ -53,16 +77,17 @@ Create a `.env` file in your project root and paste the key:
 ```bash
 UNPOD_API_KEY="sk-..."
 
-# Required for dialog flow (Step 6) — pick one LLM provider:
+# Required — Anthropic key for your dialog agent:
 ANTHROPIC_API_KEY="sk-ant-..."
-# OPENAI_API_KEY="sk-..."
 
-# Local dev / QA only — override the default orchestrator:
-# UNPOD_ORCHESTRATOR_URL="ws://localhost:8090"
+# --- Local dev only (remove for production) ---
+UNPOD_SERVICE_BASE_URL="http://localhost:8000/platform"        # AsyncClient REST API
+UNPOD_ORCHESTRATOR_URL="ws://localhost:8090"                   # AgentRunner WebSocket
+UNPOD_ORCHESTRATOR_BASE_URL="http://localhost:8090"            # AsyncClient orchestrator ops (transfer, end)
 ```
 
 <Note>
-All scripts in this guide call `load_dotenv(override=True)` at the top. The `override=True` ensures `.env` values win over any already-exported shell variables with the same name.
+All scripts in this guide call `load_dotenv(override=True)` **before** any `from unpod import ...` statement. The SDK reads `UNPOD_SERVICE_BASE_URL` at module import time — loading `.env` after the import is too late and silently falls back to the production URL.
 </Note>
 
 ---
@@ -70,11 +95,11 @@ All scripts in this guide call `load_dotenv(override=True)` at the top. The `ove
 ## Step 3 - Pick a Voice Profile
 
 ```python
-import asyncio
 from dotenv import load_dotenv
-from unpod import AsyncClient
-
 load_dotenv(override=True)
+
+import asyncio
+from unpod import AsyncClient
 
 async def main():
     async with AsyncClient() as client:
@@ -93,7 +118,7 @@ vp_james   James  male    standard
 ```
 
 <Note>
-**Seed profiles** (shown above) are available immediately. **Custom voices** must be created in the Unpod dashboard before they appear in this list. The name column (e.g. `Riya`) is what you pass as `voice_profile` in Step 4.
+**Seed profiles** (shown above) are available immediately. **Custom voices** must be created in the Unpod dashboard before they appear in this list. Pass `p.id` (the profile ID, e.g. `vp_riya`) as `voice_profile` in Step 4.
 </Note>
 
 ---
@@ -103,18 +128,18 @@ vp_james   James  male    standard
 A Speech Pipe ties a voice profile to your agent. The `agent_id` is a string you choose — it links the pipe to the `AgentRunner` you run in Step 6T.
 
 ```python
-import asyncio
 from dotenv import load_dotenv
-from unpod import AsyncClient
-
 load_dotenv(override=True)
+
+import asyncio
+from unpod import AsyncClient
 
 async def main():
     async with AsyncClient() as client:
         pipe = await client.pipes.create(
             name="Support Bot",
-            voice_profile="Riya",           # name from Step 3 output
-            agent_id="my-support-agent",    # your identifier — must match AgentRunner
+            voice_profile="vp_riya",         # profile_id from Step 3 (p.id)
+            agent_id="my-support-agent",     # your identifier — must match AgentRunner
             recording=True,
             max_call_duration_s=600,
         )
@@ -134,11 +159,11 @@ Save the `pipe.pipe_id` — you will use it in the steps below. A pipe without `
 ### Step 5T - Attach a Phone Number
 
 ```python
-import asyncio
 from dotenv import load_dotenv
-from unpod import AsyncClient
-
 load_dotenv(override=True)
+
+import asyncio
+from unpod import AsyncClient
 
 PIPE_ID = "pipe_..."
 NUMBER_ID = "num_..."   # from client.numbers.list()
@@ -162,35 +187,38 @@ See [Phone Numbers](/speech/numbers) for how to list, provision, or bring your o
 Create `agent.py`:
 
 ```python
-from superdialog import DialogMachine, Flow
-from unpod import AgentRunner, CallContext
 from dotenv import load_dotenv
-import os
-
 load_dotenv(override=True)
 
-flow = Flow.load("support.json")  # see Step 6 below for flow creation
+import os
+from anthropic import AsyncAnthropic
+from unpod import AgentRunner, CallContext
+from unpod.adapters import AnthropicAdapter
 
 async def handle_call(ctx: CallContext) -> None:
-    ctx.session.dialog_machine = DialogMachine(
-        flow=flow,
-        llm="anthropic/claude-haiku-4-5",
+    ctx.session.dialog_machine = AnthropicAdapter(
+        client=AsyncAnthropic(),
+        model="claude-haiku-4-5-20251001",
+        system_prompt=(
+            "You are Alex, a friendly support agent. "
+            "Greet the user, ask how you can help, resolve their issue, "
+            "and end the conversation when done."
+        ),
     )
-    await ctx.session.say("Hello, thanks for calling!")
     await ctx.session.run()
 
 AgentRunner(
     entrypoint=handle_call,
     agent_id="my-support-agent",    # must match agent_id in pipes.create()
     api_key=os.getenv("UNPOD_API_KEY"),
-    max_concurrent_calls=10,
+    max_sessions=10,
 ).start()
 ```
 
 ### Step 7T - Run and Call
 
 ```bash
-python agent.py
+python3.12 agent.py
 ```
 
 Call the number you attached. The runner connects to the Unpod orchestrator and dispatches inbound calls to your entrypoint. The process stays running and accepts calls until you stop it.
@@ -204,11 +232,11 @@ Call the number you attached. The runner connects to the Unpod orchestrator and 
 Your backend generates a short-lived session token for each user. The browser uses this token to connect.
 
 ```python
-import asyncio
 from dotenv import load_dotenv
-from unpod import AsyncClient
-
 load_dotenv(override=True)
+
+import asyncio
+from unpod import AsyncClient
 
 async def create_session(pipe_id: str, user_id: str) -> str:
     async with AsyncClient() as client:
@@ -221,7 +249,7 @@ async def create_session(pipe_id: str, user_id: str) -> str:
 asyncio.run(create_session("PIPE_...", "usr_123"))
 ```
 
-Return this token to your frontend. Tokens are single-use and expire after 60 seconds.
+Return this token to your frontend. Tokens are single-use — check `token.expires_at` for the actual expiry time.
 
 ### Step 6W - Embed the Web SDK
 
@@ -253,41 +281,10 @@ The same `AgentRunner` entrypoint handles both phone and browser sessions - no c
 ### Step 7W - Run Your Agent
 
 ```bash
-python agent.py
+python3.12 agent.py
 ```
 
 The runner accepts sessions from both telephony and web SDK connections on the same `agent_id`.
-
----
-
-## Step 6 - Build a Dialog Flow
-
-Both paths use the same conversation logic. Create a flow once:
-
-<Note>
-`create_dialog_flow` calls an LLM to generate the flow. Set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in your `.env` before running this script.
-</Note>
-
-```python
-import asyncio
-from dotenv import load_dotenv
-from superdialog import create_dialog_flow
-
-load_dotenv(override=True)
-
-async def main():
-    flow = await create_dialog_flow(
-        prompt=(
-            "You are Alex, a friendly support agent. "
-            "Greet the user, ask how you can help, resolve their issue, "
-            "and end the conversation when done."
-        ),
-        llm="anthropic/claude-haiku-4-5",
-    )
-    flow.save("support.json")
-
-asyncio.run(main())
-```
 
 ---
 
