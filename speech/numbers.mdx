@@ -45,7 +45,7 @@ async def main():
     async with AsyncClient(api_key="sk-...") as client:
         numbers = await client.numbers.list()
         for n in numbers:
-            print(n.id, n.number, n.status, n.pipe_id or "unattached")
+            print(n.number_id, n.number, n.status, n.pipe_id or "unattached")
 
 asyncio.run(main())
 ```
@@ -82,7 +82,7 @@ async def main():
         byon = await client.numbers.list(trunk_type="byo")
 
         for n in numbers:
-            print(n.id, n.number, n.status, n.pipe_id or "unattached")
+            print(n.number_id, n.number, n.status, n.pipe_id or "unattached")
 
 asyncio.run(main())
 ```
@@ -91,7 +91,7 @@ asyncio.run(main())
 
 | Field | Type | Description |
 |---|---|---|
-| `id` | `str` | Unique number ID (`num_...`) |
+| `number_id` | `str` | Unique number ID (`num_...`) |
 | `number` | `str` | E.164 format, e.g. `+14155550100` |
 | `status` | `str` | `active`, `inactive`, `pending` |
 | `trunk_type` | `str` | `unpod` or `byo` |
@@ -151,7 +151,7 @@ async def attach_first_free(pipe_id: str) -> None:
         free = [n for n in numbers if n.pipe_id is None]
         if not free:
             raise RuntimeError("No free numbers available")
-        await client.numbers.attach(free[0].id, pipe_id)
+        await client.numbers.attach(free[0].number_id, pipe_id)
         print("Attached", free[0].number)
 
 asyncio.run(attach_first_free("pipe_..."))
