@@ -33,7 +33,7 @@ async def create_pipe():
     client = AsyncClient()
     pipe = await client.pipes.create(
         name="My Agent",
-        voice_profile="en-female-1",   # use a name from step 1
+        voice_profile="vp_en_female_hd",   # use a profile_id from step 1
         agent_id="my-agent",           # MUST match AgentRunner(agent_id=...)
     )
     print(pipe.pipe_id)  # UUID - used for REST API calls
@@ -52,7 +52,7 @@ These are different. Mismatching them is the most common first-run failure.
 </Warning>
 
 <Note>
-Replace `"en-female-1"` with a profile name from Step 1. Run Step 1 first to see available names.
+Replace `"vp_en_female_hd"` with a `profile_id` from Step 1. Run Step 1 first to see available profiles.
 </Note>
 
 ## 3. Assign a Phone Number
@@ -131,5 +131,5 @@ AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `UNPOD_API_KEY` | Yes | Your Unpod API key |
-| `UNPOD_SERVICE_BASE_URL` | No | Default: `http://localhost:8000/platform` |
+| `UNPOD_SERVICE_BASE_URL` | No | Default: `https://api.unpod.io/platform`; use `http://localhost:8000/platform` for local service testing |
 | `UNPOD_ORCHESTRATOR_URL` | No | Default: `wss://api.unpod.io` |

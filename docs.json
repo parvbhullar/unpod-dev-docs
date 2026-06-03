@@ -83,7 +83,8 @@
             "icon": "phone-outgoing",
             "pages": [
               "speech/call-lifecycle",
-              "speech/outbound-calls"
+              "speech/outbound-calls",
+              "speech/telephony-states"
             ]
           }
         ]

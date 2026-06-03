@@ -228,6 +228,45 @@ async def handle_call(ctx: CallContext) -> None:
 
 ---
 
+## Out-of-Band Session Control
+
+The controls above run **inside** your entrypoint, on `ctx.session`. You can also
+act on a live session **from outside** it - e.g. from your backend or an ops tool
+- using the management SDK. These target the session by ID and are useful for
+supervisor handoffs, bulk control, or reacting to events elsewhere in your stack.
+
+```python
+from unpod import AsyncClient
+
+async with AsyncClient(api_key="sk-...") as client:
+    # End a live session
+    await client.sessions.end(session_id)
+
+    # Transfer it (supports a warm handoff, unlike the cold in-call transfer)
+    await client.sessions.transfer(
+        session_id,
+        to_type="sip",
+        to_config={"number": "+15551230000"},
+        mode="warm",
+        warm_handoff_ms=4000,
+    )
+
+    # Merge other sessions into a primary one (e.g. conference a supervisor in)
+    await client.sessions.merge(
+        primary_session_id,
+        secondary_session_ids=[other_session_id],
+    )
+```
+
+<Note>
+These operate on the orchestrator that owns the live session, so the management
+client must be configured to reach it (see the SDK client `orchestrator_base_url`
+option). The in-call `ctx.session.transfer_to_*` helpers remain the simplest way
+to transfer from within your dialog logic.
+</Note>
+
+---
+
 ## Next Steps
 
 <CardGroup cols={2}>

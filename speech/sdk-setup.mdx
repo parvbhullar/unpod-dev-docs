@@ -43,7 +43,7 @@ async def handle_call(ctx: CallContext) -> None:
 
 runner = AgentRunner(
     entrypoint=handle_call,
-    agent_id="agt_...",  # the agent_id from your Speech Pipe settings
+    agent_id="my-agent",  # the agent_id from your Speech Pipe settings
 )
 runner.start()  # blocking
 ```
@@ -100,7 +100,7 @@ React to runner-level events (not individual session events):
 ```python
 from unpod import AgentRunner, CallContext
 
-runner = AgentRunner(entrypoint=handle_call, agent_id="agt_...")
+runner = AgentRunner(entrypoint=handle_call, agent_id="my-agent")
 
 @runner.on("call_start")
 async def on_call_start(ctx: CallContext) -> None:
@@ -186,7 +186,7 @@ with Client(api_key="sk-...") as client:
 import asyncio
 from unpod import AgentRunner, CallContext
 
-runner = AgentRunner(entrypoint=handle_call, agent_id="agt_...")
+runner = AgentRunner(entrypoint=handle_call, agent_id="my-agent")
 
 async def log_stats() -> None:
     while True:
@@ -220,7 +220,7 @@ import signal
 import asyncio
 from unpod import AgentRunner, CallContext
 
-runner = AgentRunner(entrypoint=handle_call, agent_id="agt_...")
+runner = AgentRunner(entrypoint=handle_call, agent_id="my-agent")
 
 def handle_sigterm(signum, frame):
     asyncio.create_task(runner.shutdown())

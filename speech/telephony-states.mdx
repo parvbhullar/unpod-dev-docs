@@ -1,0 +1,121 @@
+---
+title: 'Telephony States'
+icon: 'phone-arrow-up-right'
+description: 'The states a phone call moves through, voicemail detection, and the end reasons your agent observes.'
+---
+
+## Overview
+
+A phone call is more than "ringing" and "answered". Behind a single outbound
+`calls.create()` (or an inbound call), Unpod tracks the call through a small set
+of telephony states and classifies how it ended. You never drive these states
+yourself - Unpod does - but you observe them through the call `status`, the
+`call_end` hook, and the final `end_reason`.
+
+This page covers what those states mean for your agent and how voicemail is
+handled automatically.
+
+---
+
+## Call states
+
+As a call progresses, Unpod moves it through these states. The developer-visible
+`status` on a call row maps onto them:
+
+| State | What is happening | Visible `status` |
+|---|---|---|
+| `dialing` | Outbound call is being placed; the SIP leg is originating. | `ringing` |
+| `ringing` | The far end is ringing and has not yet answered. | `ringing` |
+| `active` | Both legs are connected; your agent is talking to the caller. | `active` |
+| `not_connected` | The call never reached a live conversation (no answer, busy, blocked, voicemail pre-connect). | `failed` |
+| `ended` | The conversation finished after being `active`. | `completed` |
+| `canceled` | The call was canceled before it connected. | `failed` |
+
+<Note>
+Inbound calls skip `dialing` - the caller is already on the line, so the call
+starts at `ringing`/`active`. Only outbound calls pass through the full dial
+sequence.
+</Note>
+
+---
+
+## Voicemail detection
+
+Unpod automatically detects when an outbound call has reached a voicemail system
+so your agent does not waste a turn talking to a machine. There are two
+detection points:
+
+<Steps>
+  <Step title="Pre-connect (during ringing)">
+    Many carriers route "forwarded to voicemail" to a SIP *user-unavailable*
+    signal after a brief ring. When Unpod sees this pattern after a non-trivial
+    ring, it classifies the call as voicemail **before** it ever connects, ends
+    the call, and reports `end_reason: "VOICEMAIL_DETECTED_PRECONNECT"`.
+  </Step>
+  <Step title="Post-connect (just after answer)">
+    Some voicemail systems answer the call, play a greeting, then go silent.
+    If a call connects, the caller never speaks, and the leg ends within a short
+    window, Unpod classifies it as voicemail and reports
+    `end_reason: "AGENT_HUNG_UP_VOICEMAIL_DETECTED"`.
+  </Step>
+</Steps>
+
+<Tip>
+Use the `end_reason` in your `call_end` hook to branch your follow-up: e.g.
+schedule a retry for voicemail, but suppress one for a wrong/blocked number.
+</Tip>
+
+---
+
+## End reasons
+
+When a call finishes, Unpod records why. These are the reasons you are most
+likely to act on:
+
+| `end_reason` | Meaning |
+|---|---|
+| `USER_HUNG_UP_IN_CALL` | The caller hung up during the conversation. |
+| `USER_DID_NOT_PICK_UP` | Outbound call rang out with no answer. |
+| `USER_HUNG_UP_RINGING` | The caller rejected the call while ringing. |
+| `AGENT_HUNG_UP_SILENCE_DETECTED` | The agent ended the call after prolonged user silence. |
+| `AGENT_HUNG_UP_VOICEMAIL_DETECTED` | Voicemail detected after connect; agent hung up. |
+| `VOICEMAIL_DETECTED_PRECONNECT` | Voicemail detected during ringing; call never connected. |
+| `MAX_DURATION_REACHED` | The hard per-call duration cap was hit. |
+| `IDLE_TIMEOUT` | The call was idle too long and was reaped. |
+| `SIP_FAILED_WRONG_NUMBER` | The number was invalid or unreachable. |
+| `SIP_FAILED_NUMBER_BLOCKED` | The carrier blocked the call. |
+
+<Note>
+This is not the full set - additional reasons exist for SIP/trunk
+configuration errors and handover edge cases. Treat unknown reasons as a
+generic failure and log them.
+</Note>
+
+---
+
+## Reacting to states in your agent
+
+You observe telephony outcomes through hooks rather than polling state directly:
+
+```python
+@ctx.session.on("call_end")
+async def on_end(final_state: str) -> None:
+    reason = ctx.session.data.get("end_reason")
+    if reason == "VOICEMAIL_DETECTED_PRECONNECT":
+        await schedule_retry(ctx.user_number, after_minutes=120)
+    elif reason in ("SIP_FAILED_WRONG_NUMBER", "SIP_FAILED_NUMBER_BLOCKED"):
+        await mark_unreachable(ctx.user_number)
+```
+
+For outbound batch dialing, watch the call `status` advance from `pending` →
+`ringing` → `active` → `completed` (or `failed`) via `client.calls.get(...)` -
+see [Call Lifecycle](/speech/call-lifecycle).
+
+---
+
+## Related
+
+- [Call Lifecycle](/speech/call-lifecycle) - end-to-end flow for both directions
+- [Outbound Calls](/speech/outbound-calls) - the `calls.create()` API in detail
+- [Hooks & Events](/speech/hooks-events) - every lifecycle event you can hook
+- [Session Controls](/speech/session-controls) - ending and transferring live calls

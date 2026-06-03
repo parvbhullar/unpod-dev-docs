@@ -45,7 +45,7 @@ async def main():
     async with AsyncClient(api_key="sk-...") as client:
         numbers = await client.numbers.list()
         for n in numbers:
-            print(n.id, n.phone_number, n.status, n.pipe_id or "unattached")
+            print(n.id, n.number, n.status, n.pipe_id or "unattached")
 
 asyncio.run(main())
 ```
@@ -82,7 +82,7 @@ async def main():
         byon = await client.numbers.list(trunk_type="byo")
 
         for n in numbers:
-            print(n.id, n.phone_number, n.status, n.pipe_id or "unattached")
+            print(n.id, n.number, n.status, n.pipe_id or "unattached")
 
 asyncio.run(main())
 ```
@@ -92,7 +92,7 @@ asyncio.run(main())
 | Field | Type | Description |
 |---|---|---|
 | `id` | `str` | Unique number ID (`num_...`) |
-| `phone_number` | `str` | E.164 format, e.g. `+14155550100` |
+| `number` | `str` | E.164 format, e.g. `+14155550100` |
 | `status` | `str` | `active`, `inactive`, `pending` |
 | `trunk_type` | `str` | `unpod` or `byo` |
 | `pipe_id` | `str \| None` | Attached Speech Pipe, or `None` if free |
@@ -114,7 +114,7 @@ async def main():
             number_id="num_...",
             pipe_id="pipe_...",
         )
-        print("Attached:", number.phone_number, "-> pipe", number.pipe_id)
+        print("Attached:", number.number, "-> pipe", number.pipe_id)
 
 asyncio.run(main())
 ```
@@ -130,7 +130,7 @@ from unpod import AsyncClient
 async def main():
     async with AsyncClient(api_key="sk-...") as client:
         number = await client.numbers.detach("num_...")
-        print("Detached:", number.phone_number)
+        print("Detached:", number.number)
 
 asyncio.run(main())
 ```
@@ -152,7 +152,7 @@ async def attach_first_free(pipe_id: str) -> None:
         if not free:
             raise RuntimeError("No free numbers available")
         await client.numbers.attach(free[0].id, pipe_id)
-        print("Attached", free[0].phone_number)
+        print("Attached", free[0].number)
 
 asyncio.run(attach_first_free("pipe_..."))
 ```

@@ -20,7 +20,7 @@ The hook system lets you register `async` handlers that fire at specific points 
 ```python
 from unpod import AgentRunner, CallContext
 
-runner = AgentRunner(entrypoint=handle_call, agent_id="agt_...")
+runner = AgentRunner(entrypoint=handle_call, agent_id="my-agent")
 
 # Runner-level hook
 @runner.on("call_start")
@@ -247,7 +247,7 @@ async def handle_call(ctx: CallContext) -> None:
 import time
 from unpod import AgentRunner, CallContext
 
-runner = AgentRunner(entrypoint=handle_call, agent_id="agt_...")
+runner = AgentRunner(entrypoint=handle_call, agent_id="my-agent")
 
 @runner.on("call_start")
 async def runner_start(ctx: CallContext) -> None:

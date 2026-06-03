@@ -85,7 +85,7 @@ async def handle_call(ctx: CallContext) -> None:
 
 runner = AgentRunner(
     entrypoint=handle_call,
-    agent_id="agt_...",
+    agent_id="my-agent",
 )
 runner.start()
 ```
@@ -348,7 +348,7 @@ async def handle_call(ctx: CallContext) -> None:
 
 runner = AgentRunner(
     entrypoint=handle_call,
-    agent_id="agt_...",
+    agent_id="my-agent",
 )
 
 if __name__ == "__main__":

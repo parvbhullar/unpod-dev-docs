@@ -106,6 +106,14 @@ Everything audio-related is managed by Unpod on both phone and WebSocket session
 
 Your code only ever sees text.
 
+<Note>
+Media binding is handled entirely on Unpod's side. A media worker joins the
+LiveKit room for the session and bridges the caller's audio; your dialog brain
+connects over a separate text-only channel and never touches the audio stream
+or any SDP negotiation. This is why the same agent code runs unchanged across
+phone and WebSocket sessions.
+</Note>
+
 ---
 
 ## Next Steps
