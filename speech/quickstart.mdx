@@ -22,22 +22,48 @@ Both paths share Steps 1-4 (SDK install, API key, voice profile, create Speech P
 ## Step 1 - Install the SDK
 
 ```bash
-pip install unpod superdialog
+pip install unpod superdialog python-dotenv
 ```
 
 Or with `uv`:
 
 ```bash
-uv add unpod superdialog
+uv add unpod superdialog python-dotenv
 ```
 
 ---
 
 ## Step 2 - Set Your API Key
 
+<Tabs>
+  <Tab title="Local Dev">
+    Run this in the project root to generate a key:
+
+    ```bash
+    task create-api-key
+    ```
+  </Tab>
+  <Tab title="Production">
+    Go to [app.unpod.dev](https://app.unpod.dev) → **Settings → API Keys** and create a new key.
+  </Tab>
+</Tabs>
+
+Create a `.env` file in your project root and paste the key:
+
 ```bash
-export UNPOD_API_KEY="sk-..."
+UNPOD_API_KEY="sk-..."
+
+# Required for dialog flow (Step 6) — pick one LLM provider:
+ANTHROPIC_API_KEY="sk-ant-..."
+# OPENAI_API_KEY="sk-..."
+
+# Local dev / QA only — override the default orchestrator:
+# UNPOD_ORCHESTRATOR_URL="ws://localhost:8090"
 ```
+
+<Note>
+All scripts in this guide call `load_dotenv(override=True)` at the top. The `override=True` ensures `.env` values win over any already-exported shell variables with the same name.
+</Note>
 
 ---
 
@@ -45,10 +71,13 @@ export UNPOD_API_KEY="sk-..."
 
 ```python
 import asyncio
+from dotenv import load_dotenv
 from unpod import AsyncClient
 
+load_dotenv(override=True)
+
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient() as client:
         profiles = await client.voice_profiles.list(language="en")
         for p in profiles:
             print(p.id, p.name, p.gender, p.quality)
@@ -56,35 +85,46 @@ async def main():
 asyncio.run(main())
 ```
 
-Example output:
+Example output (profile IDs vary by account and region):
+
 ```
-vp_en_female_hd   Emma (HD)    female  high
-vp_en_male_std    James (Std)  male    standard
+vp_riya    Riya   female  high
+vp_james   James  male    standard
 ```
+
+<Note>
+**Seed profiles** (shown above) are available immediately. **Custom voices** must be created in the Unpod dashboard before they appear in this list. The name column (e.g. `Riya`) is what you pass as `voice_profile` in Step 4.
+</Note>
 
 ---
 
 ## Step 4 - Create a Speech Pipe
 
+A Speech Pipe ties a voice profile to your agent. The `agent_id` is a string you choose — it links the pipe to the `AgentRunner` you run in Step 6T.
+
 ```python
 import asyncio
+from dotenv import load_dotenv
 from unpod import AsyncClient
 
+load_dotenv(override=True)
+
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient() as client:
         pipe = await client.pipes.create(
             name="Support Bot",
-            voice_profile="vp_en_female_hd",
+            voice_profile="Riya",           # name from Step 3 output
+            agent_id="my-support-agent",    # your identifier — must match AgentRunner
             recording=True,
             max_call_duration_s=600,
         )
-        print("Pipe ID:", pipe.id)
+        print("Pipe ID:", pipe.pipe_id)
 
 asyncio.run(main())
 ```
 
 <Note>
-Save the `pipe.id` - you will use it in the steps below.
+Save the `pipe.pipe_id` — you will use it in the steps below. A pipe without `agent_id` will show as `degraded` and calls will not be dispatched to your runner.
 </Note>
 
 ---
@@ -95,15 +135,18 @@ Save the `pipe.id` - you will use it in the steps below.
 
 ```python
 import asyncio
+from dotenv import load_dotenv
 from unpod import AsyncClient
+
+load_dotenv(override=True)
 
 PIPE_ID = "pipe_..."
 NUMBER_ID = "num_..."   # from client.numbers.list()
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient() as client:
         number = await client.numbers.attach(NUMBER_ID, PIPE_ID)
-        print("Attached:", number.phone_number, "->", number.pipe_id)
+        print("Attached:", number.number, "->", number.pipe_id)
 
 asyncio.run(main())
 ```
@@ -112,11 +155,19 @@ See [Phone Numbers](/speech/numbers) for how to list, provision, or bring your o
 
 ### Step 6T - Write Your Entrypoint
 
+<Note>
+`agent_id` is a string you define (e.g. `"my-support-agent"`). It must be identical in both `pipes.create()` (Step 4) and `AgentRunner` below — this is how Unpod routes inbound calls to your runner.
+</Note>
+
 Create `agent.py`:
 
 ```python
 from superdialog import DialogMachine, Flow
 from unpod import AgentRunner, CallContext
+from dotenv import load_dotenv
+import os
+
+load_dotenv(override=True)
 
 flow = Flow.load("support.json")  # see Step 6 below for flow creation
 
@@ -130,8 +181,8 @@ async def handle_call(ctx: CallContext) -> None:
 
 AgentRunner(
     entrypoint=handle_call,
-    agent_id="agt_...",
-    api_key="sk-...",
+    agent_id="my-support-agent",    # must match agent_id in pipes.create()
+    api_key=os.getenv("UNPOD_API_KEY"),
     max_concurrent_calls=10,
 ).start()
 ```
@@ -142,13 +193,7 @@ AgentRunner(
 python agent.py
 ```
 
-Call the number you attached. The runner connects to the Unpod orchestrator and dispatches inbound calls to your entrypoint.
-
-```
-[Unpod] AgentRunner registered  agent_id=agt_... capacity=10
-[Unpod] Call dispatched         session_id=ses_...
-[Unpod] Call ended              duration=47s
-```
+Call the number you attached. The runner connects to the Unpod orchestrator and dispatches inbound calls to your entrypoint. The process stays running and accepts calls until you stop it.
 
 ---
 
@@ -160,10 +205,13 @@ Your backend generates a short-lived session token for each user. The browser us
 
 ```python
 import asyncio
+from dotenv import load_dotenv
 from unpod import AsyncClient
 
+load_dotenv(override=True)
+
 async def create_session(pipe_id: str, user_id: str) -> str:
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient() as client:
         token = await client.sessions.create_token(
             pipe_id=pipe_id,
             metadata={"user_id": user_id},
@@ -216,9 +264,16 @@ The runner accepts sessions from both telephony and web SDK connections on the s
 
 Both paths use the same conversation logic. Create a flow once:
 
+<Note>
+`create_dialog_flow` calls an LLM to generate the flow. Set `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in your `.env` before running this script.
+</Note>
+
 ```python
 import asyncio
+from dotenv import load_dotenv
 from superdialog import create_dialog_flow
+
+load_dotenv(override=True)
 
 async def main():
     flow = await create_dialog_flow(
