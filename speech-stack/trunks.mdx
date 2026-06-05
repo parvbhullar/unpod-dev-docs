@@ -1,40 +1,24 @@
 ---
 title: 'Trunks'
 icon: 'cable'
-description: 'Connect carrier capacity: managed LiveKit trunks or bring your own SIP carrier.'
+description: 'Connect your carrier: register a SIP trunk and sync its numbers into Unpod.'
 ---
 
 A [Trunk](/get-started/core-concepts#trunk) is your carrier connection — the
-SIP capacity phone numbers ride on. Numbers come from trunks: after you create
-one, `client.numbers.sync()` discovers its numbers so you can attach them to a
-[Speech Pipe](/speech-stack/pipes).
+SIP capacity phone numbers ride on. Numbers come from trunks: after you
+register one, `client.numbers.sync()` discovers its numbers so you can attach
+them to a [Speech Pipe](/speech-stack/pipes).
 
-Two types:
+You bring your own carrier (Twilio, Tata, …) and register it once with its SIP
+credentials. After that you work with numbers, not SIP.
 
-| Type | What it is | When |
-|---|---|---|
-| `livekit` | A managed SIP trunk you created in the LiveKit dashboard | Fastest path; Unpod references it by ID |
-| `byo` | Bring-your-own carrier via SIP credentials | You already have a carrier (Twilio, Tata, …) |
-
-## Create a LiveKit trunk
+## Register a trunk
 
 ```python
 from unpod import AsyncClient
-from unpod.models import TrunkCreate
+from unpod.models import TrunkCreate, ByoConfigCreate
 
 client = AsyncClient()
-
-trunk = await client.trunks.create(TrunkCreate(
-    name="main-trunk",
-    type="livekit",
-    provider_trunk_id="lk-trunk-id-from-livekit-dashboard",
-))
-```
-
-## Create a BYO trunk
-
-```python
-from unpod.models import TrunkCreate, ByoConfigCreate
 
 trunk = await client.trunks.create(TrunkCreate(
     name="tata-byo",
