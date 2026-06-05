@@ -1,0 +1,147 @@
+---
+title: 'Quickstart'
+icon: 'play'
+description: 'Talk to your own voice agent in the browser in about 5 minutes. No phone number needed.'
+---
+
+Talk to your own voice agent in the browser in about 5 minutes. **No phone
+number needed.** You write one small Python file; Unpod handles the microphone,
+speech-to-text, text-to-speech, and audio transport. You connect from a browser
+tab and speak.
+
+This is the fastest way to hear your agent. When you want a real phone call,
+follow [Make Your First Phone Call](/get-started/first-phone-call) afterwards.
+
+## Prerequisites
+
+- **Python 3.12+** (the `unpod` SDK requires it).
+- **An Unpod API key.** For local development you can use a dev key (shown
+  below). For production, generate one from the
+  [API Key](/platform/studio-view/api-key) screen in Studio.
+- **An LLM key** — `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` — for the agent's
+  brain.
+
+Install the SDK and the dialog package:
+
+```bash
+uv add unpod superdialog
+```
+
+## Set your environment
+
+The SDK reads two base URLs from the environment. **This is the one place they
+are documented** — other pages link here.
+
+| Variable | Used by | Default |
+|---|---|---|
+| `UNPOD_SERVICE_BASE_URL` | `AsyncClient` (Management REST API) | `https://api.unpod.io` |
+| `UNPOD_ORCHESTRATOR_BASE_URL` | `AsyncClient` orchestrator operations | `https://api.unpod.io` |
+
+The `AgentRunner` connects over WebSocket. In production it defaults to
+`wss://api.unpod.io`; you can override it with `UNPOD_ORCHESTRATOR_URL` or by
+passing `base_url=...` directly (which is exactly what the local browser path
+below does).
+
+<Note>
+For this browser quickstart you do **not** set the production URLs. Your
+`AgentRunner` points at a local dev speech server with `base_url="ws://127.0.0.1:9000"`
+and a dev key. Set only your LLM key:
+
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."   # or OPENAI_API_KEY
+```
+</Note>
+
+## Write the agent
+
+This is the only code you write. Save it as `agent.py`. Lifted from the SDK's
+browser example, it is about 20 lines.
+
+```python
+# agent.py
+from unpod import AgentRunner, CallContext
+from superdialog import LLMAgent
+
+async def entrypoint(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = LLMAgent(
+        llm="anthropic/claude-haiku-4-5-20251001",
+        system_prompt="You are a helpful voice assistant. Keep answers under 3 sentences.",
+    )
+    await ctx.session.run()
+
+if __name__ == "__main__":
+    AgentRunner(
+        entrypoint=entrypoint,
+        agent_id="my-agent",
+        base_url="ws://127.0.0.1:9000",  # local dev speech server
+        api_key="dev-key",               # local dev only
+    ).start()
+```
+
+Three pieces:
+
+- **`entrypoint(ctx)`** runs once per call. `ctx` is the
+  [CallContext](/get-started/core-concepts#callcontext) for that call.
+- **The brain** is `LLMAgent` — the simplest brain: a plain LLM with a system
+  prompt, no flow graph. Assigning it to `ctx.session.dialog_machine` is how you
+  plug your [Agent](/get-started/core-concepts#agent-brain) into the call.
+- **`AgentRunner`** is the long-lived process that registers as a worker and
+  serves each call. See [AgentRunner](/get-started/core-concepts#agentrunner).
+
+`await ctx.session.run()` keeps the call alive and routes each transcribed turn
+to your brain. See [Session](/get-started/core-concepts#session).
+
+<Note>
+`LLMAgent` ships in the `superdialog` package, but it is **not** a flow-based
+`DialogMachine` — it is the minimal LLM-only brain. You can swap in a pure
+adapter (`unpod.adapters.AnthropicAdapter`) or any other brain later; see
+[Bring Your Agent](/speech-stack/bring-your-agent).
+</Note>
+
+## Run and talk
+
+You need two terminals: one for the local dev speech server (microphone, STT,
+TTS, audio transport), one for your agent.
+
+**Terminal 1 — start the dev speech server.** It serves the browser UI on
+**http://localhost:9000** and runs independently of your agent code.
+
+```bash
+uv run uvicorn supervoice.dev.app:create_dev_app --factory --port 9000
+```
+
+**Terminal 2 — run your agent.** It registers as a worker with the dev server.
+
+```bash
+uv run python agent.py
+```
+
+Now open **http://localhost:9000**, click **Connect**, allow microphone access,
+and speak. You will see a live transcript of your words and the agent's
+replies, plus latency badges on each turn.
+
+<Tip>
+Prefer one command? The SDK ships a **browser playground** that builds the UI,
+starts the server on `http://localhost:9100`, and runs your agent in-process:
+
+```bash
+task playground
+```
+
+It uses the same `entrypoint` + `AgentRunner` pattern as above. See the
+`examples/browser_playground/` directory in the SDK.
+</Tip>
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Give it a phone number" icon="phone" href="/get-started/first-phone-call">
+    Take the same agent to a real inbound or outbound phone call.
+  </Card>
+  <Card title="Use your existing agent" icon="bot" href="/speech-stack/bring-your-agent">
+    Plug in LangChain, an HTTP endpoint, or any brain you already have.
+  </Card>
+  <Card title="Understand the pieces" icon="layers" href="/get-started/core-concepts">
+    Pipe, AgentRunner, Session, and every other term defined once.
+  </Card>
+</CardGroup>

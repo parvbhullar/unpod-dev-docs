@@ -26,6 +26,7 @@
             "icon": "rocket",
             "pages": [
               "get-started/why-unpod",
+              "get-started/quickstart",
               "get-started/vs-competition",
               "get-started/first-phone-call",
               "get-started/core-concepts"
