@@ -150,7 +150,8 @@
               "platform/introduction",
               "platform/onboarding",
               "platform/register",
-              "platform/use-cases"
+              "platform/use-cases",
+              "platform/build-an-agent"
             ]
           },
           {
@@ -222,7 +223,8 @@
             "pages": [
               "api/overview",
               "api/get-started/quickstart",
-              "api/get-started/authentication"
+              "api/get-started/authentication",
+              "api/post-call-data"
             ]
           },
           {
