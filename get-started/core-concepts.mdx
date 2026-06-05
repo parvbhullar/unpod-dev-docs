@@ -89,8 +89,9 @@ agent. See [Pipes](/speech-stack/pipes).
 The text-routing seam inside Unpod between the speech pipeline and your code.
 Transcribed caller text crosses the Bridge to your AgentRunner; your reply text
 crosses back to be synthesised. The Bridge is why your code never touches audio.
-It is Unpod-internal infrastructure - you do not configure it, but the term
-appears in the protocol.
+It is Unpod-internal infrastructure - you do not configure it; you'll see the
+term in WebSocket frame names and in the legacy
+[Bridges API](/api/telephony/bridges-overview).
 
 ### Agent (Brain)
 
@@ -116,12 +117,20 @@ metrics, and the `dialog_machine` slot where you plug in your brain. Calling
 `session.run()` keeps the call alive and routes each transcribed turn to your
 brain. See [Session Controls](/speech-stack/session-controls).
 
+### CallContext
+
+The per-call metadata envelope your entrypoint receives:
+`async def entrypoint(ctx: CallContext)`. It carries `call_id`, `session_id`,
+`agent_id`, `direction` (`"inbound"` or `"outbound"`), `user_number`, any
+`instructions` and `data` from dispatch, and the live `session` you control the
+call through.
+
 ### Space
 
 A Platform concept, not an SDK one. A Space is a workspace container in the Unpod
 Platform that organises agents, tasks, runs, and data. The Platform's REST API
 addresses a space by its **space token**. You only meet spaces when you use the
-hosted Platform or its v2 API - the voice SDK does not require one.
+hosted Platform or its REST API - the voice SDK does not require one.
 
 ## Two APIs
 
@@ -175,8 +184,8 @@ common reason a call never reaches your runner. The `agent_id` you pass to
 | ID | What it identifies | Where it comes from |
 |---|---|---|
 | **`agent_id`** | Your runner pool - which AgentRunner should handle a call | A string **you choose**. Passed to both `AgentRunner(agent_id=...)` and `client.pipes.create(agent_id=...)`. They must match exactly. |
-| **`pipe_id`** | One Speech Pipe in the Control Plane | A UUID **Unpod assigns** when you create the pipe. Used in REST calls (`numbers.attach`, `calls.create`). |
-| **Space token** | A Platform workspace | A token from the Platform's Spaces API. Used only in hosted Platform / v2 API URLs, not in the voice SDK. |
+| **`pipe_id`** | One Speech Pipe in the Speech Stack | A UUID **Unpod assigns** when you create the pipe. Used in REST calls (`numbers.attach`, `calls.create`). |
+| **Space token** | A Platform workspace | A token from the Platform's Spaces API. Used only in the hosted Platform and its REST API, not in the voice SDK. |
 | **Runner agent ID** | Same as `agent_id` | Just another name for `agent_id` as seen from the runner side. Internally the runner derives a `worker_id` (`<agent_id>#<random>`) per process, but you never set that. |
 
 Wiring it correctly:
