@@ -32,15 +32,6 @@
               "get-started/core-concepts",
               "get-started/choose-your-path"
             ]
-          },
-          {
-            "group": "AI Tools",
-            "icon": "sparkles",
-            "pages": [
-              "ai-tools/claude-code",
-              "ai-tools/cursor",
-              "ai-tools/windsurf"
-            ]
           }
         ]
       },
