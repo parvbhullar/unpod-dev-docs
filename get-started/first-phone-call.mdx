@@ -1,353 +1,184 @@
 ---
-title: 'Quickstart'
-icon: 'bolt'
-description: 'Get a voice agent running - via phone call or browser/app - in under 10 minutes.'
+title: 'Make Your First Phone Call'
+icon: 'phone'
+description: 'Take the agent you built in the browser quickstart to a real inbound or outbound phone call.'
 ---
 
-## Prerequisites
+You built and talked to your agent in the browser in the
+[Quickstart](/get-started/quickstart). Now give it a phone number.
 
-- **Python 3.11+**
-- An Unpod API key (see Step 2)
+Nothing about the agent changes — same `entrypoint`, same
+[`LLMAgent`](/get-started/core-concepts#agent-brain) brain, same
+[`AgentRunner`](/get-started/core-concepts#agentrunner) against Unpod's hosted
+speech service. The only new work is provisioning: telling Unpod which phone
+number routes to your agent.
 
-<Note>
-**Local development:** the production API at `wss://api.unpod.io` is not yet live.
-Until it is, run `supervoice` locally and point the SDK at it by overriding
-`base_url` (the SDK defaults to `wss://api.unpod.io`):
+## What you'll add
 
-```bash
-# Terminal 1 — start the backend
-cd supervoice && uv run uvicorn supervoice.main:app --port 8000 --reload
-```
+- **A [Speech Pipe](/get-started/core-concepts#pipe)** — the configuration entity
+  that binds a voice profile, recording settings, and the `agent_id` that points
+  at your runner.
+- **A [phone number](/get-started/core-concepts#number)** — synced from a
+  [trunk](/get-started/core-concepts#trunk) and attached to that pipe.
 
-Then pass `base_url="ws://127.0.0.1:8000"` to `AgentRunner(...)` and set
-`UNPOD_SERVICE_BASE_URL="http://localhost:8000/platform"` for the management client.
-</Note>
+You reference a [voice profile](/get-started/core-concepts#voice-profile) from
+the read-only catalog when you create the pipe; you do not create one.
 
-## Choose Your Path
+## Provision the number
 
-<CardGroup cols={2}>
-  <Card title="Phone / Telephony" icon="phone" href="#telephony-path">
-    Users call a phone number. Provision a number, attach it to your Speech Pipe, handle inbound calls.
-  </Card>
-  <Card title="Browser / App" icon="monitor-smartphone" href="#web-app-path">
-    Users connect from a web or mobile app. Embed the Web SDK in your frontend, no phone number needed.
-  </Card>
-</CardGroup>
+Provisioning uses the **Management API** — the REST half of the SDK, reached
+through `AsyncClient`. It reads `UNPOD_API_KEY` and `UNPOD_SERVICE_BASE_URL` from
+the environment, both of which the [Quickstart](/get-started/quickstart#set-your-environment)
+already covers (`UNPOD_SERVICE_BASE_URL` defaults to
+`https://api.unpod.io/platform`).
 
-Both paths share Steps 1-5 (SDK install, API key, voice profile, create Speech Pipe, build a dialog flow). They diverge at Step 6.
-
----
-
-## Step 1 - Install the SDK
-
-<Warning>
-`unpod` is not yet on PyPI. Install it from source under **Python 3.12**. `anthropic` and `python-dotenv` install normally via pip.
-</Warning>
-
-**1. Clone and install `unpod` from source (Python 3.12 required):**
-
-```bash
-git clone <unpod-sdk-repo>
-python3.12 -m pip install -e ./unpod-sdk
-```
-
-**2. Install remaining packages:**
-
-<Tabs>
-  <Tab title="pip">
-    ```bash
-    python3.12 -m pip install anthropic python-dotenv
-    ```
-  </Tab>
-  <Tab title="uv">
-    [uv](https://astral.sh/uv) is a fast Python package manager.
-
-    ```bash
-    uv add anthropic python-dotenv
-    ```
-  </Tab>
-</Tabs>
-
----
-
-## Step 2 - Set Your API Key
-
-<Tabs>
-  <Tab title="Local Dev">
-    `task` is the [go-task](https://taskfile.dev) runner. Install it once:
-
-    ```bash
-    go install github.com/go-task/task/v3/cmd/task@latest
-    ```
-
-    Then generate a key:
-
-    ```bash
-    task create-api-key
-    ```
-  </Tab>
-  <Tab title="Production">
-    Go to [app.unpod.dev](https://app.unpod.dev) → **Settings → API Keys** and create a new key.
-  </Tab>
-</Tabs>
-
-Create a `.env` file in your project root and paste the key:
-
-```bash
-UNPOD_API_KEY="sk-..."
-
-# Required — Anthropic key for your dialog agent:
-ANTHROPIC_API_KEY="sk-ant-..."
-
-# --- Local dev only (remove for production) ---
-UNPOD_SERVICE_BASE_URL="http://localhost:8000/platform"        # AsyncClient REST API
-UNPOD_ORCHESTRATOR_URL="ws://localhost:8090"                   # AgentRunner WebSocket
-UNPOD_ORCHESTRATOR_BASE_URL="http://localhost:8090"            # AsyncClient orchestrator ops (transfer, end)
-```
-
-<Note>
-All scripts in this guide call `load_dotenv(override=True)` **before** any `from unpod import ...` statement. The SDK reads `UNPOD_SERVICE_BASE_URL` at module import time — loading `.env` after the import is too late and silently falls back to the production URL.
-</Note>
-
----
-
-## Step 3 - Pick a Voice Profile
+Run this once to pick a voice profile, create the pipe, sync numbers from your
+trunks, and attach the first available number:
 
 ```python
-from dotenv import load_dotenv
-load_dotenv(override=True)
-
+# setup.py — run once to provision your phone number
 import asyncio
 from unpod import AsyncClient
 
-async def main():
+async def setup() -> None:
     async with AsyncClient() as client:
+        # 1. Pick a voice profile from the read-only catalog.
         profiles = await client.voice_profiles.list(language="en")
-        for p in profiles:
-            print(p.id, p.name, p.gender, p.quality)
+        if not profiles:
+            print("No voice profiles found.")
+            return
+        vp = profiles[0]
+        print(f"Using voice profile: {vp.name} ({vp.profile_id})")
 
-asyncio.run(main())
-```
-
-Example output (profile IDs vary by account and region):
-
-```
-vp_riya    Riya   female  high
-vp_james   James  male    standard
-```
-
-<Note>
-**Seed profiles** (shown above) are available immediately. **Custom voices** must be created in the Unpod dashboard before they appear in this list. Pass `p.id` (the profile ID, e.g. `vp_riya`) as `voice_profile` in Step 4.
-</Note>
-
----
-
-## Step 4 - Create a Speech Pipe
-
-A Speech Pipe ties a voice profile to your agent. The `agent_id` is a string you choose — it links the pipe to the `AgentRunner` you run in Step 6T.
-
-```python
-from dotenv import load_dotenv
-load_dotenv(override=True)
-
-import asyncio
-from unpod import AsyncClient
-
-async def main():
-    async with AsyncClient() as client:
+        # 2. Create the Speech Pipe. agent_id MUST match your AgentRunner.
         pipe = await client.pipes.create(
-            name="Support Bot",
-            voice_profile="vp_riya",         # profile_id from Step 3 (p.id)
-            agent_id="my-support-agent",     # your identifier — must match AgentRunner
+            name="browser-agent",
+            voice_profile=vp.name,        # name (case-insensitive) or profile_id
+            agent_id="browser-playground",  # must match AgentRunner's agent_id
             recording=True,
             max_call_duration_s=600,
         )
-        print("Pipe ID:", pipe.pipe_id)
+        print(f"Created Speech Pipe: {pipe.pipe_id}")
 
-asyncio.run(main())
+        # 3. Sync numbers from your trunks.
+        summary = await client.numbers.sync()
+        print(f"Sync result: {summary}")  # {"synced": int, "new": int}
+
+        # 4. Attach the first available number to the pipe.
+        available = await client.numbers.list(status="available")
+        if not available:
+            print("No available numbers — register a trunk first.")
+            return
+        number = await client.numbers.attach(available[0].number_id, pipe.pipe_id)
+        print(f"Attached {number.number} -> Speech Pipe {pipe.pipe_id}")
+
+asyncio.run(setup())
 ```
 
 <Note>
-Save the `pipe.pipe_id` — you will use it in the steps below. A pipe without `agent_id` will show as `degraded` and calls will not be dispatched to your runner.
+The `agent_id` on the pipe (`"browser-playground"`) is the same string your
+`AgentRunner` registers under in the Quickstart. They must match exactly, or
+inbound calls never reach your runner. See
+[IDs You'll Meet](/get-started/core-concepts#ids-youll-meet).
 </Note>
 
----
+### You need a trunk first
 
-## Step 5 - Build a Dialog Flow
+`numbers.sync()` pulls numbers from your [trunks](/get-started/core-concepts#trunk) —
+the SIP connections that carry calls between a telephony provider and Unpod. If
+`numbers.list(status="available")` comes back empty, you have no trunk yet.
 
-Both paths use the same conversation logic. Create a flow once and save it to a
-file your entrypoint will load:
+Register one with `client.trunks.create(...)` before running the setup above.
+You configure a trunk once; after that you work with numbers, not SIP. A
+dedicated trunks guide is on the way; for now the
+[Setup Checklist](/speech-stack/setup-checklist) walks through the full
+production path including trunk registration.
 
-```python
-import asyncio
-from superdialog import create_dialog_flow
+## Answer an inbound call
 
-async def main():
-    flow = await create_dialog_flow(
-        prompt=(
-            "You are Alex, a friendly support agent. "
-            "Greet the user, ask how you can help, resolve their issue, "
-            "and end the conversation when done."
-        ),
-        llm="anthropic/claude-haiku-4-5",
-    )
-    flow.save("support.json")
-
-asyncio.run(main())
-```
-
-This writes `support.json`, which the entrypoint loads with
-`Flow.load("support.json")` in the next step.
-
----
-
-## Telephony Path
-
-### Step 6T - Attach a Phone Number
+This is the agent from the Quickstart, unchanged. The same `entrypoint` and the
+same `AgentRunner` registered against the hosted speech service at
+`SUPERVOICE_URL`, using your real `UNPOD_API_KEY`:
 
 ```python
-from dotenv import load_dotenv
-load_dotenv(override=True)
-
-import asyncio
-from unpod import AsyncClient
-
-PIPE_ID = "pipe_..."
-NUMBER_ID = "num_..."   # from client.numbers.list()
-
-async def main():
-    async with AsyncClient() as client:
-        number = await client.numbers.attach(NUMBER_ID, PIPE_ID)
-        print("Attached:", number.number, "->", number.pipe_id)
-
-asyncio.run(main())
-```
-
-See [Phone Numbers](/speech-stack/numbers) for how to list, provision, or bring your own number.
-
-### Step 7T - Write Your Entrypoint
-
-<Note>
-`agent_id` is a string you define (e.g. `"my-support-agent"`). It must be identical in both `pipes.create()` (Step 4) and `AgentRunner` below — this is how Unpod routes inbound calls to your runner.
-</Note>
-
-Create `agent.py`:
-
-```python
-from dotenv import load_dotenv
-load_dotenv(override=True)
-
+# examples/browser_playground/agent.py
 import os
-from anthropic import AsyncAnthropic
 from unpod import AgentRunner, CallContext
-from unpod.adapters import AnthropicAdapter
+from superdialog import LLMAgent
 
-async def handle_call(ctx: CallContext) -> None:
-    ctx.session.dialog_machine = AnthropicAdapter(
-        client=AsyncAnthropic(),
-        model="claude-haiku-4-5-20251001",
-        system_prompt=(
-            "You are Alex, a friendly support agent. "
-            "Greet the user, ask how you can help, resolve their issue, "
-            "and end the conversation when done."
-        ),
+async def entrypoint(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = LLMAgent(
+        llm="anthropic/claude-haiku-4-5-20251001",
+        system_prompt="You are a helpful voice assistant. Keep answers under 3 sentences.",
     )
     await ctx.session.run()
 
-AgentRunner(
-    entrypoint=handle_call,
-    agent_id="my-support-agent",    # must match agent_id in pipes.create()
-    api_key=os.getenv("UNPOD_API_KEY"),
-    max_sessions=10,
-).start()
+def build_runner() -> AgentRunner:
+    return AgentRunner(
+        entrypoint=entrypoint,
+        agent_id=os.getenv("AGENT_ID", "browser-playground"),
+        base_url=os.environ["SUPERVOICE_URL"],   # hosted speech service
+        api_key=os.environ["UNPOD_API_KEY"],
+    )
+
+async def run_agent() -> None:
+    await build_runner().run()
 ```
 
-### Step 8T - Run and Call
+Start the runner:
 
 ```bash
-python3.12 agent.py
+python -m examples.browser_playground.agent
 ```
 
-Call the number you attached. The runner connects to the Unpod orchestrator and dispatches inbound calls to your entrypoint. The process stays running and accepts calls until you stop it.
+The runner connects to the orchestrator and waits. Now call the number you
+attached. Unpod recognises the number, looks up its pipe, sees the pipe's
+`agent_id`, and dispatches the call to your waiting runner. Your agent answers
+and speaks — the same brain you heard in the browser, now on the phone.
 
----
+<Note>
+The runner does not need to restart when you provision the number. Run `setup.py`
+once, then leave the runner up; it serves every inbound call until you stop it.
+</Note>
 
-## Web / App Path
+## Make an outbound call (optional)
 
-### Step 6W - Create a Session Token
-
-Your backend generates a short-lived session token for each user. The browser uses this token to connect.
+Inbound is one direction. To have your agent place a call, use `calls.create`
+with the pipe and the destination number:
 
 ```python
-from dotenv import load_dotenv
-load_dotenv(override=True)
-
+# call_out.py — dispatch an outbound call
 import asyncio
 from unpod import AsyncClient
 
-async def create_session(pipe_id: str, user_id: str) -> str:
+PIPE_ID = "pipe_..."   # from setup.py
+TO_NUMBER = "+19995550001"
+
+async def make_call() -> None:
     async with AsyncClient() as client:
-        token = await client.sessions.create_token(
-            pipe_id=pipe_id,
-            metadata={"user_id": user_id},
+        call = await client.calls.create(
+            pipe_id=PIPE_ID,
+            to_number=TO_NUMBER,
         )
-        return token.token
+        print(f"Outbound call {call.call_id} -> {TO_NUMBER} (status: {call.status})")
 
-asyncio.run(create_session("pipe_...", "usr_123"))
+asyncio.run(make_call())
 ```
 
-Return this token to your frontend. Tokens are single-use — check `token.expires_at` for the actual expiry time.
+`calls.create` enqueues the call and returns immediately with `status="pending"`.
+Unpod dials out, then dispatches the answered call to the same running
+`AgentRunner` — your `entrypoint` handles outbound exactly as it handles inbound.
 
-### Step 7W - Embed the Web SDK
+## Next steps
 
-Install the browser SDK:
-
-```bash
-npm install @unpod/web-sdk
-```
-
-Connect from your frontend:
-
-```typescript
-import { UnpodSession } from "@unpod/web-sdk";
-
-const session = new UnpodSession({
-  token: "<token-from-your-backend>",
-});
-
-await session.connect();   // starts microphone + speaker
-session.on("agent_reply", (text) => console.log("Agent:", text));
-session.on("user_turn", (text) => console.log("User:", text));
-
-// End the session
-await session.disconnect();
-```
-
-The same `AgentRunner` entrypoint from Step 7T handles both phone and browser sessions - no changes needed.
-
-### Step 8W - Run Your Agent
-
-```bash
-python3.12 agent.py
-```
-
-The runner accepts sessions from both telephony and web SDK connections on the same `agent_id`.
-
----
-
-## What's Next
-
-<CardGroup cols={2}>
-  <Card title="Session Controls" icon="sliders-horizontal" href="/speech-stack/session-controls">
-    Transfer, pause recording, inject filler phrases.
+<CardGroup cols={3}>
+  <Card title="Production setup" icon="list-checks" href="/speech-stack/setup-checklist">
+    The full path: trunks, numbers, recording, and deployment.
   </Card>
-  <Card title="Hooks & Events" icon="bell" href="/speech-stack/hooks-events">
-    React to turns, interruptions, and call lifecycle.
+  <Card title="Outbound calls" icon="phone-outgoing" href="/speech-stack/outbound-calls">
+    Campaigns, dynamic instructions, and per-call data.
   </Card>
-  <Card title="Outbound Calls" icon="phone-outgoing" href="/speech-stack/outbound-calls">
-    Programmatically initiate calls from your backend.
-  </Card>
-  <Card title="SuperDialog Integration" icon="layers" href="/speech-stack/superdialog-integration">
-    Richer flows with tools, branching, and memory.
+  <Card title="Use your own agent" icon="bot" href="/speech-stack/bring-your-agent">
+    Plug in LangChain, an HTTP endpoint, or any brain you already have.
   </Card>
 </CardGroup>
