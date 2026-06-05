@@ -1,0 +1,68 @@
+---
+title: 'Recordings & Transcripts'
+icon: 'file-audio'
+description: 'Retrieve call audio and per-turn transcripts — with per-stage latency timing — after calls end.'
+---
+
+Every call can leave two artifacts: an audio **recording** (when the Speech
+Pipe has `recording=True`) and a turn-by-turn **transcript**. Both are
+retrieved through the Management API.
+
+## Recordings
+
+```python
+from unpod import AsyncClient
+
+client = AsyncClient()
+
+recordings = await client.recordings.list()              # all
+recordings = await client.recordings.list(call_id=cid)   # one call
+```
+
+Each `Recording` carries:
+
+```python
+r.recording_id   # str
+r.call_id        # str
+r.duration_s     # float | None
+r.format         # str | None
+r.size_bytes     # int | None
+r.url            # str | None — download / stream URL
+```
+
+<Note>
+Pause and resume recording during a live call (e.g. around card numbers) with
+`ctx.session.recording.pause(reason=...)` / `.resume()` — see
+[AgentRunner & Sessions](/speech-stack/agent-runner#recording-control).
+</Note>
+
+## Transcripts
+
+```python
+transcripts = await client.transcripts.list()
+t = await client.transcripts.get(call_or_session_id)
+```
+
+A `Transcript` is a list of turns:
+
+```python
+for turn in t.turns:
+    print(turn.speaker, turn.text)   # "agent" | "user"
+    turn.timestamp_ms                # int | None
+    turn.timing                      # per-stage latency, below
+```
+
+### Per-turn timing
+
+Each turn carries a `TurnTiming` breakdown — where the milliseconds went:
+
+| Field | Stage |
+|---|---|
+| `audio_ingress_ms` | Caller audio reaching the speech stack |
+| `stt_ms` | Speech-to-text |
+| `bridge_to_dev_ms` | Bridge hop to your AgentRunner |
+| `dev_brain_ms` | Your brain's response time |
+| `tts_ms` | Text-to-speech |
+
+This is the post-call complement to the live metrics in
+[Observability](/speech-stack/observability).

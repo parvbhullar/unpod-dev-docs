@@ -69,6 +69,7 @@
               "speech-stack/numbers",
               "speech-stack/voice-profiles",
               "speech-stack/pipes",
+              "speech-stack/trunks",
               "speech-stack/outbound-calls",
               "speech-stack/call-lifecycle"
             ]
@@ -79,6 +80,7 @@
             "pages": [
               "speech-stack/agent-runner",
               "speech-stack/hooks-events",
+              "speech-stack/observability",
               "speech-stack/websocket"
             ]
           },
@@ -86,7 +88,9 @@
             "group": "Going to Production",
             "icon": "rocket",
             "pages": [
-              "speech-stack/setup-checklist"
+              "speech-stack/setup-checklist",
+              "speech-stack/deploy",
+              "speech-stack/recordings-transcripts"
             ]
           }
         ]

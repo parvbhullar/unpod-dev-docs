@@ -1,0 +1,75 @@
+---
+title: 'Deploy'
+icon: 'rocket'
+description: 'Run AgentRunner in production: reachability, authentication, scaling, and shutdown.'
+---
+
+An `AgentRunner` is a long-lived process: it registers with the Unpod
+orchestrator over WSS, heartbeats (at an interval the orchestrator assigns on
+registration), and serves a bridge connection per call. Provisioning is covered
+by the [Setup Checklist](/speech-stack/setup-checklist); this page is what
+changes when you leave your laptop.
+
+## Production checklist
+
+### 1. Reachability — `serving_url`
+
+The runner serves a per-call bridge that Unpod dials into. It binds to
+`0.0.0.0:8765` by default; in production, tell the orchestrator where that
+bridge is publicly reachable:
+
+```bash
+export UNPOD_RUNNER_URL="wss://agents.example.com:8765"
+```
+
+(or pass `serving_url=...` to `AgentRunner`). The host/port must be reachable
+from Unpod.
+
+### 2. Authentication — `agent_secret`
+
+With an agent secret set, every inbound bridge connection is HMAC-verified
+(signed URLs, replay-protected). Without one, the runner accepts unsigned
+connections — acceptable only for local dev.
+
+```bash
+export UNPOD_AGENT_SECRET="a-long-random-secret"
+```
+
+### 3. Capacity
+
+```python
+AgentRunner(
+    entrypoint=handle_call,
+    agent_id="my-agent",
+    max_sessions=50,          # orchestrator never dispatches beyond this
+    permits_per_minute=120,   # rate of new call acceptance
+    drain_timeout_s=60,
+)
+```
+
+### 4. Scaling — add replicas
+
+Run more processes with the **same `agent_id`** — on one machine or many. They
+form a pool; the orchestrator load-balances dispatches across replicas by
+reported capacity. No shared state, no coordination needed.
+
+```bash
+# replica 1, replica 2, ... identical:
+UNPOD_API_KEY=sk_... UNPOD_AGENT_SECRET=... python agent.py
+```
+
+### 5. Shutdown and supervision
+
+On `SIGTERM` the runner stops accepting dispatches and drains active calls for
+up to `drain_timeout_s` before exiting — container- and systemd-friendly.
+
+<Warning>
+The runner does not reconnect on its own if the orchestrator WebSocket drops —
+run it under a supervisor with restart-on-exit (systemd `Restart=always`,
+Kubernetes restart policy, Docker `--restart`).
+</Warning>
+
+## Watch it run
+
+Wire up [metrics and runner stats](/speech-stack/observability) before you
+need them.

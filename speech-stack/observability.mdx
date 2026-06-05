@@ -1,0 +1,65 @@
+---
+title: 'Metrics, Cost & Observability'
+icon: 'chart-line'
+description: 'Live per-call metrics, runner pool stats, the metric hook for your dashboards, and post-call timing.'
+---
+
+Four layers of visibility, from inside a call out to your dashboards.
+
+## 1. Live per-call metrics
+
+Inside (or after) `session.run()`, take a `CallMetrics` snapshot:
+
+```python
+m = ctx.session.metrics.live()
+
+m.turns           # int: dialog turns so far
+m.duration_s      # float
+m.stt_p95_ms      # int: P95 speech-to-text latency
+m.llm_p95_ms      # int: P95 brain latency
+m.tts_p95_ms      # int: P95 synthesis latency
+m.cost.voice      # float — speech-stack cost
+m.cost.llm        # float — model cost
+m.cost.total      # float
+m.tokens.input    # int
+m.tokens.output   # int
+m.active_llm      # str: model used on the last turn
+```
+
+## 2. Stream metrics to your dashboard
+
+The runner fires a `metric` event you can forward anywhere:
+
+```python
+@runner.on("metric")
+async def _(ctx: CallContext, metric: CallMetrics) -> None:
+    push_to_grafana(metric)
+```
+
+## 3. Runner pool stats
+
+```python
+s = runner.stats()        # RunnerStats snapshot
+
+s.in_flight               # current active calls
+s.queued                  # dispatches waiting for capacity
+s.capacity                # your max_sessions setting
+s.completed_last_hour
+s.failed_last_hour
+s.mean_call_duration_s
+```
+
+Poll this on a timer for liveness dashboards — see
+[AgentRunner & Sessions](/speech-stack/agent-runner#running-in-production).
+
+## 4. Post-call timing
+
+After the call, the transcript carries a per-turn, per-stage latency breakdown
+(`audio_ingress_ms`, `stt_ms`, `bridge_to_dev_ms`, `dev_brain_ms`, `tts_ms`) —
+see [Recordings & Transcripts](/speech-stack/recordings-transcripts#per-turn-timing).
+
+<Tip>
+High `dev_brain_ms` with healthy `stt_ms`/`tts_ms` means the latency is in
+YOUR brain — usually a `stream()` that is not actually streaming. See
+[Streaming is the hot path](/speech-stack/bring-your-agent#streaming-is-the-hot-path).
+</Tip>
