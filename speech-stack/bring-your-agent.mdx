@@ -1,12 +1,18 @@
 ---
 title: "Bring Your Agent"
 icon: 'bot'
-description: "Connect your existing LangChain, OpenAI, Anthropic, or custom Python agent to Unpod voice infrastructure in 3 steps."
+description: "Connect your existing LangChain, OpenAI, Anthropic, HTTP, or custom Python agent to Unpod voice infrastructure."
 ---
 
-# Bring Your Agent
+Already have a working agent? This is your page. You wrap your brain in a
+`DialogAdapter`, assign it to `ctx.session.dialog_machine`, and Unpod handles
+the rest of the call — telephony, speech-to-text, text-to-speech, audio
+transport. Your [Agent](/get-started/core-concepts#agent-brain) stays
+text-in/text-out.
 
-Already have a working Python agent? Connect it to a phone number in under 15 minutes.
+If you don't have an agent yet, start with the
+[Quickstart](/get-started/quickstart) instead — it builds the minimal brain
+first.
 
 ## Install
 
@@ -14,9 +20,10 @@ Already have a working Python agent? Connect it to a phone number in under 15 mi
 uv add unpod
 ```
 
-## Write Your Entrypoint
+## Write your entrypoint
 
-The entrypoint is an async function called once per call. Set your agent on `ctx.session.dialog_machine` and call `await ctx.session.run()`.
+The entrypoint is an async function called once per call. Set your agent on
+`ctx.session.dialog_machine` and call `await ctx.session.run()`.
 
 ```python
 from unpod import AgentRunner, CallContext
@@ -30,10 +37,12 @@ async def entrypoint(ctx: CallContext) -> None:
     await ctx.session.run()
 ```
 
-## Start Your Runner
-
 <Note>
-`AgentRunner` requires `UNPOD_API_KEY` to be set in your environment. See the [Setup Checklist](/speech-stack/setup-checklist#environment-variables) for all required variables.
+`AgentRunner` requires `UNPOD_API_KEY` in your environment, and the
+`agent_id` you pass must match your Speech Pipe's `agent_id` — see
+[IDs You'll Meet](/get-started/core-concepts#ids-youll-meet). The
+[Setup Checklist](/speech-stack/setup-checklist#environment-variables) lists
+every variable.
 </Note>
 
 ```python
@@ -43,18 +52,61 @@ AgentRunner(
 ).start()
 ```
 
-That's it. Incoming calls to your Unpod number are now routed to your agent.
+Incoming calls to your Unpod number are now routed to your agent.
 
-## Supported Adapters
+## Streaming is the hot path
 
-| Adapter | Import | Use when |
-|---------|--------|----------|
-| `OpenAIAdapter` | `unpod.adapters.openai` | OpenAI `AsyncOpenAI` client — `gpt-4o`, `gpt-4o-mini`, etc. |
-| `AnthropicAdapter` | `unpod.adapters.anthropic` | Anthropic `AsyncAnthropic` client — Claude models |
-| `LangChainAdapter` | `unpod.adapters.langchain` | LangChain chain with `.ainvoke()` / `.astream()` |
-| `HTTPAdapter` | `unpod.adapters.http` | Remote agent API (any language) |
-| `SuperDialogAdapter` | `unpod.adapters.superdialog` | superdialog `DialogMachine` / `LLMAgent` — or assign directly, auto-wrapping handled |
-| Custom | Implement `DialogAdapter` protocol | Any Python object with `turn`, `stream`, `assist` |
+This is the single most important thing on this page.
+
+During a live call, `session.run()` calls your adapter's **`stream()`** on
+every user turn and pipes tokens straight to the voice bridge for synthesis.
+**`turn()` is never called by the framework during live calls.**
+
+<Warning>
+If your adapter implements `turn()` properly but fakes `stream()` with a
+single-chunk fallback (await the full response, yield it once), the caller
+hears **silence until the entire response is generated, then a long
+monologue** — choppy, high-latency audio with no error message anywhere.
+Implement real token streaming in `stream()`.
+</Warning>
+
+The bundled adapters differ here — check the table below before choosing:
+`OpenAIAdapter`, `AnthropicAdapter`, and `LangChainAdapter` stream real tokens
+from their providers; `HTTPAdapter` cannot stream (one HTTP round-trip, one
+chunk), so expect a latency penalty proportional to your response length.
+
+## The DialogAdapter protocol
+
+Any object with these three methods is a valid brain — no base class required
+(the protocol is runtime-checkable):
+
+```python
+async def turn(text: str, context: dict | None = None) -> str
+    # Return a complete response. Not called during live calls.
+
+async def stream(text: str, context: dict | None = None) -> AsyncIterator[str]
+    # Yield response tokens. THE hot path — session.run() calls this.
+
+def assist(text: str) -> None
+    # Inject a system instruction before the next turn.
+```
+
+**Auto-wrapping:** assigning a superdialog `DialogMachine` or `LLMAgent`
+directly to `ctx.session.dialog_machine` wraps it in a `SuperDialogAdapter`
+for you. Anything else must satisfy the protocol above, or the setter raises
+`TypeError`.
+
+## Supported adapters
+
+| Adapter | Import | Real streaming | Use when |
+|---------|--------|----------------|----------|
+| `OpenAIAdapter` | `unpod.adapters.openai` | Yes | OpenAI `AsyncOpenAI` client — `gpt-4o`, `gpt-4o-mini`, etc. |
+| `AnthropicAdapter` | `unpod.adapters.anthropic` | Yes | Anthropic `AsyncAnthropic` client — Claude models |
+| `LangChainAdapter` | `unpod.adapters.langchain` | Yes | LangChain chain with `.ainvoke()` / `.astream()` |
+| `SuperDialogAdapter` | `unpod.adapters.superdialog` | Yes | superdialog `DialogMachine` / `LLMAgent` — or assign directly, auto-wrapped |
+| `HTTPAdapter` | `unpod.adapters.http` | No — single chunk | Remote agent API (any language); accepts the latency trade-off |
+| `MCPAdapter` | `unpod.adapters.mcp` | Preview | Interface defined; full MCP orchestration is not implemented yet (`unpod[mcp]`) |
+| Custom | Implement the protocol | Up to you | Any Python object with `turn`, `stream`, `assist` |
 
 ## OpenAI
 
@@ -96,9 +148,11 @@ async def entrypoint(ctx: CallContext) -> None:
 AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
 ```
 
-## LangChain Chain Requirements
+## LangChain
 
-`LangChainAdapter` expects your chain to accept `{"messages": [...]}` as input by default. This works with `ChatPromptTemplate | ChatModel` chains.
+`LangChainAdapter` expects your chain to accept `{"messages": [...]}` as input
+by default. This works with `ChatPromptTemplate | ChatModel` chains. The
+adapter keeps conversation history across turns and streams via `.astream()`.
 
 If your chain uses a different input key, pass `input_key`:
 
@@ -107,7 +161,37 @@ If your chain uses a different input key, pass `input_key`:
 LangChainAdapter(chain, input_key="input")
 ```
 
-## Using Session Controls
+## HTTP endpoint
+
+`HTTPAdapter` lets you keep your agent in any language behind an HTTP API.
+Each user turn becomes one `POST`:
+
+```python
+from unpod.adapters.http import HTTPAdapter
+
+adapter = HTTPAdapter(
+    url="https://agent.example.com/respond",
+    headers={"Authorization": "Bearer ..."},  # optional
+    timeout_s=10.0,
+)
+```
+
+Request body your endpoint receives, and the response it must return:
+
+```json
+// request — session_id and system_instructions are included when present
+{"text": "what the caller said", "context": {}, "session_id": "...", "system_instructions": ["..."]}
+// response
+{"text": "your agent's reply"}
+```
+
+<Warning>
+`HTTPAdapter` does not stream — the whole reply arrives as one chunk, so the
+caller waits for your full HTTP round-trip before hearing anything. Fine for
+short replies; for long-form answers prefer an in-process adapter.
+</Warning>
+
+## Using session controls
 
 Inside your entrypoint you can react to call events and control the call:
 
@@ -125,11 +209,13 @@ async def entrypoint(ctx: CallContext) -> None:
     await ctx.session.run()
 ```
 
-Available hooks: `call_start`, `user_turn`, `agent_turn`, `user_partial`, `interruption`, `call_end`, `error`.
+Available hooks: `call_start`, `user_turn`, `agent_turn`, `user_partial`,
+`interruption`, `call_end`, `error`. See
+[Session](/get-started/core-concepts#session) for the full control surface.
 
-## Writing a Custom Adapter
+## Writing a custom adapter
 
-Implement three methods - no base class required:
+Implement the three protocol methods — no base class required:
 
 ```python
 class MyAdapter:
@@ -147,11 +233,7 @@ class MyAdapter:
         my_agent.set_instruction(text)
 ```
 
-<Warning>
-`stream()` is called on every user turn by `session.run()`. Implement it properly - a single-chunk fallback causes choppy audio.
-</Warning>
-
-## Next Steps
+## Next steps
 
 <CardGroup cols={2}>
   <Card title="Setup Checklist" icon="list-check" href="/speech-stack/setup-checklist">
