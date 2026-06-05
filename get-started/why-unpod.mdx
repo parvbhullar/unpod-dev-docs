@@ -45,6 +45,9 @@ async def handle_call(ctx: CallContext) -> None:
 AgentRunner(entrypoint=handle_call, agent_id="agt_...").start()
 ```
 
+(Illustrative — the [Quickstart](/get-started/quickstart) walks through the
+runnable version, no flow file needed.)
+
 No pipeline configuration. No WebRTC. No SIP. No carrier account. No audio handling. If you already have an HTTP endpoint or a LangChain agent, you can point Unpod at it with no SDK code at all.
 
 For where this sits in the larger architecture, see [Core Concepts](/get-started/core-concepts).

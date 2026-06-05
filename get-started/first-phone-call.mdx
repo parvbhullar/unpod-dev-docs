@@ -100,7 +100,8 @@ same `AgentRunner` registered against the hosted speech service at
 `SUPERVOICE_URL`, using your real `UNPOD_API_KEY`:
 
 ```python
-# examples/browser_playground/agent.py
+# agent.py — standalone runner, no playground server needed
+import asyncio
 import os
 from unpod import AgentRunner, CallContext
 from superdialog import LLMAgent
@@ -122,12 +123,15 @@ def build_runner() -> AgentRunner:
 
 async def run_agent() -> None:
     await build_runner().run()
+
+if __name__ == "__main__":
+    asyncio.run(run_agent())
 ```
 
 Start the runner:
 
 ```bash
-python -m examples.browser_playground.agent
+python agent.py
 ```
 
 The runner connects to the orchestrator and waits. Now call the number you

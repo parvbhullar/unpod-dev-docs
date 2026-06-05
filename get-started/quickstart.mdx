@@ -15,10 +15,13 @@ follow [Make Your First Phone Call](/get-started/first-phone-call) afterwards.
 ## Prerequisites
 
 - **Python 3.12+** (the `unpod` SDK requires it).
-- **An Unpod API key.** Generate one from the
+- **An Unpod API key.** Create an account at [unpod.dev](https://unpod.dev)
+  (see [Register](/platform/register)), then generate a key from the
   [API Key](/platform/studio-view/api-key) screen in Studio.
 - **An LLM key** — `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` — for the agent's
   brain. It stays on your machine.
+- **[Task](https://taskfile.dev)** — the repo's run commands use it
+  (`brew install go-task` on macOS).
 - **The browser playground UI.** It ships in the `unpod-sdk` repository (not on
   PyPI), so clone the repo to get it:
 
@@ -60,8 +63,9 @@ is the one place they are documented**:
 
 The `AgentRunner` connects over WebSocket; on its own it defaults to
 `wss://api.unpod.io` and can be overridden with `UNPOD_ORCHESTRATOR_URL` or a
-`base_url=...` argument. The playground passes `SUPERVOICE_URL` as that argument
-for you.
+`base_url=...` argument. Yes, that is a different variable from the client's
+`UNPOD_ORCHESTRATOR_BASE_URL` above — one per component, not a typo. The
+playground passes `SUPERVOICE_URL` as that argument for you.
 </Note>
 
 ## Write the agent
@@ -93,6 +97,12 @@ def build_runner() -> AgentRunner:
 async def run_agent() -> None:
     await build_runner().run()
 ```
+
+<Note>
+You don't run this file directly — `task playground` starts the playground
+server, which imports it and calls `run_agent()` for you. (`await runner.run()`
+is the async form of the blocking `runner.start()` you'll see elsewhere.)
+</Note>
 
 Three pieces:
 

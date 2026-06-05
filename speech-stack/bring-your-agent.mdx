@@ -148,6 +148,13 @@ async def entrypoint(ctx: CallContext) -> None:
 AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
 ```
 
+<Note>
+Model name formats differ by layer: direct adapters take the provider's raw
+model name (`claude-haiku-4-5-20251001`, `gpt-4o-mini`); superdialog brains
+take a `provider/model` URI (`anthropic/claude-haiku-4-5`). Both are correct
+in their context.
+</Note>
+
 ## LangChain
 
 `LangChainAdapter` expects your chain to accept `{"messages": [...]}` as input
