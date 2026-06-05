@@ -19,94 +19,75 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Why Unpod",
+        "tab": "Get Started",
         "groups": [
           {
-            "group": " ",
-            "pages": [
-              "home"
-            ]
-          },
-          {
-            "group": "Getting Started",
+            "group": "Start Here",
             "icon": "rocket",
             "pages": [
-              "why-unpod/introduction",
-              "why-unpod/vs-competition"
+              "get-started/why-unpod",
+              "get-started/vs-competition",
+              "get-started/how-it-works",
+              "get-started/first-phone-call",
+              "get-started/core-concepts"
             ]
           },
           {
-            "group": "How It Works",
-            "icon": "workflow",
+            "group": "AI Tools",
+            "icon": "sparkles",
             "pages": [
-              "why-unpod/how-it-works"
+              "ai-tools/claude-code",
+              "ai-tools/cursor",
+              "ai-tools/windsurf"
             ]
           }
         ]
       },
       {
-        "tab": "Voice Stack",
+        "tab": "Speech Stack",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Overview",
             "icon": "book-open",
             "pages": [
-              "speech/introduction",
-              "speech/quickstart"
+              "speech-stack/introduction"
             ]
           },
           {
-            "group": "Voice Stack",
-            "icon": "audio-waveform",
+            "group": "Your Agent",
+            "icon": "bot",
             "pages": [
-              "speech/voice-profiles",
-              "speech/pipes"
+              "speech-stack/bring-your-agent",
+              "speech-stack/superdialog-integration"
             ]
           },
           {
-            "group": "Connectivity",
-            "icon": "plug",
-            "pages": [
-              "speech/numbers",
-              "speech/websocket"
-            ]
-          },
-          {
-            "group": "Dialog",
-            "icon": "layers",
-            "pages": [
-              "speech/superdialog-integration"
-            ]
-          },
-          {
-            "group": "Calls",
-            "icon": "phone-outgoing",
-            "pages": [
-              "speech/call-lifecycle",
-              "speech/outbound-calls",
-              "speech/telephony-states"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "SDK",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "icon": "rocket",
-            "pages": [
-              "speech/sdk-setup",
-              "sdk/setup-checklist",
-              "sdk/bring-your-agent"
-            ]
-          },
-          {
-            "group": "Session",
+            "group": "Telephony",
             "icon": "phone",
             "pages": [
-              "speech/session-controls",
-              "speech/hooks-events"
+              "speech-stack/numbers",
+              "speech-stack/voice-profiles",
+              "speech-stack/pipes",
+              "speech-stack/outbound-calls",
+              "speech-stack/call-lifecycle",
+              "speech-stack/telephony-states"
+            ]
+          },
+          {
+            "group": "Runtime",
+            "icon": "activity",
+            "pages": [
+              "speech-stack/sdk-setup",
+              "speech-stack/session-controls",
+              "speech-stack/hooks-events",
+              "speech-stack/websocket"
+            ]
+          },
+          {
+            "group": "Going to Production",
+            "icon": "rocket",
+            "pages": [
+              "speech-stack/setup-checklist"
             ]
           }
         ]
@@ -118,113 +99,119 @@
             "group": "Getting Started",
             "icon": "book-open",
             "pages": [
-              "SuperDialog/thinking-in-flows",
-              "SuperDialog/introduction",
-              "SuperDialog/quickstart"
+              "superdialog/introduction",
+              "superdialog/quickstart",
+              "superdialog/thinking-in-flows"
             ]
           },
           {
             "group": "Core Concepts",
             "icon": "layers",
             "pages": [
-              "SuperDialog/architecture",
-              "SuperDialog/flows",
-              "SuperDialog/tools",
-              "SuperDialog/sessions"
+              "superdialog/architecture",
+              "superdialog/flows",
+              "superdialog/tools",
+              "superdialog/sessions"
             ]
           },
           {
             "group": "Reference",
             "icon": "code",
             "pages": [
-              "SuperDialog/api-reference",
-              "SuperDialog/cli"
+              "superdialog/api-reference",
+              "superdialog/cli"
             ]
           },
           {
             "group": "Embedding Guides",
             "icon": "plug",
             "pages": [
-              "SuperDialog/Embedding Guides/overview",
-              "SuperDialog/Embedding Guides/unpod-voice",
-              "SuperDialog/Embedding Guides/cli",
-              "SuperDialog/Embedding Guides/livekit",
-              "SuperDialog/Embedding Guides/pipecat",
-              "SuperDialog/Embedding Guides/fastapi",
-              "SuperDialog/Embedding Guides/testing"
+              "superdialog/embedding-guides/overview",
+              "superdialog/embedding-guides/unpod-voice",
+              "superdialog/embedding-guides/cli",
+              "superdialog/embedding-guides/livekit",
+              "superdialog/embedding-guides/pipecat",
+              "superdialog/embedding-guides/fastapi",
+              "superdialog/embedding-guides/testing"
             ]
           }
         ]
       },
       {
-        "tab": "Open-Source Platform",
+        "tab": "Platform",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Overview",
             "icon": "book-open",
             "pages": [
-              "platform",
-              "architecture",
-              "quickstart",
-              "configuration",
-              "Voice AI/Voice AI Agents Use Case",
-              "Voice AI/Register",
-              "Voice AI/introduction"
+              "platform/introduction",
+              "platform/onboarding",
+              "platform/register",
+              "platform/use-cases"
             ]
           },
           {
             "group": "Space View",
             "icon": "grid-2x2",
             "pages": [
-              "Voice AI/Space View/introduction",
-              "Voice AI/Space View/conversation",
-              "Voice AI/Space View/calls",
-              "Voice AI/Space View/people",
-              "Voice AI/Space View/analytics"
+              "platform/space-view/introduction",
+              "platform/space-view/conversation",
+              "platform/space-view/calls",
+              "platform/space-view/people",
+              "platform/space-view/analytics"
             ]
           },
           {
             "group": "Studio View",
             "icon": "layout-panel-left",
             "pages": [
-              "Voice AI/Studio View/dashboard",
+              "platform/studio-view/dashboard",
               {
                 "group": "Agents",
                 "pages": [
-                  "Voice AI/Studio View/identity",
-                  "Voice AI/Studio View/persona",
-                  "Voice AI/Studio View/voice profile",
-                  "Voice AI/Studio View/telephony",
-                  "Voice AI/Studio View/advance",
-                  "Voice AI/Studio View/analysis",
-                  "Voice AI/Studio View/integration"
+                  "platform/studio-view/identity",
+                  "platform/studio-view/persona",
+                  "platform/studio-view/voice-profile",
+                  "platform/studio-view/telephony",
+                  "platform/studio-view/advance",
+                  "platform/studio-view/analysis",
+                  "platform/studio-view/integration"
                 ]
               },
-              "Voice AI/Studio View/knowledge base",
-              "Voice AI/Studio View/call logs",
-              "Voice AI/Studio View/api key"
+              "platform/studio-view/knowledge-base",
+              "platform/studio-view/call-logs",
+              "platform/studio-view/api-key"
             ]
           },
           {
             "group": "Dev Platform",
             "icon": "sliders-horizontal",
             "pages": [
-              "Dev Platform/introduction",
-              "Dev Platform/register",
-              "Dev Platform/login",
-              "Dev Platform/telephony",
-              "Dev Platform/numbers",
-              "Dev Platform/provider",
-              "Dev Platform/agents",
-              "Dev Platform/Analytics-and-Reporting",
-              "Dev Platform/Load-Testing",
-              "Dev Platform/Security-&-Compliance"
+              "platform/dev-platform/introduction",
+              "platform/dev-platform/register",
+              "platform/dev-platform/login",
+              "platform/dev-platform/telephony",
+              "platform/dev-platform/numbers",
+              "platform/dev-platform/provider",
+              "platform/dev-platform/agents",
+              "platform/dev-platform/analytics-and-reporting",
+              "platform/dev-platform/load-testing",
+              "platform/dev-platform/security-and-compliance"
+            ]
+          },
+          {
+            "group": "Self-Hosting",
+            "icon": "server",
+            "pages": [
+              "platform/self-hosting/quickstart",
+              "platform/self-hosting/configuration",
+              "platform/self-hosting/architecture"
             ]
           }
         ]
       },
       {
-        "tab": "APIs",
+        "tab": "API Reference",
         "groups": [
           {
             "group": "Getting Started",
@@ -347,23 +334,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "Guides",
-        "groups": [
-          {
-            "group": "Guides",
-            "icon": "newspaper",
-            "pages": [
-              "blog/index",
-              "blog/getting-started-with-unpod-api",
-              "blog/building-voice-ai-agent",
-              "blog/self-hosting-unpod",
-              "blog/understanding-telephony",
-              "blog/webhook-integration"
-            ]
-          }
-        ]
       }
     ],
     "global": {
@@ -375,7 +345,7 @@
       {
         "label": "GitHub",
         "icon": "github",
-        "href": "https://github.com/parvbhullar/unpod"
+        "href": "https://github.com/unpod-ai/unpod"
       },
       {
         "label": "Documentation",
@@ -391,7 +361,7 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/geneffic/unpod",
+      "github": "https://github.com/unpod-ai/unpod",
       "twitter": "https://x.com/unpod_ai",
       "youtube": "https://www.youtube.com/@unpod-ai",
       "discord": "https://discord.gg/7kQ4ewNSHZ"
@@ -400,7 +370,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/why-unpod/introduction"
+      "destination": "/get-started/why-unpod"
     }
   ]
 }
