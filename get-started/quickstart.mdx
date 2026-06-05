@@ -40,7 +40,7 @@ cp examples/browser_playground/.env.example examples/browser_playground/.env
 
 ```bash
 # examples/browser_playground/.env
-UNPOD_BASE_URL=api.unpod.io           # one URL - everything derives from it
+UNPOD_BASE_URL=api.unpod.ai           # one URL - everything derives from it
 UNPOD_API_KEY=sk_...                  # from Studio -> API Key
 ANTHROPIC_API_KEY=sk-ant-...          # or OPENAI_API_KEY
 ```
@@ -51,7 +51,7 @@ it is documented**. The SDK derives every service from it in code:
 | Variable | Purpose | Default |
 |---|---|---|
 | `UNPOD_API_KEY` | Auth, everywhere | - (required) |
-| `UNPOD_BASE_URL` | The one endpoint: REST becomes `https://<host>/platform`; the orchestrator and speech service become `wss://<host>` | `api.unpod.io` |
+| `UNPOD_BASE_URL` | The one endpoint: REST becomes `https://<host>/platform`; the orchestrator and speech service become `wss://<host>` | `api.unpod.ai` |
 
 <Note>
 Per-component overrides exist for non-standard deployments -
