@@ -344,6 +344,23 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Guides",
+            "icon": "newspaper",
+            "pages": [
+              "blog/index",
+              "blog/getting-started-with-unpod-api",
+              "platform/build-an-agent",
+              "blog/self-hosting-unpod",
+              "blog/understanding-telephony",
+              "api/post-call-data"
+            ]
+          }
+        ]
       }
     ],
     "global": {
