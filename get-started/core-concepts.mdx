@@ -107,7 +107,7 @@ A long-lived Python process you run. It registers with the Unpod orchestrator
 over WebSocket, advertises capacity, and serves a per-call bridge that Unpod
 dials into. For each call it builds a `CallContext` and invokes your entrypoint.
 You identify it with an `agent_id` (see [IDs You'll Meet](#ids-youll-meet)). See
-[SDK Setup](/speech-stack/sdk-setup).
+[SDK Setup](/speech-stack/agent-runner).
 
 ### Session
 
@@ -115,7 +115,7 @@ Your control interface for one live call, reached as `ctx.session`. It exposes
 controls (`say()`, `transfer_to_human()`, `end()`, recording controls), hooks,
 metrics, and the `dialog_machine` slot where you plug in your brain. Calling
 `session.run()` keeps the call alive and routes each transcribed turn to your
-brain. See [Session Controls](/speech-stack/session-controls).
+brain. See [Session Controls](/speech-stack/agent-runner).
 
 ### CallContext
 
@@ -221,13 +221,13 @@ terms precisely.
   <Card title="Make Your First Call" icon="phone" href="/get-started/first-phone-call">
     Wire a number, a pipe, and a runner end to end.
   </Card>
-  <Card title="Speech Stack" icon="layers" href="/speech-stack/sdk-setup">
+  <Card title="Speech Stack" icon="layers" href="/speech-stack/agent-runner">
     Numbers, voice profiles, pipes, and the AgentRunner SDK.
   </Card>
   <Card title="SuperDialog" icon="git-branch" href="/superdialog/introduction">
     The optional framework for structured conversation flows.
   </Card>
-  <Card title="Session Controls" icon="sliders-horizontal" href="/speech-stack/session-controls">
+  <Card title="Session Controls" icon="sliders-horizontal" href="/speech-stack/agent-runner">
     Act on a live call - say, transfer, end, record.
   </Card>
 </CardGroup>

@@ -1,0 +1,290 @@
+---
+title: 'AgentRunner & Sessions'
+icon: 'activity'
+description: 'The Connectivity API runtime: run an AgentRunner, control live calls with Session, and read per-call metrics.'
+---
+
+The Connectivity half of the SDK. An
+[AgentRunner](/get-started/core-concepts#agentrunner) is the long-lived process
+that receives calls; a [Session](/get-started/core-concepts#session) is your
+control surface for one live call. This page is the reference for both.
+
+## Install
+
+```bash
+uv add unpod
+uv add unpod[dialog]      # optional: superdialog for structured flows
+uv add unpod[langchain]   # optional: LangChain adapter
+```
+
+```bash
+export UNPOD_API_KEY="sk_..."
+export UNPOD_ORCHESTRATOR_URL="wss://api.unpod.io"  # optional override
+```
+
+The [Quickstart](/get-started/quickstart#set-your-environment) documents every
+environment variable.
+
+## The runner
+
+`AgentRunner` holds a WebSocket connection to the Unpod orchestrator. When a
+call is dispatched to your agent, the runner invokes your `entrypoint` with a
+`CallContext`.
+
+```
+Unpod Orchestrator
+      | WebSocket (wss)
+      v
+AgentRunner  --- heartbeat, advertises capacity
+      |
+      | on dispatch
+      v
+entrypoint(CallContext)  --- your code
+```
+
+```python
+from unpod import AgentRunner, CallContext
+
+async def handle_call(ctx: CallContext) -> None:
+    await ctx.session.say("Hello, thanks for calling!")
+    await ctx.session.run()  # blocks until the call ends
+
+runner = AgentRunner(
+    entrypoint=handle_call,
+    agent_id="my-agent",  # must match agent_id in your Speech Pipe
+)
+runner.start()  # blocking
+```
+
+<Note>
+`agent_id` is the runner agent ID — a short string you choose, matching the
+`agent_id` in your Speech Pipe config. Not the pipe's UUID. See
+[IDs You'll Meet](/get-started/core-concepts#ids-youll-meet).
+</Note>
+
+### Constructor
+
+```python
+AgentRunner(
+    entrypoint: Callable[[CallContext], Awaitable[None]],
+    agent_id: str,
+    api_key: str | None = None,            # falls back to UNPOD_API_KEY
+    max_sessions: int = 50,                 # max concurrent sessions
+    max_concurrent_calls: int | None = None, # alias for max_sessions
+    permits_per_minute: int = 120,          # rate of new call acceptance
+    drain_timeout_s: int = 60,              # graceful shutdown window
+    dev_mode: bool = False,                 # local orchestrator, dev pool
+    base_url: str | None = None,            # override orchestrator URL
+    serving_url: str | None = None,         # falls back to UNPOD_RUNNER_URL
+    agent_secret: str | None = None,        # falls back to UNPOD_AGENT_SECRET
+)
+```
+
+| Parameter | Description |
+|---|---|
+| `max_sessions` | Max simultaneous sessions this runner accepts; the orchestrator will not dispatch beyond it. |
+| `permits_per_minute` | Rate of new call acceptance. Lower it to protect downstream systems. |
+| `drain_timeout_s` | On shutdown, wait this long for active calls to finish before force-exiting. |
+| `dev_mode` | Register in a dev pool against a local orchestrator. |
+| `agent_secret` | When set, inbound bridge connections are HMAC-verified; without it the runner accepts unsigned connections (dev default). |
+
+### Runner lifecycle hooks
+
+React to runner-level events (distinct from per-session hooks):
+
+```python
+@runner.on("call_start")
+async def on_call_start(ctx: CallContext) -> None:
+    print(f"New call: {ctx.call_id}")
+
+@runner.on("call_end")
+async def on_call_end(ctx: CallContext, final_state: str) -> None:
+    print(f"Call {ctx.call_id} ended: {final_state}")
+```
+
+## CallContext
+
+Every call to your `entrypoint` receives a
+[CallContext](/get-started/core-concepts#callcontext):
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    ctx.call_id       # str: unique call ID
+    ctx.session_id    # str: unique session ID
+    ctx.agent_id      # str: agent that received this call
+    ctx.direction     # str: "inbound" or "outbound"
+    ctx.user_number   # str: caller's E.164 number
+    ctx.instructions  # str | None: per-call override instructions
+    ctx.data          # dict: metadata from dispatch (e.g. CRM data)
+    ctx.session       # Session: call control object
+```
+
+## The Session
+
+`ctx.session` is your interface to the live call: speak, interrupt, transfer,
+record, end — all from inside your entrypoint.
+
+### Speaking
+
+```python
+await ctx.session.say("Thank you for your patience.")   # speak via TTS, returns immediately
+await ctx.session.set_filler("One moment please...")    # played during processing silences
+```
+
+### Interrupting
+
+```python
+@ctx.session.on("user_turn")
+async def on_user_turn(text: str) -> None:
+    if "stop" in text.lower():
+        await ctx.session.interrupt()   # stop the current utterance
+```
+
+### Transferring
+
+```python
+await ctx.session.transfer_to_human(queue="tier-2-support")   # cold transfer to a human queue
+await ctx.session.transfer_to_agent(agent_id="billing-agent") # cold transfer to another agent
+```
+
+<Tip>
+A cold transfer drops your session the moment it is initiated. For a warm
+handoff, use the out-of-band `client.sessions.transfer(..., mode="warm")` —
+see below.
+</Tip>
+
+### Ending
+
+```python
+await ctx.session.end(reason="completed")  # reason defaults to "completed"
+```
+
+Common reasons: `"completed"`, `"no_response"`, `"error"`, `"transferred"`,
+`"max_duration"`.
+
+### Recording control
+
+```python
+await ctx.session.recording.pause(reason="PII")  # e.g. before card numbers
+await ctx.session.recording.resume()
+```
+
+<Warning>
+Pause/resume requires recording to be enabled on the Speech Pipe
+(`recording=True`); otherwise these calls are ignored.
+</Warning>
+
+### Per-call data
+
+`session.data` is a plain dict scoped to the current call:
+
+```python
+ctx.session.data["customer"] = await crm.lookup(ctx.user_number)
+```
+
+### The main loop — `run()`
+
+`session.run()` keeps the call alive. It reads bridge events, fires your hooks,
+routes each transcribed user turn to your dialog adapter's `stream()`, and
+pipes the reply tokens to TTS.
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = my_brain          # see Bring Your Agent
+    await ctx.session.say("Hi, I'm Alex. How can I help?")
+    await ctx.session.run()                        # blocks until call ends
+    # anything here runs as post-call cleanup
+```
+
+### Live metrics
+
+```python
+m = ctx.session.metrics.live()   # CallMetrics snapshot, during or after run()
+m.turns           # int: dialog turns so far
+m.duration_s      # float: call duration
+m.stt_p95_ms      # int: P95 STT latency
+m.llm_p95_ms      # int: P95 LLM latency
+m.tts_p95_ms      # int: P95 TTS latency
+m.cost.voice      # float — m.cost.llm, m.cost.total
+m.tokens.input    # int — m.tokens.output
+m.active_llm      # str: model used on the last turn
+```
+
+### Session API reference
+
+| Method | Signature | Description |
+|---|---|---|
+| `say` | `async (text: str) → None` | Speak text via TTS |
+| `interrupt` | `async () → None` | Stop current utterance |
+| `set_filler` | `async (text: str) → None` | Set filler phrase |
+| `transfer_to_human` | `async (queue: str) → None` | Cold transfer to human queue |
+| `transfer_to_agent` | `async (agent_id: str) → None` | Cold transfer to another agent |
+| `end` | `async (reason: str = "completed") → None` | End the call |
+| `run` | `async () → None` | Main event loop |
+| `on` | `(event: str) → decorator` | Register hook |
+| `recording.pause` | `async (reason: str = "") → None` | Pause recording |
+| `recording.resume` | `async () → None` | Resume recording |
+| `metrics` | `property → MetricsTracker` | Per-call metrics (`.live()`) |
+| `dialog_machine` | `property (get/set)` | Dialog adapter — auto-wraps superdialog types |
+| `data` | `dict[str, Any]` | Per-call scratch space |
+
+## Out-of-band session control
+
+Act on a live session from outside the call — your backend, an ops tool —
+via the Management SDK, targeting it by session ID:
+
+```python
+from unpod import AsyncClient
+
+async with AsyncClient(api_key="sk_...") as client:
+    await client.sessions.end(session_id)
+
+    await client.sessions.transfer(          # warm handoff supported here
+        session_id,
+        to_type="sip",
+        to_config={"number": "+15551230000"},
+        mode="warm",
+        warm_handoff_ms=4000,
+    )
+
+    await client.sessions.merge(             # e.g. conference a supervisor in
+        primary_session_id,
+        secondary_session_ids=[other_session_id],
+    )
+```
+
+## Running in production
+
+### Monitoring
+
+```python
+s = runner.stats()        # RunnerStats snapshot
+s.in_flight               # current active calls
+s.queued                  # dispatches waiting for capacity
+s.capacity                # your max_sessions setting
+s.completed_last_hour     # completed calls
+s.failed_last_hour        # failed calls
+s.mean_call_duration_s    # average call length
+```
+
+### Graceful shutdown
+
+Send `SIGTERM` (standard for containers and systemd). The runner stops
+accepting dispatches, waits up to `drain_timeout_s` for active calls, then
+exits. Or call `await runner.shutdown()` yourself.
+
+### Multiple runners
+
+Run multiple `AgentRunner` processes with the same `agent_id` across machines.
+The orchestrator load-balances on reported capacity — no shared state needed.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Bring Your Agent" icon="bot" href="/speech-stack/bring-your-agent">
+    Plug your existing brain into session.dialog_machine.
+  </Card>
+  <Card title="Hooks & Events" icon="bell" href="/speech-stack/hooks-events">
+    React to every turn, interruption, silence, and lifecycle event.
+  </Card>
+</CardGroup>

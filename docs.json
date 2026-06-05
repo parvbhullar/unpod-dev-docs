@@ -78,8 +78,7 @@
             "group": "Runtime",
             "icon": "activity",
             "pages": [
-              "speech-stack/sdk-setup",
-              "speech-stack/session-controls",
+              "speech-stack/agent-runner",
               "speech-stack/hooks-events",
               "speech-stack/websocket"
             ]
