@@ -1,5 +1,3 @@
-home
-introduction
 api/overview
 api/rate-limiting
 blog/getting-started-with-unpod-api

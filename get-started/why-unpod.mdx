@@ -1,58 +1,36 @@
 ---
 title: 'Why Unpod'
 icon: 'rocket'
-description: 'Phone Numbers & Speech Infra for AI Agents. You bring the agent - we handle the communication stack.'
+description: 'Most of the work in shipping a voice agent is speech infrastructure, not AI. Unpod owns that layer so you only write the agent.'
 ---
 
-## The Problem Nobody Talks About
+## The problem
 
-You have an AI agent. It works great in a chat window. You want to give it a phone number.
+You have an AI agent. It works in a chat window. You want to give it a phone number.
 
-That should take an afternoon. Instead it takes months.
+That should take an afternoon. It usually takes months.
 
-Here is why: **80% of the engineering effort burns on speech infrastructure - not on the AI itself.**
+Here is why: **most of the engineering effort goes into speech infrastructure, not the AI.** Transcription, synthesis, voice activity detection, barge-in, endpointing, carrier connections, audio transport, scaling under load — this layer takes far longer to build than the agent logic, and it has nothing to do with what makes your agent good.
 
-The speech layer — transcription, synthesis, VAD, barge-in detection, endpointing, carrier connections — takes 10x longer to build than the agent logic. Most teams spend 3–4 months wiring this up before their agent takes a single real call.
+Teams routinely spend three or four months wiring this up before their agent takes a single real call. That time buys no product differentiation. Every voice startup rebuilds the same plumbing.
 
-**Your team should ship product - not run a speech infra company.**
+Unpod removes that work. You write the agent's brain. Unpod handles everything between the caller and your logic.
 
----
+## What Unpod handles vs what you write
 
-## What Unpod Is
+The line is sharp: the wire between Unpod and your code carries **text, not audio**. Your code never sees a packet, a codec, or a SIP message. It receives transcribed text and returns text. Audio never leaves Unpod's infrastructure.
 
-Unpod is **communication infrastructure for AI agents**. We own the entire communication stack so you don't have to.
+| Unpod handles | You write |
+|---|---|
+| Telephony, SIP, carriers | The agent's brain — one entrypoint |
+| Phone numbers (provision or bring your own) | LLM choice and prompts |
+| STT, TTS, and provider failover | Conversation flows and logic |
+| VAD, barge-in, endpointing | Tools and business logic |
+| Audio transport (phone, WebSocket, WebRTC) | Per-call memory and state |
+| Scaling, dispatch, and orchestration | |
+| Recordings and transcripts | |
 
-<CardGroup cols={3}>
-  <Card title="Phone Numbers" icon="phone">
-    Provision numbers directly from Unpod or bring your own. No SIP trunk setup, no carrier account.
-  </Card>
-  <Card title="Fully Managed Speech" icon="waveform">
-    STT, TTS, VAD, barge-in, endpointing - all configured, monitored, and failed over automatically.
-  </Card>
-  <Card title="One Webhook" icon="webhook">
-    Your agent receives transcribed text and returns text. Audio never leaves Unpod.
-  </Card>
-</CardGroup>
-
----
-
-## How It Works
-
-You already have an agent. It could be LangChain, a FastAPI endpoint, n8n, SuperDialog - anything that accepts text and returns text.
-
-Unpod gives it a phone number and handles everything between the caller and your logic.
-
-<Frame>
-  <img src="/images/diagrams/unpod-voice-stack.svg" alt="Unpod voice stack diagram showing callers, browser users, and mobile users connecting through the managed speech layer to your agent." />
-</Frame>
-
-Your endpoint never touches audio. It never touches SIP. It never manages a carrier.
-
----
-
-## What This Looks Like in Code
-
-This is a complete production voice agent using the Unpod SDK:
+In practice your entire integration is a function that receives a call and runs a dialog:
 
 ```python
 from superdialog import DialogMachine, Flow
@@ -67,40 +45,32 @@ async def handle_call(ctx: CallContext) -> None:
 AgentRunner(entrypoint=handle_call, agent_id="agt_...").start()
 ```
 
-No pipeline configuration. No WebRTC. No SIP setup. No carrier account. No audio handling.
+No pipeline configuration. No WebRTC. No SIP. No carrier account. No audio handling. If you already have an HTTP endpoint or a LangChain agent, you can point Unpod at it with no SDK code at all.
 
-You can also point Unpod at any HTTP endpoint or LangChain agent you already have - no SDK required.
+For where this sits in the larger architecture, see [Core Concepts](/get-started/core-concepts).
 
----
+## Vs the alternatives
 
-## Where Unpod Sits in the Stack
+The honest comparison is about what you own and how long it takes to get to a real call.
 
-<Frame>
-  <img src="/images/diagrams/where-unpod-sits.svg" alt="Layered diagram showing Unpod as communication infrastructure between raw telephony providers and agent platforms." />
-</Frame>
+**Rolling your own** (or using a pipeline framework like Pipecat or an audio platform like LiveKit): you assemble and run every component — STT provider, TTS provider, VAD, transport, endpointing, scaling. Maximum control, maximum setup. Phone numbers mean a SIP trunk and a carrier account. Expect months before the first production call, and ongoing operational ownership of the speech layer forever.
 
-Unpod sits between raw carriers (Layer 1) and agent platforms (Layer 3). We are the communication stack that agent builders rely on - and that you can use directly.
+**Unpod:** you bring the agent; the speech layer is managed. Numbers provision directly, voice profiles configure STT/TTS with automatic failover, and dispatch and scaling are handled for you. Expect hours to your first call.
 
----
+Choose to roll your own when you need fine-grained control over the audio pipeline or already run that infrastructure. Choose Unpod when your value is the agent logic and you do not want to become a telephony team.
 
-## Who Unpod Is For
+Unpod's core components are open source — you can self-host the full stack or use the managed cloud. See [Self-hosting Unpod](/blog/self-hosting-unpod).
 
-| You have... | Unpod gives you... |
-|---|---|
-| A Python agent | A phone number and fully managed speech in 2 hours |
-| An HTTP endpoint | Inbound calls routed to it - no code changes |
-| A LangChain chain | Drop-in adapter - voice in, voice out |
-| A product to ship | Production voice in days - not months |
+## Start building
 
----
-
-## Next Steps
-
-<CardGroup cols={2}>
-  <Card title="Unpod vs LiveKit vs Pipecat" icon="scale" href="/get-started/vs-competition">
-    How Unpod compares to audio frameworks on time to production and ownership.
+<CardGroup cols={3}>
+  <Card title="Quickstart" icon="play" href="/get-started/quickstart">
+    Talk to your own voice agent in the browser in about five minutes. No phone number needed.
   </Card>
-  <Card title="Core Concepts" icon="layers" href="/get-started/core-concepts">
-    The communication stack - from caller to your agent and back, with every term defined.
+  <Card title="SuperDialog" icon="git-branch" href="/superdialog/introduction">
+    The dialog framework. Turn a prompt or flow graph into an executable conversation — pure text in, pure text out.
+  </Card>
+  <Card title="Platform (no-code)" icon="layout-dashboard" href="/platform/introduction">
+    Build, configure, and run agents from the hosted UI. No SDK required.
   </Card>
 </CardGroup>
