@@ -70,8 +70,7 @@
               "speech-stack/voice-profiles",
               "speech-stack/pipes",
               "speech-stack/outbound-calls",
-              "speech-stack/call-lifecycle",
-              "speech-stack/telephony-states"
+              "speech-stack/call-lifecycle"
             ]
           },
           {
