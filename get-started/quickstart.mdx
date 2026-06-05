@@ -40,32 +40,25 @@ cp examples/browser_playground/.env.example examples/browser_playground/.env
 
 ```bash
 # examples/browser_playground/.env
-SUPERVOICE_URL=wss://api.unpod.io     # Unpod's hosted speech service
-UNPOD_API_KEY=sk_...                  # from Studio → API Key
+UNPOD_BASE_URL=api.unpod.io           # one URL - everything derives from it
+UNPOD_API_KEY=sk_...                  # from Studio -> API Key
 ANTHROPIC_API_KEY=sk-ant-...          # or OPENAI_API_KEY
 ```
 
-`SUPERVOICE_URL` points the playground at Unpod's hosted speech service and is
-also the `base_url` your agent registers against. Use the speech endpoint shown
-in your Studio dashboard; `wss://api.unpod.io` is the default.
+`UNPOD_BASE_URL` is the only endpoint you configure - **this is the one place
+it is documented**. The SDK derives every service from it in code:
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `UNPOD_API_KEY` | Auth, everywhere | - (required) |
+| `UNPOD_BASE_URL` | The one endpoint: REST becomes `https://<host>/platform`; the orchestrator and speech service become `wss://<host>` | `api.unpod.io` |
 
 <Note>
-These are the only base URLs you set for this quickstart. For reference, the
-Management SDK (`AsyncClient`) reads its own URLs from the environment - **this
-is the one place they are documented**:
-
-| Variable | Used by | Default |
-|---|---|---|
-| `UNPOD_API_KEY` | Everything (auth) | - (required) |
-| `UNPOD_SERVICE_BASE_URL` | `AsyncClient` (Management REST) | `https://api.unpod.io/platform` |
-| `UNPOD_ORCHESTRATOR_BASE_URL` | `AsyncClient` (orchestrator ops) | derived from the service URL |
-| `SUPERVOICE_URL` | Browser playground (speech service + agent `base_url`) | `wss://api.unpod.io` (hosted; the code default `ws://127.0.0.1:9000` is for local development) |
-
-The `AgentRunner` connects over WebSocket; on its own it defaults to
-`wss://api.unpod.io` and can be overridden with `UNPOD_ORCHESTRATOR_URL` or a
-`base_url=...` argument. Yes, that is a different variable from the client's
-`UNPOD_ORCHESTRATOR_BASE_URL` above - one per component, not a typo. The
-playground passes `SUPERVOICE_URL` as that argument for you.
+Per-component overrides exist for non-standard deployments -
+`UNPOD_SERVICE_BASE_URL` (Management REST), `UNPOD_ORCHESTRATOR_URL`
+(AgentRunner), `SUPERVOICE_URL` (browser playground speech) - and win when
+set. You should not need them; pointing at a local speech server (accordion
+below) is the one common use.
 </Note>
 
 ## Write the agent
@@ -90,8 +83,7 @@ def build_runner() -> AgentRunner:
     return AgentRunner(
         entrypoint=entrypoint,
         agent_id=os.getenv("AGENT_ID", "browser-playground"),
-        base_url=os.environ["SUPERVOICE_URL"],   # hosted speech service
-        api_key=os.environ["UNPOD_API_KEY"],
+        # base_url and api_key derive from UNPOD_BASE_URL / UNPOD_API_KEY
     )
 
 async def run_agent() -> None:
@@ -112,8 +104,8 @@ Three pieces:
   prompt, no flow graph. Assigning it to `ctx.session.dialog_machine` is how you
   plug your [Agent](/get-started/core-concepts#agent-brain) into the call.
 - **`AgentRunner`** is the long-lived process that registers as a worker and
-  serves each call. Here it registers against the hosted speech service at
-  `SUPERVOICE_URL`. See [AgentRunner](/get-started/core-concepts#agentrunner).
+  serves each call. It registers against `wss://<UNPOD_BASE_URL>`. See
+  [AgentRunner](/get-started/core-concepts#agentrunner).
 
 `await ctx.session.run()` keeps the call alive and routes each transcribed turn
 to your brain. See [Session](/get-started/core-concepts#session).
@@ -134,8 +126,8 @@ task playground
 ```
 
 This builds the browser UI, starts it on **http://localhost:9100**, and runs
-your agent in-process - registering it with the hosted speech service at
-`SUPERVOICE_URL`. The page opens automatically.
+your agent in-process - registering it with the speech service at
+`wss://<UNPOD_BASE_URL>`. The page opens automatically.
 
 Click **Connect**, allow microphone access, and speak. You will see a live
 transcript of your words and the agent's replies, plus latency badges on each

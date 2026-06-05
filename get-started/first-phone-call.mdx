@@ -27,10 +27,9 @@ the read-only catalog when you create the pipe; you do not create one.
 ## Provision the number
 
 Provisioning uses the **Management API** - the REST half of the SDK, reached
-through `AsyncClient`. It reads `UNPOD_API_KEY` and `UNPOD_SERVICE_BASE_URL` from
-the environment, both of which the [Quickstart](/get-started/quickstart#set-your-environment)
-already covers (`UNPOD_SERVICE_BASE_URL` defaults to
-`https://api.unpod.io/platform`).
+through `AsyncClient`. It reads `UNPOD_API_KEY` and derives its REST endpoint
+from `UNPOD_BASE_URL` (`https://<host>/platform`) - both set in the
+[Quickstart](/get-started/quickstart#set-your-environment).
 
 Run this once to pick a voice profile, create the pipe, sync numbers from your
 trunks, and attach the first available number:
@@ -96,8 +95,8 @@ You configure a trunk once; after that you work with numbers, not SIP. See
 ## Answer an inbound call
 
 This is the agent from the Quickstart, unchanged. The same `entrypoint` and the
-same `AgentRunner` registered against the hosted speech service at
-`SUPERVOICE_URL`, using your real `UNPOD_API_KEY`:
+same `AgentRunner` registered against `wss://<UNPOD_BASE_URL>`, using your real
+`UNPOD_API_KEY`:
 
 ```python
 # agent.py - standalone runner, no playground server needed
@@ -117,8 +116,7 @@ def build_runner() -> AgentRunner:
     return AgentRunner(
         entrypoint=entrypoint,
         agent_id=os.getenv("AGENT_ID", "browser-playground"),
-        base_url=os.environ["SUPERVOICE_URL"],   # hosted speech service
-        api_key=os.environ["UNPOD_API_KEY"],
+        # base_url and api_key derive from UNPOD_BASE_URL / UNPOD_API_KEY
     )
 
 async def run_agent() -> None:

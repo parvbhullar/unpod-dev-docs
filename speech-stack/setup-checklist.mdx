@@ -131,5 +131,6 @@ AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `UNPOD_API_KEY` | Yes | Your Unpod API key |
-| `UNPOD_SERVICE_BASE_URL` | No | Default: `https://api.unpod.io/platform`; use `http://localhost:8000/platform` for local service testing |
-| `UNPOD_ORCHESTRATOR_URL` | No | Default: `wss://api.unpod.io` |
+| `UNPOD_BASE_URL` | No | The one endpoint (default `api.unpod.io`): REST derives `https://<host>/platform`, the runner derives `wss://<host>` |
+| `UNPOD_SERVICE_BASE_URL` | No | Override for Management REST only, e.g. `http://localhost:8000/platform` for local service testing |
+| `UNPOD_ORCHESTRATOR_URL` | No | Override for the runner WebSocket only |
