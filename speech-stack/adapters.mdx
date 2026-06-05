@@ -88,7 +88,7 @@ controls:
 adapter.set_llm("anthropic/claude-haiku-4-5")        # swap the runtime model
 adapter.switch_flow(flow, preserve_memory=False)      # change the active flow
 adapter.is_complete                                   # has the flow finished?
-adapter.state                                         # current flow node
+adapter.state                                         # current flow state (dict)
 ```
 
 See [SuperDialog](/superdialog/introduction) for the machine itself.
