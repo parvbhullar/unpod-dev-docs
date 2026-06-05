@@ -1,0 +1,133 @@
+---
+title: 'Level Up to SuperDialog'
+icon: 'layers'
+description: 'When a plain LLM brain stops being enough: plug a structured DialogMachine into your voice agent.'
+---
+
+A plain LLM brain answers questions. It does not reliably follow a multi-step
+process, collect required fields in order, branch on conditions, or call your
+tools at the right moment. When your voice agent needs that —
+appointment booking, triage, verification flows — level up to
+[SuperDialog](/superdialog/introduction): a dialog state machine that executes
+a **flow** (a graph of states and transitions) turn by turn.
+
+<Frame>
+  <img src="/images/diagrams/superdialog-session-integration.svg" alt="SuperDialog session integration diagram showing user speech passing through STT, user_turn hooks, DialogMachine.turn, agent_turn hooks, TTS, and caller playback." />
+</Frame>
+
+## Wire it in
+
+Assign a `DialogMachine` to `ctx.session.dialog_machine` — the SDK auto-wraps
+it in a `SuperDialogAdapter` (see
+[Adapters](/speech-stack/adapters#auto-wrapping)):
+
+```python
+from superdialog import DialogMachine, Flow
+from unpod import AgentRunner, CallContext
+
+flow = Flow.load("clinic.json")
+
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = DialogMachine(
+        flow=flow,
+        llm="anthropic/claude-haiku-4-5",   # runtime model
+    )
+    await ctx.session.run()  # hands every turn to the machine
+
+AgentRunner(entrypoint=handle_call, agent_id="my-agent").start()
+```
+
+<Note>
+Flows are built once (`create_dialog_flow` calls an LLM at build time, not at
+runtime) and saved as JSON you version-control. The build model and the runtime
+model can differ — build with a strong model, run with a fast one. See the
+[SuperDialog Quickstart](/superdialog/quickstart).
+</Note>
+
+## Voice-specific patterns
+
+These patterns are specific to running a DialogMachine inside a live call.
+For flows, tools, and sessions themselves, see the
+[SuperDialog docs](/superdialog/introduction).
+
+### Give tools call context
+
+Define tools as closures inside your entrypoint to capture per-call data:
+
+```python
+from superdialog.tools import tool
+
+async def handle_call(ctx: CallContext) -> None:
+    caller_number = ctx.user_number
+
+    @tool
+    def lookup_caller() -> dict:
+        """Look up the caller's account by phone number."""
+        return crm.lookup_phone(caller_number)   # closure over call data
+
+    ctx.session.dialog_machine = DialogMachine(
+        flow=flow, llm="anthropic/claude-haiku-4-5", tools=[lookup_caller]
+    )
+    await ctx.session.run()
+```
+
+### Inject instructions mid-call
+
+Push a runtime directive into the machine from a session hook:
+
+```python
+@ctx.session.on("user_turn")
+async def on_user_turn(text: str) -> None:
+    if "premium" in ctx.session.data.get("tier", ""):
+        ctx.session.dialog_machine.assist(
+            "This is a premium customer - prioritize quick resolution."
+        )
+```
+
+### Switch flows mid-call
+
+```python
+billing_flow = Flow.load("billing.json")
+
+@ctx.session.on("user_turn")
+async def on_user_turn(text: str) -> None:
+    if "billing" in text.lower():
+        ctx.session.dialog_machine.switch_flow(
+            billing_flow,
+            preserve_memory=True,   # keep conversation history
+        )
+```
+
+### Detect completion
+
+Flows have terminal states. After `run()` returns, check whether the dialog
+finished or the caller hung up mid-flow:
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    machine = DialogMachine(flow=flow, llm="anthropic/claude-haiku-4-5")
+    ctx.session.dialog_machine = machine
+    await ctx.session.run()
+
+    if machine.is_complete:
+        print("Dialog reached a terminal state")
+    else:
+        print("Call ended mid-flow (hang up / timeout)")
+```
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="SuperDialog" icon="diagram-project" href="/superdialog/introduction">
+    The framework itself: flows, tools, sessions, CLI.
+  </Card>
+  <Card title="Embedding Guide: Unpod Voice" icon="plug" href="/superdialog/embedding-guides/unpod-voice">
+    The full worked example: DialogMachine inside an AgentRunner session.
+  </Card>
+  <Card title="Thinking in Flows" icon="git-branch" href="/superdialog/thinking-in-flows">
+    The mental model for designing dialog flows.
+  </Card>
+  <Card title="Bring Your Agent" icon="bot" href="/speech-stack/bring-your-agent">
+    Prefer your own brain? Adapters for LangChain, OpenAI, Anthropic, HTTP.
+  </Card>
+</CardGroup>
