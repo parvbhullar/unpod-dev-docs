@@ -1,35 +1,57 @@
 ---
 title: 'Introduction'
 icon: 'layout-dashboard'
-description: 'Get started with the Unpod AI platform for business users'
+description: 'The Unpod Platform: an open-source, AI-native communication platform — use the managed cloud or host it on your own infrastructure.'
 ---
 
-## Unpod AI Platform
+## The Unpod Platform
 
-The Unpod AI platform at [unpod.ai](https://unpod.ai) is designed for business users, teams, and organizations who want to build and manage AI voice agents without writing code.
+Unpod is an **open-source, AI-native communication platform**
+([github.com/unpod-ai/unpod](https://github.com/unpod-ai/unpod), MIT-licensed)
+for creating AI agents with dedicated phone numbers. Agents handle incoming
+calls and messages, filter communications intelligently, and deliver
+actionable insights — integrated with your existing business tools.
 
----
-
-## What You Get
+You can use it two ways:
 
 <CardGroup cols={2}>
-  <Card title="No-Code Agent Builder" icon="bot">
-    Create AI voice agents with a visual interface. Define personality, voice, and behavior without any programming.
+  <Card title="Managed Cloud" icon="cloud" href="https://unpod.ai">
+    Sign up at [unpod.ai](https://unpod.ai) and build agents in the browser.
+    Nothing to install, nothing to operate.
   </Card>
-  <Card title="Visual Dashboard" icon="layout-dashboard">
-    Monitor conversations, call logs, analytics, and agent performance from a single dashboard.
-  </Card>
-  <Card title="Team Collaboration" icon="users">
-    Manage workspaces, invite team members, and share agents across your organization.
-  </Card>
-  <Card title="Pre-Built Templates" icon="copy">
-    Start with ready-made templates for customer support, sales, scheduling, and more.
+  <Card title="Self-Hosted / On-Prem" icon="server" href="/platform/self-hosting/quickstart">
+    Run the full stack on your own infrastructure — one Docker Compose command
+    brings up everything with working defaults.
   </Card>
 </CardGroup>
 
----
+The same platform powers both: agents you build in the cloud run identically
+on-prem, so you can start managed and move in-house (or the reverse) without
+rebuilding.
 
-## Getting Started
+## What the platform includes
+
+- **AI Voice Agents** — conversational agents powered by LLMs, with
+  customizable personality, knowledge, and tools
+- **Agent Studio** — visual no-code builder for agent behavior, prompts, and
+  workflows
+- **Multi-channel** — voice calls, WhatsApp, and email through one agent
+  interface
+- **Telephony** — dedicated phone numbers with SIP trunking and call routing
+- **Knowledge Base** — upload documents and data sources for RAG-powered
+  responses
+- **Multi-tenant workspaces** — organizations, teams, RBAC, and shared Spaces
+- **Call analytics** — real-time dashboards, conversation logs, performance
+  metrics
+- **Workflow automation** — trigger scheduling, CRM updates, and notifications
+  from conversations
+- **Desktop app** — native cross-platform client built with Tauri
+
+Under the hood it is a monorepo of a Next.js web app, a Django REST backend,
+FastAPI microservices, and a real-time voice engine (LiveKit + Pipecat) — see
+[Architecture](/platform/self-hosting/architecture) for the full picture.
+
+## Getting started (managed cloud)
 
 <Steps>
 
@@ -46,7 +68,7 @@ The Unpod AI platform at [unpod.ai](https://unpod.ai) is designed for business u
 </Step>
 
 <Step title="Connect a Phone Number">
-  Set up telephony by creating a bridge, assigning a phone number, and configuring a voice provider (LiveKit or Vapi).
+  Set up telephony by creating a bridge, assigning a phone number, and configuring a voice provider.
 </Step>
 
 <Step title="Go Live">
@@ -55,21 +77,23 @@ The Unpod AI platform at [unpod.ai](https://unpod.ai) is designed for business u
 
 </Steps>
 
----
+All you need is an email account and a modern browser.
 
-## Prerequisites
+## Getting started (self-hosted)
 
-All you need to get started:
+```bash
+git clone https://github.com/unpod-ai/unpod
+cd unpod
+docker compose -f docker-compose.simple.yml up -d --build
+```
 
-- An active email account
-- Modern web browser (Chrome, Firefox, Safari, or Edge)
-- Internet connection
+That starts the full stack in containers — frontend on `:3000`, API on
+`:8000`, services on `:9116` — with working defaults. The
+[Self-Hosting Quickstart](/platform/self-hosting/quickstart) covers setup
+options, [Configuration](/platform/self-hosting/configuration) the environment,
+and [Architecture](/platform/self-hosting/architecture) the moving parts.
 
----
-
-## Detailed Guides
-
-For step-by-step walkthroughs with screenshots, see the Voice AI documentation:
+## Detailed guides
 
 <CardGroup cols={2}>
   <Card title="Account Setup" icon="arrow-right" href="/platform/onboarding">
@@ -85,3 +109,8 @@ For step-by-step walkthroughs with screenshots, see the Voice AI documentation:
     Upload documents and FAQs for your agent.
   </Card>
 </CardGroup>
+
+<Note>
+Writing code instead? The [Speech Stack](/get-started/quickstart) gives you the
+same calling infrastructure as a Python SDK.
+</Note>
