@@ -1,6 +1,3 @@
-api/overview
-api/rate-limiting
-blog/getting-started-with-unpod-api
 blog/building-voice-ai-agent
 blog/self-hosting-unpod
 blog/understanding-telephony

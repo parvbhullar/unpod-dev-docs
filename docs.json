@@ -220,6 +220,7 @@
             "group": "Getting Started",
             "icon": "book-open",
             "pages": [
+              "api/overview",
               "api/get-started/quickstart",
               "api/get-started/authentication"
             ]
