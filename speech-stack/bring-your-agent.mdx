@@ -6,12 +6,12 @@ description: "Connect your existing LangChain, OpenAI, Anthropic, HTTP, or custo
 
 Already have a working agent? This is your page. You wrap your brain in a
 `DialogAdapter`, assign it to `ctx.session.dialog_machine`, and Unpod handles
-the rest of the call — telephony, speech-to-text, text-to-speech, audio
+the rest of the call - telephony, speech-to-text, text-to-speech, audio
 transport. Your [Agent](/get-started/core-concepts#agent-brain) stays
 text-in/text-out.
 
 If you don't have an agent yet, start with the
-[Quickstart](/get-started/quickstart) instead — it builds the minimal brain
+[Quickstart](/get-started/quickstart) instead - it builds the minimal brain
 first.
 
 ## Install
@@ -39,7 +39,7 @@ async def entrypoint(ctx: CallContext) -> None:
 
 <Note>
 `AgentRunner` requires `UNPOD_API_KEY` in your environment, and the
-`agent_id` you pass must match your Speech Pipe's `agent_id` — see
+`agent_id` you pass must match your Speech Pipe's `agent_id` - see
 [IDs You'll Meet](/get-started/core-concepts#ids-youll-meet). The
 [Setup Checklist](/speech-stack/setup-checklist#environment-variables) lists
 every variable.
@@ -66,18 +66,18 @@ every user turn and pipes tokens straight to the voice bridge for synthesis.
 If your adapter implements `turn()` properly but fakes `stream()` with a
 single-chunk fallback (await the full response, yield it once), the caller
 hears **silence until the entire response is generated, then a long
-monologue** — choppy, high-latency audio with no error message anywhere.
+monologue** - choppy, high-latency audio with no error message anywhere.
 Implement real token streaming in `stream()`.
 </Warning>
 
-The bundled adapters differ here — check the table below before choosing:
+The bundled adapters differ here - check the table below before choosing:
 `OpenAIAdapter`, `AnthropicAdapter`, and `LangChainAdapter` stream real tokens
 from their providers; `HTTPAdapter` cannot stream (one HTTP round-trip, one
 chunk), so expect a latency penalty proportional to your response length.
 
 ## The DialogAdapter protocol
 
-Any object with these three methods is a valid brain — no base class required
+Any object with these three methods is a valid brain - no base class required
 (the protocol is runtime-checkable):
 
 ```python
@@ -85,7 +85,7 @@ async def turn(self, text: str, context: dict | None = None) -> str
     # Return a complete response. Not called during live calls.
 
 async def stream(self, text: str, context: dict | None = None) -> AsyncIterator[str]
-    # Yield response tokens. THE hot path — session.run() calls this.
+    # Yield response tokens. THE hot path - session.run() calls this.
 
 def assist(self, text: str) -> None
     # Inject a system instruction before the next turn.
@@ -100,11 +100,11 @@ for you. Anything else must satisfy the protocol above, or the setter raises
 
 | Adapter | Import | Real streaming | Use when |
 |---------|--------|----------------|----------|
-| `OpenAIAdapter` | `unpod.adapters.openai` | Yes | OpenAI `AsyncOpenAI` client — `gpt-4o`, `gpt-4o-mini`, etc. |
-| `AnthropicAdapter` | `unpod.adapters.anthropic` | Yes | Anthropic `AsyncAnthropic` client — Claude models |
+| `OpenAIAdapter` | `unpod.adapters.openai` | Yes | OpenAI `AsyncOpenAI` client - `gpt-4o`, `gpt-4o-mini`, etc. |
+| `AnthropicAdapter` | `unpod.adapters.anthropic` | Yes | Anthropic `AsyncAnthropic` client - Claude models |
 | `LangChainAdapter` | `unpod.adapters.langchain` | Yes | LangChain chain with `.ainvoke()` / `.astream()` |
-| `SuperDialogAdapter` | `unpod.adapters.superdialog` | Yes | superdialog `DialogMachine` / `LLMAgent` — or assign directly, auto-wrapped |
-| `HTTPAdapter` | `unpod.adapters.http` | No — single chunk | Remote agent API (any language); accepts the latency trade-off |
+| `SuperDialogAdapter` | `unpod.adapters.superdialog` | Yes | superdialog `DialogMachine` / `LLMAgent` - or assign directly, auto-wrapped |
+| `HTTPAdapter` | `unpod.adapters.http` | No - single chunk | Remote agent API (any language); accepts the latency trade-off |
 | `MCPAdapter` | `unpod.adapters.mcp` | Preview | Interface defined; full MCP orchestration is not implemented yet (`unpod[mcp]`) |
 | Custom | Implement the protocol | Up to you | Any Python object with `turn`, `stream`, `assist` |
 
@@ -186,14 +186,14 @@ adapter = HTTPAdapter(
 Request body your endpoint receives, and the response it must return:
 
 ```json
-// request — session_id and system_instructions are included when present
+// request - session_id and system_instructions are included when present
 {"text": "what the caller said", "context": {}, "session_id": "...", "system_instructions": ["..."]}
 // response
 {"text": "your agent's reply"}
 ```
 
 <Warning>
-`HTTPAdapter` does not stream — the whole reply arrives as one chunk, so the
+`HTTPAdapter` does not stream - the whole reply arrives as one chunk, so the
 caller waits for your full HTTP round-trip before hearing anything. Fine for
 short replies; for long-form answers prefer an in-process adapter.
 </Warning>
@@ -223,7 +223,7 @@ Common hooks: `call_start`, `user_turn`, `agent_turn`, `user_partial`,
 
 ## Writing a custom adapter
 
-Implement the three protocol methods — no base class required:
+Implement the three protocol methods - no base class required:
 
 ```python
 class MyAdapter:

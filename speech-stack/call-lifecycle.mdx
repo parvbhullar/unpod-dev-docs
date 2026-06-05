@@ -4,7 +4,7 @@ icon: 'route'
 description: 'How a call flows end to end, every state it moves through, voicemail detection, and the end reasons your agent observes.'
 ---
 
-Every call — whether you start it or a caller rings in — ends up the same way:
+Every call - whether you start it or a caller rings in - ends up the same way:
 your agent and the caller are two participants in a LiveKit room, and Unpod
 bridges the audio between them while streaming transcripts to your
 `AgentRunner`. This page traces both directions, the states a call moves
@@ -34,7 +34,7 @@ stateDiagram-v2
 | `failed` | `not_connected` / `canceled` | Never reached a live conversation, or canceled pre-connect. |
 
 <Note>
-Inbound calls skip `pending` and dialing — the caller is already on the line,
+Inbound calls skip `pending` and dialing - the caller is already on the line,
 so the call starts at `ringing`/`active`. Only outbound calls pass through the
 full sequence. You never drive these states yourself; you observe them via the
 call `status`, the `call_end` hook, and the final `end_reason`.
@@ -42,7 +42,7 @@ call `status`, the `call_end` hook, and the final `end_reason`.
 
 ## Outbound: what happens after `calls.create()`
 
-`calls.create()` is **asynchronous**. It does not wait for the phone to ring —
+`calls.create()` is **asynchronous**. It does not wait for the phone to ring -
 it puts your call on a queue and returns immediately with `status: "pending"`.
 The actual dialing happens in the background, gated by your plan's per-account
 concurrency limit.
@@ -55,7 +55,7 @@ concurrency limit.
   <Step title="Unpod gates on concurrency">
     A background worker picks up the call. If your account is at its
     concurrent-call cap, the call is automatically rescheduled and retried
-    shortly — no error, no dropped call.
+    shortly - no error, no dropped call.
   </Step>
   <Step title="Unpod dials the number">
     Unpod creates a room and originates the SIP call to `to_number`. The call
@@ -95,7 +95,7 @@ returns.
 
 ## Inbound: what happens when someone calls your number
 
-Inbound is simpler — there is no queue, because there is nothing to rate-limit.
+Inbound is simpler - there is no queue, because there is nothing to rate-limit.
 The moment a caller dials a number attached to your Speech Pipe, the call is
 already live and Unpod connects your agent to it.
 
@@ -129,7 +129,7 @@ flowchart LR
 ```
 
 <Note>
-Your `agent_id` selects **which dialog brain** runs for the call — it is not
+Your `agent_id` selects **which dialog brain** runs for the call - it is not
 how Unpod routes the phone number. Number routing is handled by the
 [Speech Pipe](/get-started/core-concepts#pipe) the number is attached to.
 </Note>
@@ -174,7 +174,7 @@ likely to act on:
 | `SIP_FAILED_NUMBER_BLOCKED` | The carrier blocked the call. |
 
 <Note>
-This is not the full set — additional reasons exist for SIP/trunk
+This is not the full set - additional reasons exist for SIP/trunk
 configuration errors and handover edge cases. Treat unknown reasons as a
 generic failure and log them.
 </Note>
@@ -195,7 +195,7 @@ async def on_end(final_state: str) -> None:
 
 ## Related
 
-- [Outbound Calls](/speech-stack/outbound-calls) — the `calls.create()` API in detail
-- [Speech Pipes](/speech-stack/pipes) — what ties a number, voice profile, and agent together
-- [Hooks & Events](/speech-stack/hooks-events) — every lifecycle event you can hook
-- [AgentRunner & Sessions](/speech-stack/agent-runner) — ending and transferring live calls
+- [Outbound Calls](/speech-stack/outbound-calls) - the `calls.create()` API in detail
+- [Speech Pipes](/speech-stack/pipes) - what ties a number, voice profile, and agent together
+- [Hooks & Events](/speech-stack/hooks-events) - every lifecycle event you can hook
+- [AgentRunner & Sessions](/speech-stack/agent-runner) - ending and transferring live calls

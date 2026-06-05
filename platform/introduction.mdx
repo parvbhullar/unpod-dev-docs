@@ -1,7 +1,7 @@
 ---
 title: 'Introduction'
 icon: 'layout-dashboard'
-description: 'The Unpod Platform: an open-source, AI-native communication platform — use the managed cloud or host it on your own infrastructure.'
+description: 'The Unpod Platform: an open-source, AI-native communication platform - use the managed cloud or host it on your own infrastructure.'
 ---
 
 ## The Unpod Platform
@@ -10,7 +10,7 @@ Unpod is an **open-source, AI-native communication platform**
 ([github.com/unpod-ai/unpod](https://github.com/unpod-ai/unpod), MIT-licensed)
 for creating AI agents with dedicated phone numbers. Agents handle incoming
 calls and messages, filter communications intelligently, and deliver
-actionable insights — integrated with your existing business tools.
+actionable insights - integrated with your existing business tools.
 
 You can use it two ways:
 
@@ -20,7 +20,7 @@ You can use it two ways:
     Nothing to install, nothing to operate.
   </Card>
   <Card title="Self-Hosted / On-Prem" icon="server" href="/platform/self-hosting/quickstart">
-    Run the full stack on your own infrastructure — one Docker Compose command
+    Run the full stack on your own infrastructure - one Docker Compose command
     brings up everything with working defaults.
   </Card>
 </CardGroup>
@@ -31,24 +31,24 @@ rebuilding.
 
 ## What the platform includes
 
-- **AI Voice Agents** — conversational agents powered by LLMs, with
+- **AI Voice Agents** - conversational agents powered by LLMs, with
   customizable personality, knowledge, and tools
-- **Agent Studio** — visual no-code builder for agent behavior, prompts, and
+- **Agent Studio** - visual no-code builder for agent behavior, prompts, and
   workflows
-- **Multi-channel** — voice calls, WhatsApp, and email through one agent
+- **Multi-channel** - voice calls, WhatsApp, and email through one agent
   interface
-- **Telephony** — dedicated phone numbers with SIP trunking and call routing
-- **Knowledge Base** — upload documents and data sources for RAG-powered
+- **Telephony** - dedicated phone numbers with SIP trunking and call routing
+- **Knowledge Base** - upload documents and data sources for RAG-powered
   responses
-- **Multi-tenant workspaces** — organizations, teams, RBAC, and shared Spaces
-- **Call analytics** — real-time dashboards, conversation logs, performance
+- **Multi-tenant workspaces** - organizations, teams, RBAC, and shared Spaces
+- **Call analytics** - real-time dashboards, conversation logs, performance
   metrics
-- **Workflow automation** — trigger scheduling, CRM updates, and notifications
+- **Workflow automation** - trigger scheduling, CRM updates, and notifications
   from conversations
-- **Desktop app** — native cross-platform client built with Tauri
+- **Desktop app** - native cross-platform client built with Tauri
 
 Under the hood it is a monorepo of a Next.js web app, a Django REST backend,
-FastAPI microservices, and a real-time voice engine (LiveKit + Pipecat) — see
+FastAPI microservices, and a real-time voice engine (LiveKit + Pipecat) - see
 [Architecture](/platform/self-hosting/architecture) for the full picture.
 
 ## Getting started (managed cloud)
@@ -87,8 +87,8 @@ cd unpod
 docker compose -f docker-compose.simple.yml up -d --build
 ```
 
-That starts the full stack in containers — frontend on `:3000`, API on
-`:8000`, services on `:9116` — with working defaults. The
+That starts the full stack in containers - frontend on `:3000`, API on
+`:8000`, services on `:9116` - with working defaults. The
 [Self-Hosting Quickstart](/platform/self-hosting/quickstart) covers setup
 options, [Configuration](/platform/self-hosting/configuration) the environment,
 and [Architecture](/platform/self-hosting/architecture) the moving parts.

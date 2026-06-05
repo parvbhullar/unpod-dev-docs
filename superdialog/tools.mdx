@@ -6,7 +6,7 @@ description: "Give your dialog machine the ability to call Python functions, HTT
 
 ## Overview
 
-Tools let your `DialogMachine` take actions during a conversation — look up a customer record, book a slot, query a database, call an API. When the LLM decides a tool is needed, SuperDialog executes it automatically and feeds the result back into the conversation.
+Tools let your `DialogMachine` take actions during a conversation - look up a customer record, book a slot, query a database, call an API. When the LLM decides a tool is needed, SuperDialog executes it automatically and feeds the result back into the conversation.
 
 Three tool types, one interface:
 
@@ -47,7 +47,7 @@ async def check_inventory(sku: str, qty: int) -> dict:
 
 ### 2. Plain functions in `tools=[]`
 
-No decorator needed — pass any function directly. SuperDialog wraps it automatically using the function name as the tool id and the docstring as the description.
+No decorator needed - pass any function directly. SuperDialog wraps it automatically using the function name as the tool id and the docstring as the description.
 
 ```python
 async def lookup_customer(customer_id: str) -> dict:
@@ -67,7 +67,7 @@ dialog_machine = DialogMachine(
 
 ### 3. Function references on the flow model
 
-Attach functions directly to `ConversationFlow.tools` or `FlowNode.tools` when building flows in Python. This gives you **scoping** — flow-level tools are available on every node, node-level tools only on that node.
+Attach functions directly to `ConversationFlow.tools` or `FlowNode.tools` when building flows in Python. This gives you **scoping** - flow-level tools are available on every node, node-level tools only on that node.
 
 ```python
 from superdialog.flow.models import ConversationFlow, FlowNode, Edge
@@ -98,7 +98,7 @@ flow = ConversationFlow(
     ],
 )
 
-# No tool_handlers dict required — functions are bound directly
+# No tool_handlers dict required - functions are bound directly
 machine = await DialogStateMachine.from_flow(flow, adapter)
 ```
 
@@ -125,7 +125,7 @@ For explicit control over the tool's id, name, description, or schema:
 ```python
 from superdialog import PythonTool
 
-# Convenience constructor — infers id, name, description, schema from the function
+# Convenience constructor - infers id, name, description, schema from the function
 tool = PythonTool.of(lookup_customer)
 
 # Explicit constructor
@@ -189,7 +189,7 @@ tool = MCPTool(
 
 ## `Tool.from_dict`
 
-Deserialize a tool from a plain dict — useful when loading tool specs from JSON config files:
+Deserialize a tool from a plain dict - useful when loading tool specs from JSON config files:
 
 ```python
 from superdialog import Tool
@@ -240,13 +240,13 @@ from superdialog.flow.models import ConversationFlow, FlowNode, Edge
 from superdialog.machine.machine import DialogStateMachine
 from superdialog.tools import tool
 
-# Flow-level tool — available on every node
+# Flow-level tool - available on every node
 @tool
 async def search_kb(query: str) -> dict:
     """Search the knowledge base for answers."""
     return {"results": await kb.search(query)}
 
-# Node-level tool — only available on the collect_info node
+# Node-level tool - only available on the collect_info node
 async def check_availability(date: str) -> dict:
     """Check available appointment slots for a date."""
     return {"slots": await calendar.get_slots(date)}

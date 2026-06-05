@@ -110,7 +110,7 @@ uv run super_services/orchestration/executors/voice_executor_v3.py start
 #### Media plane (the `RoomEngine` seam)
 
 Every voice session has an infra-level **media session** owned by a
-backend-agnostic **`RoomEngine`** — the orchestrator never speaks a specific
+backend-agnostic **`RoomEngine`** - the orchestrator never speaks a specific
 media vendor's vocabulary, so the backend is a swap, not a rewrite.
 
 - **Today:** self-hosted **LiveKit OSS** (`LiveKitRoomEngine`) provides the SFU,
@@ -127,7 +127,7 @@ media vendor's vocabulary, so the backend is a swap, not a rewrite.
   `end_reason=media_unavailable`.
 - **Scale path:** a future `mediasoup` engine registers behind the same seam
   (advertising no `sip`), so `pick_engine` keeps PSTN on LiveKit and routes
-  WebRTC-only traffic to mediasoup — no orchestrator change.
+  WebRTC-only traffic to mediasoup - no orchestrator change.
 
 ---
 

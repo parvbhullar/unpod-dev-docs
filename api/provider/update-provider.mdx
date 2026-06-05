@@ -57,7 +57,7 @@ You can get the provider configuration `id` by hitting the [Get All Providers](/
 
 ### Request Body
 
-All fields are optional — include only the fields you wish to update.
+All fields are optional - include only the fields you wish to update.
 
 | Field      | Type   | Required | Description                        |
 |------------|--------|----------|------------------------------------|
@@ -160,7 +160,7 @@ curl -X PATCH "https://unpod.ai/api/v2/platform/telephony/providers-configuratio
 
 ## Best Practices
 
-1. **Partial Updates**: Only include fields you want to change — PATCH supports partial updates
+1. **Partial Updates**: Only include fields you want to change - PATCH supports partial updates
 2. **Credential Rotation**: Regularly rotate `auth_token` values for security without disrupting bridges
 3. **Security**: Never expose `auth_token` values in logs or responses
 4. **Verify Before Update**: Use [Get Provider by ID](/api/provider/get-provider-by-id) to confirm the configuration exists before patching

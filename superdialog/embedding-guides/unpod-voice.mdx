@@ -6,7 +6,7 @@ description: "Connect a SuperDialog dialog machine to Unpod voice calls via the 
 
 ## How it works
 
-The `unpod` SDK connects your `AgentRunner` to Unpod's voice platform over WebSocket. Unpod handles STT, TTS, telephony, numbers, and recording — your code handles dialog logic using a SuperDialog `DialogMachine` or `LLMAgent`.
+The `unpod` SDK connects your `AgentRunner` to Unpod's voice platform over WebSocket. Unpod handles STT, TTS, telephony, numbers, and recording - your code handles dialog logic using a SuperDialog `DialogMachine` or `LLMAgent`.
 
 ```
 Caller → Phone number (Unpod) → STT → AgentRunner → DialogMachine → TTS → Caller
@@ -16,7 +16,7 @@ Your dialog machine runs inside your process, in the same call as the rest of yo
 
 ---
 
-## Step 1 — Build your dialog machine
+## Step 1 - Build your dialog machine
 
 ```python
 from superdialog import DialogMachine, Flow, PythonTool
@@ -36,9 +36,9 @@ See [SuperDialog Quickstart](/superdialog/quickstart) to generate and save a flo
 
 ---
 
-## Step 2 — Plug the machine into your session
+## Step 2 - Plug the machine into your session
 
-Assign `dialog_machine` to `ctx.session.dialog_machine` inside your `AgentRunner` entrypoint. The SDK auto-wraps it — no adapter import needed.
+Assign `dialog_machine` to `ctx.session.dialog_machine` inside your `AgentRunner` entrypoint. The SDK auto-wraps it - no adapter import needed.
 
 ```python
 from unpod import AgentRunner, CallContext
@@ -66,7 +66,7 @@ AgentRunner(
 
 ---
 
-## Step 3 — Create and register your Speech Pipe
+## Step 3 - Create and register your Speech Pipe
 
 ```python
 import asyncio

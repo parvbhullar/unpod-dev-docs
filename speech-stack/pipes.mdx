@@ -40,7 +40,7 @@ asyncio.run(main())
 |---|---|---|---|
 | `name` | `str` | required | Display name for the pipe |
 | `voice_profile` | `str \| None` | `None` | Voice profile ID (`vp_...`) |
-| `agent_id` | `str \| None` | `None` | ID of your `AgentRunner` brain — links the pipe to your runner worker |
+| `agent_id` | `str \| None` | `None` | ID of your `AgentRunner` brain - links the pipe to your runner worker |
 | `agent_endpoint` | `str \| None` | `None` | HTTP endpoint for the dialog brain (HTTPAdapter) |
 | `recording` | `bool` | `False` | Enable call recording |
 | `max_call_duration_s` | `int` | `3600` | Hard cap in seconds (default 1 hour) |
@@ -194,7 +194,7 @@ Your endpoint must respond with:
 ```
 
 <Note>
-This protocol is **not** OpenAI-compatible. It is a simple text-in / text-out interface — your endpoint owns all LLM or chatbot logic. You can forward to OpenAI, Gemini, a rules engine, or anything else under the hood.
+This protocol is **not** OpenAI-compatible. It is a simple text-in / text-out interface - your endpoint owns all LLM or chatbot logic. You can forward to OpenAI, Gemini, a rules engine, or anything else under the hood.
 </Note>
 
 Alternatively, use the `HTTPAdapter` inside an `AgentRunner` entrypoint to call a remote endpoint from within the SDK:

@@ -160,6 +160,6 @@ curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-00
 1. **Pre-disconnect Check**: Verify the phone number is currently connected using [Get Bridge by Slug](/api/telephony/get-bridge-by-slug) before disconnecting
 2. **Phone Number Format**: Use E.164 format (e.g., `+1234567890`) for the `phone_number` field
 3. **Before Deletion**: Always disconnect providers before deleting a bridge to ensure clean teardown
-4. **Error Handling**: Handle 400 errors — the phone number may not be connected to the specified bridge
+4. **Error Handling**: Handle 400 errors - the phone number may not be connected to the specified bridge
 5. **Service Disruption**: Disconnecting an active number will stop calls routing through the bridge immediately
 6. **Security**: Keep API tokens secure and rotate them regularly

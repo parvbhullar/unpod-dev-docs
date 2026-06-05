@@ -7,7 +7,7 @@ description: 'Take the agent you built in the browser quickstart to a real inbou
 You built and talked to your agent in the browser in the
 [Quickstart](/get-started/quickstart). Now give it a phone number.
 
-Nothing about the agent changes — same `entrypoint`, same
+Nothing about the agent changes - same `entrypoint`, same
 [`LLMAgent`](/get-started/core-concepts#agent-brain) brain, same
 [`AgentRunner`](/get-started/core-concepts#agentrunner) against Unpod's hosted
 speech service. The only new work is provisioning: telling Unpod which phone
@@ -15,10 +15,10 @@ number routes to your agent.
 
 ## What you'll add
 
-- **A [Speech Pipe](/get-started/core-concepts#pipe)** — the configuration entity
+- **A [Speech Pipe](/get-started/core-concepts#pipe)** - the configuration entity
   that binds a voice profile, recording settings, and the `agent_id` that points
   at your runner.
-- **A [phone number](/get-started/core-concepts#number)** — synced from a
+- **A [phone number](/get-started/core-concepts#number)** - synced from a
   [trunk](/get-started/core-concepts#trunk) and attached to that pipe.
 
 You reference a [voice profile](/get-started/core-concepts#voice-profile) from
@@ -26,7 +26,7 @@ the read-only catalog when you create the pipe; you do not create one.
 
 ## Provision the number
 
-Provisioning uses the **Management API** — the REST half of the SDK, reached
+Provisioning uses the **Management API** - the REST half of the SDK, reached
 through `AsyncClient`. It reads `UNPOD_API_KEY` and `UNPOD_SERVICE_BASE_URL` from
 the environment, both of which the [Quickstart](/get-started/quickstart#set-your-environment)
 already covers (`UNPOD_SERVICE_BASE_URL` defaults to
@@ -36,7 +36,7 @@ Run this once to pick a voice profile, create the pipe, sync numbers from your
 trunks, and attach the first available number:
 
 ```python
-# setup.py — run once to provision your phone number
+# setup.py - run once to provision your phone number
 import asyncio
 from unpod import AsyncClient
 
@@ -67,7 +67,7 @@ async def setup() -> None:
         # 4. Attach the first available number to the pipe.
         available = await client.numbers.list(status="available")
         if not available:
-            print("No available numbers — register a trunk first.")
+            print("No available numbers - register a trunk first.")
             return
         number = await client.numbers.attach(available[0].number_id, pipe.pipe_id)
         print(f"Attached {number.number} -> Speech Pipe {pipe.pipe_id}")
@@ -84,7 +84,7 @@ inbound calls never reach your runner. See
 
 ### You need a trunk first
 
-`numbers.sync()` pulls numbers from your [trunks](/get-started/core-concepts#trunk) —
+`numbers.sync()` pulls numbers from your [trunks](/get-started/core-concepts#trunk) -
 the SIP connections that carry calls between a telephony provider and Unpod. If
 `numbers.list(status="available")` comes back empty, you have no trunk yet.
 
@@ -100,7 +100,7 @@ same `AgentRunner` registered against the hosted speech service at
 `SUPERVOICE_URL`, using your real `UNPOD_API_KEY`:
 
 ```python
-# agent.py — standalone runner, no playground server needed
+# agent.py - standalone runner, no playground server needed
 import asyncio
 import os
 from unpod import AgentRunner, CallContext
@@ -137,7 +137,7 @@ python agent.py
 The runner connects to the orchestrator and waits. Now call the number you
 attached. Unpod recognises the number, looks up its pipe, sees the pipe's
 `agent_id`, and dispatches the call to your waiting runner. Your agent answers
-and speaks — the same brain you heard in the browser, now on the phone.
+and speaks - the same brain you heard in the browser, now on the phone.
 
 <Note>
 The runner does not need to restart when you provision the number. Run `setup.py`
@@ -150,7 +150,7 @@ Inbound is one direction. To have your agent place a call, use `calls.create`
 with the pipe and the destination number:
 
 ```python
-# call_out.py — dispatch an outbound call
+# call_out.py - dispatch an outbound call
 import asyncio
 from unpod import AsyncClient
 
@@ -170,7 +170,7 @@ asyncio.run(make_call())
 
 `calls.create` enqueues the call and returns immediately with `status="pending"`.
 Unpod dials out, then dispatches the answered call to the same running
-`AgentRunner` — your `entrypoint` handles outbound exactly as it handles inbound.
+`AgentRunner` - your `entrypoint` handles outbound exactly as it handles inbound.
 
 ## Next steps
 

@@ -176,6 +176,6 @@ curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-00
 1. **Provider Config ID**: Get the correct `provider_config_id` from [Get All Providers](/api/provider/get-all-providers) before connecting
 2. **Phone Number Format**: Use E.164 format (e.g., `+1234567890`) for phone numbers
 3. **Verify Bridge**: Confirm the bridge exists using [Get Bridge by Slug](/api/telephony/get-bridge-by-slug) before connecting
-4. **One Provider per Bridge**: A bridge typically connects to one provider — verify current state before re-connecting
+4. **One Provider per Bridge**: A bridge typically connects to one provider - verify current state before re-connecting
 5. **Error Handling**: Handle 400 errors that may indicate an invalid phone number or provider config
 6. **Security**: Keep API tokens secure and rotate them regularly

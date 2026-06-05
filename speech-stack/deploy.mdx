@@ -12,7 +12,7 @@ changes when you leave your laptop.
 
 ## Production checklist
 
-### 1. Reachability — `serving_url`
+### 1. Reachability - `serving_url`
 
 The runner serves a per-call bridge that Unpod dials into. It binds to
 `0.0.0.0:8765` by default; in production, tell the orchestrator where that
@@ -25,11 +25,11 @@ export UNPOD_RUNNER_URL="wss://agents.example.com:8765"
 (or pass `serving_url=...` to `AgentRunner`). The host/port must be reachable
 from Unpod.
 
-### 2. Authentication — `agent_secret`
+### 2. Authentication - `agent_secret`
 
 With an agent secret set, every inbound bridge connection is HMAC-verified
 (signed URLs, replay-protected). Without one, the runner accepts unsigned
-connections — acceptable only for local dev.
+connections - acceptable only for local dev.
 
 ```bash
 export UNPOD_AGENT_SECRET="a-long-random-secret"
@@ -47,9 +47,9 @@ AgentRunner(
 )
 ```
 
-### 4. Scaling — add replicas
+### 4. Scaling - add replicas
 
-Run more processes with the **same `agent_id`** — on one machine or many. They
+Run more processes with the **same `agent_id`** - on one machine or many. They
 form a pool; the orchestrator load-balances dispatches across replicas by
 reported capacity. No shared state, no coordination needed.
 
@@ -61,10 +61,10 @@ UNPOD_API_KEY=sk_... UNPOD_AGENT_SECRET=... python agent.py
 ### 5. Shutdown and supervision
 
 On `SIGTERM` the runner stops accepting dispatches and drains active calls for
-up to `drain_timeout_s` before exiting — container- and systemd-friendly.
+up to `drain_timeout_s` before exiting - container- and systemd-friendly.
 
 <Warning>
-The runner does not reconnect on its own if the orchestrator WebSocket drops —
+The runner does not reconnect on its own if the orchestrator WebSocket drops -
 run it under a supervisor with restart-on-exit (systemd `Restart=always`,
 Kubernetes restart policy, Docker `--restart`).
 </Warning>

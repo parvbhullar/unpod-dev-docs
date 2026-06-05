@@ -6,8 +6,8 @@ description: 'When a plain LLM brain stops being enough: plug a structured Dialo
 
 A plain LLM brain answers questions. It does not reliably follow a multi-step
 process, collect required fields in order, branch on conditions, or call your
-tools at the right moment. When your voice agent needs that —
-appointment booking, triage, verification flows — level up to
+tools at the right moment. When your voice agent needs that -
+appointment booking, triage, verification flows - level up to
 [SuperDialog](/superdialog/introduction): a dialog state machine that executes
 a **flow** (a graph of states and transitions) turn by turn.
 
@@ -17,7 +17,7 @@ a **flow** (a graph of states and transitions) turn by turn.
 
 ## Wire it in
 
-Assign a `DialogMachine` to `ctx.session.dialog_machine` — the SDK auto-wraps
+Assign a `DialogMachine` to `ctx.session.dialog_machine` - the SDK auto-wraps
 it in a `SuperDialogAdapter` (see
 [Adapters](/speech-stack/adapters#auto-wrapping)):
 
@@ -40,7 +40,7 @@ AgentRunner(entrypoint=handle_call, agent_id="my-agent").start()
 <Note>
 Flows are built once (`create_dialog_flow` calls an LLM at build time, not at
 runtime) and saved as JSON you version-control. The build model and the runtime
-model can differ — build with a strong model, run with a fast one. See the
+model can differ - build with a strong model, run with a fast one. See the
 [SuperDialog Quickstart](/superdialog/quickstart).
 </Note>
 

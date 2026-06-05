@@ -64,7 +64,7 @@ curl --request POST \
 
 </ResponseExample>
 
-# Create a Task — Make Voice AI Call
+# Create a Task - Make Voice AI Call
 
 Create a new task inside a given space using the space's public token. You can assign the task to a pilot/agent, attach multiple documents (contacts), provide additional context, and schedule the execution.
 
@@ -82,7 +82,7 @@ POST /api/v2/platform/spaces/{space_token}/tasks/create/
 
 <ParamField path="space_token" type="string" required>
   Public token of the space where the task is created.
-  <Note>Get this from the [Get All Spaces](/api/space/get-all-spaces) API — use the `token` field.</Note>
+  <Note>Get this from the [Get All Spaces](/api/space/get-all-spaces) API - use the `token` field.</Note>
 </ParamField>
 
 ### Headers
@@ -170,13 +170,13 @@ POST /api/v2/platform/spaces/{space_token}/tasks/create/
 
   <Expandable title="Data Object Fields">
     <ResponseField name="run_id" type="string">
-      Created run identifier — use this to track execution via [Get All Runs](/api/execution/get-all-runs)
+      Created run identifier - use this to track execution via [Get All Runs](/api/execution/get-all-runs)
     </ResponseField>
     <ResponseField name="task_ids" type="array">
       Array of created task identifiers (one per document/contact)
     </ResponseField>
     <ResponseField name="status" type="string">
-      Task status — initially `pending`
+      Task status - initially `pending`
     </ResponseField>
   </Expandable>
 </ResponseField>
@@ -303,7 +303,7 @@ curl -X POST "https://unpod.ai/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/t
 ## Best Practices
 
 1. **Pilot Handle**: Use the correct agent handle from the [Get All Agents](/api/agent/get-all-agents) API
-2. **contact_number**: Always include a valid `contact_number` in each document — this is required for call execution
+2. **contact_number**: Always include a valid `contact_number` in each document - this is required for call execution
 3. **Batch Calls**: Pass multiple documents in the `documents` array to trigger batch calls in a single request
 4. **Context**: Provide clear, specific context to guide the agent's conversation objectives
 5. **Run ID**: Store the returned `run_id` to track task execution status using the [Get All Runs](/api/execution/get-all-runs) API

@@ -9,17 +9,17 @@ description: 'Browse and select the speech stack for your Speech Pipes.'
 A [Voice Profile](/get-started/core-concepts#voice-profile) bundles three
 things into a single reusable configuration:
 
-- **Speech-to-Text (STT)** — transcribes the caller's audio into text
-- **Text-to-Speech (TTS)** — converts agent text into natural-sounding audio
-- **Voice** — the specific voice identity (gender, accent, character) used for TTS output
+- **Speech-to-Text (STT)** - transcribes the caller's audio into text
+- **Text-to-Speech (TTS)** - converts agent text into natural-sounding audio
+- **Voice** - the specific voice identity (gender, accent, character) used for TTS output
 
-When you attach a voice profile to a Speech Pipe, every call that Speech Pipe handles uses that configuration automatically — including failover if a provider goes down.
+When you attach a voice profile to a Speech Pipe, every call that Speech Pipe handles uses that configuration automatically - including failover if a provider goes down.
 
 <Frame>
   <img src="/images/diagrams/voice-profile-pipeline.svg" alt="Voice profile pipeline diagram showing caller speech passing through STT, dialog machine text handling, TTS plus voice, and caller playback." />
 </Frame>
 
-Voice profiles are managed by Unpod. You browse and select from the available list — you do not configure STT/TTS providers directly.
+Voice profiles are managed by Unpod. You browse and select from the available list - you do not configure STT/TTS providers directly.
 
 ---
 
@@ -88,7 +88,7 @@ asyncio.run(main())
 |---|---|
 | Customer support | High quality, natural voice, low latency |
 | Sales outreach | Expressive, high quality, brand-matched |
-| Appointment booking | Standard quality — lower latency |
+| Appointment booking | Standard quality - lower latency |
 | Multilingual | Match language codes to caller's region |
 
 ### By latency

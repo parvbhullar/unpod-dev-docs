@@ -168,8 +168,8 @@ curl -X GET "https://unpod.ai/api/v2/platform/telephony/numbers/" \
 ## Best Practices
 
 1. **Bridge Assignment**: Check `bridge_slug` to identify unassigned numbers available for new bridge connections
-2. **Status Check**: Only numbers with `status: active` can handle calls — filter inactive numbers in your application
+2. **Status Check**: Only numbers with `status: active` can handle calls - filter inactive numbers in your application
 3. **Provider Tracking**: Use the `provider` field to understand which provider account each number belongs to
 4. **Number Inventory**: Regularly audit your number list to identify unused or misconfigured numbers
-5. **E.164 Format**: All numbers are returned in E.164 format — use this format consistently in all API calls
+5. **E.164 Format**: All numbers are returned in E.164 format - use this format consistently in all API calls
 6. **Security**: Keep API tokens secure and rotate them regularly

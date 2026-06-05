@@ -48,15 +48,32 @@
         "tab": "Speech Stack",
         "groups": [
           {
-            "group": "Overview",
+            "group": "Getting Started",
             "icon": "book-open",
             "pages": [
               "speech-stack/introduction"
             ]
           },
           {
-            "group": "Your Agent",
-            "icon": "bot",
+            "group": "Speech",
+            "icon": "audio-waveform",
+            "pages": [
+              "speech-stack/voice-profiles",
+              "speech-stack/pipes"
+            ]
+          },
+          {
+            "group": "Connectivity",
+            "icon": "plug",
+            "pages": [
+              "speech-stack/numbers",
+              "speech-stack/trunks",
+              "speech-stack/websocket"
+            ]
+          },
+          {
+            "group": "Dialog",
+            "icon": "layers",
             "pages": [
               "speech-stack/bring-your-agent",
               "speech-stack/adapters",
@@ -64,29 +81,24 @@
             ]
           },
           {
-            "group": "Telephony",
-            "icon": "phone",
+            "group": "Calls",
+            "icon": "phone-outgoing",
             "pages": [
-              "speech-stack/numbers",
-              "speech-stack/voice-profiles",
-              "speech-stack/pipes",
-              "speech-stack/trunks",
-              "speech-stack/outbound-calls",
-              "speech-stack/call-lifecycle"
+              "speech-stack/call-lifecycle",
+              "speech-stack/outbound-calls"
             ]
           },
           {
-            "group": "Runtime",
-            "icon": "activity",
+            "group": "Session",
+            "icon": "phone",
             "pages": [
               "speech-stack/agent-runner",
               "speech-stack/hooks-events",
-              "speech-stack/observability",
-              "speech-stack/websocket"
+              "speech-stack/observability"
             ]
           },
           {
-            "group": "Going to Production",
+            "group": "Production",
             "icon": "rocket",
             "pages": [
               "speech-stack/setup-checklist",

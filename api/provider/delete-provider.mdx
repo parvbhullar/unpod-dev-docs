@@ -119,7 +119,7 @@ curl -X DELETE "https://unpod.ai/api/v2/platform/telephony/providers-configurati
 ## Best Practices
 
 1. **Disconnect First**: Always [disconnect the provider from bridges](/api/telephony/disconnect-provider-from-bridge) before deleting a configuration
-2. **Irreversible**: Deletion is permanent — verify the correct `id` before proceeding
+2. **Irreversible**: Deletion is permanent - verify the correct `id` before proceeding
 3. **Audit Trail**: Note the deletion in your records for compliance and troubleshooting purposes
-4. **204 Response**: A successful delete returns HTTP 204 with no body — handle this in your code
-5. **Error Handling**: Handle 404 gracefully — the configuration may have already been deleted
+4. **204 Response**: A successful delete returns HTTP 204 with no body - handle this in your code
+5. **Error Handling**: Handle 404 gracefully - the configuration may have already been deleted

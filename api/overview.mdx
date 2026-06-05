@@ -1,7 +1,7 @@
 ---
 title: 'API Overview'
 icon: 'book-open'
-description: 'Base URL, authentication, rate limiting, and error handling for the Unpod REST API — stated once.'
+description: 'Base URL, authentication, rate limiting, and error handling for the Unpod REST API - stated once.'
 ---
 
 The Unpod REST API manages platform resources: spaces, agents, tasks, runs,
@@ -10,7 +10,7 @@ states the conventions once; the endpoint pages in the sidebar assume them.
 
 <Note>
 Building a voice agent in Python? You likely want the
-[Speech Stack](/get-started/quickstart) instead — the `unpod` SDK wraps
+[Speech Stack](/get-started/quickstart) instead - the `unpod` SDK wraps
 provisioning and live-call handling. The REST API is for direct integrations
 and non-Python stacks.
 </Note>
@@ -32,7 +32,7 @@ Every request carries an API token in the `Authorization` header using the
 Authorization: Token a1b2c3d4e5f6g7h8i9j0...
 ```
 
-Generate tokens from the Unpod Dashboard — see
+Generate tokens from the Unpod Dashboard - see
 [Authentication](/api/get-started/authentication) for the step-by-step,
 space-token scoping, and error responses.
 
@@ -54,7 +54,7 @@ Responses include rate-limit headers; exceeding your limit returns
 | `Retry-After` | Seconds to wait (only on 429) |
 
 Handle 429s with exponential backoff, honoring `Retry-After`. Cache reads and
-batch writes where you can. Current limits depend on your plan — check the
+batch writes where you can. Current limits depend on your plan - check the
 dashboard.
 
 ## Errors
@@ -71,9 +71,9 @@ machine-readable code and a human-readable message:
 }
 ```
 
-Common cases: `401` — token missing, expired, or access denied (see
-[Authentication](/api/get-started/authentication)); `404` — resource not
-found or outside your space; `429` — rate limited.
+Common cases: `401` - token missing, expired, or access denied (see
+[Authentication](/api/get-started/authentication)); `404` - resource not
+found or outside your space; `429` - rate limited.
 
 ## Start here
 

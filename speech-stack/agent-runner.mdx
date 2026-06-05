@@ -57,7 +57,7 @@ runner.start()  # blocking
 ```
 
 <Note>
-`agent_id` is the runner agent ID — a short string you choose, matching the
+`agent_id` is the runner agent ID - a short string you choose, matching the
 `agent_id` in your Speech Pipe config. Not the pipe's UUID. See
 [IDs You'll Meet](/get-started/core-concepts#ids-youll-meet).
 </Note>
@@ -122,7 +122,7 @@ async def handle_call(ctx: CallContext) -> None:
 ## The Session
 
 `ctx.session` is your interface to the live call: speak, interrupt, transfer,
-record, end — all from inside your entrypoint.
+record, end - all from inside your entrypoint.
 
 ### Speaking
 
@@ -149,7 +149,7 @@ await ctx.session.transfer_to_agent(agent_id="billing-agent") # cold transfer to
 
 <Tip>
 A cold transfer drops your session the moment it is initiated. For a warm
-handoff, use the out-of-band `client.sessions.transfer(..., mode="warm")` —
+handoff, use the out-of-band `client.sessions.transfer(..., mode="warm")` -
 see below.
 </Tip>
 
@@ -182,7 +182,7 @@ Pause/resume requires recording to be enabled on the Speech Pipe
 ctx.session.data["customer"] = await crm.lookup(ctx.user_number)
 ```
 
-### The main loop — `run()`
+### The main loop - `run()`
 
 `session.run()` keeps the call alive. It reads bridge events, fires your hooks,
 routes each transcribed user turn to your dialog adapter's `stream()`, and
@@ -205,8 +205,8 @@ m.duration_s      # float: call duration
 m.stt_p95_ms      # int: P95 STT latency
 m.llm_p95_ms      # int: P95 LLM latency
 m.tts_p95_ms      # int: P95 TTS latency
-m.cost.voice      # float — m.cost.llm, m.cost.total
-m.tokens.input    # int — m.tokens.output
+m.cost.voice      # float - m.cost.llm, m.cost.total
+m.tokens.input    # int - m.tokens.output
 m.active_llm      # str: model used on the last turn
 ```
 
@@ -225,12 +225,12 @@ m.active_llm      # str: model used on the last turn
 | `recording.pause` | `async (reason: str = "") → None` | Pause recording |
 | `recording.resume` | `async () → None` | Resume recording |
 | `metrics` | `property → MetricsTracker` | Per-call metrics (`.live()`) |
-| `dialog_machine` | `property (get/set)` | Dialog adapter — auto-wraps superdialog types |
+| `dialog_machine` | `property (get/set)` | Dialog adapter - auto-wraps superdialog types |
 | `data` | `dict[str, Any]` | Per-call scratch space |
 
 ## Out-of-band session control
 
-Act on a live session from outside the call — your backend, an ops tool —
+Act on a live session from outside the call - your backend, an ops tool -
 via the Management SDK, targeting it by session ID:
 
 ```python
@@ -276,7 +276,7 @@ exits. Or call `await runner.shutdown()` yourself.
 ### Multiple runners
 
 Run multiple `AgentRunner` processes with the same `agent_id` across machines.
-The orchestrator load-balances on reported capacity — no shared state needed.
+The orchestrator load-balances on reported capacity - no shared state needed.
 
 ## Next steps
 

@@ -5,7 +5,7 @@ description: 'Talk to your own voice agent in the browser in about 5 minutes. No
 ---
 
 Talk to your own voice agent in the browser in about 5 minutes. **No phone
-number needed.** Unpod hosts the speech service — microphone capture,
+number needed.** Unpod hosts the speech service - microphone capture,
 speech-to-text, text-to-speech, and the audio bridge. You write the agent's
 brain and run a small browser UI on your machine to speak with it.
 
@@ -18,9 +18,9 @@ follow [Make Your First Phone Call](/get-started/first-phone-call) afterwards.
 - **An Unpod API key.** Create an account at [unpod.dev](https://unpod.dev)
   (see [Register](/platform/register)), then generate a key from the
   [API Key](/platform/studio-view/api-key) screen in Studio.
-- **An LLM key** — `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` — for the agent's
+- **An LLM key** - `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` - for the agent's
   brain. It stays on your machine.
-- **[Task](https://taskfile.dev)** — the repo's run commands use it
+- **[Task](https://taskfile.dev)** - the repo's run commands use it
   (`brew install go-task` on macOS).
 - **The browser playground UI.** It ships in the `unpod-sdk` repository (not on
   PyPI), so clone the repo to get it:
@@ -51,12 +51,12 @@ in your Studio dashboard; `wss://api.unpod.io` is the default.
 
 <Note>
 These are the only base URLs you set for this quickstart. For reference, the
-Management SDK (`AsyncClient`) reads its own URLs from the environment — **this
+Management SDK (`AsyncClient`) reads its own URLs from the environment - **this
 is the one place they are documented**:
 
 | Variable | Used by | Default |
 |---|---|---|
-| `UNPOD_API_KEY` | Everything (auth) | — (required) |
+| `UNPOD_API_KEY` | Everything (auth) | - (required) |
 | `UNPOD_SERVICE_BASE_URL` | `AsyncClient` (Management REST) | `https://api.unpod.io/platform` |
 | `UNPOD_ORCHESTRATOR_BASE_URL` | `AsyncClient` (orchestrator ops) | derived from the service URL |
 | `SUPERVOICE_URL` | Browser playground (speech service + agent `base_url`) | `wss://api.unpod.io` (hosted; the code default `ws://127.0.0.1:9000` is for local development) |
@@ -64,7 +64,7 @@ is the one place they are documented**:
 The `AgentRunner` connects over WebSocket; on its own it defaults to
 `wss://api.unpod.io` and can be overridden with `UNPOD_ORCHESTRATOR_URL` or a
 `base_url=...` argument. Yes, that is a different variable from the client's
-`UNPOD_ORCHESTRATOR_BASE_URL` above — one per component, not a typo. The
+`UNPOD_ORCHESTRATOR_BASE_URL` above - one per component, not a typo. The
 playground passes `SUPERVOICE_URL` as that argument for you.
 </Note>
 
@@ -99,7 +99,7 @@ async def run_agent() -> None:
 ```
 
 <Note>
-You don't run this file directly — `task playground` starts the playground
+You don't run this file directly - `task playground` starts the playground
 server, which imports it and calls `run_agent()` for you. (`await runner.run()`
 is the async form of the blocking `runner.start()` you'll see elsewhere.)
 </Note>
@@ -108,7 +108,7 @@ Three pieces:
 
 - **`entrypoint(ctx)`** runs once per call. `ctx` is the
   [CallContext](/get-started/core-concepts#callcontext) for that call.
-- **The brain** is `LLMAgent` — the simplest brain: a plain LLM with a system
+- **The brain** is `LLMAgent` - the simplest brain: a plain LLM with a system
   prompt, no flow graph. Assigning it to `ctx.session.dialog_machine` is how you
   plug your [Agent](/get-started/core-concepts#agent-brain) into the call.
 - **`AgentRunner`** is the long-lived process that registers as a worker and
@@ -120,7 +120,7 @@ to your brain. See [Session](/get-started/core-concepts#session).
 
 <Note>
 `LLMAgent` ships in the `superdialog` package, but it is **not** a flow-based
-`DialogMachine` — it is the minimal LLM-only brain. You can swap in a pure
+`DialogMachine` - it is the minimal LLM-only brain. You can swap in a pure
 adapter (`unpod.adapters.AnthropicAdapter`) or any other brain later; see
 [Bring Your Agent](/speech-stack/bring-your-agent).
 </Note>
@@ -134,7 +134,7 @@ task playground
 ```
 
 This builds the browser UI, starts it on **http://localhost:9100**, and runs
-your agent in-process — registering it with the hosted speech service at
+your agent in-process - registering it with the hosted speech service at
 `SUPERVOICE_URL`. The page opens automatically.
 
 Click **Connect**, allow microphone access, and speak. You will see a live

@@ -1,14 +1,14 @@
 ---
 title: 'Webhook Integration: Receive Unpod Call Data in Your System'
 sidebarTitle: 'Webhook Integration'
-description: 'Build a webhook receiver to capture Unpod call transcripts, summaries, and analysis data — then push it to your CRM, Slack, or database'
+description: 'Build a webhook receiver to capture Unpod call transcripts, summaries, and analysis data - then push it to your CRM, Slack, or database'
 icon: 'webhook'
 ---
 
 
 ---
 
-Every Unpod call produces rich structured data: full transcripts, AI-generated summaries, sentiment analysis, call recordings, and extracted lead intelligence. This guide shows you how to pull that data into your own system — whether that's a CRM, database, Slack, or a custom pipeline.
+Every Unpod call produces rich structured data: full transcripts, AI-generated summaries, sentiment analysis, call recordings, and extracted lead intelligence. This guide shows you how to pull that data into your own system - whether that's a CRM, database, Slack, or a custom pipeline.
 
 ## What Data Is Available After a Call
 
@@ -448,13 +448,13 @@ def was_call_answered(output: dict) -> bool:
 
 Before going live with your integration:
 
-- [ ] **Idempotency** — Use `task_id` as a deduplication key. Store processed IDs in Redis or DB to prevent double-processing
-- [ ] **Error handling** — Retry failed webhook deliveries with exponential backoff
-- [ ] **Persist cursor** — Store the last processed timestamp or task ID so restarts don't reprocess all history
-- [ ] **Secrets** — Store `UNPOD_API_TOKEN` in environment variables, not in code
-- [ ] **Rate limits** — Unpod API has rate limits; add delays between polling requests if processing large backlogs
-- [ ] **Logging** — Log every task ID processed for audit trail
-- [ ] **Alerting** — Alert if the polling service stops delivering (gap in processed timestamps)
+- [ ] **Idempotency** - Use `task_id` as a deduplication key. Store processed IDs in Redis or DB to prevent double-processing
+- [ ] **Error handling** - Retry failed webhook deliveries with exponential backoff
+- [ ] **Persist cursor** - Store the last processed timestamp or task ID so restarts don't reprocess all history
+- [ ] **Secrets** - Store `UNPOD_API_TOKEN` in environment variables, not in code
+- [ ] **Rate limits** - Unpod API has rate limits; add delays between polling requests if processing large backlogs
+- [ ] **Logging** - Log every task ID processed for audit trail
+- [ ] **Alerting** - Alert if the polling service stops delivering (gap in processed timestamps)
 
 ---
 
