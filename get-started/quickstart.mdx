@@ -5,9 +5,9 @@ description: 'Talk to your own voice agent in the browser in about 5 minutes. No
 ---
 
 Talk to your own voice agent in the browser in about 5 minutes. **No phone
-number needed.** You write one small Python file; Unpod handles the microphone,
-speech-to-text, text-to-speech, and audio transport. You connect from a browser
-tab and speak.
+number needed.** Unpod hosts the speech service — microphone capture,
+speech-to-text, text-to-speech, and the audio bridge. You write the agent's
+brain and run a small browser UI on your machine to speak with it.
 
 This is the fastest way to hear your agent. When you want a real phone call,
 follow [Make Your First Phone Call](/get-started/first-phone-call) afterwards.
@@ -15,50 +15,63 @@ follow [Make Your First Phone Call](/get-started/first-phone-call) afterwards.
 ## Prerequisites
 
 - **Python 3.12+** (the `unpod` SDK requires it).
-- **An Unpod API key.** For local development you can use a dev key (shown
-  below). For production, generate one from the
+- **An Unpod API key.** Generate one from the
   [API Key](/platform/studio-view/api-key) screen in Studio.
 - **An LLM key** — `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` — for the agent's
-  brain.
+  brain. It stays on your machine.
+- **The browser playground UI.** It ships in the `unpod-sdk` repository (not on
+  PyPI), so clone the repo to get it:
 
-Install the SDK and the dialog package:
-
-```bash
-uv add unpod superdialog
-```
+  ```bash
+  git clone https://github.com/unpod-ai/unpod-sdk
+  cd unpod-sdk
+  ```
 
 ## Set your environment
 
-The SDK reads two base URLs from the environment. **This is the one place they
-are documented** — other pages link here.
+Copy the playground's example env file and fill in three values:
+
+```bash
+cp examples/browser_playground/.env.example examples/browser_playground/.env
+```
+
+```bash
+# examples/browser_playground/.env
+SUPERVOICE_URL=wss://api.unpod.io     # Unpod's hosted speech service
+UNPOD_API_KEY=sk_...                  # from Studio → API Key
+ANTHROPIC_API_KEY=sk-ant-...          # or OPENAI_API_KEY
+```
+
+`SUPERVOICE_URL` points the playground at Unpod's hosted speech service and is
+also the `base_url` your agent registers against. Use the speech endpoint shown
+in your Studio dashboard; `wss://api.unpod.io` is the default.
+
+<Note>
+These are the only base URLs you set for this quickstart. For reference, the
+Management SDK (`AsyncClient`) reads its own URLs from the environment — **this
+is the one place they are documented**:
 
 | Variable | Used by | Default |
 |---|---|---|
-| `UNPOD_SERVICE_BASE_URL` | `AsyncClient` (Management REST API) | `https://api.unpod.io` |
-| `UNPOD_ORCHESTRATOR_BASE_URL` | `AsyncClient` orchestrator operations | `https://api.unpod.io` |
+| `UNPOD_API_KEY` | Everything (auth) | — (required) |
+| `UNPOD_SERVICE_BASE_URL` | `AsyncClient` (Management REST) | `https://api.unpod.io/platform` |
+| `UNPOD_ORCHESTRATOR_BASE_URL` | `AsyncClient` (orchestrator ops) | derived from the service URL |
+| `SUPERVOICE_URL` | Browser playground (speech service + agent `base_url`) | `ws://127.0.0.1:9000` |
 
-The `AgentRunner` connects over WebSocket. In production it defaults to
-`wss://api.unpod.io`; you can override it with `UNPOD_ORCHESTRATOR_URL` or by
-passing `base_url=...` directly (which is exactly what the local browser path
-below does).
-
-<Note>
-For this browser quickstart you do **not** set the production URLs. Your
-`AgentRunner` points at a local dev speech server with `base_url="ws://127.0.0.1:9000"`
-and a dev key. Set only your LLM key:
-
-```bash
-export ANTHROPIC_API_KEY="sk-ant-..."   # or OPENAI_API_KEY
-```
+The `AgentRunner` connects over WebSocket; on its own it defaults to
+`wss://api.unpod.io` and can be overridden with `UNPOD_ORCHESTRATOR_URL` or a
+`base_url=...` argument. The playground passes `SUPERVOICE_URL` as that argument
+for you.
 </Note>
 
 ## Write the agent
 
-This is the only code you write. Save it as `agent.py`. Lifted from the SDK's
-browser example, it is about 20 lines.
+This is the only code you write per call. The playground runs
+`examples/browser_playground/agent.py`; edit it down to this:
 
 ```python
-# agent.py
+# examples/browser_playground/agent.py
+import os
 from unpod import AgentRunner, CallContext
 from superdialog import LLMAgent
 
@@ -69,13 +82,16 @@ async def entrypoint(ctx: CallContext) -> None:
     )
     await ctx.session.run()
 
-if __name__ == "__main__":
-    AgentRunner(
+def build_runner() -> AgentRunner:
+    return AgentRunner(
         entrypoint=entrypoint,
-        agent_id="my-agent",
-        base_url="ws://127.0.0.1:9000",  # local dev speech server
-        api_key="dev-key",               # local dev only
-    ).start()
+        agent_id=os.getenv("AGENT_ID", "browser-playground"),
+        base_url=os.environ["SUPERVOICE_URL"],   # hosted speech service
+        api_key=os.environ["UNPOD_API_KEY"],
+    )
+
+async def run_agent() -> None:
+    await build_runner().run()
 ```
 
 Three pieces:
@@ -86,7 +102,8 @@ Three pieces:
   prompt, no flow graph. Assigning it to `ctx.session.dialog_machine` is how you
   plug your [Agent](/get-started/core-concepts#agent-brain) into the call.
 - **`AgentRunner`** is the long-lived process that registers as a worker and
-  serves each call. See [AgentRunner](/get-started/core-concepts#agentrunner).
+  serves each call. Here it registers against the hosted speech service at
+  `SUPERVOICE_URL`. See [AgentRunner](/get-started/core-concepts#agentrunner).
 
 `await ctx.session.run()` keeps the call alive and routes each transcribed turn
 to your brain. See [Session](/get-started/core-concepts#session).
@@ -100,37 +117,38 @@ adapter (`unpod.adapters.AnthropicAdapter`) or any other brain later; see
 
 ## Run and talk
 
-You need two terminals: one for the local dev speech server (microphone, STT,
-TTS, audio transport), one for your agent.
-
-**Terminal 1 — start the dev speech server.** It serves the browser UI on
-**http://localhost:9000** and runs independently of your agent code.
-
-```bash
-uv run uvicorn supervoice.dev.app:create_dev_app --factory --port 9000
-```
-
-**Terminal 2 — run your agent.** It registers as a worker with the dev server.
-
-```bash
-uv run python agent.py
-```
-
-Now open **http://localhost:9000**, click **Connect**, allow microphone access,
-and speak. You will see a live transcript of your words and the agent's
-replies, plus latency badges on each turn.
-
-<Tip>
-Prefer one command? The SDK ships a **browser playground** that builds the UI,
-starts the server on `http://localhost:9100`, and runs your agent in-process:
+From the `unpod-sdk/` directory:
 
 ```bash
 task playground
 ```
 
-It uses the same `entrypoint` + `AgentRunner` pattern as above. See the
-`examples/browser_playground/` directory in the SDK.
-</Tip>
+This builds the browser UI, starts it on **http://localhost:9100**, and runs
+your agent in-process — registering it with the hosted speech service at
+`SUPERVOICE_URL`. The page opens automatically.
+
+Click **Connect**, allow microphone access, and speak. You will see a live
+transcript of your words and the agent's replies, plus latency badges on each
+turn.
+
+<Accordion title="Run the speech service locally (contributors)">
+If you are developing against a local speech stack instead of the hosted
+service, run `supervoice` yourself and point `SUPERVOICE_URL` at it:
+
+```bash
+# in a separate terminal, from the supervoice repo
+cd supervoice
+uv run uvicorn supervoice.dev.app:create_dev_app --factory --port 9000
+```
+
+```bash
+# examples/browser_playground/.env
+SUPERVOICE_URL=ws://127.0.0.1:9000
+```
+
+The browser-audio routes (`/connect`, `/ws/audio`) are served by
+`supervoice.dev.app`, not the platform API. Then run `task playground` as above.
+</Accordion>
 
 ## Next steps
 
