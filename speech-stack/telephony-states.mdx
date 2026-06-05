@@ -109,13 +109,13 @@ async def on_end(final_state: str) -> None:
 
 For outbound batch dialing, watch the call `status` advance from `pending` →
 `ringing` → `active` → `completed` (or `failed`) via `client.calls.get(...)` -
-see [Call Lifecycle](/speech/call-lifecycle).
+see [Call Lifecycle](/speech-stack/call-lifecycle).
 
 ---
 
 ## Related
 
-- [Call Lifecycle](/speech/call-lifecycle) - end-to-end flow for both directions
-- [Outbound Calls](/speech/outbound-calls) - the `calls.create()` API in detail
-- [Hooks & Events](/speech/hooks-events) - every lifecycle event you can hook
-- [Session Controls](/speech/session-controls) - ending and transferring live calls
+- [Call Lifecycle](/speech-stack/call-lifecycle) - end-to-end flow for both directions
+- [Outbound Calls](/speech-stack/outbound-calls) - the `calls.create()` API in detail
+- [Hooks & Events](/speech-stack/hooks-events) - every lifecycle event you can hook
+- [Session Controls](/speech-stack/session-controls) - ending and transferring live calls

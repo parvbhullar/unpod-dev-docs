@@ -18,8 +18,8 @@ Outbound calls use the same Speech Pipe, voice profile, and `AgentRunner` infras
 
 ## Prerequisites
 
-- A configured Speech Pipe with a voice profile - see [Speech Pipe](/speech/pipes)
-- A phone number attached to that Speech Pipe - see [Numbers](/speech/numbers)
+- A configured Speech Pipe with a voice profile - see [Speech Pipe](/speech-stack/pipes)
+- A phone number attached to that Speech Pipe - see [Numbers](/speech-stack/numbers)
 - A running `AgentRunner` process for the Speech Pipe
 
 ---
@@ -56,7 +56,7 @@ asyncio.run(main())
 <Note>
 `calls.create()` is asynchronous: it enqueues the call and returns a record
 with `status="pending"`. The call is dispatched on a worker as soon as your
-account has free concurrency. See [Call Lifecycle](/speech/call-lifecycle) for
+account has free concurrency. See [Call Lifecycle](/speech-stack/call-lifecycle) for
 the full status progression and how to poll for completion.
 </Note>
 
@@ -263,10 +263,10 @@ asyncio.run(get_transcript("cal_..."))
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Hooks & Events" icon="bell" href="/speech/hooks-events">
+  <Card title="Hooks & Events" icon="bell" href="/speech-stack/hooks-events">
     Log outbound call data and react to call events in real time.
   </Card>
-  <Card title="Speech Pipe" icon="bot" href="/speech/pipes">
+  <Card title="Speech Pipe" icon="bot" href="/speech-stack/pipes">
     Configure Speech Pipes and voice profiles for outbound campaigns.
   </Card>
 </CardGroup>

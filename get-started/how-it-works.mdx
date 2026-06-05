@@ -51,25 +51,25 @@ The line is clear: **you own everything from AgentRunner down**. Everything abov
 ## Core Concepts
 
 ### Numbers
-Phone numbers attached to your Speech Pipe. Inbound calls arrive on a number and are routed to the Speech Pipe it is attached to. Numbers come from Unpod directly or via BYON. See [Voice Stack - Numbers](/speech/numbers).
+Phone numbers attached to your Speech Pipe. Inbound calls arrive on a number and are routed to the Speech Pipe it is attached to. Numbers come from Unpod directly or via BYON. See [Voice Stack - Numbers](/speech-stack/numbers).
 
 ### Voice Profiles
-A bundle of STT + TTS provider configuration. Defines which providers handle speech recognition and synthesis, which language, and the failover order. See [Voice Stack - Voice Profiles](/speech/voice-profiles).
+A bundle of STT + TTS provider configuration. Defines which providers handle speech recognition and synthesis, which language, and the failover order. See [Voice Stack - Voice Profiles](/speech-stack/voice-profiles).
 
 ### Speech Pipe
-A configuration entity: name, voice profile, recording settings, call duration limits. The Speech Pipe is the anchor point for numbers, voice profiles, and runner workers. See [Voice Stack - Speech Pipe](/speech/pipes).
+A configuration entity: name, voice profile, recording settings, call duration limits. The Speech Pipe is the anchor point for numbers, voice profiles, and runner workers. See [Voice Stack - Speech Pipe](/speech-stack/pipes).
 
 ### AgentRunner
-A long-lived Python process that registers with the Unpod orchestrator over WebSocket. It advertises capacity, receives dispatch frames, and calls your entrypoint for each call. See [Voice Stack - SDK Setup](/speech/sdk-setup).
+A long-lived Python process that registers with the Unpod orchestrator over WebSocket. It advertises capacity, receives dispatch frames, and calls your entrypoint for each call. See [Voice Stack - SDK Setup](/speech-stack/sdk-setup).
 
 ### CallContext
 The object passed to your entrypoint for every call. Contains `call_id`, `session_id`, `direction`, `user_number`, `instructions`, `data`, and the `session` object. Read-only metadata plus the live session handle.
 
 ### Session
-Your control interface for a live call. `say()`, `transfer_to_human()`, `end()`, `recording.pause()`, hooks, metrics, and the `dialog_machine` property. See [Voice Stack - Session Controls](/speech/session-controls).
+Your control interface for a live call. `say()`, `transfer_to_human()`, `end()`, `recording.pause()`, hooks, metrics, and the `dialog_machine` property. See [Voice Stack - Session Controls](/speech-stack/session-controls).
 
 ### SuperDialog
-The conversation engine. A `DialogMachine` executes a structured `Flow` turn-by-turn, calls tools, and manages state. Plugs into any Session via `session.dialog_machine = machine`. See [SuperDialog](/SuperDialog/introduction).
+The conversation engine. A `DialogMachine` executes a structured `Flow` turn-by-turn, calls tools, and manages state. Plugs into any Session via `session.dialog_machine = machine`. See [SuperDialog](/superdialog/introduction).
 
 ---
 
@@ -94,10 +94,10 @@ Your code runs from step 4 onward. Steps 1-3 are Unpod.
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Voice Stack" icon="layers" href="/speech/introduction">
+  <Card title="Voice Stack" icon="layers" href="/speech-stack/introduction">
     Numbers, voice profiles, agents, and the AgentRunner SDK.
   </Card>
-  <Card title="SuperDialog" icon="git-branch" href="/SuperDialog/introduction">
+  <Card title="SuperDialog" icon="git-branch" href="/superdialog/introduction">
     Build structured conversation flows with tools and branching.
   </Card>
 </CardGroup>
