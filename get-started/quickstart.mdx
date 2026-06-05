@@ -56,7 +56,7 @@ is the one place they are documented**:
 | `UNPOD_API_KEY` | Everything (auth) | — (required) |
 | `UNPOD_SERVICE_BASE_URL` | `AsyncClient` (Management REST) | `https://api.unpod.io/platform` |
 | `UNPOD_ORCHESTRATOR_BASE_URL` | `AsyncClient` (orchestrator ops) | derived from the service URL |
-| `SUPERVOICE_URL` | Browser playground (speech service + agent `base_url`) | `ws://127.0.0.1:9000` |
+| `SUPERVOICE_URL` | Browser playground (speech service + agent `base_url`) | `wss://api.unpod.io` (hosted; the code default `ws://127.0.0.1:9000` is for local development) |
 
 The `AgentRunner` connects over WebSocket; on its own it defaults to
 `wss://api.unpod.io` and can be overridden with `UNPOD_ORCHESTRATOR_URL` or a
