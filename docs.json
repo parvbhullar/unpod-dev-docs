@@ -10,10 +10,10 @@
     "light": "#9a90ff",
     "dark": "#5a4fff"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.png",
   "logo": {
     "light": "/logo/dark.svg",
-    "dark": "/logo/light.svg",
+    "dark": "/logo/white.svg",
     "href": "https://unpod.dev"
   },
   "navigation": {
