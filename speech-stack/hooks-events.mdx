@@ -131,7 +131,7 @@ async def on_call_end(final_state: str) -> None:
     metrics = ctx.session.metrics.live()
     await db.save_call_summary(
         call_id=ctx.call_id,
-        turns=metrics.turn_count,
+        turns=metrics.turns,
         final_state=final_state,
     )
 ```
@@ -265,9 +265,9 @@ async def runner_end(ctx: CallContext, final_state: str) -> None:
     await db.update_call(
         ctx.call_id,
         final_state=final_state,
-        turns=m.turn_count,
-        tokens_in=m.tokens_in,
-        tokens_out=m.tokens_out,
+        turns=m.turns,
+        tokens_in=m.tokens.input,
+        tokens_out=m.tokens.output,
     )
 
 async def handle_call(ctx: CallContext) -> None:
