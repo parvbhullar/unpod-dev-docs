@@ -11,16 +11,13 @@ control surface for one live call. This page is the reference for both.
 
 ## Install
 
-The SDK isn't on PyPI yet — install it from GitHub
-([unpod-ai/unpod-python-sdk](https://github.com/unpod-ai/unpod-python-sdk)):
-
 ```bash
-uv add "unpod @ git+https://github.com/unpod-ai/unpod-python-sdk"
-# optional: superdialog for structured flows
-uv add "unpod[dialog] @ git+https://github.com/unpod-ai/unpod-python-sdk"
-# optional: LangChain adapter
-uv add "unpod[langchain] @ git+https://github.com/unpod-ai/unpod-python-sdk"
+uv add unpod
+uv add "unpod[dialog]"      # optional: superdialog for structured flows
+uv add "unpod[langchain]"   # optional: LangChain adapter
 ```
+
+Source: [unpod-ai/unpod-python-sdk](https://github.com/unpod-ai/unpod-python-sdk).
 
 ```bash
 export UNPOD_API_KEY="sk_..."
