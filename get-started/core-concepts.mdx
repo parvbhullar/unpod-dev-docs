@@ -18,25 +18,9 @@ A single inbound call, end to end:
 
 ```mermaid
 flowchart LR
-    Caller([Caller]) --> Number
-    Number --> Trunk
-    Trunk --> Bridge
-
-    subgraph Unpod["Unpod infrastructure (audio)"]
-        Number
-        Trunk
-        Bridge
-        STT["STT / TTS<br/>voice profile"]
-    end
-
-    Bridge <-->|audio| STT
-    Bridge <-->|text over WSS| Runner
-
-    subgraph Yours["Your process (text)"]
-        Runner["AgentRunner"]
-        Runner --> Agent["Agent / Brain"]
-        Agent -. optional .-> SD["SuperDialog<br/>DialogMachine"]
-    end
+    A(["Caller"]) -->|"audio"| B["Unpod\nSTT · TTS · numbers · trunks"]
+    B -->|"text"| C["Your AgentRunner\n+ Agent Brain"]
+    C -->|"text"| B
 ```
 
 Read it as: a **Caller** dials a **Number**, which routes over a **Trunk** into

@@ -2,6 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Unpod Dev",
+   "customCss": "/custom.css",
   "icons": {
     "library": "lucide"
   },
@@ -26,11 +27,11 @@
             "icon": "rocket",
             "pages": [
               "get-started/why-unpod",
-              "get-started/vs-competition",
               "get-started/quickstart",
               "get-started/first-phone-call",
               "get-started/core-concepts",
-              "get-started/choose-your-path"
+              "get-started/choose-your-path",
+              "get-started/vs-competition"
             ]
           }
         ]

@@ -10,6 +10,26 @@ registration), and serves a bridge connection per call. Provisioning is covered
 by the [Setup Checklist](/speech-stack/setup-checklist); this page is what
 changes when you leave your laptop.
 
+## What production needs
+
+A production deployment should have:
+
+- A public `serving_url` so Unpod can reach the runner bridge
+- An `agent_secret` so inbound bridge connections are signed and verified
+- A stable `UNPOD_API_KEY` for the management API
+- A clear `agent_id` shared by every replica of the same agent
+- Capacity limits (`max_sessions`, `permits_per_minute`) that match your traffic
+- Shutdown handling so active calls can drain before the process exits
+- Observability for active calls, failures, and latency
+
+If you are writing docs for app developers, this is the minimum contract:
+
+1. Set the environment variables.
+2. Expose the runner publicly.
+3. Lock down the bridge with `UNPOD_AGENT_SECRET`.
+4. Run multiple replicas with the same `agent_id` when you need scale.
+5. Restart the process under a supervisor.
+
 ## Production checklist
 
 ### 1. Reachability - `serving_url`
@@ -68,6 +88,23 @@ The runner does not reconnect on its own if the orchestrator WebSocket drops -
 run it under a supervisor with restart-on-exit (systemd `Restart=always`,
 Kubernetes restart policy, Docker `--restart`).
 </Warning>
+
+## Environment summary
+
+For a production runner, the usual minimum `.env` looks like this:
+
+```bash
+UNPOD_API_KEY="sk_..."
+UNPOD_AGENT_SECRET="long-random-secret"
+UNPOD_BASE_URL="api.unpod.ai"
+UNPOD_RUNNER_URL="wss://agents.example.com:8765"
+```
+
+If you override URLs in code instead of `.env`, keep the same precedence rules:
+
+- `AgentRunner(base_url=...)` overrides `UNPOD_ORCHESTRATOR_URL`
+- `AgentRunner(serving_url=...)` overrides `UNPOD_RUNNER_URL`
+- `AsyncClient(base_url=...)` overrides `UNPOD_SERVICE_BASE_URL`
 
 ## Watch it run
 

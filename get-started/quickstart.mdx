@@ -12,157 +12,374 @@ brain and run a small browser UI on your machine to speak with it.
 This is the fastest way to hear your agent. When you want a real phone call,
 follow [Make Your First Phone Call](/get-started/first-phone-call) afterwards.
 
-## Prerequisites
+For production, follow the steps below and use the deploy checklist for the
+runner-specific settings.
 
-- **Python 3.12+** (the `unpod` SDK requires it).
-- **An Unpod API key.** Create an account at [unpod.dev](https://unpod.dev)
-  (see [Register](/platform/register)), then generate a key from the
-  [API Key](/platform/studio-view/api-key) screen in Studio.
-- **An LLM key** - `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` - for the agent's
-  brain. It stays on your machine.
-- **[Task](https://taskfile.dev)** - the repo's run commands use it
-  (`brew install go-task` on macOS).
-- **The browser playground UI.** It ships in the
-  [`unpod-python-sdk`](https://github.com/unpod-ai/unpod-python-sdk) repository
-  (not on PyPI), so clone the repo to get it:
+<CardGroup cols={3}>
+  <Card title="Unpod" icon="server">
+    Phone numbers, STT, TTS, routing, call control
+  </Card>
+  <Card title="Your App" icon="code">
+    Agent brain, tools, prompts, business logic
+  </Card>
+  <Card title="Production" icon="rocket">
+    Public runner, secrets, scaling, shutdown, observability
+  </Card>
+</CardGroup>
 
-  ```bash
-  git clone https://github.com/unpod-ai/unpod-python-sdk
-  cd unpod-python-sdk
-  ```
+---
 
-## Set your environment
+## Step 1 - Install the SDK
 
-Copy the playground's example env file and fill in three values:
+<Tabs>
+  <Tab title="pip">
+    ```bash
+    pip install "unpod[dialog]"
+    ```
+  </Tab>
+  <Tab title="uv">
+    ```bash
+    uv add "unpod[dialog]"
+    ```
+  </Tab>
+</Tabs>
 
-```bash
-cp examples/browser_playground/.env.example examples/browser_playground/.env
-```
+---
 
-```bash
-# examples/browser_playground/.env
-UNPOD_BASE_URL=api.unpod.ai           # one URL - everything derives from it
-UNPOD_API_KEY=sk_...                  # from Studio -> API Key
-ANTHROPIC_API_KEY=sk-ant-...          # or OPENAI_API_KEY
-```
+## Step 2 - Set your environment
 
-`UNPOD_BASE_URL` is the only endpoint you configure - **this is the one place
-it is documented**. The SDK derives every service from it in code:
+<Tip>
+**Where to get your keys:**
+- **`UNPOD_API_KEY`** — [unpod.ai/api-keys](https://unpod.ai/api-keys/) → create a new key
+- **`ANTHROPIC_API_KEY`** — your own key from [console.anthropic.com](https://console.anthropic.com) → **API Keys**. Use any provider you want — OpenAI, Gemini, etc. The variable name is just an example.
+</Tip>
 
-| Variable | Purpose | Default |
-|---|---|---|
-| `UNPOD_API_KEY` | Auth, everywhere | - (required) |
-| `UNPOD_BASE_URL` | The one endpoint: REST becomes `https://<host>/platform`; the orchestrator and speech service become `wss://<host>` | `api.unpod.ai` |
+Create a `.env` file in your project root and add the API keys:
+
+<Tabs>
+  <Tab title="Local Dev">
+    ```bash
+    UNPOD_API_KEY="sk_..."
+    ANTHROPIC_API_KEY="sk-ant-..."
+
+    # Local dev overrides — remove for production
+    UNPOD_SERVICE_BASE_URL=http://localhost:8000/platform
+    UNPOD_ORCHESTRATOR_URL=ws://localhost:8000
+    ```
+  </Tab>
+  <Tab title="Production">
+    ```bash
+    UNPOD_API_KEY="sk_..."
+    ANTHROPIC_API_KEY="sk-ant-..."
+    UNPOD_BASE_URL="unpod.ai"
+
+    # Runner hardening
+    UNPOD_AGENT_SECRET="long-random-secret"
+    UNPOD_RUNNER_URL="wss://agents.example.com:8765"
+    ```
+  </Tab>
+</Tabs>
 
 <Note>
-Per-component overrides exist for non-standard deployments -
-`UNPOD_SERVICE_BASE_URL` (Management REST), `UNPOD_ORCHESTRATOR_URL`
-(AgentRunner), `SUPERVOICE_URL` (browser playground speech) - and win when
-set. You should not need them; pointing at a local speech server (accordion
-below) is the one common use.
+`UNPOD_BASE_URL` is the shared default for production. The SDK derives:
+
+- REST: `https://<host>/platform`
+- Runner/orchestrator: `wss://<host>`
+
+For local dev, set `UNPOD_SERVICE_BASE_URL` and `UNPOD_ORCHESTRATOR_URL` separately — `UNPOD_BASE_URL` does not work for local services.
 </Note>
 
-## Write the agent
+<Note>
+If you use a different dialog provider, set its key here instead of
+`ANTHROPIC_API_KEY`.
+</Note>
 
-This is the only code you write per call. The playground runs
-`examples/browser_playground/agent.py`; edit it down to this:
+<Warning>
+Load `.env` before `from unpod import ...`. The SDK reads env vars at import
+time.
+</Warning>
+
+---
+
+## Step 3 - Pick a Voice Profile
 
 ```python
-# examples/browser_playground/agent.py
-import os
-from unpod import AgentRunner, CallContext
-from superdialog import LLMAgent
+from dotenv import load_dotenv
+load_dotenv(override=True)
 
-async def entrypoint(ctx: CallContext) -> None:
-    ctx.session.dialog_machine = LLMAgent(
-        llm="anthropic/claude-haiku-4-5-20251001",
-        system_prompt="You are a helpful voice assistant. Keep answers under 3 sentences.",
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:
+        profiles = await client.voice_profiles.list(language="en")
+        for p in profiles:
+            print(p.id, p.name, p.gender, p.quality)
+
+asyncio.run(main())
+```
+
+Available profiles look like this. Copy the `agent_profile_id` you want and use
+it as `voice_profile` in Step 4:
+
+---
+
+## Step 4 - Create a Speech Pipe
+
+A Speech Pipe ties a voice profile to your agent. The `agent_id` is a string
+you choose - it links the pipe to the `AgentRunner` you run in Step 7T.
+
+```python
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
+import asyncio
+from unpod import AsyncClient
+
+
+
+
+async def main():
+    async with AsyncClient() as client:
+        pipe = await client.pipes.create(
+            name="Support Bot",
+            voice_profile="vp_riya",         # profile_id from Step 3 (p.id)
+            agent_id="my-support-agent",     # your identifier - must match AgentRunner
+            recording=True,
+            max_call_duration_s=600,
+        )
+        print("Pipe ID:", pipe.pipe_id)
+
+asyncio.run(main())
+```
+
+<Note>
+Save the `pipe.pipe_id` - you will use it in the steps below. A pipe without
+`agent_id` will show as `degraded` and calls will not be dispatched to your
+runner.
+</Note>
+
+---
+
+## Step 5 - Build a Dialog Flow (optional)
+
+`create_dialog_flow` generates a structured conversation graph (nodes + edges)
+from a plain-English description. Run it once and save the result.
+
+```python
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
+import asyncio
+from superdialog import create_dialog_flow
+
+async def main():
+    flow = await create_dialog_flow(
+        prompt=(
+            "You are Alex, a friendly support agent. "
+            "Greet the user, ask how you can help, resolve their issue, "
+            "and end the conversation when done."
+        ),
+        llm="anthropic/claude-haiku-4-5-20251001",  # or "openai/gpt-4o-mini"
+    )
+    flow.save("support.json")
+
+asyncio.run(main())
+```
+
+This writes `support.json`. Use it in your entrypoint with
+`DialogMachine(flow=Flow.load("support.json"), llm="...")` for structured,
+node-based conversations. For a simpler prompt-only agent, skip this step and
+use `AnthropicAdapter` or `LLMAgent` directly in Step 7T.
+
+---
+
+## Telephony Path
+
+### Step 6T - Attach a Phone Number
+
+```python
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
+import asyncio
+from unpod import AsyncClient
+
+PIPE_ID = "pipe_..."
+NUMBER_ID = "num_..."   # from client.numbers.list()
+
+async def main():
+    async with AsyncClient() as client:
+        number = await client.numbers.attach(NUMBER_ID, PIPE_ID)
+        print("Attached:", number.number, "->", number.pipe_id)
+
+asyncio.run(main())
+```
+
+See [Phone Numbers](/speech-stack/numbers) for how to list, provision, or bring
+your own number.
+
+### Step 7T - Write Your Entrypoint
+
+<Note>
+`agent_id` is a string you define (e.g. `"my-support-agent"`). It must be
+identical in both `pipes.create()` (Step 4) and `AgentRunner` below - this is
+how Unpod routes inbound calls to your runner.
+</Note>
+
+Create `agent.py`:
+
+```python
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
+import os
+from anthropic import AsyncAnthropic
+from unpod import AgentRunner, CallContext
+from unpod.adapters import AnthropicAdapter
+
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = AnthropicAdapter(
+        client=AsyncAnthropic(),
+        model="claude-haiku-4-5-20251001",
+        system_prompt=(
+            "You are Alex, a friendly support agent. "
+            "Greet the user, ask how you can help, resolve their issue, "
+            "and end the conversation when done."
+        ),
     )
     await ctx.session.run()
 
-def build_runner() -> AgentRunner:
-    return AgentRunner(
-        entrypoint=entrypoint,
-        agent_id=os.getenv("AGENT_ID", "browser-playground"),
-        # base_url and api_key derive from UNPOD_BASE_URL / UNPOD_API_KEY
+AgentRunner(
+    entrypoint=handle_call,
+    agent_id="my-support-agent",    # must match agent_id in pipes.create()
+    api_key=os.getenv("UNPOD_API_KEY"),
+    max_sessions=10,
+    agent_secret=os.getenv("UNPOD_AGENT_SECRET"),
+    serving_url=os.getenv("UNPOD_RUNNER_URL"),
+).start()
+```
+
+<Accordion title="Using the flow from Step 5 instead">
+If you ran Step 5, swap `AnthropicAdapter` for `DialogMachine` to drive a
+structured node-based conversation:
+
+```python
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
+import os
+from unpod import AgentRunner, CallContext
+from superdialog import DialogMachine, Flow
+
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = DialogMachine(
+        flow=Flow.load("support.json"),
+        llm="anthropic/claude-haiku-4-5-20251001",
     )
+    await ctx.session.run()
 
-async def run_agent() -> None:
-    await build_runner().run()
+AgentRunner(
+    entrypoint=handle_call,
+    agent_id="my-support-agent",
+    api_key=os.getenv("UNPOD_API_KEY"),
+    max_sessions=10,
+    agent_secret=os.getenv("UNPOD_AGENT_SECRET"),
+    serving_url=os.getenv("UNPOD_RUNNER_URL"),
+).start()
 ```
-
-<Note>
-You don't run this file directly - `task playground` starts the playground
-server, which imports it and calls `run_agent()` for you. (`await runner.run()`
-is the async form of the blocking `runner.start()` you'll see elsewhere.)
-</Note>
-
-Three pieces:
-
-- **`entrypoint(ctx)`** runs once per call. `ctx` is the
-  [CallContext](/get-started/core-concepts#callcontext) for that call.
-- **The brain** is `LLMAgent` - the simplest brain: a plain LLM with a system
-  prompt, no flow graph. Assigning it to `ctx.session.dialog_machine` is how you
-  plug your [Agent](/get-started/core-concepts#agent-brain) into the call.
-- **`AgentRunner`** is the long-lived process that registers as a worker and
-  serves each call. It registers against `wss://<UNPOD_BASE_URL>`. See
-  [AgentRunner](/get-started/core-concepts#agentrunner).
-
-`await ctx.session.run()` keeps the call alive and routes each transcribed turn
-to your brain. See [Session](/get-started/core-concepts#session).
-
-<Note>
-`LLMAgent` ships in the `superdialog` package, but it is **not** a flow-based
-`DialogMachine` - it is the minimal LLM-only brain. You can swap in a pure
-adapter (`unpod.adapters.AnthropicAdapter`) or any other brain later; see
-[Bring Your Agent](/speech-stack/bring-your-agent).
-</Note>
-
-## Run and talk
-
-From the `unpod-sdk/` directory:
-
-```bash
-task playground
-```
-
-This builds the browser UI, starts it on **http://localhost:9100**, and runs
-your agent in-process - registering it with the speech service at
-`wss://<UNPOD_BASE_URL>`. The page opens automatically.
-
-Click **Connect**, allow microphone access, and speak. You will see a live
-transcript of your words and the agent's replies, plus latency badges on each
-turn.
-
-<Accordion title="Run the speech service locally (contributors)">
-If you are developing against a local speech stack instead of the hosted
-service, run `supervoice` yourself and point `SUPERVOICE_URL` at it:
-
-```bash
-# in a separate terminal, from the supervoice repo
-cd supervoice
-uv run uvicorn supervoice.dev.app:create_dev_app --factory --port 9000
-```
-
-```bash
-# examples/browser_playground/.env
-SUPERVOICE_URL=ws://127.0.0.1:9000
-```
-
-The browser-audio routes (`/connect`, `/ws/audio`) are served by
-`supervoice.dev.app`, not the platform API. Then run `task playground` as above.
 </Accordion>
 
-## Next steps
+### Step 8T - Run and Call
+
+```bash
+python3.12 agent.py
+```
+
+Call the number you attached. The runner connects to the Unpod orchestrator and
+dispatches inbound calls to your entrypoint. The process stays running and
+accepts calls until you stop it.
+
+---
+
+## Web / App Path
+
+### Step 6W - Create a Session Token
+
+Your backend generates a short-lived session token for each user. The browser
+uses this token to connect.
+
+```python
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
+import asyncio
+from unpod import AsyncClient
+
+async def create_session(pipe_id: str, user_id: str) -> str:
+    async with AsyncClient() as client:
+        token = await client.sessions.create_token(
+            pipe_id=pipe_id,
+            metadata={"user_id": user_id},
+        )
+        return token.token
+
+asyncio.run(create_session("pipe_...", "usr_123"))
+```
+
+Return this token to your frontend. Tokens are single-use - check
+`token.expires_at` for the actual expiry time.
+
+### Step 7W - Open the Local Browser Demo
+
+No npm package needed for local dev. Open the Supervoice web dashboard:
+
+```
+http://localhost:3100
+```
+
+Point it at your pipe — it handles microphone capture, session token exchange,
+and the audio bridge. The same `AgentRunner` from Step 7T handles both phone
+and browser sessions with no changes.
+
+<Note>
+`@unpod/web-sdk` is not yet published on npm. `localhost:3100` is the local
+Supervoice UI — start it before opening the browser demo.
+</Note>
+
+### Step 8W - Run Your Agent
+
+```bash
+python3.12 agent.py
+```
+
+The runner accepts sessions from both telephony and web SDK connections on the
+same `agent_id`.
+
+---
+
+## What Unpod Owns vs. What You Own
+
+| Unpod owns | You own |
+|---|---|
+| Numbers, telephony, SIP trunks | Prompt + system message |
+| STT (speech → text) | Tool calls + RAG context |
+| Routing, threading, retries | Customer data + memory |
+| TTS (text → speech) | Compliance + audit log |
+| WebSocket bridge | Model choice (Claude, OpenAI, …) |
+
+---
+
+## Next Steps
 
 <CardGroup cols={3}>
-  <Card title="Give it a phone number" icon="phone" href="/get-started/first-phone-call">
-    Take the same agent to a real inbound or outbound phone call.
+  <Card title="Structured flows" icon="layers" href="/superdialog/flows">
+    Nodes, edges, router nodes, and HTTP actions inside your flow graph.
   </Card>
-  <Card title="Use your existing agent" icon="bot" href="/speech-stack/bring-your-agent">
-    Plug in LangChain, an HTTP endpoint, or any brain you already have.
+  <Card title="Bring your own agent" icon="bot" href="/speech-stack/bring-your-agent">
+    Plug in LangChain, an HTTP webhook, or any brain you already have.
   </Card>
-  <Card title="Understand the pieces" icon="layers" href="/get-started/core-concepts">
-    Pipe, AgentRunner, Session, and every other term defined once.
+  <Card title="Production checklist" icon="list-checks" href="/speech-stack/setup-checklist">
+    Trunks, numbers, recording, deploy - the full production path.
   </Card>
 </CardGroup>

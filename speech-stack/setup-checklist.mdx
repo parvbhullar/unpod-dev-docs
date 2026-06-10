@@ -84,6 +84,15 @@ AgentRunner(
 ).start()
 ```
 
+## Which Setting To Use
+
+- Use `UNPOD_BASE_URL` when the management API and runner should both point to
+  the same host.
+- Use `UNPOD_SERVICE_BASE_URL` only for management REST overrides.
+- Use `UNPOD_ORCHESTRATOR_URL` only for runner WebSocket overrides.
+- Use `base_url=` / `orchestrator_base_url=` in code when a single script or
+  test needs to override `.env`.
+
 ## Full Setup Script
 
 ```python
@@ -131,6 +140,6 @@ AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `UNPOD_API_KEY` | Yes | Your Unpod API key |
-| `UNPOD_BASE_URL` | No | The one endpoint (default `api.unpod.ai`): REST derives `https://<host>/platform`, the runner derives `wss://<host>` |
-| `UNPOD_SERVICE_BASE_URL` | No | Override for Management REST only, e.g. `http://localhost:8000/platform` for local service testing |
-| `UNPOD_ORCHESTRATOR_URL` | No | Override for the runner WebSocket only |
+| `UNPOD_BASE_URL` | No | Single shared endpoint. REST derives `https://<host>/platform` and the runner derives `wss://<host>` |
+| `UNPOD_SERVICE_BASE_URL` | No | Management REST override only. Takes precedence over `UNPOD_BASE_URL` when set |
+| `UNPOD_ORCHESTRATOR_URL` | No | Runner WebSocket override only. Takes precedence over `UNPOD_BASE_URL` when set |
