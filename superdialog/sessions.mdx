@@ -6,7 +6,10 @@ description: "Manage multiple concurrent conversations, persist state across pro
 
 ## When do you need sessions?
 
-A bare `DialogMachine` holds its conversation state in memory for the lifetime of the instance. This works perfectly for:
+Sessions add a lifecycle and persistence layer on top of **any `Agent`-protocol
+brain** - the default `PlaybookAgent` and the legacy `DialogMachine` alike. A
+bare agent holds its conversation state in memory for the lifetime of the
+instance. This works perfectly for:
 
 - Voice calls (one machine per call, ephemeral)
 - CLI testing (single conversation, short-lived)
@@ -20,7 +23,7 @@ You need `SessionWorker` when:
 
 ## The Agent Protocol
 
-`SessionWorker` works with any brain that implements this Protocol - not just `DialogMachine`:
+`SessionWorker` works with any brain that implements this Protocol:
 
 ```python
 class Agent(Protocol):
@@ -31,17 +34,20 @@ class Agent(Protocol):
     def load_chat_ctx(ctx: ChatContext) -> None
 ```
 
-`DialogMachine`, `LLMAgent`, and `LangChainAgent` all implement this.
+The Playbook engine's `PlaybookAgent`, the legacy `DialogMachine`, `LLMAgent`,
+and `LangChainAgent` all implement this.
 
 ## SessionWorker
 
-```python
-from superdialog import DialogMachine, Flow, SessionWorker, InMemorySessionStore
+The `agent_factory` returns a fresh agent per session. Point `DialogMachine` at
+a playbook and you get the default engine; the factory is identical whatever the
+artifact:
 
-flow = Flow.load("kyc.json")
+```python
+from superdialog import DialogMachine, SessionWorker, InMemorySessionStore
 
 worker = SessionWorker(
-    agent_factory=lambda: DialogMachine(flow=flow, llm="openai/gpt-5.1"),
+    agent_factory=lambda: DialogMachine("kyc.yaml", llm="openai/gpt-4.1-mini"),
     store=InMemorySessionStore(),
     max_sessions=1000,               # optional cap
 )
@@ -69,16 +75,15 @@ Requests for **different** `session_id`s run fully in parallel.
 ```python
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from superdialog import DialogMachine, Flow, SessionWorker, InMemorySessionStore
+from superdialog import DialogMachine, SessionWorker, InMemorySessionStore
 
-flow = Flow.load("kyc.json")
 worker: SessionWorker
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global worker
     worker = SessionWorker(
-        agent_factory=lambda: DialogMachine(flow=flow, llm="openai/gpt-5.1"),
+        agent_factory=lambda: DialogMachine("kyc.yaml", llm="openai/gpt-4.1-mini"),
         store=InMemorySessionStore(),
     )
     yield
@@ -119,9 +124,10 @@ store = InMemorySessionStore()
 | `AsyncioLockBackend` | ✅ v0.2 | Single-process (default) |
 | `RedisLockBackend` | 🔜 v0.3 | Multi-process / distributed |
 
-## Non-DM agent brains
+## Other agent brains
 
-When you want sessions and persistence but not the flow/state-machine opinion:
+When you want sessions and persistence but no checkpoint or flow opinion at all -
+a raw chat brain:
 
 ```python
 from superdialog import LLMAgent, SessionWorker, InMemorySessionStore
@@ -147,23 +153,38 @@ worker = SessionWorker(
 )
 ```
 
-## ChatContext and FlowState
+## Conversation state
 
-Internally, each session stores:
+Internally, each session stores a `ChatContext` - LiveKit-aligned message
+history:
 
-- **`ChatContext`** - message history (LiveKit-aligned)
-  ```python
-  @dataclass
-  class ChatMessage:
-      role: Literal["system", "user", "assistant", "tool"]
-      content: str
+```python
+@dataclass
+class ChatMessage:
+    role: Literal["system", "user", "assistant", "tool"]
+    content: str
 
-  @dataclass
-  class ChatContext:
-      items: list[ChatMessage]
-  ```
+@dataclass
+class ChatContext:
+    items: list[ChatMessage]
+```
 
-- **`FlowState`** - DM-specific runtime state (current node, slot values). Present only when the brain is a `DialogMachine`; `None` for `LLMAgent` / `LangChainAgent`.
+Beyond the transcript, each engine carries its own runtime state:
+
+- **Playbook engine** - the source of truth is the **event-sourced log**
+  (`agent.event_log`); `ConversationState.fold(log, playbook)` derives the
+  checkpoint, slots, and outcome. Persist `event_log.to_jsonl()` and restore via
+  `load_event_log` for full fidelity.
+- **Legacy DialogMachine** - `FlowState` (current node, slot values). Present
+  only when the brain is a `DialogMachine`; `None` otherwise.
+
+<Warning>
+`SessionWorker`'s built-in `SessionRecord` persists `chat_ctx` / `flow_state`
+only. For durable or multi-worker resume on the Playbook engine, persist
+`agent.event_log.to_jsonl()` yourself and restore with `load_event_log` -
+otherwise playbook state fidelity (provisional vs confirmed slots, tool results)
+is lost.
+</Warning>
 
 ## Voice (ephemeral) pattern
 
@@ -171,9 +192,9 @@ For voice calls where each call is a fresh conversation and no persistence is ne
 
 ```python
 worker = SessionWorker(
-    agent_factory=lambda: DialogMachine(flow=flow, llm="anthropic/claude-haiku-4-5"),
+    agent_factory=lambda: DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5"),
     store=NullSessionStore(),   # writes are dropped; reads always return empty
 )
 ```
 
-`NullSessionStore` keeps the single-call lifecycle of a bare `DialogMachine` while still giving you the multiplexing and locking of `SessionWorker`.
+`NullSessionStore` keeps the single-call lifecycle of a bare agent while still giving you the multiplexing and locking of `SessionWorker`.

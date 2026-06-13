@@ -336,3 +336,177 @@ write("superdialog-flow-graph", "SUPERDIALOG FLOW GRAPH", `
   ${flow("M1284 822 H1364", "cyan")}
   ${textBlock(1510, 830, "EDGE = CONDITION", "small")}
 `);
+
+write("superdialog-engines-contract", "SUPERDIALOG ENGINE CONTRACT", `
+  ${panel(420, 118, 832, 140, "HOST PLATFORMS", "gray")}
+  ${pill(478, 178, 134, 44, "LIVEKIT", "purple")}
+  ${pill(634, 178, 134, 44, "PIPECAT", "purple")}
+  ${pill(790, 178, 134, 44, "FASTAPI", "purple")}
+  ${pill(946, 178, 172, 44, "WEBSOCKET", "purple")}
+  ${pill(1140, 178, 72, 44, "CLI", "purple")}
+  ${box(574, 318, 524, 78, "SUPERDIALOG.ADAPTERS", "cyan")}
+  ${box(574, 454, 524, 78, "SESSIONWORKER", "cyan")}
+  ${box(466, 590, 740, 82, ["AGENT PROTOCOL", "TURN / ASSIST / CHAT_CTX / LOAD_CHAT_CTX"], "purple")}
+  ${box(250, 758, 388, 94, ["PLAYBOOKAGENT", "ENGINE B DEFAULT"], "cyan")}
+  ${box(1034, 758, 388, 94, ["DIALOGMACHINE", "ENGINE A LEGACY"], "purple")}
+  ${smallBox(260, 872, 160, 54, "RUNTIME", "cyan")}
+  ${smallBox(432, 872, 160, 54, "EVENTLOG", "cyan")}
+  ${smallBox(1044, 872, 160, 54, "FLOW GRAPH", "purple")}
+  ${smallBox(1216, 872, 160, 54, "STATE", "purple")}
+  ${flow("M836 258 V308", "cyan")}
+  ${flow("M836 396 V444", "cyan")}
+  ${flow("M836 532 V580", "cyan")}
+  ${flow("M704 672 C704 720 572 720 520 748", "cyan")}
+  ${flow("M968 672 C968 720 1100 720 1152 748", "purple")}
+  ${flow("M444 852 V862", "cyan", false)}
+  ${flow("M1228 852 V862", "purple", false)}
+`);
+
+write("playbook-turn-runtime", "PLAYBOOK TURN RUNTIME", `
+  ${smallBox(44, 406, 202, 118, "USER TEXT", "purple")}
+  ${box(318, 386, 264, 146, ["PLAYBOOKAGENT", "TURN"], "purple")}
+  ${panel(720, 132, 420, 292, "DIRECTOR TASK", "cyan")}
+  ${smallBox(760, 208, 340, 54, "APPEND UTTERANCE", "cyan")}
+  ${smallBox(760, 282, 340, 54, "EVALUATE SLOTS", "cyan")}
+  ${smallBox(760, 356, 340, 54, "QUIESCE RULES", "cyan")}
+  ${panel(720, 518, 420, 292, "TALKER STREAM", "purple")}
+  ${smallBox(760, 590, 340, 54, "SNAPSHOT STATE N", "purple")}
+  ${smallBox(760, 664, 340, 54, "SOFT OR HARD GATE", "purple")}
+  ${smallBox(760, 738, 340, 54, "TOKENS TO HOST", "purple")}
+  ${box(1270, 324, 282, 120, "JOIN", "cyan")}
+  ${box(1270, 590, 282, 120, ["DONE", "CHECKPOINT + OUTCOME"], "cyan")}
+  ${flow("M246 465 H308", "purple")}
+  ${flow("M582 430 C650 430 650 278 710 278", "cyan")}
+  ${flow("M582 490 C650 490 650 664 710 664", "purple")}
+  ${flow("M1140 280 C1210 280 1210 384 1260 384", "cyan")}
+  ${flow("M1140 738 C1210 738 1210 650 1260 650", "purple")}
+  ${flow("M1412 444 V580", "cyan")}
+  ${lineLabel(634, 302, "SHIELDED", "cyan")}
+  ${lineLabel(638, 628, "STREAMS", "purple")}
+`);
+
+write("playbook-loading-pipeline", "PLAYBOOK LOADING PIPELINE", `
+  ${smallBox(54, 242, 300, 86, "SIMPLE YAML", "purple")}
+  ${smallBox(54, 424, 300, 86, "FULL YAML", "purple")}
+  ${smallBox(54, 606, 300, 86, "LEGACY FLOW JSON", "purple")}
+  ${box(516, 210, 310, 116, "SIMPLE_TO_PLAYBOOK", "cyan")}
+  ${box(516, 398, 310, 116, "PLAYBOOK.LOAD", "cyan")}
+  ${box(516, 584, 310, 116, "COMPILE_FLOW", "cyan")}
+  ${panel(988, 292, 360, 300, "VALIDATED ARTIFACT", "purple")}
+  ${box(1030, 386, 276, 112, ["PLAYBOOK", "IR"], "purple")}
+  ${box(1442, 386, 180, 112, "RUNTIME", "cyan")}
+  ${flow("M354 285 H506", "cyan")}
+  ${flow("M354 467 H506", "cyan")}
+  ${flow("M354 649 H506", "cyan")}
+  ${flow("M826 268 C918 268 918 442 978 442", "cyan")}
+  ${flow("M826 456 H978", "cyan")}
+  ${flow("M826 642 C918 642 918 442 978 442", "cyan")}
+  ${flow("M1348 442 H1432", "purple")}
+`);
+
+write("playbook-checkpoint-model", "PLAYBOOK CHECKPOINT MODEL", `
+  ${panel(320, 134, 620, 560, "CHECKPOINT: COLLECT_DETAILS", "purple")}
+  ${smallBox(372, 224, 516, 68, ["GOAL", "CITY + DATE + PARTY SIZE"], "purple")}
+  ${smallBox(372, 326, 516, 68, ["SLOTS", "CITY / DATE / PLAYERS"], "purple")}
+  ${smallBox(372, 428, 516, 68, ["GUIDANCE", "COLLECT NATURALLY"], "purple")}
+  ${smallBox(372, 530, 516, 82, ["ADVANCE RULES", "DETAILS COMPLETE OR COURSE INFO"], "purple")}
+  ${panel(1030, 210, 330, 236, "FREE CONVERSATION", "cyan")}
+  ${box(1066, 304, 258, 78, "MODEL TALKS", "cyan")}
+  ${box(1058, 574, 276, 96, ["NEXT", "CHECKPOINT"], "cyan")}
+  ${flow("M940 340 H1020", "cyan")}
+  ${flow("M1195 446 V564", "cyan")}
+  ${flow("M632 612 C632 760 1188 760 1190 680", "purple")}
+  ${lineLabel(1182, 510, "OUTCOME MET", "cyan")}
+  ${lineLabel(772, 754, "FRAMEWORK OWNS PROGRESS", "purple")}
+`);
+
+write("superdialog-text-loop", "SUPERDIALOG TEXT LOOP", `
+  ${box(152, 356, 290, 150, "USER TEXT", "purple")}
+  ${panel(602, 250, 468, 360, "AGENT PROTOCOL", "cyan")}
+  ${box(664, 344, 344, 94, "AGENT.TURN", "cyan")}
+  ${smallBox(664, 470, 158, 62, "TOOLS", "cyan")}
+  ${smallBox(850, 470, 158, 62, "STATE", "cyan")}
+  ${box(1230, 356, 290, 150, "REPLY TEXT", "purple")}
+  ${flow("M442 431 H592", "cyan")}
+  ${flow("M1070 431 H1220", "cyan")}
+`);
+
+write("post-call-data-integration", "POST CALL DATA INTEGRATION", `
+  ${box(72, 390, 260, 128, "UNPOD API", "purple")}
+  ${box(524, 374, 330, 160, ["POLLING", "SERVICE"], "cyan")}
+  ${panel(1070, 178, 420, 586, "YOUR SYSTEMS", "purple")}
+  ${smallBox(1132, 264, 296, 68, "CRM", "purple")}
+  ${smallBox(1132, 386, 296, 68, "SLACK", "purple")}
+  ${smallBox(1132, 508, 296, 68, "DATABASE", "purple")}
+  ${smallBox(1132, 630, 296, 68, "CUSTOM WEBHOOKS", "purple")}
+  ${flow("M332 454 H514", "cyan")}
+  ${flow("M854 454 H1060", "cyan")}
+  ${flow("M1280 454 V344", "purple", false)}
+  ${flow("M1280 454 V386", "purple", false)}
+  ${flow("M1280 454 V508", "purple", false)}
+  ${flow("M1280 454 V620", "purple", false)}
+`);
+
+write("platform-execution-lifecycle", "PLATFORM EXECUTION LIFECYCLE", `
+  ${box(74, 392, 260, 122, ["CREATE", "TASK"], "purple")}
+  ${box(458, 392, 260, 122, "PENDING", "cyan")}
+  ${box(842, 392, 260, 122, "EXECUTING", "cyan")}
+  ${box(1226, 276, 300, 110, "COMPLETED", "purple")}
+  ${box(1226, 530, 300, 110, "FAILED", "purple")}
+  ${flow("M334 453 H448", "cyan")}
+  ${flow("M718 453 H832", "cyan")}
+  ${flow("M1102 432 C1168 432 1168 331 1216 331", "purple")}
+  ${flow("M1102 474 C1168 474 1168 585 1216 585", "purple")}
+`);
+
+write("bridge-lifecycle", "BRIDGE LIFECYCLE", `
+  ${box(56, 390, 270, 126, ["CREATE BRIDGE", "DRAFT"], "purple")}
+  ${box(430, 390, 270, 126, ["CONNECT", "PROVIDER"], "cyan")}
+  ${box(804, 390, 270, 126, ["ASSIGN", "NUMBERS"], "cyan")}
+  ${box(1178, 390, 220, 126, "ACTIVE", "purple")}
+  ${box(1472, 390, 150, 126, "DELETE", "purple")}
+  ${flow("M326 453 H420", "cyan")}
+  ${flow("M700 453 H794", "cyan")}
+  ${flow("M1074 453 H1168", "cyan")}
+  ${flow("M1398 453 H1462", "purple")}
+`);
+
+write("agent-runner-dispatch", "AGENTRUNNER DISPATCH", `
+  ${box(138, 240, 360, 132, ["UNPOD", "ORCHESTRATOR"], "cyan")}
+  ${box(656, 240, 360, 132, "AGENTRUNNER", "purple")}
+  ${box(1174, 240, 360, 132, ["ENTRYPOINT", "CALLCONTEXT"], "purple")}
+  ${smallBox(656, 528, 360, 82, ["HEARTBEAT", "CAPACITY"], "cyan")}
+  ${smallBox(1174, 528, 360, 82, ["SESSION", "RUN LOOP"], "cyan")}
+  ${flow("M498 306 H646", "cyan")}
+  ${lineLabel(572, 274, "WSS", "cyan")}
+  ${flow("M1016 306 H1164", "purple")}
+  ${lineLabel(1090, 274, "DISPATCH", "purple")}
+  ${flow("M836 372 V518", "cyan")}
+  ${flow("M1354 372 V518", "purple")}
+`);
+
+write("websocket-connectivity", "WEBSOCKET CONNECTIVITY", `
+  ${box(86, 348, 300, 150, ["BROWSER", "APP", "CLIENT"], "purple")}
+  ${box(526, 348, 320, 150, ["PIPE", "WSS ENDPOINT"], "cyan")}
+  ${panel(980, 242, 366, 360, "UNPOD SPEECH PIPELINE", "cyan")}
+  ${smallBox(1024, 336, 278, 62, "STT + VAD", "cyan")}
+  ${smallBox(1024, 442, 278, 62, "TTS + BARGE-IN", "cyan")}
+  ${box(1462, 348, 170, 150, ["YOUR", "RUNNER"], "purple")}
+  ${flow("M386 423 H516", "cyan")}
+  ${lineLabel(454, 390, "WSS", "cyan")}
+  ${flow("M846 423 H970", "cyan")}
+  ${flow("M1346 423 H1452", "purple")}
+  ${lineLabel(1400, 390, "TEXT", "purple")}
+`);
+
+write("telephony-routing-flow", "TELEPHONY ROUTING FLOW", `
+  ${box(66, 386, 270, 136, ["PHONE", "NUMBER"], "purple")}
+  ${box(460, 386, 270, 136, "BRIDGE", "purple")}
+  ${box(854, 386, 270, 136, "PROVIDER", "cyan")}
+  ${box(1248, 386, 270, 136, "AGENT", "cyan")}
+  ${flow("M336 454 H450", "purple")}
+  ${flow("M730 454 H844", "cyan")}
+  ${flow("M1124 454 H1238", "cyan")}
+  ${lineLabel(595, 350, "ROUTING", "purple")}
+  ${lineLabel(990, 350, "MEDIA", "cyan")}
+`);

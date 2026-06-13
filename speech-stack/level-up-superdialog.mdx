@@ -1,15 +1,16 @@
 ---
 title: 'Level Up to SuperDialog'
 icon: 'layers'
-description: 'When a plain LLM brain stops being enough: plug a structured DialogMachine into your voice agent.'
+description: 'When a plain LLM brain stops being enough: plug a structured SuperDialog agent into your voice agent.'
 ---
 
 A plain LLM brain answers questions. It does not reliably follow a multi-step
 process, collect required fields in order, branch on conditions, or call your
 tools at the right moment. When your voice agent needs that -
 appointment booking, triage, verification flows - level up to
-[SuperDialog](/superdialog/introduction): a dialog state machine that executes
-a **flow** (a graph of states and transitions) turn by turn.
+[SuperDialog](/superdialog/introduction): a conversation runtime that executes a
+**playbook** - journeys of checkpoints that gate outcomes - turn by turn. (Flow
+graphs still work too, run compiled on the same engine.)
 
 <Frame>
   <img src="/images/diagrams/superdialog-session-integration.svg" alt="SuperDialog session integration diagram showing user speech passing through STT, user_turn hooks, DialogMachine.turn, agent_turn hooks, TTS, and caller playback." />
@@ -19,35 +20,33 @@ a **flow** (a graph of states and transitions) turn by turn.
 
 Assign a `DialogMachine` to `ctx.session.dialog_machine` - the SDK auto-wraps
 it in a `SuperDialogAdapter` (see
-[Adapters](/speech-stack/adapters#auto-wrapping)):
+[Adapters](/speech-stack/adapters#auto-wrapping)). On the Playbook engine the
+Talker streams real tokens straight to TTS:
 
 ```python
-from superdialog import DialogMachine, Flow
+from superdialog import DialogMachine
 from unpod import AgentRunner, CallContext
-
-flow = Flow.load("clinic.json")
 
 async def handle_call(ctx: CallContext) -> None:
     ctx.session.dialog_machine = DialogMachine(
-        flow=flow,
-        llm="anthropic/claude-haiku-4-5",   # runtime model
+        "clinic.yaml",                       # any format; Playbook engine by default
+        llm="anthropic/claude-haiku-4-5",    # runtime model
     )
-    await ctx.session.run()  # hands every turn to the machine
+    await ctx.session.run()  # hands every turn to the agent
 
 AgentRunner(entrypoint=handle_call, agent_id="my-agent").start()
 ```
 
 <Note>
-Flows are built once (`create_dialog_flow` calls an LLM at build time, not at
-runtime) and saved as JSON you version-control. The build model and the runtime
-model can differ - build with a strong model, run with a fast one. See the
-[SuperDialog Quickstart](/superdialog/quickstart).
+Generate a playbook once with `superdialog generate` and version-control the
+YAML. You can edit it by hand and re-run `superdialog chat` to test - no voice
+setup needed. See the [SuperDialog Quickstart](/superdialog/quickstart).
 </Note>
 
 ## Voice-specific patterns
 
-These patterns are specific to running a DialogMachine inside a live call.
-For flows, tools, and sessions themselves, see the
+These patterns are specific to running a SuperDialog agent inside a live call.
+For playbooks, tools, and sessions themselves, see the
 [SuperDialog docs](/superdialog/introduction).
 
 ### Give tools call context
@@ -66,7 +65,7 @@ async def handle_call(ctx: CallContext) -> None:
         return crm.lookup_phone(caller_number)   # closure over call data
 
     ctx.session.dialog_machine = DialogMachine(
-        flow=flow, llm="anthropic/claude-haiku-4-5", tools=[lookup_caller]
+        "clinic.yaml", llm="anthropic/claude-haiku-4-5", tools=[lookup_caller]
     )
     await ctx.session.run()
 ```
@@ -84,48 +83,52 @@ async def on_user_turn(text: str) -> None:
         )
 ```
 
-### Switch flows mid-call
+### Switch flows mid-call (graph engine)
+
+`switch_flow` is a **graph-engine** feature - build the machine with a `FlowSet`
+and `engine="flow"`. On the Playbook engine, model the same behaviour with
+multiple `journeys` and `interrupts` in one playbook instead.
 
 ```python
-billing_flow = Flow.load("billing.json")
+from superdialog import DialogMachine, Flow, FlowSet
+
+flows = FlowSet({"triage": Flow.load("triage.json"), "billing": Flow.load("billing.json")})
+ctx.session.dialog_machine = DialogMachine(flows, llm="anthropic/claude-haiku-4-5", engine="flow")
 
 @ctx.session.on("user_turn")
 async def on_user_turn(text: str) -> None:
     if "billing" in text.lower():
-        ctx.session.dialog_machine.switch_flow(
-            billing_flow,
-            preserve_memory=True,   # keep conversation history
-        )
+        ctx.session.dialog_machine.switch_flow("billing", preserve_memory=True)
 ```
 
 ### Detect completion
 
-Flows have terminal states. After `run()` returns, check whether the dialog
-finished or the caller hung up mid-flow:
+Both engines have terminal states. After `run()` returns, check whether the
+dialog finished or the caller hung up mid-conversation:
 
 ```python
 async def handle_call(ctx: CallContext) -> None:
-    machine = DialogMachine(flow=flow, llm="anthropic/claude-haiku-4-5")
+    machine = DialogMachine("clinic.yaml", llm="anthropic/claude-haiku-4-5")
     ctx.session.dialog_machine = machine
     await ctx.session.run()
 
     if machine.is_complete:
-        print("Dialog reached a terminal state")
+        print("Dialog reached a terminal checkpoint")
     else:
-        print("Call ended mid-flow (hang up / timeout)")
+        print("Call ended mid-conversation (hang up / timeout)")
 ```
 
 ## Go deeper
 
 <CardGroup cols={2}>
   <Card title="SuperDialog" icon="diagram-project" href="/superdialog/introduction">
-    The framework itself: flows, tools, sessions, CLI.
+    The framework itself: playbooks, tools, sessions, CLI.
   </Card>
   <Card title="Embedding Guide: Unpod Voice" icon="plug" href="/superdialog/embedding-guides/unpod-voice">
-    The full worked example: DialogMachine inside an AgentRunner session.
+    The full worked example: a SuperDialog agent inside an AgentRunner session.
   </Card>
-  <Card title="Thinking in Flows" icon="git-branch" href="/superdialog/thinking-in-flows">
-    The mental model for designing dialog flows.
+  <Card title="Thinking in Playbooks" icon="brain" href="/superdialog/thinking-in-playbooks">
+    The mental model: checkpoints that gate outcomes.
   </Card>
   <Card title="Bring Your Agent" icon="bot" href="/speech-stack/bring-your-agent">
     Prefer your own brain? Adapters for LangChain, OpenAI, Anthropic, HTTP.

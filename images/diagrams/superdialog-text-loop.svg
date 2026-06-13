@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="WHERE UNPOD SITS">
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="SUPERDIALOG TEXT LOOP">
   <defs>
     <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
       <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
@@ -42,48 +42,33 @@
     </style>
   </defs>
   <rect width="1672" height="941" fill="#020303"/>
-  <text x="836" y="70" text-anchor="middle" class="title">WHERE UNPOD SITS</text>
+  <text x="836" y="70" text-anchor="middle" class="title">SUPERDIALOG TEXT LOOP</text>
   
-  <rect x="476" y="116" width="742" height="186" rx="18" class="panel purple"/>
-  <text x="847" y="160" text-anchor="middle" class="label purpleText">
-    <tspan x="847" dy="0">LAYER 3</tspan>
+  <rect x="152" y="356" width="290" height="150" rx="16" class="box purple "/>
+  <text x="297" y="439" text-anchor="middle" class="label">
+    <tspan x="297" dy="0">USER TEXT</tspan>
   </text>
-  <rect x="534" y="152" width="626" height="96" rx="16" class="box purple "/>
-  <text x="847" y="208" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">AGENT PLATFORMS</tspan>
+  <rect x="602" y="250" width="468" height="360" rx="18" class="panel cyan"/>
+  <text x="836" y="294" text-anchor="middle" class="label cyanText">
+    <tspan x="836" dy="0">AGENT PROTOCOL</tspan>
   </text>
-  <text x="846" y="262" text-anchor="middle" class="small purpleText">
-    <tspan x="846" dy="0">VAPI / RETELL / BLAND</tspan>
+  <rect x="664" y="344" width="344" height="94" rx="16" class="box cyan "/>
+  <text x="836" y="399" text-anchor="middle" class="label">
+    <tspan x="836" dy="0">AGENT.TURN</tspan>
   </text>
-  <rect x="476" y="380" width="742" height="202" rx="18" class="panel cyan"/>
-  <text x="847" y="424" text-anchor="middle" class="label cyanText">
-    <tspan x="847" dy="0">LAYER 2</tspan>
+  <rect x="664" y="470" width="158" height="62" rx="12" class="box cyan"/>
+  <text x="743" y="507" text-anchor="middle" class="small">
+    <tspan x="743" dy="0">TOOLS</tspan>
   </text>
-  <rect x="534" y="418" width="626" height="100" rx="16" class="box cyan "/>
-  <text x="847" y="476" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">UNPOD</tspan>
+  <rect x="850" y="470" width="158" height="62" rx="12" class="box cyan"/>
+  <text x="929" y="507" text-anchor="middle" class="small">
+    <tspan x="929" dy="0">STATE</tspan>
   </text>
-  <text x="846" y="536" text-anchor="middle" class="small cyanText">
-    <tspan x="846" dy="0">COMMUNICATION INFRA</tspan>
+  <rect x="1230" y="356" width="290" height="150" rx="16" class="box purple "/>
+  <text x="1375" y="439" text-anchor="middle" class="label">
+    <tspan x="1375" dy="0">REPLY TEXT</tspan>
   </text>
-  <rect x="476" y="668" width="742" height="190" rx="18" class="panel purple"/>
-  <text x="847" y="712" text-anchor="middle" class="label purpleText">
-    <tspan x="847" dy="0">LAYER 1</tspan>
-  </text>
-  <rect x="534" y="704" width="626" height="96" rx="16" class="box purple "/>
-  <text x="847" y="760" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">RAW TELEPHONY</tspan>
-  </text>
-  <text x="846" y="815" text-anchor="middle" class="small purpleText">
-    <tspan x="846" dy="0">TWILIO / PLIVO / BANDWIDTH</tspan>
-  </text>
-  <path d="M846 380 V312" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M846 582 V660" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <text x="936" y="350" text-anchor="middle" class="tiny cyanText">
-    <tspan x="936" dy="0">USED BY</tspan>
-  </text>
-  <text x="946" y="636" text-anchor="middle" class="tiny cyanText">
-    <tspan x="946" dy="0">BUILDS ON</tspan>
-  </text>
+  <path d="M442 431 H592" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M1070 431 H1220" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
 
 </svg>

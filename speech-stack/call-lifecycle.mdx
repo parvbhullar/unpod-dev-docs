@@ -10,6 +10,10 @@ bridges the audio between them while streaming transcripts to your
 `AgentRunner`. This page traces both directions, the states a call moves
 through, and how it can end.
 
+<Frame>
+  <img src="/images/diagrams/call-lifecycle.svg" alt="Animated call lifecycle diagram showing a caller entering Unpod, speech converted to text, dispatch to AgentRunner and Session, dialog turns, reply text, and final transcript, metrics, and webhook storage." />
+</Frame>
+
 ## The state machine
 
 ```mermaid
@@ -119,14 +123,8 @@ Once both legs are in the room, every call works the same way. Unpod's speech
 stack transcribes the caller and streams plain **text** to your `AgentRunner`;
 your dialog logic replies with text; Unpod synthesizes it back to speech.
 
-```mermaid
-flowchart LR
-    Caller[Caller audio] --> STT[Speech-to-Text]
-    STT -->|text| Bridge[Agent Bridge]
-    Bridge <-->|text over secure WSS| Runner[Your AgentRunner]
-    Bridge -->|reply text| TTS[Text-to-Speech]
-    TTS --> Caller2[Caller hears reply]
-```
+The animated lifecycle above is the same loop in motion: call audio stays on
+Unpod's side, text crosses into your runner, and reply text comes back for TTS.
 
 <Note>
 Your `agent_id` selects **which dialog brain** runs for the call - it is not

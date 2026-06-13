@@ -10,17 +10,9 @@ When you create a Speech Pipe on Unpod, it is automatically available as a WebSo
 
 Your agent code does not change. Speech processing (STT, VAD, barge-in, endpointing, TTS) all happens on Unpod's side. Your AgentRunner just receives text and returns text, exactly as it does for phone calls.
 
-```
-Browser / App / Any Client
-    |
-    | wss://api.unpod.dev/v1/pipes/{pipe_id}/connect
-    |
-    v
-[ Unpod Speech Pipeline ]   <- audio in, STT, VAD, barge-in, TTS
-    |
-    v
-[ Your AgentRunner ]        <- text in, text out (same as phone calls)
-```
+<Frame>
+  <img src="/images/diagrams/websocket-connectivity.svg" alt="Animated WebSocket connectivity diagram showing browser, app, or client audio connecting through a pipe WSS endpoint into the Unpod speech pipeline, then text routing to your AgentRunner." />
+</Frame>
 
 ---
 
@@ -71,10 +63,9 @@ Return the token to your frontend via your own API. The client passes it to `Unp
 
 Your AgentRunner accepts sessions from all sources on the same `agent_id`. You do not need separate agents for phone calls and web/app clients.
 
-```
-Phone call    -> Unpod orchestrator -> AgentRunner (handle_call)
-Browser/app   -> Unpod WS endpoint  -> AgentRunner (handle_call)
-```
+<Frame>
+  <img src="/images/diagrams/unpod-voice-stack.svg" alt="Animated Unpod voice stack diagram showing phone, browser, and mobile entrypoints reaching the same managed speech layer and AgentRunner." />
+</Frame>
 
 The `CallContext` tells you how the session arrived:
 
@@ -85,7 +76,7 @@ async def handle_call(ctx: CallContext) -> None:
     elif ctx.direction == "web":
         # user connected from browser or app
 
-    ctx.session.dialog_machine = DialogMachine(flow=flow, llm="anthropic/claude-haiku-4-5")
+    ctx.session.dialog_machine = DialogMachine("agent.yaml", llm="anthropic/claude-haiku-4-5")
     await ctx.session.run()
 ```
 

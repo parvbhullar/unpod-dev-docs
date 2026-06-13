@@ -1,86 +1,98 @@
 ---
 title: "CLI Chatbot"
 icon: 'terminal'
-description: "Test your dialog machine in a terminal - zero infrastructure, zero setup."
+description: "Test your agent in a terminal - zero infrastructure, zero setup."
 ---
 
 ## Why start here
 
-Before setting up any voice infrastructure, test your flow in a terminal. You get the full end-to-end dialog experience - same logic, same LLM calls, same tool execution - with nothing but Python.
+Before setting up any voice infrastructure, test your agent in a terminal. You
+get the full end-to-end dialog experience - same logic, same LLM calls, same
+tool execution - with nothing but Python.
 
-This is also the recommended eval loop:
-1. Build a flow
+This is also the recommended build loop:
+
+1. `superdialog generate` a playbook from a prompt
 2. Chat with it in the CLI
-3. Iterate on the prompt or flow structure
+3. Iterate on the prose, slots, and advance rules
 4. Only then wire it into LiveKit / PipeCat / Unpod
 
 ## Option 1: bundled CLI
 
-If you already have a `flow.json`:
-
 ```bash
-superdialog chat kyc.json
+superdialog generate "Confirm KYC. Ask for Aadhaar last 4. Confirm DOB." \
+  --output kyc.yaml
+superdialog chat kyc.yaml
 ```
 
-That's it. The CLI reads `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` from your environment and runs the flow interactively.
-
-Override the model:
+The CLI reads `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` from your environment and
+runs the playbook on the Playbook engine. `chat` defaults to `./playbook.yaml`,
+then `./flow.json`, and auto-detects any format. Override the model:
 
 ```bash
-superdialog chat kyc.json --llm anthropic/claude-haiku-4-5
+superdialog chat kyc.yaml --llm anthropic/claude-haiku-4-5
 ```
+
+The per-turn status line (`[checkpoint=<id> ended=<bool>]`) names the live
+checkpoint so you can watch outcomes advance.
 
 ## Option 2: Python REPL loop
 
-For more control - custom tool setup, custom model, traversal logging:
+For more control - custom tools, a split Talker/Director, or to inspect the
+event log:
 
 ```python
 import asyncio
-from superdialog import create_dialog_flow, DialogMachine
+from superdialog import DialogMachine
+
+agent = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")  # any format
 
 async def main():
-    flow = await create_dialog_flow(
-        prompt="Confirm KYC. Ask for Aadhaar last 4. Confirm DOB.",
-        llm="openai/gpt-5.1",
-    )
-
-    dialog_machine = DialogMachine(
-        flow=flow,
-        llm="anthropic/claude-haiku-4-5",
-        traversal_dir="./traversal_history",  # saves a JSON per session on completion
-    )
-
     while True:
         user = input("> ")
         if user.strip() in ("quit", "exit"):
             break
-        reply = await dialog_machine.turn(user)
+        reply = await agent.turn(user)
         print(reply.text)
 
 asyncio.run(main())
 ```
 
-## Traversal history
-
-Pass `traversal_dir` to save a timestamped JSON file for every completed session. Each file captures:
-
-- Every node visited (in order)
-- Every turn (user text + agent reply)
-- All collected slot values
+<Note>
+**Inspect the event log.** Drop to `PlaybookAgent` and
+`agent.event_log.to_jsonl()` is the audit artifact - every utterance, slot
+write, advance, and tool call, replayable offline:
 
 ```python
-dialog_machine = DialogMachine(
-    flow=flow,
-    llm="anthropic/claude-haiku-4-5",
-    traversal_dir="./traversal_history",
+from superdialog.playbook import Playbook, PlaybookAgent, httpx_http
+
+agent = PlaybookAgent(
+    playbook=Playbook.load("kyc.yaml"),
+    talker_llm=talker, director_llm=director, http=httpx_http,
 )
 ```
+</Note>
 
-Use these files to build eval corpora and inspect unexpected flow paths.
+<Note>
+**Legacy graph engine.** `superdialog chat kyc.json --mode flow` runs the
+original graph engine. In code, construct
+`DialogMachine(Flow.load("kyc.json"), llm=..., engine="flow",
+traversal_dir="./traversal_history")` and drive the same loop; `traversal_dir`
+writes a timestamped JSON per completed session (full node path, every turn,
+collected slots).
+</Note>
+
+## Which engine am I on?
+
+The status line tells you: `[checkpoint=<id> ended=<bool>]` is the Playbook
+engine (the default); `[<ms>ms]` is the legacy DialogMachine (`--mode flow`). A
+bare `--flow x.json` shows the checkpoint form because flow JSON is compiled onto
+the Playbook engine.
 
 ## When to move to the next step
 
-Once your flow behaves correctly in the CLI:
+Once your agent behaves correctly in the CLI:
+
 - Wire it into [LiveKit](/superdialog/embedding-guides/livekit) for voice
 - Or add a [FastAPI endpoint](/superdialog/embedding-guides/fastapi) for a text chatbot
 - Or connect to [Unpod Voice Infra](/superdialog/embedding-guides/unpod-voice) for full telephony

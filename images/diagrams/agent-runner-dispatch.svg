@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="WHERE UNPOD SITS">
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="AGENTRUNNER DISPATCH">
   <defs>
     <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
       <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
@@ -42,48 +42,41 @@
     </style>
   </defs>
   <rect width="1672" height="941" fill="#020303"/>
-  <text x="836" y="70" text-anchor="middle" class="title">WHERE UNPOD SITS</text>
+  <text x="836" y="70" text-anchor="middle" class="title">AGENTRUNNER DISPATCH</text>
   
-  <rect x="476" y="116" width="742" height="186" rx="18" class="panel purple"/>
-  <text x="847" y="160" text-anchor="middle" class="label purpleText">
-    <tspan x="847" dy="0">LAYER 3</tspan>
+  <rect x="138" y="240" width="360" height="132" rx="16" class="box cyan "/>
+  <text x="318" y="299" text-anchor="middle" class="label">
+    <tspan x="318" dy="0">UNPOD</tspan>
+    <tspan x="318" dy="30">ORCHESTRATOR</tspan>
   </text>
-  <rect x="534" y="152" width="626" height="96" rx="16" class="box purple "/>
-  <text x="847" y="208" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">AGENT PLATFORMS</tspan>
+  <rect x="656" y="240" width="360" height="132" rx="16" class="box purple "/>
+  <text x="836" y="314" text-anchor="middle" class="label">
+    <tspan x="836" dy="0">AGENTRUNNER</tspan>
   </text>
-  <text x="846" y="262" text-anchor="middle" class="small purpleText">
-    <tspan x="846" dy="0">VAPI / RETELL / BLAND</tspan>
+  <rect x="1174" y="240" width="360" height="132" rx="16" class="box purple "/>
+  <text x="1354" y="299" text-anchor="middle" class="label">
+    <tspan x="1354" dy="0">ENTRYPOINT</tspan>
+    <tspan x="1354" dy="30">CALLCONTEXT</tspan>
   </text>
-  <rect x="476" y="380" width="742" height="202" rx="18" class="panel cyan"/>
-  <text x="847" y="424" text-anchor="middle" class="label cyanText">
-    <tspan x="847" dy="0">LAYER 2</tspan>
+  <rect x="656" y="528" width="360" height="82" rx="12" class="box cyan"/>
+  <text x="836" y="560" text-anchor="middle" class="small">
+    <tspan x="836" dy="0">HEARTBEAT</tspan>
+    <tspan x="836" dy="30">CAPACITY</tspan>
   </text>
-  <rect x="534" y="418" width="626" height="100" rx="16" class="box cyan "/>
-  <text x="847" y="476" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">UNPOD</tspan>
+  <rect x="1174" y="528" width="360" height="82" rx="12" class="box cyan"/>
+  <text x="1354" y="560" text-anchor="middle" class="small">
+    <tspan x="1354" dy="0">SESSION</tspan>
+    <tspan x="1354" dy="30">RUN LOOP</tspan>
   </text>
-  <text x="846" y="536" text-anchor="middle" class="small cyanText">
-    <tspan x="846" dy="0">COMMUNICATION INFRA</tspan>
+  <path d="M498 306 H646" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <text x="572" y="274" text-anchor="middle" class="tiny cyanText">
+    <tspan x="572" dy="0">WSS</tspan>
   </text>
-  <rect x="476" y="668" width="742" height="190" rx="18" class="panel purple"/>
-  <text x="847" y="712" text-anchor="middle" class="label purpleText">
-    <tspan x="847" dy="0">LAYER 1</tspan>
+  <path d="M1016 306 H1164" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <text x="1090" y="274" text-anchor="middle" class="tiny purpleText">
+    <tspan x="1090" dy="0">DISPATCH</tspan>
   </text>
-  <rect x="534" y="704" width="626" height="96" rx="16" class="box purple "/>
-  <text x="847" y="760" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">RAW TELEPHONY</tspan>
-  </text>
-  <text x="846" y="815" text-anchor="middle" class="small purpleText">
-    <tspan x="846" dy="0">TWILIO / PLIVO / BANDWIDTH</tspan>
-  </text>
-  <path d="M846 380 V312" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M846 582 V660" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <text x="936" y="350" text-anchor="middle" class="tiny cyanText">
-    <tspan x="936" dy="0">USED BY</tspan>
-  </text>
-  <text x="946" y="636" text-anchor="middle" class="tiny cyanText">
-    <tspan x="946" dy="0">BUILDS ON</tspan>
-  </text>
+  <path d="M836 372 V518" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M1354 372 V518" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
 
 </svg>

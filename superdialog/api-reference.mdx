@@ -1,165 +1,361 @@
 ---
 title: "API Reference"
 icon: 'code'
-description: "Complete reference for every class and method in SuperDialog."
+description: "Complete reference for SuperDialog - the unified DialogMachine entry point, the Playbook engine, sessions, tools, and adapters."
 ---
 
-## Flow construction
-
-### `create_dialog_flow`
-
-```python
-async create_dialog_flow(prompt: str, llm: str, **kwargs) -> Flow
-```
-
-Bootstrap a flow graph from a prompt using a one-shot LLM call.
-
-```python
-import asyncio
-from superdialog import create_dialog_flow
-
-# Inside async code
-flow = await create_dialog_flow(
-    prompt="Confirm appointment. Ask if Friday 4pm works; offer 5pm if not.",
-    llm="openai/gpt-5.1",
-)
-
-# From a sync entry point
-flow = asyncio.run(create_dialog_flow(prompt=..., llm=...))
-```
-
-<Note>
-The `llm` parameter is used **only at construction**. The runtime model is set on `DialogMachine`, not here.
-</Note>
-
-### `Flow.save` / `Flow.load`
-
-```python
-flow.save("kyc.json")       # Serialize to JSON
-flow = Flow.load("kyc.json") # Deserialize from JSON
-```
-
-JSON-serializable and version-controllable.
-
-### `FlowSet`
-
-Container for multiple named flows. Switch between them at runtime.
-
-```python
-from superdialog import FlowSet
-
-flowset = FlowSet({
-    "main": main_flow,
-    "escalation": escalation_flow,
-    "billing": billing_flow,
-})
-```
+SuperDialog ships **two engines, one entry point**. `DialogMachine` is the
+recommended way in; it drives either engine behind the same `Agent` protocol -
+the **Playbook engine by default**, the legacy graph runtime with
+`engine="flow"`.
 
 ---
 
-## DialogMachine
+## DialogMachine (unified entry point)
 
 ### Construction
 
 ```python
 DialogMachine(
-    flow: Flow | FlowSet,
-    llm: str,                                    # model URI
-    tools: list[Tool] | None = None,
-    memory: Memory | None = None,                # default: in-memory
-    config: dict | None = None,                  # max_tokens, temperature, etc.
-    traversal_dir: str | Path | None = None,     # auto-save traversal JSON on completion
-    adapter: str = "toolcall",                   # "toolcall" (1 LLM call/turn) or "llm" (2 calls/turn)
+    source: Flow | FlowSet | Playbook | str | dict,  # path, parsed dict, or object
+    llm: str | None = None,             # model URI (Talker, and Director unless split)
+    tools: list[Tool] | None = None,    # any Tool; both engines
+    memory: ContextStore | None = None, # graph-only; default in-memory
+    config: dict | None = None,         # graph-only: max_tokens, temperature, etc.
+    traversal_dir: str | Path | None = None,  # graph-only: auto-save traversal JSON
+    adapter: str = "toolcall",          # graph-only adapter selection
+    *,
+    engine: str = "auto",               # "auto" | "playbook" | "flow"
+    director_llm: str | None = None,    # Playbook: strong-Director override
 )
 ```
 
-- **`traversal_dir`** - Writes a timestamped JSON file on each completed session recording every node visited, every turn, and all slot values. Useful for debugging, building eval datasets, and auditing.
-- **`adapter`** - `"toolcall"` (default, production) uses one LLM call per turn. `"llm"` uses two calls per turn and can be useful for debugging flow traversal logic.
+`source` is the artifact: a path string, a parsed dict, or an object. The
+unified loader auto-detects **full playbooks, the simple format, and legacy flow
+JSON** (compiled transparently), so you never route by format.
 
-### `start`
+**Engine selection** (`engine="auto"`, the default): a `Flow` / `FlowSet` object
+keeps the legacy graph engine (back-compat); a `Playbook` object, a path string,
+or a parsed dict runs the Playbook engine. Override with:
+
+- `engine="playbook"` - force the Playbook engine (compiling a flow if needed)
+- `engine="flow"` - force the legacy graph runtime (`ValueError` on a `Playbook`)
+
+In Playbook mode, `llm` is the Talker and the Director unless `director_llm`
+splits them; a missing `llm` raises a clear `ValueError`. Graph-only methods
+(`switch_flow`, `seed`, `load_flow_state`) raise `NotImplementedError` in
+Playbook mode, and `flow_state` returns `None`.
 
 ```python
-async start() -> Turn
-```
+from superdialog import DialogMachine
 
-Generate the agent's opening message without any user input. Call this at the start of a voice call or chat session to have the agent greet first.
-
-```python
-opening = await dialog_machine.start()
-print(opening.text)   # "Hello! I'm here to help verify your KYC. Could you provide..."
+agent = DialogMachine("booking.yaml", llm="openai/gpt-4.1-mini")          # Playbook (default)
+agent = DialogMachine("booking.yaml", llm="anthropic/claude-haiku-4-5",
+                      director_llm="anthropic/claude-opus-4-7")           # split Talker/Director
+dm = DialogMachine(Flow.load("kyc.json"), llm="...", engine="flow")        # legacy graph
 ```
 
 ### `turn`
 
 ```python
-async turn(
-    text: str,
-    context: dict | None = None,
-    stream: bool | Literal["text"] = False,
-) -> Turn | AsyncIterator[StreamChunk]
+async turn(text, context=None, stream=False) -> Turn | AsyncIterator[StreamChunk]
 ```
 
-The primary method. Always async.
+The primary method. Always async - drive it from `asyncio.run(...)` or any async
+runtime.
 
 ```python
-# Non-streaming - returns complete Turn
-reply = await dialog_machine.turn("hello")
+reply = await agent.turn("hello")
 print(reply.text)
-print(reply.tool_calls)   # list[ToolCall]
-print(reply.metadata)     # {"latency_ms": ..., "tokens": ..., "model": ...}
 
-# Streaming - await coroutine first, then iterate
-stream = await dialog_machine.turn("hello", stream=True)
+stream = await agent.turn("hello", stream=True)   # await the coroutine, then iterate
 async for chunk in stream:
     print(chunk.text, end="")
 ```
 
-<Note>
-**Streaming in v0.2:** the response is resolved in one shot, then emitted as whitespace-delimited chunks. True provider-level streaming (first-token latency) is planned for v0.4. The `StreamChunk(text, done, turn)` shape is stable.
-</Note>
-
-### `reset`
-
-```python
-dialog_machine.reset()
-```
-
-Clear conversation memory and restart from the flow's initial node. Useful between independent conversations on the same instance.
-
-### `set_llm`
-
-```python
-dialog_machine.set_llm("anthropic/claude-haiku-4-5")
-```
-
-Hot-swap the model. Applies to the next turn; in-flight streaming continues on the old model.
-
-### `switch_flow`
-
-```python
-dialog_machine.switch_flow("escalation")
-dialog_machine.switch_flow("billing", preserve_memory=True)
-```
-
-Switch to a named flow within the `FlowSet`. State resets by default; pass `preserve_memory=True` to keep history.
-
-### `assist`
-
-```python
-dialog_machine.assist("Customer is upset. Be especially empathetic.")
-```
-
-Push a system-level instruction that takes effect on the next turn. Used for mid-call context injection.
+`Turn` carries `text`, `tool_calls`, and `metadata`. On the Playbook engine,
+`metadata` includes `checkpoint`, `version`, `ended`, and (on terminal
+checkpoints) `outcome`.
 
 <Note>
-`inject_system(...)` is preserved as a deprecated alias and will emit a `DeprecationWarning`. It is slated for removal in v0.4.
+**Streaming is real on the Playbook engine.** `PlaybookAgent` yields live
+provider tokens as the Talker produces them. The legacy graph engine resolves
+the turn in one shot and surfaces whitespace-delimited chunks (the
+`StreamChunk(text, done, turn)` shape is stable).
 </Note>
+
+### `start` / `reset` / `set_llm` / `assist`
+
+```python
+opening = await agent.start()       # agent greets first, no user input
+agent.reset()                       # clear memory, restart from the beginning
+agent.set_llm("anthropic/claude-haiku-4-5")   # hot-swap; applies next turn
+agent.assist("Customer is upset. Be especially empathetic.")  # system inject
+```
+
+### `switch_flow` (graph engine only)
+
+```python
+dm.switch_flow("escalation")                      # FlowSet, engine="flow"
+dm.switch_flow("billing", preserve_memory=True)
+```
+
+Raises `NotImplementedError` on the Playbook engine - use multiple `journeys`
+and advance rules instead.
+
+---
+
+## Creating agents
+
+### `generate_simple_playbook` (default)
+
+```python
+async generate_simple_playbook(prompt, llm, *, max_attempts=3) -> str
+```
+
+Bootstrap a validated simple-format playbook from a description. The output is
+parsed and compiled before return, so a successful return is always loadable.
+CLI equivalent: `superdialog generate "<prompt>" --output playbook.yaml`.
+
+```python
+from superdialog.playbook import generate_simple_playbook
+
+yaml_text = await generate_simple_playbook(
+    "An agent that books demo calls and captures a day and time.",
+    director,                       # any CompletesLLM
+)
+open("playbook.yaml", "w").write(yaml_text)
+```
+
+### `create_dialog_flow` (legacy)
+
+```python
+async create_dialog_flow(prompt, llm, **kwargs) -> Flow
+```
+
+Bootstrap a legacy flow graph from a prompt. Prefer `generate_simple_playbook`
+for new agents; generated flows still run on the Playbook engine by default. The
+`llm` is used **only at construction**.
+
+---
+
+## Playbook engine
+
+Import from `superdialog.playbook`. Checkpoint-compound journeys: a fast
+**Talker** streams every spoken turn while an async **Director** extracts slots,
+judges advancement, and runs tools over an append-only event log.
+
+### `Playbook`
+
+The authored artifact. Load it - all loaders auto-detect the simple format and
+legacy flow JSON:
+
+```python
+from superdialog.playbook import Playbook
+
+pb = Playbook.load(path)         # YAML for .yaml/.yml, else JSON
+pb = Playbook.from_yaml(text)
+pb = Playbook.from_json(text)
+```
+
+Top-level fields: `persona`, `journeys` (≥1), `dispatch`, `tools`, `pipelines`,
+`handlers`, `interrupts`, `policies`, `middleware`, `env`, `views`, `initial`.
+Validation runs on construction and raises on unknown checkpoint/pipeline/tool
+refs, duplicate ids, undeclared `requires` keys, and the reserved `pipeline`
+result key.
+
+### `PlaybookAgent`
+
+The engine behind the `Agent` protocol - drop it into `SessionWorker` and every
+host adapter unchanged. Use it directly when you want explicit Talker/Director
+LLMs or a custom HTTP executor.
+
+```python
+from superdialog.playbook import Playbook, PlaybookAgent, httpx_http
+
+agent = PlaybookAgent(
+    playbook=Playbook.load("booking.yaml"),
+    talker_llm=talker,          # StreamsLLM
+    director_llm=director,      # CompletesLLM
+    http=httpx_http,            # HttpFn
+    python_tools=None,          # dict[str, PythonToolFn] | None
+    token_budget=4000,          # Talker view budget (estimated tokens)
+    barrier_timeout=0.4,        # hard gate: wait this long for the Director
+    hold_timeout=None,          # then filler + this much more before degrading
+)
+```
+
+- **`async turn(text, *, stream=False)`** - Agent protocol. With `stream=True`
+  the iterator yields **live provider tokens**, then any pass-through
+  `say_verbatim` lines, then the `done=True` chunk.
+- **Barge-in safety** - aborting the stream interrupts *speech*, not the state
+  machine: the Director runs to completion in a shielded scope.
+- **`assist`, `chat_ctx` / `load_chat_ctx`, `event_log` / `load_event_log`,
+  `runtime`** - system inject, transcript view, the lossless log, and the
+  `PlaybookRuntime`.
+
+### The artifact model
+
+#### `Checkpoint`
+
+| Field | Meaning |
+|---|---|
+| `id` | Unique within its journey; referenced as `"journey.id"` |
+| `goal` | What "done" means; shown to Talker and Director |
+| `slots` | `dict[str, SlotSpec]` to extract while here |
+| `guidance` | Talker prose; Jinja over `{slots, views, results}` |
+| `say_verbatim` | Exact line; bypasses the Talker LLM |
+| `never_say` | Hard prohibitions injected into the Talker view |
+| `advance_when` | Ordered `AdvanceRule` list (outcome gates) |
+| `gate` | `soft` (default) or `hard` (barrier; `requires` need *confirmed* slots) |
+| `auto` | Speak verbatim once, then advance without user input |
+| `pipeline` | Pipeline run once on entry; routes on `pipeline.ok` / `pipeline.failed` |
+| `on_failure` | Route on pipeline failure or turn-budget exhaustion |
+| `terminal` + `outcome` | Entering ends the session with this outcome label |
+| `turn_budget` | User turns before a wrap-up steering note |
+
+#### `SlotSpec`
+
+`type` (`str int float bool date enum array object`), `required`, `values`
+(enum), `authoritative` (tool / pipeline / expr-`set` writes only), `invalidates`
+(slots/results cleared when this value changes), `description`.
+
+#### `AdvanceRule`
+
+`when` (prose for `judge: llm`, expr text for `judge: expr`), `judge`
+(`llm`/`expr`), `to` (target ref), `requires` (slots that must be filled at soft
+gates, confirmed at hard gates), `set` (confirmed slot writes on advance).
+Verdict-extracted slots are **provisional at hard gates** - a single verdict can
+never confirm its own `requires` in one shot.
+
+#### `ToolSpec` / `PipelineSpec`
+
+`ToolSpec`: `type` (`http`/`python`), `method`/`url`/`headers`/`body` (sandboxed
+Jinja over `{slots, env, results}`), `store_response_as`, `env_updates`,
+`run_once`, `when`, `timeout`, `args`. `PipelineSpec`: ordered `steps`, each with
+typed `on: {ok, failed, http_<code>}` branches and a capped `RetrySpec`
+(`retry` ≤ 10). Tool failures are recorded as failed result events - data, never
+a crash.
+
+### Protocols: `CompletesLLM`, `StreamsLLM`, `HttpFn`, `PythonToolFn`
+
+```python
+class CompletesLLM(Protocol):            # Director seam
+    async def complete(self, messages: list[dict[str, str]], **kwargs) -> str: ...
+
+class StreamsLLM(Protocol):              # Talker seam
+    def stream(self, messages: list[dict[str, str]], **kwargs) -> AsyncIterator[str]: ...
+
+HttpFn = Callable[..., Awaitable[tuple[int, Any]]]   # (method=, url=, headers=,
+                                                     #  body=, timeout=) -> (status, json)
+
+class PythonToolFn(Protocol):            # registered via python_tools={id: fn}
+    async def __call__(self, args: dict[str, Any], state: ConversationState) -> Any: ...
+```
+
+`httpx_http` is the production `HttpFn` backed by httpx. Any
+`superdialog.llm.LLMProvider` (the litellm-backed one behind model URIs) adapts
+to the Talker/Director protocols in a few lines - see
+[Embedding Guides](/superdialog/embedding-guides/overview).
+
+### The expr language
+
+Used by `judge: expr` rules, `ToolSpec.when`, and `Playbook.views`. A safe,
+LLM-free, restricted Python expression over state:
+
+```python
+slots.city == "Pune"                    # slot value; None when unset
+results.hold.ok                         # tool result: ok / status / data / error
+results.search.status == 404
+env.BOOKING_API                         # env lane (not available in views)
+pipeline.ok                             # pipeline-owned checkpoints only
+len(results.search.data.slots) > 0
+first(pluck(results.search.data.slots, "time"))
+```
+
+Helpers (the only callables): `len`, `first`, `last`, `pluck`, `unique`, `min`,
+`max`, `any`, `all`. **Forbidden** (raises `ExprError`): arithmetic,
+comprehensions, lambdas, dict literals, f-strings, any `_`-prefixed name,
+non-whitelisted calls, expressions over 4096 chars. Missing values evaluate to
+`None` (falsy), never an exception.
+
+### Migrating flows
+
+```python
+from superdialog import Flow
+from superdialog.playbook import compile_flow, coverage_report
+
+flow = Flow.load("golf_booking.json")
+pb = compile_flow(flow)                # single-journey "main" Playbook
+report = coverage_report(flow, pb)     # CoverageReport - the lossless proof
+assert not report.unmapped_nodes
+assert not report.unmapped_edges
+assert not report.unmapped_actions
+```
+
+`compile_flow` is lossless by construction:
+
+| Legacy construct | Becomes |
+|---|---|
+| Conversational nodes | Checkpoints in journey `"main"` |
+| Tool-free computational nodes | Folded into their sources' advance rules |
+| Tool-bearing computational chains | A `PipelineSpec` + synthetic checkpoint |
+| Hub routers (≥4-exit) | `dispatch` entries merged into inbound checkpoints |
+| Silence nodes | `policies.silence` |
+| Token-expiry global edge + refresh | `middleware` |
+| Other global edges | `interrupts` |
+| Webhook/timer system nodes | `handlers` |
+| `global_actions` | `tools`, 1:1 |
+
+Deterministic edge conditions (`X.success == true`, `X.status == 404`) compile
+to `judge: expr`; everything else stays `judge: llm` with the prose verbatim.
+`coverage_report` lists anything that didn't map (any `unmapped_*` entry is a
+compiler bug) - run it in CI.
+
+### `EventLog` and `ConversationState`
+
+The event log is the single source of truth; state is a pure fold over it.
+
+```python
+from superdialog.playbook import ConversationState, EventLog
+
+text = agent.event_log.to_jsonl()                 # persist (JSONL, one event/line)
+agent.load_event_log(EventLog.from_jsonl(text))   # lossless restore
+state = ConversationState.fold(agent.event_log, playbook)
+```
+
+`EventLog` is append-only with contiguous versions from 1. Events are frozen,
+discriminated on `type`: `utterance`, `slot_write`, `advance`, `steering_note`,
+`tool_call`, `tool_result`, `env_write`, `scratchpad`, `summary`, `external`,
+`degraded`, `session_end`. `ConversationState.fold` derives `checkpoint_id`,
+`slots` (value + provisional/confirmed status), `transcript`, `env`,
+`tool_results`, `ended`, `outcome`, and helpers `slot_value`, `confirmed`,
+`filled`.
+
+### `replay` and the eval bridge
+
+```python
+from superdialog.playbook import replay, run_session, run_eval, PersonaSpec
+
+report = await replay(log, playbook, director_llm)   # pure: never mutates log
+report.stable                                        # every decision matched?
+
+metrics = await run_session(agent, persona, user_llm)
+report = await run_eval(playbook_factory=make_agent, personas=personas,
+                        user_llm=user_llm, n=1)
+report.completion_rate, report.mean_slot_accuracy
+```
+
+`replay` re-runs the Director over recorded utterances under a (possibly edited)
+playbook and diffs decisions - regression evidence for prompt or model changes.
+The eval bridge scores persona self-play from the same logs.
 
 ---
 
 ## Sessions (v0.2)
 
-Sessions add lifecycle and persistence on top of `DialogMachine` (and any `Agent`-protocol-compatible brain). Use them when conversations need to survive across process boundaries.
+Sessions add lifecycle and persistence on top of any `Agent`-protocol brain -
+`PlaybookAgent` (default) and the legacy `DialogMachine` alike.
 
 ### Agent Protocol
 
@@ -172,15 +368,13 @@ class Agent(Protocol):
     def load_chat_ctx(ctx: ChatContext) -> None
 ```
 
-`DialogMachine`, `LLMAgent`, and `LangChainAgent` all implement this Protocol.
-
-### `SessionWorker`
+### `SessionWorker` / `SessionHandle`
 
 ```python
 from superdialog import DialogMachine, SessionWorker, InMemorySessionStore
 
 worker = SessionWorker(
-    agent_factory=lambda: DialogMachine(flow=flow, llm="openai/gpt-5.1", tools=tools),
+    agent_factory=lambda: DialogMachine("booking.yaml", llm="openai/gpt-4.1-mini"),
     store=InMemorySessionStore(),
     lock_backend=None,        # default: AsyncioLockBackend
     max_sessions=1000,
@@ -191,153 +385,88 @@ async with worker.acquire("user-42") as h:
     h.assist("Customer sounds upset; be empathetic.")
 ```
 
-- `agent_factory` is called once per new session
-- `acquire(session_id)` is an async context manager - loads or creates the session, locks it for the duration of the block, persists state on exit
-- Concurrent requests for different `session_id`s run in parallel; same id serialises via per-session lock
+`agent_factory` is called once per new session; `acquire(session_id)` loads or
+creates the session, locks it for the block, and persists on exit. Different ids
+run in parallel; same id serialises. `SessionHandle` exposes `turn`, `assist`,
+`state`.
 
-### `SessionHandle`
-
-Yielded inside the `async with worker.acquire(...)` block.
-
-| Method / Property | Description |
-|---|---|
-| `await h.turn(text, *, stream=False)` | Execute one turn |
-| `h.assist(text)` | Push system instruction |
-| `h.state` | Current session state |
-
-### Session stores
+### Session stores and lock backends
 
 | Store | Ships | Use case |
 |---|---|---|
 | `InMemorySessionStore` | ✅ v0.2 | Single-process; state lives for process lifetime |
 | `NullSessionStore` | ✅ v0.2 | Voice calls; no persistence wanted |
-| `RedisSessionStore` | 🔜 v0.3 | Multi-process, distributed deployments |
-| `FileSessionStore` | 🔜 v0.3 | Simple persistence without Redis |
-| `SQLiteSessionStore` | 🔜 v0.3 | Local single-server persistence |
-
-### Lock backends
+| `RedisSessionStore`, `FileSessionStore`, `SQLiteSessionStore` | 🔜 planned | Distributed / durable |
 
 | Backend | Ships | Use case |
 |---|---|---|
 | `AsyncioLockBackend` | ✅ v0.2 | Single-process |
-| `RedisLockBackend` | 🔜 v0.3 | Multi-process / distributed |
+| `RedisLockBackend` | 🔜 planned | Multi-process / distributed |
 
-### Alternative agent brains
+<Note>
+`SessionWorker`'s `SessionRecord` persists `chat_ctx` / `flow_state` only. For
+durable Playbook-engine resume, persist `agent.event_log.to_jsonl()` and restore
+with `load_event_log` - see [Sessions](/superdialog/sessions).
+</Note>
+
+### Other agent brains
 
 ```python
-from superdialog import LLMAgent, LangChainAgent, SessionWorker
+from superdialog import LLMAgent, LangChainAgent, SessionWorker, InMemorySessionStore
 
-# Raw chat brain - no flow, no slots
 worker = SessionWorker(
-    agent_factory=lambda: LLMAgent(llm="openai/gpt-5.1", system_prompt="Be helpful."),
+    agent_factory=lambda: LLMAgent(llm="openai/gpt-4.1-mini", system_prompt="Be helpful."),
     store=InMemorySessionStore(),
 )
-
-# LangChain runnable (requires: pip install superdialog[langchain])
-worker = SessionWorker(
-    agent_factory=lambda: LangChainAgent(runnable=my_chain),
-    store=InMemorySessionStore(),
-)
+# LangChainAgent(runnable=...) requires: pip install superdialog[langchain]
 ```
 
 ---
 
 ## Tools
 
-### `@tool` decorator
-
-The quickest way to define a tool - decorate any function and it becomes a `PythonTool` with schema inferred from type hints and docstring:
-
-```python
-from superdialog.tools import tool
-
-@tool
-def lookup_customer(customer_id: str) -> dict:
-    """Look up customer record by ID."""
-    return crm.get(customer_id)
-
-# Use directly in DialogMachine
-dialog_machine = DialogMachine(flow=flow, llm="...", tools=[lookup_customer])
-```
-
-### `PythonTool`
+`PythonTool`, `HttpTool`, and `MCPTool` implement the `Tool` ABC and are passed
+through `DialogMachine(tools=[...])` on either engine. On the Playbook engine,
+prefer declaring tools in the playbook's process layer (see
+[Tools](/superdialog/tools)).
 
 ```python
-# Convenience constructor - infers id, name, description, schema
-tool = PythonTool.of(my_function)
+from superdialog import PythonTool, HttpTool, MCPTool, Tool
+import os
 
-# Explicit constructor
-tool = PythonTool(
-    id="lookup",
-    name="lookup",
-    description="Look up customer by ID",
-    fn=lookup_customer,
-)
+PythonTool.of(lookup_customer)                # infer id/name/schema
+PythonTool(id="lookup", name="lookup", description="...", fn=lookup_customer)
+
+HttpTool(id="lookup", name="lookup", description="Look up a customer",
+         url="https://api.company.io/lookup", method="POST",
+         auth={"type": "bearer", "token": os.environ["KEY"]})
+
+MCPTool(id="search", name="search", description="Search the KB",
+        server="https://mcp.company.io")
+
+Tool.from_dict({"type": "http", "id": "lookup", "name": "lookup",
+                "description": "...", "url": "https://api.company.io/lookup"})
 ```
 
-### `Tool.from_dict`
-
-Deserialize a tool spec from a plain dict (e.g. loaded from JSON config). Routes to `PythonTool`, `HttpTool`, or `MCPTool` based on the `type` field:
-
-```python
-from superdialog import Tool
-
-tool = Tool.from_dict(
-    {"type": "http", "id": "lookup", "name": "lookup",
-     "description": "...", "url": "https://api.company.io/lookup"},
-    handler_registry={"my_fn": my_python_fn},  # optional, for type=python
-)
-```
-
-### `HttpTool`
-
-```python
-tool = HttpTool(
-    id="lookup",
-    name="lookup",
-    description="Look up a customer by partial Aadhaar",
-    url="https://api.company.io/customer/lookup",
-    method="POST",                    # default: POST
-    auth={"type": "bearer", "token": os.environ["KEY"]},
-    input_schema=None,                # inferred if not provided
-)
-```
-
-**Auth shapes in v0.2:** `{"type": "bearer", "token": "..."}`. Additional shapes (`basic`, `api_key`, callable) are planned for v0.3.
-
-### `MCPTool`
-
-```python
-tool = MCPTool(
-    id="search",
-    name="search",
-    description="Search the knowledge base",
-    server="https://mcp.company.io",
-    input_schema=None,
-)
-```
-
-In v0.2, `MCPTool` forwards `execute(args)` to `session.call_tool(self.id, args)` against the configured server. Auto-discovery of all tools on an MCP server is planned for a follow-up.
+HTTP `auth` accepts `{"type": "bearer", "token": "..."}` in v0.2 (`basic`,
+`api_key`, callable planned).
 
 ---
 
 ## LLM provider registration
-
-### `register_llm_provider`
 
 ```python
 register_llm_provider(
     name="internal",
     base_url="https://llm.company.io/v1",
     api_key=os.environ["INTERNAL_KEY"],
-    api_style="openai",               # only "openai" supported in v0.2
+    api_style="openai",
 )
-
-# Use anywhere after registration
-dialog_machine = DialogMachine(flow=flow, llm="custom/internal/llama-3-70b-tuned")
+agent = DialogMachine("booking.yaml", llm="custom/internal/llama-3-70b-tuned")
 ```
 
-Process-global. Once registered, `custom/<name>/<model>` works in `DialogMachine(llm=...)`, `set_llm()`, and `create_dialog_flow(llm=...)`.
+Process-global. Once registered, `custom/<name>/<model>` works in
+`DialogMachine(llm=...)`, `set_llm()`, and `create_dialog_flow(llm=...)`.
 
 ---
 
@@ -345,28 +474,10 @@ Process-global. Once registered, `custom/<name>/<model>` works in `DialogMachine
 
 | Import | Purpose |
 |---|---|
-| `superdialog.adapters.livekit.DialogMachineLLM` | LiveKit `Agent(llm=...)` plugin |
+| `superdialog.adapters.livekit.DialogMachineLLM` | LiveKit `Agent(llm=...)` plugin (accepts any Agent) |
 | `superdialog.adapters.pipecat.make_processor` | Factory for PipeCat `FrameProcessor` |
 | `superdialog.adapters.fastapi.FastAPIRouter` | Mountable router: `/turn`, `/stream`, `/reset` |
 | `superdialog.adapters.websocket.WebSocketRunner` | Standalone WSS server for Unpod Voice Infra |
 
-See [Embedding Guides](/superdialog/embedding-guides/cli) for complete integration examples.
-
----
-
-## Eval (v0.3 - planned)
-
-```python
-from superdialog.eval import Eval
-
-eval = Eval(
-    flow=flow,
-    corpus="tests/kyc-corpus.jsonl",
-    llms=["openai/gpt-5.1", "anthropic/claude-haiku-4-5", "groq/llama-3.3-70b"],
-    metrics=["accuracy", "latency_p95", "tool_call_correctness"],
-)
-report = eval.run()
-report.save("reports/2026-05-19.md")
-```
-
-Corpus format: JSONL with `{utterance, expected_response | expected_intent | expected_tool_call}` records. Custom metrics are passable as callables.
+See [Embedding Guides](/superdialog/embedding-guides/overview) for complete
+integration examples per host.

@@ -6,9 +6,17 @@ description: "Plug SuperDialog into a LiveKit agent as the LLM brain."
 
 ## How it works
 
-SuperDialog ships a `DialogMachineLLM` plugin that wires a `DialogMachine` into a LiveKit `Agent` via the `llm=` parameter - the same pattern LiveKit's own `livekit-plugins-langchain` uses.
+SuperDialog ships a `DialogMachineLLM` plugin (named for the legacy engine, but
+it accepts **any** superdialog `Agent`) that wires an agent into a LiveKit
+`Agent` via the `llm=` parameter - the same pattern LiveKit's own
+`livekit-plugins-langchain` uses.
 
-LiveKit's `AgentSession` drives the conversation (STT → LLM → TTS). `DialogMachineLLM` sits in the LLM slot and translates between LiveKit's `ChatContext` and SuperDialog's `turn()` API.
+LiveKit's `AgentSession` drives the conversation (STT → LLM → TTS).
+`DialogMachineLLM` sits in the LLM slot and translates between LiveKit's
+`ChatContext` and SuperDialog's `turn()` API. On the Playbook engine (the
+default), **streaming is real**: the Talker's tokens reach TTS as they are
+generated, and a barge-in (the host aborting the stream mid-utterance) interrupts
+speech, never the state machine - the Director's decision still lands.
 
 ## Install
 
@@ -20,16 +28,13 @@ pip install superdialog livekit-agents
 
 ```python
 from livekit.agents import Agent, AgentSession, JobContext, WorkerOptions, cli
-from superdialog import DialogMachine, Flow
+from superdialog import DialogMachine
 from superdialog.adapters.livekit import DialogMachineLLM
 
-dialog_machine = DialogMachine(
-    flow=Flow.load("kyc.json"),
-    llm="anthropic/claude-opus-4-7",
-)
+dm = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")  # any format
 
 async def entrypoint(ctx: JobContext):
-    agent = Agent(llm=DialogMachineLLM(dialog_machine))
+    agent = Agent(llm=DialogMachineLLM(dm))
     await AgentSession().start(agent=agent, room=ctx.room)
 
 if __name__ == "__main__":
@@ -41,18 +46,15 @@ if __name__ == "__main__":
 ```python
 from livekit.agents import Agent, AgentSession, JobContext, WorkerOptions, cli
 from livekit.plugins import deepgram, cartesia
-from superdialog import DialogMachine, Flow
+from superdialog import DialogMachine
 from superdialog.adapters.livekit import DialogMachineLLM
 
-dialog_machine = DialogMachine(
-    flow=Flow.load("kyc.json"),
-    llm="anthropic/claude-haiku-4-5",
-)
+dm = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")
 
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
     agent = Agent(
-        llm=DialogMachineLLM(dialog_machine),
+        llm=DialogMachineLLM(dm),
         stt=deepgram.STT(),
         tts=cartesia.TTS(),
     )
@@ -64,27 +66,32 @@ if __name__ == "__main__":
 
 ## Per-call dialog machine
 
-For production, create a fresh `DialogMachine` per call so conversation state is isolated:
+For production, create a fresh agent per call so conversation state is isolated:
 
 ```python
-from superdialog import DialogMachine, Flow, PythonTool
-
-flow = Flow.load("kyc.json")   # load once, share by reference
+from superdialog import DialogMachine, PythonTool
 
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
 
-    # Fresh machine per call
+    # Fresh agent per call
     dm = DialogMachine(
-        flow=flow,
+        "kyc.yaml",
         llm="anthropic/claude-haiku-4-5",
         tools=[PythonTool.of(lookup_customer)],
-        traversal_dir="./traversal_history",
     )
 
     agent = Agent(llm=DialogMachineLLM(dm))
     await AgentSession().start(agent=agent, room=ctx.room)
 ```
+
+<Note>
+**Advanced / legacy.** Pass a `PlaybookAgent` for explicit Talker/Director LLMs,
+or `DialogMachine(Flow.load("kyc.json"), llm="anthropic/claude-opus-4-7",
+engine="flow")` for the legacy graph engine - same adapter, same wiring.
+Voice-event plumbing (feeding silence timeouts into `agent.runtime.on_external`)
+is roadmap; today the adapter covers the text path.
+</Note>
 
 ## Mid-call context injection
 

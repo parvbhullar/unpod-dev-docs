@@ -220,7 +220,7 @@ async def handle_call(ctx: CallContext) -> None:
                 f"Their open ticket count is {account['open_tickets']}."
             )
 
-    ctx.session.dialog_machine = DialogMachine(flow=flow, llm="...")
+    ctx.session.dialog_machine = DialogMachine("support.yaml", llm="...")
     await ctx.session.run()
 ```
 
@@ -237,7 +237,7 @@ async def handle_call(ctx: CallContext) -> None:
             )
             await ctx.session.transfer_to_human(queue="tier-1")
 
-    ctx.session.dialog_machine = DialogMachine(flow=flow, llm="...")
+    ctx.session.dialog_machine = DialogMachine("support.yaml", llm="...")
     await ctx.session.run()
 ```
 
@@ -285,7 +285,7 @@ async def handle_call(ctx: CallContext) -> None:
     async def save_transcript(state: str) -> None:
         await db.save_transcript(ctx.call_id, transcript)
 
-    ctx.session.dialog_machine = DialogMachine(flow=flow, llm="...")
+    ctx.session.dialog_machine = DialogMachine("support.yaml", llm="...")
     await ctx.session.run()
 ```
 

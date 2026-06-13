@@ -33,16 +33,9 @@ environment variable.
 call is dispatched to your agent, the runner invokes your `entrypoint` with a
 `CallContext`.
 
-```
-Unpod Orchestrator
-      | WebSocket (wss)
-      v
-AgentRunner  --- heartbeat, advertises capacity
-      |
-      | on dispatch
-      v
-entrypoint(CallContext)  --- your code
-```
+<Frame>
+  <img src="/images/diagrams/agent-runner-dispatch.svg" alt="Animated AgentRunner dispatch diagram showing the Unpod orchestrator connected to AgentRunner over WSS, heartbeats and capacity reporting, dispatch into entrypoint CallContext, and the Session run loop." />
+</Frame>
 
 ```python
 from unpod import AgentRunner, CallContext

@@ -6,7 +6,10 @@ description: "Use SuperDialog as the LLM processor in a PipeCat voice pipeline."
 
 ## How it works
 
-SuperDialog ships a `make_processor` factory that builds a PipeCat `FrameProcessor` wrapping a `DialogMachine`. Because PipeCat's `FrameProcessor` base class shifts between releases, SuperDialog synthesises the right subclass against whichever PipeCat version is installed.
+SuperDialog ships a `make_processor` factory that builds a PipeCat
+`FrameProcessor` wrapping **any** superdialog `Agent`. Because PipeCat's
+`FrameProcessor` base class shifts between releases, SuperDialog synthesises the
+right subclass against whichever PipeCat version is installed.
 
 ## Install
 
@@ -17,16 +20,19 @@ pip install superdialog pipecat-ai
 ## Minimal example
 
 ```python
-from superdialog import DialogMachine, Flow
+from superdialog import DialogMachine
 from superdialog.adapters.pipecat import make_processor
 
-dialog_machine = DialogMachine(
-    flow=Flow.load("kyc.json"),
-    llm="openai/gpt-5.1",
-)
+agent = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")  # any format
 
-processor = make_processor(dialog_machine)
+processor = make_processor(agent)
 ```
+
+<Note>
+**Legacy / advanced:**
+`make_processor(DialogMachine(Flow.load("kyc.json"), llm=..., engine="flow"))`
+or a hand-built `PlaybookAgent` - same factory, same pipeline position.
+</Note>
 
 ## Full pipeline
 
@@ -36,18 +42,15 @@ from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineTask
 from pipecat.services.deepgram import DeepgramSTTService
 from pipecat.services.cartesia import CartesiaTTSService
-from superdialog import DialogMachine, Flow
+from superdialog import DialogMachine
 from superdialog.adapters.pipecat import make_processor
 
 async def main():
-    dialog_machine = DialogMachine(
-        flow=Flow.load("kyc.json"),
-        llm="anthropic/claude-haiku-4-5",
-    )
+    agent = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")
 
     pipeline = Pipeline([
         DeepgramSTTService(api_key="..."),   # STT
-        make_processor(dialog_machine),       # SuperDialog as the LLM
+        make_processor(agent),                # SuperDialog as the LLM
         CartesiaTTSService(api_key="..."),    # TTS
     ])
 
@@ -58,17 +61,12 @@ async def main():
 
 ## Per-call processor
 
-For production, create a fresh `DialogMachine` and processor per call:
+For production, create a fresh agent and processor per call:
 
 ```python
-flow = Flow.load("kyc.json")   # load once, share by reference
-
 async def handle_call():
-    dm = DialogMachine(
-        flow=flow,
-        llm="anthropic/claude-haiku-4-5",
-    )
-    processor = make_processor(dm)
+    agent = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")
+    processor = make_processor(agent)
 
     pipeline = Pipeline([stt, processor, tts])
     await PipelineRunner().run(PipelineTask(pipeline))

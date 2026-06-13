@@ -1,14 +1,36 @@
 ---
-title: "Flows"
+title: "Flows (legacy)"
 icon: 'git-branch'
-description: "How to build, save, load, and switch between dialog flows."
+description: "Author flow graphs - the legacy / compliance path. Flows run compiled on the Playbook engine by default; opt into the original graph runtime with engine=\"flow\"."
 ---
+
+<Note>
+**Flows are the legacy authoring surface.** The default engine is the
+[Playbook](/superdialog/playbooks) runtime, and a flow graph **runs compiled
+onto it by default** - `Playbook.load` detects flow JSON and converts it
+(`compile_flow`). Reach for a hand-authored graph when you need an enumerable,
+lintable spec for **compliance** or **strict determinism**. New conversational
+agents should start with [Thinking in Playbooks](/superdialog/thinking-in-playbooks).
+</Note>
 
 ## What is a Flow?
 
 A `Flow` is a directed graph: nodes (states) connected by edges (transitions), with metadata at each node (prompts, tool references, slot definitions). It's the static definition of what your dialog can do.
 
-The `DialogMachine` executes the flow at runtime - one `turn()` at a time.
+By default, `DialogMachine` runs a flow **compiled onto the Playbook engine** -
+you pass the flow and get checkpoint semantics for free. To run the **original
+graph runtime** (one `turn()` at a time, every transition authored), pass
+`engine="flow"`:
+
+```python
+from superdialog import DialogMachine, Flow
+
+# Default: flow JSON is compiled and run on the Playbook engine
+agent = DialogMachine(Flow.load("kyc.json"), llm="anthropic/claude-haiku-4-5")
+
+# Legacy graph runtime (opt-in)
+dm = DialogMachine(Flow.load("kyc.json"), llm="anthropic/claude-haiku-4-5", engine="flow")
+```
 
 <Frame>
   <img src="/images/diagrams/superdialog-flow-graph.svg" alt="SuperDialog flow graph diagram showing states connected by conditional edges, including fallback and retry paths." />
@@ -94,6 +116,12 @@ flow = Flow.load("flows/kyc-react-flow-export.json")
 
 A `FlowSet` holds several named flows. Use it when a conversation may branch across distinct sub-flows (e.g. main flow → escalation, billing, or FAQ).
 
+<Note>
+`FlowSet` and `switch_flow` are **graph-engine features** - construct the machine
+with `engine="flow"`. On the Playbook engine, use multiple `journeys` and advance
+rules instead (see [Playbooks](/superdialog/playbooks)).
+</Note>
+
 ```python
 from superdialog import FlowSet, DialogMachine
 
@@ -103,7 +131,7 @@ flowset = FlowSet({
     "billing": billing_flow,
 })
 
-dm = DialogMachine(flow=flowset, llm="openai/gpt-5.1")
+dm = DialogMachine(flowset, llm="openai/gpt-4.1-mini", engine="flow")
 ```
 
 Switch flows at runtime:
@@ -118,7 +146,7 @@ dm.switch_flow("billing", preserve_memory=True)
 
 ## Validating and inspecting flows
 
-Use the CLI to lint and visualise a flow before running it:
+Use the legacy `flow` CLI sub-tree to lint and visualise a flow graph:
 
 ```bash
 # Check graph structure for errors
@@ -127,9 +155,44 @@ superdialog flow lint kyc.json
 # Render a Mermaid diagram
 superdialog flow draw kyc.json
 
-# Re-generate a flow from a prompt
+# Re-generate a flow graph from a prompt (legacy; `superdialog generate`
+# writes a playbook instead)
 superdialog flow generate "Confirm KYC." --llm openai/gpt-5.1 --output kyc.json
+
+# Run the original graph runtime in the REPL
+superdialog chat kyc.json --mode flow
 ```
+
+## Migrating a flow to a playbook
+
+A flow already runs on the Playbook engine by default. To make the conversion
+explicit - and to keep authoring in the playbook format going forward - compile
+it:
+
+```bash
+# Compile flow JSON to a playbook YAML you can edit
+superdialog playbook compile kyc.json
+
+# Or compile-and-run in one step
+superdialog playbook run kyc.json
+```
+
+```python
+from superdialog import Flow
+from superdialog.playbook import compile_flow, coverage_report
+
+flow = Flow.load("kyc.json")
+pb = compile_flow(flow)                 # single-journey "main" playbook
+report = coverage_report(flow, pb)      # lossless proof
+assert not report.unmapped_nodes
+assert not report.unmapped_edges
+assert not report.unmapped_actions
+```
+
+`compile_flow` is lossless by construction; `coverage_report` lists anything
+that didn't map (any entry is a compiler bug). Run it in CI next to the compiled
+artifact. See the [API Reference](/superdialog/api-reference#migrating-flows)
+for the full mapping table.
 
 ## Flow versioning
 

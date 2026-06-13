@@ -8,9 +8,9 @@ description: "Connect a SuperDialog dialog machine to Unpod voice calls via the 
 
 The `unpod` SDK connects your `AgentRunner` to Unpod's voice platform over WebSocket. Unpod handles STT, TTS, telephony, numbers, and recording - your code handles dialog logic using a SuperDialog `DialogMachine` or `LLMAgent`.
 
-```
-Caller → Phone number (Unpod) → STT → AgentRunner → DialogMachine → TTS → Caller
-```
+<Frame>
+  <img src="/images/diagrams/superdialog-session-integration.svg" alt="Animated SuperDialog and Unpod voice integration diagram showing caller speech through STT, user-turn hooks, DialogMachine.turn, agent-turn hooks, TTS, and caller playback." />
+</Frame>
 
 Your dialog machine runs inside your process, in the same call as the rest of your agent logic. No separate WebSocket server needed.
 
@@ -19,20 +19,20 @@ Your dialog machine runs inside your process, in the same call as the rest of yo
 ## Step 1 - Build your dialog machine
 
 ```python
-from superdialog import DialogMachine, Flow, PythonTool
+from superdialog import DialogMachine, PythonTool
 
 def lookup_customer(phone: str) -> dict:
     """Look up customer by phone number."""
     return crm.get_by_phone(phone)
 
 dialog_machine = DialogMachine(
-    flow=Flow.load("kyc.json"),
+    "kyc.yaml",                              # any format; Playbook engine by default
     llm="anthropic/claude-haiku-4-5",
     tools=[PythonTool.of(lookup_customer)],
 )
 ```
 
-See [SuperDialog Quickstart](/superdialog/quickstart) to generate and save a flow file.
+See [SuperDialog Quickstart](/superdialog/quickstart) to generate and save a playbook.
 
 ---
 
@@ -49,9 +49,9 @@ def lookup_customer(phone: str) -> dict:
     return crm.get_by_phone(phone)
 
 async def handle_call(ctx: CallContext) -> None:
-    # Build (or re-use) the machine per call
+    # Build (or re-use) the agent per call
     machine = DialogMachine(
-        flow=Flow.load("kyc.json"),
+        "kyc.yaml",
         llm="anthropic/claude-haiku-4-5",
         tools=[PythonTool.of(lookup_customer)],
     )
@@ -98,7 +98,7 @@ asyncio.run(setup())
 ```python
 import asyncio
 import os
-from superdialog import DialogMachine, Flow, PythonTool
+from superdialog import DialogMachine, PythonTool
 from unpod import AgentRunner, AsyncClient, CallContext
 
 # --- One-time setup (run once) ---
@@ -118,7 +118,7 @@ async def setup():
 
 # asyncio.run(setup())   # Run once to provision
 
-# --- Load flow (built with superdialog CLI or create_dialog_flow) ---
+# --- Playbook (built with `superdialog generate` or generate_simple_playbook) ---
 
 def lookup_aadhaar(partial: str) -> dict:
     """Look up customer by partial Aadhaar."""
@@ -128,7 +128,7 @@ def lookup_aadhaar(partial: str) -> dict:
 
 async def handle_call(ctx: CallContext) -> None:
     machine = DialogMachine(
-        flow=Flow.load("kyc.json"),
+        "kyc.yaml",
         llm="anthropic/claude-haiku-4-5",
         tools=[PythonTool.of(lookup_aadhaar)],
     )
@@ -149,10 +149,7 @@ Data passed when triggering an outbound call (or injected by the platform) is av
 
 ```python
 async def handle_call(ctx: CallContext) -> None:
-    machine = DialogMachine(
-        flow=Flow.load("onboarding.json"),
-        llm="anthropic/claude-haiku-4-5",
-    )
+    machine = DialogMachine("onboarding.yaml", llm="anthropic/claude-haiku-4-5")
     # Inject caller context before the first turn
     if customer_name := ctx.data.get("customer_name"):
         machine.assist(f"The customer's name is {customer_name}. Address them by name.")
@@ -169,7 +166,7 @@ Inject system instructions at any point during an active call from your own busi
 
 ```python
 async def handle_call(ctx: CallContext) -> None:
-    machine = DialogMachine(flow=Flow.load("support.json"), llm="openai/gpt-4o-mini")
+    machine = DialogMachine("support.yaml", llm="openai/gpt-4.1-mini")
 
     @ctx.session.on("user_turn")
     async def _(text: str) -> None:
@@ -183,20 +180,32 @@ async def handle_call(ctx: CallContext) -> None:
 
 ---
 
-## Switching flows mid-call
+## Switching flows mid-call (graph engine)
+
+`switch_flow` is a **graph-engine** feature - construct the machine with a
+`FlowSet` and `engine="flow"`:
 
 ```python
+from superdialog import DialogMachine, Flow, FlowSet
+
 async def handle_call(ctx: CallContext) -> None:
-    machine = DialogMachine(flow=Flow.load("triage.json"), llm="openai/gpt-4o-mini")
+    flows = FlowSet({"triage": Flow.load("triage.json"), "billing": Flow.load("billing.json")})
+    machine = DialogMachine(flows, llm="openai/gpt-4.1-mini", engine="flow")
 
     @ctx.session.on("user_turn")
     async def _(text: str) -> None:
         if "billing" in text.lower():
-            machine.switch_flow(Flow.load("billing.json"), preserve_memory=True)
+            machine.switch_flow("billing", preserve_memory=True)
 
     ctx.session.dialog_machine = machine
     await ctx.session.run()
 ```
+
+<Note>
+On the **Playbook engine** (the default), model the same behaviour with multiple
+`journeys` and `interrupts` inside a single playbook instead of swapping flows.
+See [Playbooks](/superdialog/playbooks).
+</Note>
 
 ---
 
@@ -220,10 +229,10 @@ async def handle_call(ctx: CallContext) -> None:
   <Card title="Session Controls" icon="sliders-horizontal" href="/speech-stack/agent-runner">
     say(), transfer(), recording controls during live calls.
   </Card>
-  <Card title="SuperDialog Flows" icon="diagram-project" href="/superdialog/flows">
-    Build and save conversation flows.
+  <Card title="Playbooks" icon="book" href="/superdialog/playbooks">
+    Author the simple and full playbook formats.
   </Card>
   <Card title="SuperDialog Tools" icon="wrench" href="/superdialog/tools">
-    Add Python, HTTP, and MCP tools to your machine.
+    Add HTTP, Python, and MCP tools to your agent.
   </Card>
 </CardGroup>

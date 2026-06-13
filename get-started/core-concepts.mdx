@@ -16,19 +16,18 @@ follows from that split.
 
 A single inbound call, end to end:
 
-```mermaid
-flowchart LR
-    A(["Caller"]) -->|"audio"| B["Unpod\nSTT · TTS · numbers · trunks"]
-    B -->|"text"| C["Your AgentRunner\n+ Agent Brain"]
-    C -->|"text"| B
-```
+<Frame>
+  <img src="/images/diagrams/unpod-voice-stack.svg" alt="Animated Unpod voice stack diagram showing phone, browser, and mobile entrypoints flowing through the managed speech layer into your AgentRunner, dialog machine, and tools." />
+</Frame>
 
-Read it as: a **Caller** dials a **Number**, which routes over a **Trunk** into
-Unpod. Unpod transcribes the audio with the call's **voice profile** (STT) and
-sends plain text across the **Bridge** over a WebSocket to your **AgentRunner**.
-Your runner hands each turn to your **Agent** (your brain). Your reply text
-crosses back over the Bridge, Unpod synthesises it (TTS), and the caller hears
-it. SuperDialog is one option for the brain - powerful, but optional.
+Read it as: a **Caller** enters through a phone number, browser, or mobile app.
+For phone calls, the **Number** routes over a **Trunk** into Unpod's managed
+speech layer. Unpod transcribes the audio with the call's **voice profile**
+(STT) and sends plain text across the **Bridge** over a WebSocket to your
+**AgentRunner**. Your runner hands each turn to your **Agent** (your brain).
+Your reply text crosses back over the Bridge, Unpod synthesises it (TTS), and
+the caller hears it. SuperDialog is one option for the brain - powerful, but
+optional.
 
 You own everything from the AgentRunner down. Everything above it is managed.
 

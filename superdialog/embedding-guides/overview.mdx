@@ -8,22 +8,46 @@ description: "How to plug SuperDialog into any host environment - CLI, LiveKit, 
 
 In every host, three things stay the same:
 
-1. **Construct a `DialogMachine`** with a flow, an LLM URI, and tools
-2. **Route inbound text** to `dialog_machine.turn(text)`
-3. **Send the reply text** back to the host's output channel
+1. **Construct an entry point** - `DialogMachine(source, llm=...)`. It runs the
+   Playbook engine by default; `source` accepts full playbooks, simple-format
+   playbooks, *and* legacy flow JSON (auto-compiled), so you don't pick a format,
+   you just point it at your artifact.
+2. **Route inbound text** to `agent.turn(text)`.
+3. **Send the reply text** back to the host's output channel.
 
-The host varies; the SuperDialog code is identical.
+Both engines implement the same `superdialog.agent.Agent` protocol
+(`turn` / `assist` / `chat_ctx` / `load_chat_ctx`), so every adapter accepts
+either one. The host varies; the SuperDialog code is identical.
 
 ```python
 # This object works in every host below
-from superdialog import DialogMachine, Flow
+from superdialog import DialogMachine
 
-dialog_machine = DialogMachine(
-    flow=Flow.load("kyc.json"),
-    llm="anthropic/claude-haiku-4-5",
-    tools=[...],
-)
+agent = DialogMachine("booking.yaml", llm="anthropic/claude-haiku-4-5")  # any format
 ```
+
+<Note>
+**Advanced:** drop to `PlaybookAgent` when you need to supply the two LLM seams
+directly - a `StreamsLLM` Talker and a `CompletesLLM` Director - or a custom HTTP
+executor. Any `superdialog.llm.LLMProvider` (the litellm-backed one behind model
+URIs) adapts in a few lines:
+
+```python
+from superdialog.llm import resolve_llm
+
+class TextLLM:
+    def __init__(self, provider): self._p = provider
+    async def complete(self, messages, **kw):
+        return (await self._p.complete(messages, **kw)).text
+    async def stream(self, messages, **kw):
+        async for chunk in self._p.stream(messages, **kw):
+            if chunk.text:
+                yield chunk.text
+
+talker = TextLLM(resolve_llm("anthropic/claude-haiku-4-5"))   # fast: speaks
+director = TextLLM(resolve_llm("anthropic/claude-opus-4-7"))  # strong: judges
+```
+</Note>
 
 ## Choose your host
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="WHERE UNPOD SITS">
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="TELEPHONY ROUTING FLOW">
   <defs>
     <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
       <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
@@ -42,48 +42,33 @@
     </style>
   </defs>
   <rect width="1672" height="941" fill="#020303"/>
-  <text x="836" y="70" text-anchor="middle" class="title">WHERE UNPOD SITS</text>
+  <text x="836" y="70" text-anchor="middle" class="title">TELEPHONY ROUTING FLOW</text>
   
-  <rect x="476" y="116" width="742" height="186" rx="18" class="panel purple"/>
-  <text x="847" y="160" text-anchor="middle" class="label purpleText">
-    <tspan x="847" dy="0">LAYER 3</tspan>
+  <rect x="66" y="386" width="270" height="136" rx="16" class="box purple "/>
+  <text x="201" y="447" text-anchor="middle" class="label">
+    <tspan x="201" dy="0">PHONE</tspan>
+    <tspan x="201" dy="30">NUMBER</tspan>
   </text>
-  <rect x="534" y="152" width="626" height="96" rx="16" class="box purple "/>
-  <text x="847" y="208" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">AGENT PLATFORMS</tspan>
+  <rect x="460" y="386" width="270" height="136" rx="16" class="box purple "/>
+  <text x="595" y="462" text-anchor="middle" class="label">
+    <tspan x="595" dy="0">BRIDGE</tspan>
   </text>
-  <text x="846" y="262" text-anchor="middle" class="small purpleText">
-    <tspan x="846" dy="0">VAPI / RETELL / BLAND</tspan>
+  <rect x="854" y="386" width="270" height="136" rx="16" class="box cyan "/>
+  <text x="989" y="462" text-anchor="middle" class="label">
+    <tspan x="989" dy="0">PROVIDER</tspan>
   </text>
-  <rect x="476" y="380" width="742" height="202" rx="18" class="panel cyan"/>
-  <text x="847" y="424" text-anchor="middle" class="label cyanText">
-    <tspan x="847" dy="0">LAYER 2</tspan>
+  <rect x="1248" y="386" width="270" height="136" rx="16" class="box cyan "/>
+  <text x="1383" y="462" text-anchor="middle" class="label">
+    <tspan x="1383" dy="0">AGENT</tspan>
   </text>
-  <rect x="534" y="418" width="626" height="100" rx="16" class="box cyan "/>
-  <text x="847" y="476" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">UNPOD</tspan>
+  <path d="M336 454 H450" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <path d="M730 454 H844" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M1124 454 H1238" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <text x="595" y="350" text-anchor="middle" class="tiny purpleText">
+    <tspan x="595" dy="0">ROUTING</tspan>
   </text>
-  <text x="846" y="536" text-anchor="middle" class="small cyanText">
-    <tspan x="846" dy="0">COMMUNICATION INFRA</tspan>
-  </text>
-  <rect x="476" y="668" width="742" height="190" rx="18" class="panel purple"/>
-  <text x="847" y="712" text-anchor="middle" class="label purpleText">
-    <tspan x="847" dy="0">LAYER 1</tspan>
-  </text>
-  <rect x="534" y="704" width="626" height="96" rx="16" class="box purple "/>
-  <text x="847" y="760" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">RAW TELEPHONY</tspan>
-  </text>
-  <text x="846" y="815" text-anchor="middle" class="small purpleText">
-    <tspan x="846" dy="0">TWILIO / PLIVO / BANDWIDTH</tspan>
-  </text>
-  <path d="M846 380 V312" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M846 582 V660" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <text x="936" y="350" text-anchor="middle" class="tiny cyanText">
-    <tspan x="936" dy="0">USED BY</tspan>
-  </text>
-  <text x="946" y="636" text-anchor="middle" class="tiny cyanText">
-    <tspan x="946" dy="0">BUILDS ON</tspan>
+  <text x="990" y="350" text-anchor="middle" class="tiny cyanText">
+    <tspan x="990" dy="0">MEDIA</tspan>
   </text>
 
 </svg>

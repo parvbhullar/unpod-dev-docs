@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="WHERE UNPOD SITS">
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="BRIDGE LIFECYCLE">
   <defs>
     <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
       <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
@@ -42,48 +42,34 @@
     </style>
   </defs>
   <rect width="1672" height="941" fill="#020303"/>
-  <text x="836" y="70" text-anchor="middle" class="title">WHERE UNPOD SITS</text>
+  <text x="836" y="70" text-anchor="middle" class="title">BRIDGE LIFECYCLE</text>
   
-  <rect x="476" y="116" width="742" height="186" rx="18" class="panel purple"/>
-  <text x="847" y="160" text-anchor="middle" class="label purpleText">
-    <tspan x="847" dy="0">LAYER 3</tspan>
+  <rect x="56" y="390" width="270" height="126" rx="16" class="box purple "/>
+  <text x="191" y="446" text-anchor="middle" class="label">
+    <tspan x="191" dy="0">CREATE BRIDGE</tspan>
+    <tspan x="191" dy="30">DRAFT</tspan>
   </text>
-  <rect x="534" y="152" width="626" height="96" rx="16" class="box purple "/>
-  <text x="847" y="208" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">AGENT PLATFORMS</tspan>
+  <rect x="430" y="390" width="270" height="126" rx="16" class="box cyan "/>
+  <text x="565" y="446" text-anchor="middle" class="label">
+    <tspan x="565" dy="0">CONNECT</tspan>
+    <tspan x="565" dy="30">PROVIDER</tspan>
   </text>
-  <text x="846" y="262" text-anchor="middle" class="small purpleText">
-    <tspan x="846" dy="0">VAPI / RETELL / BLAND</tspan>
+  <rect x="804" y="390" width="270" height="126" rx="16" class="box cyan "/>
+  <text x="939" y="446" text-anchor="middle" class="label">
+    <tspan x="939" dy="0">ASSIGN</tspan>
+    <tspan x="939" dy="30">NUMBERS</tspan>
   </text>
-  <rect x="476" y="380" width="742" height="202" rx="18" class="panel cyan"/>
-  <text x="847" y="424" text-anchor="middle" class="label cyanText">
-    <tspan x="847" dy="0">LAYER 2</tspan>
+  <rect x="1178" y="390" width="220" height="126" rx="16" class="box purple "/>
+  <text x="1288" y="461" text-anchor="middle" class="label">
+    <tspan x="1288" dy="0">ACTIVE</tspan>
   </text>
-  <rect x="534" y="418" width="626" height="100" rx="16" class="box cyan "/>
-  <text x="847" y="476" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">UNPOD</tspan>
+  <rect x="1472" y="390" width="150" height="126" rx="16" class="box purple "/>
+  <text x="1547" y="461" text-anchor="middle" class="label">
+    <tspan x="1547" dy="0">DELETE</tspan>
   </text>
-  <text x="846" y="536" text-anchor="middle" class="small cyanText">
-    <tspan x="846" dy="0">COMMUNICATION INFRA</tspan>
-  </text>
-  <rect x="476" y="668" width="742" height="190" rx="18" class="panel purple"/>
-  <text x="847" y="712" text-anchor="middle" class="label purpleText">
-    <tspan x="847" dy="0">LAYER 1</tspan>
-  </text>
-  <rect x="534" y="704" width="626" height="96" rx="16" class="box purple "/>
-  <text x="847" y="760" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">RAW TELEPHONY</tspan>
-  </text>
-  <text x="846" y="815" text-anchor="middle" class="small purpleText">
-    <tspan x="846" dy="0">TWILIO / PLIVO / BANDWIDTH</tspan>
-  </text>
-  <path d="M846 380 V312" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M846 582 V660" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <text x="936" y="350" text-anchor="middle" class="tiny cyanText">
-    <tspan x="936" dy="0">USED BY</tspan>
-  </text>
-  <text x="946" y="636" text-anchor="middle" class="tiny cyanText">
-    <tspan x="946" dy="0">BUILDS ON</tspan>
-  </text>
+  <path d="M326 453 H420" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M700 453 H794" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M1074 453 H1168" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M1398 453 H1462" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
 
 </svg>

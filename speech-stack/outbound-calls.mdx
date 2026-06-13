@@ -77,10 +77,8 @@ the full status progression and how to poll for completion.
 The `data` and `instructions` you pass to `calls.create()` are available on the `CallContext`:
 
 ```python
-from superdialog import DialogMachine, Flow
+from superdialog import DialogMachine
 from unpod import AgentRunner, CallContext
-
-flow = Flow.load("reminder.json")
 
 async def handle_call(ctx: CallContext) -> None:
     # Available for both inbound and outbound calls
@@ -94,7 +92,7 @@ async def handle_call(ctx: CallContext) -> None:
     appt_time = ctx.data.get("appointment_time", "")
 
     ctx.session.dialog_machine = DialogMachine(
-        flow=flow,
+        "reminder.yaml",
         llm="anthropic/claude-haiku-4-5",
     )
     # Inject the personalization as an assist directive

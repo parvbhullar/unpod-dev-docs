@@ -81,17 +81,19 @@ All importable from `unpod.adapters`:
 
 ### SuperDialogAdapter extras
 
-Beyond the protocol, `SuperDialogAdapter` exposes the wrapped machine's
-controls:
+Beyond the protocol, `SuperDialogAdapter` exposes the wrapped agent's controls:
 
 ```python
 adapter.set_llm("anthropic/claude-haiku-4-5")        # swap the runtime model
-adapter.switch_flow(flow, preserve_memory=False)      # change the active flow
-adapter.is_complete                                   # has the flow finished?
-adapter.state                                         # current flow state (dict)
+adapter.switch_flow("billing", preserve_memory=False) # graph engine only (FlowSet)
+adapter.is_complete                                   # reached a terminal state?
+adapter.state                                         # current state (dict)
 ```
 
-See [SuperDialog](/superdialog/introduction) for the machine itself.
+`is_complete` and `state` work on both engines; on the Playbook engine `state`
+returns `{"checkpoint": ..., "slots": ..., "ended": ...}`. `switch_flow` applies
+only to the legacy graph engine (a `FlowSet` constructed with `engine="flow"`).
+See [SuperDialog](/superdialog/introduction) for the agent itself.
 
 ## Error surfaces
 

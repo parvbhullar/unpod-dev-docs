@@ -57,13 +57,9 @@ This is the data you want flowing into your business systems automatically.
 
 Unpod uses a **poll + process** model. You poll the API to detect completed calls, then process and forward the data.
 
-```
-Unpod API → Your Polling Service → Your Systems
-                                 ├── CRM (HubSpot, Salesforce)
-                                 ├── Slack notifications
-                                 ├── Your database
-                                 └── Custom webhooks
-```
+<Frame>
+  <img src="/images/diagrams/post-call-data-integration.svg" alt="Animated post-call data integration diagram showing Unpod API data flowing through a polling service into CRM, Slack, database, and custom webhook systems." />
+</Frame>
 
 For high-volume deployments, run the polling service as a background worker. For lower volume, a cron job works fine.
 

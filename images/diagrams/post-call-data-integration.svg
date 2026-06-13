@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="WHERE UNPOD SITS">
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="POST CALL DATA INTEGRATION">
   <defs>
     <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
       <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
@@ -42,48 +42,42 @@
     </style>
   </defs>
   <rect width="1672" height="941" fill="#020303"/>
-  <text x="836" y="70" text-anchor="middle" class="title">WHERE UNPOD SITS</text>
+  <text x="836" y="70" text-anchor="middle" class="title">POST CALL DATA INTEGRATION</text>
   
-  <rect x="476" y="116" width="742" height="186" rx="18" class="panel purple"/>
-  <text x="847" y="160" text-anchor="middle" class="label purpleText">
-    <tspan x="847" dy="0">LAYER 3</tspan>
+  <rect x="72" y="390" width="260" height="128" rx="16" class="box purple "/>
+  <text x="202" y="462" text-anchor="middle" class="label">
+    <tspan x="202" dy="0">UNPOD API</tspan>
   </text>
-  <rect x="534" y="152" width="626" height="96" rx="16" class="box purple "/>
-  <text x="847" y="208" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">AGENT PLATFORMS</tspan>
+  <rect x="524" y="374" width="330" height="160" rx="16" class="box cyan "/>
+  <text x="689" y="447" text-anchor="middle" class="label">
+    <tspan x="689" dy="0">POLLING</tspan>
+    <tspan x="689" dy="30">SERVICE</tspan>
   </text>
-  <text x="846" y="262" text-anchor="middle" class="small purpleText">
-    <tspan x="846" dy="0">VAPI / RETELL / BLAND</tspan>
+  <rect x="1070" y="178" width="420" height="586" rx="18" class="panel purple"/>
+  <text x="1280" y="222" text-anchor="middle" class="label purpleText">
+    <tspan x="1280" dy="0">YOUR SYSTEMS</tspan>
   </text>
-  <rect x="476" y="380" width="742" height="202" rx="18" class="panel cyan"/>
-  <text x="847" y="424" text-anchor="middle" class="label cyanText">
-    <tspan x="847" dy="0">LAYER 2</tspan>
+  <rect x="1132" y="264" width="296" height="68" rx="12" class="box purple"/>
+  <text x="1280" y="304" text-anchor="middle" class="small">
+    <tspan x="1280" dy="0">CRM</tspan>
   </text>
-  <rect x="534" y="418" width="626" height="100" rx="16" class="box cyan "/>
-  <text x="847" y="476" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">UNPOD</tspan>
+  <rect x="1132" y="386" width="296" height="68" rx="12" class="box purple"/>
+  <text x="1280" y="426" text-anchor="middle" class="small">
+    <tspan x="1280" dy="0">SLACK</tspan>
   </text>
-  <text x="846" y="536" text-anchor="middle" class="small cyanText">
-    <tspan x="846" dy="0">COMMUNICATION INFRA</tspan>
+  <rect x="1132" y="508" width="296" height="68" rx="12" class="box purple"/>
+  <text x="1280" y="548" text-anchor="middle" class="small">
+    <tspan x="1280" dy="0">DATABASE</tspan>
   </text>
-  <rect x="476" y="668" width="742" height="190" rx="18" class="panel purple"/>
-  <text x="847" y="712" text-anchor="middle" class="label purpleText">
-    <tspan x="847" dy="0">LAYER 1</tspan>
+  <rect x="1132" y="630" width="296" height="68" rx="12" class="box purple"/>
+  <text x="1280" y="670" text-anchor="middle" class="small">
+    <tspan x="1280" dy="0">CUSTOM WEBHOOKS</tspan>
   </text>
-  <rect x="534" y="704" width="626" height="96" rx="16" class="box purple "/>
-  <text x="847" y="760" text-anchor="middle" class="label">
-    <tspan x="847" dy="0">RAW TELEPHONY</tspan>
-  </text>
-  <text x="846" y="815" text-anchor="middle" class="small purpleText">
-    <tspan x="846" dy="0">TWILIO / PLIVO / BANDWIDTH</tspan>
-  </text>
-  <path d="M846 380 V312" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <path d="M846 582 V660" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
-  <text x="936" y="350" text-anchor="middle" class="tiny cyanText">
-    <tspan x="936" dy="0">USED BY</tspan>
-  </text>
-  <text x="946" y="636" text-anchor="middle" class="tiny cyanText">
-    <tspan x="946" dy="0">BUILDS ON</tspan>
-  </text>
+  <path d="M332 454 H514" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M854 454 H1060" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M1280 454 V344" class="flow purple " stroke="#8d75ff" />
+  <path d="M1280 454 V386" class="flow purple " stroke="#8d75ff" />
+  <path d="M1280 454 V508" class="flow purple " stroke="#8d75ff" />
+  <path d="M1280 454 V620" class="flow purple " stroke="#8d75ff" />
 
 </svg>

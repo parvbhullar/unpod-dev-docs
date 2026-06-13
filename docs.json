@@ -109,7 +109,7 @@
             "pages": [
               "superdialog/introduction",
               "superdialog/quickstart",
-              "superdialog/thinking-in-flows"
+              "superdialog/thinking-in-playbooks"
             ]
           },
           {
@@ -117,6 +117,7 @@
             "icon": "layers",
             "pages": [
               "superdialog/architecture",
+              "superdialog/playbooks",
               "superdialog/flows",
               "superdialog/tools",
               "superdialog/sessions"

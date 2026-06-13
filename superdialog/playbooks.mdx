@@ -1,0 +1,230 @@
+---
+title: "Playbooks"
+icon: 'book'
+description: "Author playbooks - the simple format to start, the full format when you need typed slots, gates, pipelines, and multiple journeys."
+---
+
+## What is a playbook?
+
+A **playbook** is the authored, git-diffable artifact the Playbook engine runs.
+It has two layers:
+
+- **Conversation layer** - `journeys` of **checkpoints** (a goal, typed slots,
+  guidance prose, and ordered advance rules) plus a `persona`.
+- **Process layer** - everything that isn't conversation: `tools`, `pipelines`,
+  `handlers`, `interrupts`, and `policies`.
+
+There are **two authoring formats and one engine**. Start in the simple format;
+graduate to the full format when you need precision. Both compile to the same
+validated artifact and run identically.
+
+<Frame>
+  <img src="/images/diagrams/playbook-loading-pipeline.svg" alt="Animated Playbook loading pipeline diagram showing simple YAML, full YAML, and legacy flow JSON converging into a validated Playbook artifact and one runtime." />
+</Frame>
+
+`Playbook.load(path)` auto-detects all three, so callers never branch on format.
+
+## The simple format
+
+Prose steps, a structured persona, and reference data as real YAML. This is what
+`superdialog generate` writes.
+
+```yaml
+goal: "Book a haircut and confirm it."
+persona:
+  name: Mira
+  language: ["en", "hi"]
+  voice_style: "Warm and brief. One question at a time."
+  identity: "You are Mira, a booking assistant for Glow Studio."
+opening: "Greet the caller warmly."
+closing: "Thank them and say goodbye."
+playbook:
+  - id: greet
+    purpose: "Open the call."
+    say: "Greet the caller and ask how you can help."
+    done_when: "Caller is ready to book."
+  - id: collect
+    purpose: "Get the booking details."
+    say: "Ask for their name and preferred service."
+    collect: [name, service]
+    done_when: "Name and service are captured."
+  - id: confirm
+    purpose: "Confirm and close."
+    say: "Read back the booking and confirm."
+    done_when: "Caller has confirmed."
+facts:
+  canonical_pricing: {haircut: "₹400"}
+boundaries: ["NEVER invent prices."]
+interrupts:
+  - {when: "Caller says goodbye or asks to end the call.", to: main.confirm}
+```
+
+### Section reference
+
+| Key | Meaning |
+|---|---|
+| `goal` | The call's mission statement - what makes this call a win. |
+| `persona` | `identity` (who the agent is), `name`, `language` (first is default), `voice_style` (tone, pacing). Compiles into the persona the Talker sees every turn. |
+| `playbook` | Ordered steps. Each becomes a checkpoint in a single journey `main`, **chained linearly**: step N's `done_when` advances to step N+1. Reordering re-wires the chain. |
+| `facts` | Grounding data (pricing, policies) the agent may recite - never invent beyond it. |
+| `objections` | `{trigger, handle}` steering, handled *within* a step. |
+| `boundaries` | Compliance "NEVER…" rules (prose-enforced). |
+| `interrupts` | Global jumps judged from any step (`{when, to}`). |
+
+Per step: `id`, `purpose` (the goal, Director-facing), `say` (the guidance the
+Talker speaks from), `collect` (slot keys to capture), `done_when` (the
+observable condition that advances).
+
+<Warning>
+**All `collect` keys gate advancement together** - a 3-slot step needs all three
+before the conversation moves, the single biggest source of stalls in evals.
+Prefer 1-2 slots per step.
+</Warning>
+
+<Tip>
+**Always add a goodbye interrupt.** In testing, linear playbooks with no early
+exit never completed a single call (a satisfied caller loops until the turn
+cap); the same playbook with goodbye/busy interrupts completed every call.
+</Tip>
+
+### What the simple format cannot express
+
+When you need any of these, move to the full format:
+
+- Multiple terminals / outcomes (booked vs callback vs do-not-call in metrics)
+- `gate: hard`, pipelines, tools (transactional steps - holds, payments)
+- `judge: expr` rules (machine-evaluated transitions - zero LLM cost)
+- Typed/required slots, `never_say`, `say_verbatim`, silence policy, multiple journeys
+
+The escape hatch is one-way: compile your simple file and continue authoring the
+result. There is no decompiler back.
+
+## The full format
+
+Everything the engine can do, stated explicitly. The conversation layer is
+`journeys` of checkpoints; the process layer is `tools`, `pipelines`,
+`handlers`, `interrupts`, `policies`.
+
+```yaml
+persona: "You are Asha, a friendly golf-course booking assistant."
+
+views:                        # computed, LLM-free exprs; shown as reference data
+  hold_valid_until: "results.hold.data.valid_until"
+
+journeys:
+  booking:
+    checkpoints:
+      - id: collect           # addressed as booking.collect
+        goal: "Have city and date"
+        slots:                # typed, flow-scoped declarations
+          city:
+            type: str         # str|int|float|bool|date|enum|array|object
+            required: true
+            invalidates: [hold]      # a city change clears the stale hold result
+          date: {type: date, required: true}
+          players: {type: int}
+        guidance: |           # Jinja over {slots, views, results}
+          Collect naturally; the caller may give everything in one breath.
+        never_say: ["our systems are slow"]
+        turn_budget: 6        # steer to wrap up after 6 user turns here
+        on_failure: booking.handoff
+        advance_when:         # ordered; first matching rule wins
+          - when: "caller gave the booking details"
+            judge: llm        # the Director judges intent
+            to: booking.confirm
+            requires: [city, date]   # rule fires only when these are met
+      - id: confirm
+        gate: hard            # outcomes barrier on the Director here
+        pipeline: confirm_and_hold   # process layer runs on entry
+        advance_when:
+          - {when: "pipeline.ok", judge: expr, to: booking.close}
+          - {when: "pipeline.failed", judge: expr, to: booking.collect}
+      - id: close
+        terminal: true        # session ends on entry
+        outcome: confirmed    # label for metrics and host hangup
+
+tools:
+  - id: hold_slot
+    type: http
+    method: POST
+    url: "{{ env.API_BASE_URL }}/slots/hold"
+    headers: {Authorization: "Bearer {{ env.ACCESS_TOKEN }}"}
+    body: {city: "{{ slots.city }}", date: "{{ slots.date }}"}
+    store_response_as: hold   # readable as results.hold.* afterwards
+
+pipelines:
+  - id: confirm_and_hold
+    steps:
+      - tool: hold_slot
+        on:
+          ok: continue
+          http_409: booking.collect          # typed HTTP-status branch
+          failed: {retry: 1, on_exhaust: booking.collect}
+
+interrupts:
+  - {id: goodbye, when: "caller says goodbye", judge: llm, to: booking.close}
+
+policies:
+  silence:
+    max_prompts: 2
+    prompts: ["Can you hear me?", "Are you there?"]
+    then: booking.close
+```
+
+### The building blocks
+
+| Block | Key fields |
+|---|---|
+| **Checkpoint** | `goal`, `slots`, `guidance`, `advance_when`, `gate` (`soft`/`hard`), `say_verbatim`, `never_say`, `auto`, `pipeline`, `on_failure`, `terminal` + `outcome`, `turn_budget` |
+| **SlotSpec** | `type`, `required`, `values` (enum), `authoritative` (tool-written only), `invalidates`, `description` |
+| **AdvanceRule** | `when` (prose or expr), `judge` (`llm`/`expr`), `to` (checkpoint ref), `requires` (slots that must be filled/confirmed), `set` (slot writes on advance) |
+| **ToolSpec** | `type` (`http`/`python`), `method`/`url`/`headers`/`body` (sandboxed Jinja), `store_response_as`, `env_updates`, `run_once`, `when`, `timeout` |
+| **PipelineSpec** | ordered `steps`, each with typed `on: {ok, failed, http_<code>}` branches and capped `retry` |
+
+Validation runs on load and raises on unknown checkpoint/pipeline/tool refs,
+duplicate ids, undeclared `requires` keys, and the reserved `pipeline` result
+key - typos fail fast, not mid-call.
+
+<Note>
+**`judge: expr` rules are evaluated LLM-free** at every quiescence hop - this is
+what makes compiled router chains instant. The expr language is a sandboxed,
+AST-whitelisted subset of Python over `slots`, `results`, `env`, and `pipeline`.
+See the [API Reference](/superdialog/api-reference#the-expr-language).
+</Note>
+
+## Generate, then refine
+
+```bash
+# Generate a simple-format playbook from a prompt
+superdialog generate "Book a tee time. Collect city, date, party size. \
+  Confirm before holding the slot." --output booking.yaml
+
+# Chat against it - watch checkpoints advance
+superdialog chat booking.yaml
+
+# Close the loop: paired persona evals score prose-only edits, output stays
+# in your source format
+superdialog optimize --playbook booking.yaml
+```
+
+## How it runs
+
+This page is about what you *write*. For what *happens* - the Talker/Director
+compound runtime, gating semantics, and the event log - see
+[Architecture](/superdialog/architecture). The mental model is in
+[Thinking in Playbooks](/superdialog/thinking-in-playbooks).
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="diagram-project" href="/superdialog/architecture">
+    The runtime that executes a playbook
+  </Card>
+  <Card title="Tools" icon="wrench" href="/superdialog/tools">
+    The process layer in depth
+  </Card>
+  <Card title="API Reference" icon="code" href="/superdialog/api-reference">
+    Every field and the expr language
+  </Card>
+  <Card title="Flows (legacy)" icon="git-branch" href="/superdialog/flows">
+    Graph authoring and migration
+  </Card>
+</CardGroup>
