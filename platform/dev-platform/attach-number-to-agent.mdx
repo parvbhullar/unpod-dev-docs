@@ -1,0 +1,216 @@
+---
+title: 'Attach a Number to an Agent'
+icon: 'phone-arrow-right'
+description: 'Map your phone numbers to a voice agent over the platform telephony plane — the primary external flow.'
+---
+
+## Overview
+
+The platform telephony plane (`client.telephony.*`) maps your phone numbers to
+voice **agents** on backend-core's `/api/v2/platform/telephony/*` surface. The
+primary flow is **attach a number to an agent** — what telephony calls the
+**Leg-B** termination (Unpod's SuperSBC routes the inbound call through to your
+agent on LiveKit).
+
+You **list** your org's numbers, then **attach** one or many to an agent. The
+underlying voice bridge is resolved for you (hidden) — you work with numbers and
+agents, not bridges.
+
+<Note>
+This plane (`client.telephony.*`) is distinct from the Speech Stack management
+plane at [`client.numbers`](/speech-stack/numbers) / `client.trunks`. The
+telephony plane is `Org-Handle`-scoped and requires proxy/JWT auth — it is **not**
+reachable in direct/Bearer mode.
+</Note>
+
+---
+
+## Concepts
+
+| Concept | What it is |
+|---|---|
+| **Leg B (agent attach)** | SuperSBC → agent/LiveKit. The **primary** flow — `numbers.attach(..., agent_id=...)`. |
+| **Leg A (BYO carrier)** | Your own SIP carrier → SuperSBC. The carrier leg is the hardcoded SuperSBC default today; bringing your own carrier (`client.telephony.trunks.*`) is **future/beta**. |
+| **`agent_id`** | The agent handle a number routes to. **Optional** — attach now, bind an agent later. |
+| **Bridge** | The voice bridge a number rides on. **Auto-resolved and hidden** — one number maps to one bridge. |
+
+---
+
+## Authenticate
+
+The telephony plane is org-scoped. Authenticate with a JWT and your org handle:
+
+```python
+import asyncio
+from unpod import AsyncClient, JWTAuth
+
+async def main():
+    async with AsyncClient(auth=JWTAuth("<jwt>", org_handle="acme")) as client:
+        numbers = await client.telephony.numbers.list()
+        for n in numbers:
+            print(n.id, n.number, n.state)
+
+asyncio.run(main())
+```
+
+---
+
+## List Numbers
+
+```python
+numbers = await client.telephony.numbers.list()
+```
+
+### Number fields
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `int` | Telephony number ID |
+| `number` | `str` | E.164 format, e.g. `+14155550100` |
+| `state` | `str \| None` | `NOT_ASSIGNED`, `ASSIGNED`, … |
+| `country` | `str \| None` | ISO 3166-1 alpha-2 country code |
+
+---
+
+## Attach Numbers to an Agent
+
+Map one or more numbers to an agent. The bridge is resolved automatically; each
+number reports its own outcome (partial-success), so one bad id never fails the
+rest.
+
+```python
+import asyncio
+from unpod import AsyncClient, JWTAuth
+
+async def main():
+    async with AsyncClient(auth=JWTAuth("<jwt>", org_handle="acme")) as client:
+        nums = await client.telephony.numbers.list()
+        res = await client.telephony.numbers.attach(
+            [n.id for n in nums[:2]],
+            agent_id="asst_sales",
+        )
+        print(res.agent_id, res.message)
+        for r in res.numbers:
+            print(r.number, r.connection_state, "ok" if r.ok else r.error)
+
+asyncio.run(main())
+```
+
+### Result fields
+
+| Field | Type | Description |
+|---|---|---|
+| `agent_id` | `str \| None` | The agent the numbers were bound to (echoes the request). |
+| `numbers` | `list[NumberResult]` | Per-number outcome (see below). |
+| `message` | `str \| None` | Human-readable summary. |
+
+Each `NumberResult`:
+
+| Field | Type | Description |
+|---|---|---|
+| `number_id` | `int` | The number's ID. |
+| `number` | `str \| None` | E.164, on success. |
+| `connection_state` | `str \| None` | Lifecycle state (e.g. `NOT_LINKED`, `PENDING_VERIFY`). |
+| `agent_id` | `str \| None` | The bound agent, on success. |
+| `ok` | `bool` | `True` if this number was attached. |
+| `error` | `str \| None` | Why it failed, when `ok` is `False`. |
+
+<Note>
+The agent attach returns the per-number **lifecycle** — there is no carrier
+`origin_endpoint`. That belongs to the BYO-carrier (Leg-A) path below.
+</Note>
+
+### `agent_id` is optional
+
+Omit `agent_id` to wire a number for agent use without binding an agent yet —
+bind one later by calling `attach` again with the same number and an `agent_id`:
+
+```python
+# provision now, bind later
+await client.telephony.numbers.attach([number_id])
+# ...later
+await client.telephony.numbers.attach([number_id], agent_id="asst_sales")
+```
+
+---
+
+## Check the Lifecycle
+
+```python
+overview = await client.telephony.overview()
+for row in overview:
+    print(row.number, row.agent_id, row.connection_state, row.in_sync)
+```
+
+---
+
+## Bring Your Own Carrier (Leg A) — Future / Beta
+
+Bringing your own SIP carrier (`client.telephony.trunks.*`) wires the **Leg-A**
+carrier leg. Today that leg is the hardcoded SuperSBC default, so this surface is
+**future/beta** — prefer the agent attach above for production. When enabled, the
+flow is: create a trunk, attach numbers, and point your carrier at the returned
+origin endpoint.
+
+```python
+# future / beta — BYO SIP carrier (Leg A)
+trunk = await client.telephony.trunks.create(
+    name="My Carrier", sip_url="sip:carrier.net",
+    username="u", password="p", source_ips=["203.0.113.10"],
+)
+res = await client.telephony.trunks.attach_numbers(trunk.id, number_ids=[1, 2])
+print(res.origin_endpoint.ingress)  # point your carrier here
+```
+
+---
+
+## Common Patterns
+
+### Attach the first available number to an agent
+
+```python
+import asyncio
+from unpod import AsyncClient, JWTAuth
+
+async def attach_first(agent_id: str) -> None:
+    async with AsyncClient(auth=JWTAuth("<jwt>", org_handle="acme")) as client:
+        nums = await client.telephony.numbers.list()
+        if not nums:
+            raise RuntimeError("No numbers available")
+        res = await client.telephony.numbers.attach([nums[0].id], agent_id=agent_id)
+        row = res.numbers[0]
+        print("attached" if row.ok else f"failed: {row.error}", nums[0].number)
+
+asyncio.run(attach_first("asst_sales"))
+```
+
+### Attach many numbers to one agent
+
+```python
+import asyncio
+from unpod import AsyncClient, JWTAuth
+
+async def attach_all(number_ids: list[int], agent_id: str) -> None:
+    async with AsyncClient(auth=JWTAuth("<jwt>", org_handle="acme")) as client:
+        res = await client.telephony.numbers.attach(number_ids, agent_id=agent_id)
+        ok = [r.number for r in res.numbers if r.ok]
+        bad = [(r.number_id, r.error) for r in res.numbers if not r.ok]
+        print("attached:", ok)
+        if bad:
+            print("failed:", bad)
+
+asyncio.run(attach_all([1, 2, 3], "asst_sales"))
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agents" icon="robot" href="/platform/dev-platform/agents">
+    Build the agent your numbers route to.
+  </Card>
+  <Card title="Numbers" icon="hash" href="/platform/dev-platform/numbers">
+    Acquire and manage numbers from the dashboard.
+  </Card>
+</CardGroup>

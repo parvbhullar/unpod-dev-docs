@@ -290,6 +290,7 @@
               "platform/dev-platform/login",
               "platform/dev-platform/telephony",
               "platform/dev-platform/numbers",
+              "platform/dev-platform/attach-number-to-agent",
               "platform/dev-platform/provider",
               "platform/dev-platform/agents",
               "platform/dev-platform/analytics-and-reporting",
