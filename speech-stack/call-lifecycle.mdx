@@ -22,7 +22,7 @@ stateDiagram-v2
     [*] --> ringing: inbound call arrives
     pending --> ringing: dialing starts
     ringing --> active: answered
-    ringing --> failed: no answer / busy / blocked / canceled / voicemail pre-connect
+    ringing --> failed: no answer / busy / blocked / cancelled / voicemail pre-connect
     active --> completed: hangup or end()
     active --> failed: error
     completed --> [*]
@@ -35,7 +35,7 @@ stateDiagram-v2
 | `ringing` | `dialing` / `ringing` | The SIP leg is originating, or the far end is ringing. |
 | `active` | `active` | Both legs connected; your agent is talking to the caller. |
 | `completed` | `ended` | The conversation finished after being active. |
-| `failed` | `not_connected` / `canceled` | Never reached a live conversation, or canceled pre-connect. |
+| `failed` | `not_connected` / `cancelled` | Never reached a live conversation, or cancelled pre-connect. |
 
 <Note>
 Inbound calls skip `pending` and dialing - the caller is already on the line,

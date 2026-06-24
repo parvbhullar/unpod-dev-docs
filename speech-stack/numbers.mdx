@@ -44,7 +44,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         numbers = await client.numbers.list()
         for n in numbers:
             print(n.number_id, n.number, n.status, n.pipe_id or "unattached")
@@ -60,10 +60,17 @@ If you already have numbers with a carrier, configure them as a BYON trunk in th
 
 1. Go to **Dev Platform -> Telephony** and click **Add Trunk -> BYO SIP**.
 2. Provide your carrier's SIP server details:
-   - **Termination URI** - e.g. `sip:your-carrier.com`
+   - **SIP domain** - e.g. `sip.your-carrier.com`
    - **Credentials** - auth username and password
 3. At your carrier, set inbound routing to point at the Unpod SIP endpoint shown in the dashboard.
-4. Your numbers will appear in Unpod and can be attached to Speech Pipes.
+4. Run `await client.numbers.sync()` (or click **Sync** on the trunk) so Unpod discovers the numbers on the trunk.
+5. Your numbers appear in Unpod and can be attached to Speech Pipes.
+
+<Note>
+Prefer the SDK? Register the same trunk with `client.trunks.create(...)`, then
+`client.numbers.sync()`. The field names match the dashboard - `sip_domain`,
+`auth_username`, `auth_password`. See [Trunks](/speech-stack/trunks).
+</Note>
 
 ---
 
@@ -74,7 +81,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         # All numbers
         numbers = await client.numbers.list()
 
@@ -111,7 +118,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         number = await client.numbers.attach(
             number_id="num_...",
             pipe_id="pipe_...",
@@ -130,7 +137,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         number = await client.numbers.detach("num_...")
         print("Detached:", number.number)
 
@@ -148,7 +155,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def attach_first_free(pipe_id: str) -> None:
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         numbers = await client.numbers.list(status="active")
         free = [n for n in numbers if n.pipe_id is None]
         if not free:
@@ -166,7 +173,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def rotate(numbers: list[str], pipes: list[str]) -> None:
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         for num_id, pipe_id in zip(numbers, pipes):
             await client.numbers.attach(num_id, pipe_id)
             print(f"{num_id} -> {pipe_id}")

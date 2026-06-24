@@ -30,7 +30,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         # All profiles
         profiles = await client.voice_profiles.list()
 
@@ -71,7 +71,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         profile = await client.voice_profiles.get("vp_en_female_hd")
         print(profile.name, profile.quality, profile.languages)
 
@@ -110,7 +110,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         # List to find the right profile
         profiles = await client.voice_profiles.list(language="en")
         hd_female = next(
@@ -136,7 +136,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         pipe = await client.pipes.update(
             "pipe_...",
             voice_profile="vp_es_male_std",   # switch to Spanish male

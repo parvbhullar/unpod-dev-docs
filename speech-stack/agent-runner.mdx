@@ -97,6 +97,15 @@ async def on_call_end(ctx: CallContext, final_state: str) -> None:
     print(f"Call {ctx.call_id} ended: {final_state}")
 ```
 
+<Note>
+This is the **runner-level** `call_end` (signature `(ctx, final_state)`), fired
+once per call on the runner. The **session-level** `call_end`
+(`@ctx.session.on("call_end")`, signature `(final_state)`) fires inside a single
+call and is where you read the telephony `end_reason` via
+`ctx.session.data.get("end_reason")`. See
+[Call Lifecycle](/speech-stack/call-lifecycle#reacting-to-outcomes-in-your-agent).
+</Note>
+
 ## CallContext
 
 Every call to your `entrypoint` receives a

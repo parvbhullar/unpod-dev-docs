@@ -31,7 +31,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         call = await client.calls.create(
             pipe_id="pipe_...",
             to_number="+14155550100",    # E.164 format
@@ -120,13 +120,26 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         call = await client.calls.get("cal_...")
         print(call.call_id, call.status, call.direction)
         # status: "pending", "ringing", "active", "completed", "failed", "cancelled"
 
 asyncio.run(main())
 ```
+
+### Call fields
+
+| Field | Type | Description |
+|---|---|---|
+| `call_id` | `str` | Unique call ID (`cal_...`) |
+| `status` | `str` | `pending`, `ringing`, `active`, `completed`, `failed`, `cancelled` |
+| `direction` | `str` | `inbound` or `outbound` |
+| `to_number` | `str` | Destination number (E.164) |
+| `from_number` | `str \| None` | Caller ID used for the call |
+| `pipe_id` | `str` | Speech Pipe that handled the call |
+| `duration_s` | `float \| None` | Call duration in seconds (set once completed) |
+| `end_reason` | `str \| None` | Why the call ended - see [Call Lifecycle](/speech-stack/call-lifecycle#end-reasons) |
 
 ---
 
@@ -137,14 +150,14 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         # All outbound calls for a Speech Pipe
         calls = await client.calls.list(
             pipe_id="pipe_...",
             status="completed",
         )
         for c in calls:
-            print(c.id, c.to_number, c.status, c.duration_s)
+            print(c.call_id, c.to_number, c.status, c.duration_s)
 
 asyncio.run(main())
 ```
@@ -165,7 +178,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         await client.calls.hangup("cal_...")
         print("Call terminated")
 
@@ -190,7 +203,7 @@ contacts = [
 ]
 
 async def dial_all(contacts: list[dict]) -> None:
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         for contact in contacts:
             call = await client.calls.create(
                 pipe_id=PIPE_ID,
@@ -221,7 +234,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def process_callback_queue(queue: list[dict]) -> None:
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         for request in queue:
             # Check if the Speech Pipe is not at capacity before dialing
             # (AgentRunner handles capacity internally - orchestrator rejects if full)
@@ -248,7 +261,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def get_transcript(call_id: str) -> None:
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         transcript = await client.transcripts.get(call_id)
         for turn in transcript.turns:
             print(f"[{turn.speaker}] {turn.text}")

@@ -120,7 +120,8 @@
               "superdialog/playbooks",
               "superdialog/flows",
               "superdialog/tools",
-              "superdialog/sessions"
+              "superdialog/sessions",
+              "superdialog/playground"
             ]
           },
           {
@@ -377,16 +378,16 @@
         "href": "https://github.com/unpod-ai/unpod"
       },
       {
-        "label": "Documentation",
-        "icon": "book-open",
-        "href": "https://docs.unpod.dev/"
+        "label": "Dashboard",
+        "icon": "layout-dashboard",
+        "href": "https://unpod.dev"
+      },
+      {
+        "label": "Playground",
+        "icon": "play",
+        "href": "https://superdialog.unpod.ai/playground?tab=preview"
       }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://unpod.dev"
-    }
+    ]
   },
   "footer": {
     "socials": {

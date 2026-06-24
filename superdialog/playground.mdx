@@ -1,0 +1,82 @@
+---
+title: "Playground"
+icon: 'play'
+description: "Pick an agent, talk to it in the browser, and watch the live transcript - test a playbook end to end before attaching it to a pipe or number."
+---
+
+## What the Playground is
+
+The **Playground** is the no-code way to test an agent. You pick an agent,
+talk to it in the browser, and watch the transcript update live as the
+conversation advances - no phone number, no pipe, and no client code required.
+
+It runs the same stack production does: the agent's flow is authored with
+**SuperDialog** (playbooks), and the call is served by the **unpod**
+`AgentRunner`. What you hear in the Playground is what a caller would hear.
+
+<Card title="Open the Playground" icon="play" href="https://superdialog.unpod.ai/playground?tab=preview">
+  Launch the live Playground at `superdialog.unpod.ai/playground` and talk to an agent in your browser.
+</Card>
+
+<Note>
+Use the Playground to iterate on a playbook (persona, checkpoints, advance
+rules) and confirm it behaves, *then* attach the agent to a
+[Speech Pipe](/speech-stack/pipes) and a [number](/speech-stack/numbers) to take
+it live.
+</Note>
+
+## How a Playground session works
+
+<Steps>
+  <Step title="Pick an agent">
+    Select the agent (playbook) you want to test from the Playground screen.
+  </Step>
+  <Step title="Connect">
+    The browser opens a session and streams your microphone audio to the
+    speech stack (16 kHz up); synthesized replies stream back (24 kHz down).
+  </Step>
+  <Step title="Talk">
+    Speak as a caller would. Audio rides the WebSocket bridge; the agent's
+    `AgentRunner` handles each turn exactly as it would on a real call.
+  </Step>
+  <Step title="Watch the transcript">
+    Per-turn transcript and the current checkpoint stream to the browser over a
+    side channel fed by `Session` hooks - separate from the audio path, so the
+    transcript stays accurate even under load.
+  </Step>
+</Steps>
+
+## What you can test here
+
+- The persona and voice style your callers hear
+- Whether checkpoints advance on the conditions you wrote (`done_when` /
+  `advance_when`)
+- Slot collection - does the agent capture what it needs before moving on
+- Interrupts (goodbye, busy) firing from any step
+
+## What is not in the Playground yet
+
+The Playground ships in milestones. The current build is single-agent over the
+WebSocket transport: connect, talk, live transcript. Live metrics, the flow
+graph view, in-call controls, the LiveKit transport, and side-by-side agent
+compare arrive in later milestones.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/superdialog/quickstart">
+    Generate your first playbook, then test it here.
+  </Card>
+  <Card title="Playbooks" icon="book" href="/superdialog/playbooks">
+    Author the persona, checkpoints, and advance rules you test in the Playground.
+  </Card>
+  <Card title="Speech Pipe" icon="bot" href="/speech-stack/pipes">
+    Once it behaves, attach the agent to a pipe to go live.
+  </Card>
+  <Card title="Sessions" icon="database" href="/superdialog/sessions">
+    Persist and multiplex conversations beyond a single test.
+  </Card>
+  <Card title="Open the Playground" icon="play" href="https://superdialog.unpod.ai/playground?tab=preview">
+    Jump straight into the live Playground and start talking to an agent.
+  </Card>
+</CardGroup>

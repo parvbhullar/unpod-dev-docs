@@ -21,7 +21,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         pipe = await client.pipes.create(
             name="Support Bot",
             voice_profile="vp_en_female_hd",    # from voice_profiles.list()
@@ -54,7 +54,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         pipes = await client.pipes.list()
         for p in pipes:
             print(p.pipe_id, p.name, p.voice_profile_id or "no voice profile")
@@ -85,7 +85,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         pipe = await client.pipes.get("pipe_...")
         print(pipe.name, pipe.voice_profile_id, pipe.recording)
 
@@ -101,7 +101,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         # Update any subset of fields
         pipe = await client.pipes.update(
             "pipe_...",
@@ -128,12 +128,12 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         # Detach numbers first
         numbers = await client.numbers.list()
         for n in numbers:
             if n.pipe_id == "pipe_...":
-                await client.numbers.detach(n.id)
+                await client.numbers.detach(n.number_id)
 
         # Then delete
         await client.pipes.delete("pipe_...")
@@ -153,7 +153,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         pipe = await client.pipes.create(
             name="Webhook Bot",
             voice_profile="vp_en_male_std",
@@ -197,7 +197,7 @@ Your endpoint must respond with:
 This protocol is **not** OpenAI-compatible. It is a simple text-in / text-out interface - your endpoint owns all LLM or chatbot logic. You can forward to OpenAI, Gemini, a rules engine, or anything else under the hood.
 </Note>
 
-Alternatively, use the `HTTPAdapter` inside an `AgentRunner` entrypoint to call a remote endpoint from within the SDK:
+Alternatively, use the `HTTPAdapter` inside an `AgentRunner` entrypoint to call a remote endpoint from within the [SDK](https://github.com/unpod-ai/unpod-python-sdk):
 
 ```python
 from unpod import AgentRunner, CallContext

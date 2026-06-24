@@ -47,7 +47,7 @@ Your backend generates a short-lived token for each user session. Pass it to the
 from unpod import AsyncClient
 
 async def get_session_token(pipe_id: str, user_id: str) -> str:
-    async with AsyncClient(api_key="sk-...") as client:
+    async with AsyncClient(api_key="sk_...") as client:
         token = await client.sessions.create_token(
             pipe_id=pipe_id,
             metadata={"user_id": user_id},
