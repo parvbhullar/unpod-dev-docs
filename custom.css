@@ -37,31 +37,6 @@ header a[href*="superdialog.unpod.ai/playground"] * {
   fill: currentColor;
 }
 
-/* ---- UNPOD logo (left side) glow animation ----------------- */
-/* The logo is the unpod.dev anchor that contains an <img>. */
-a[href="https://unpod.dev"]:has(img) img {
-  animation: logo-glow 2.4s ease-in-out infinite;
-  transition: transform 0.18s ease, filter 0.18s ease;
-  will-change: filter, transform;
-}
-
-a[href="https://unpod.dev"]:has(img):hover img {
-  transform: scale(1.08);
-  filter: drop-shadow(0 0 18px rgba(121, 108, 255, 1));
-}
-
-@keyframes logo-glow {
-  0%, 100% {
-    filter: drop-shadow(0 0 4px rgba(121, 108, 255, 0.45));
-    transform: scale(1);
-  }
-  50% {
-    filter: drop-shadow(0 0 18px rgba(121, 108, 255, 0.95))
-            drop-shadow(0 0 30px rgba(154, 144, 255, 0.6));
-    transform: scale(1.04);
-  }
-}
-
 /* ---- Keyframes --------------------------------------------- */
 @keyframes pg-shimmer {
   to { background-position: 300% 0; }
@@ -74,8 +49,7 @@ a[href="https://unpod.dev"]:has(img):hover img {
 
 @media (prefers-reduced-motion: reduce) {
   #navbar a[href*="superdialog.unpod.ai/playground"],
-  header a[href*="superdialog.unpod.ai/playground"],
-  a[href="https://unpod.dev"]:has(img) img {
+  header a[href*="superdialog.unpod.ai/playground"] {
     animation: none;
   }
 }
