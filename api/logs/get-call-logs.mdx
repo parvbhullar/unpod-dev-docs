@@ -1,28 +1,32 @@
 ---
-title: 'Get Call Logs'
+title: 'Get Call Detail Records (CDR)'
 icon: 'file-text'
-description: 'Retrieve call history logs with filtering and pagination support'
-openapi: 'GET /api/v2/platform/call-logs/'
+description: 'Retrieve telephony call detail records with filtering and pagination support'
+openapi: 'GET /api/v2/platform/cdr/'
 ---
 
 <ResponseExample>
 
 ```json Success Response (200)
 {
-  "count": 150,
+  "count": 643,
   "status_code": 200,
   "message": "Call logs fetched successfully",
   "data": [
     {
-      "source_number": "+911234567890",
-      "destination_number": "+919876543210",
-      "call_type": "outbound",
+      "id": 33364,
       "call_status": "completed",
-      "creation_time": "2026-02-07T05:57:00Z",
-      "start_time": "2026-02-07T05:57:45Z",
-      "end_time": "2026-02-07T06:01:12Z",
-      "call_duration": 207,
-      "end_reason": "caller_hangup"
+      "end_reason": "call.in-progress.sip-completed-call",
+      "call_type": "outbound",
+      "bridge": { "id": 12, "name": "Acme Primary Bridge" },
+      "creation_time": "2025-11-08T05:32:29Z",
+      "start_time": "2025-11-08T05:29:43Z",
+      "end_time": "2025-11-08T05:32:28.686639Z",
+      "call_duration": 165.686639,
+      "source_number": "+15551234567",
+      "destination_number": "+15559876543",
+      "failure_source": null,
+      "sip_cause": null
     }
   ]
 }
@@ -37,9 +41,9 @@ openapi: 'GET /api/v2/platform/call-logs/'
 
 </ResponseExample>
 
-# Get Call Logs
+# Get Call Detail Records (CDR)
 
-Retrieve call history logs for your organization with support for filtering by date range, call type, call status, and pagination for efficient data retrieval.
+Retrieve telephony call detail records (CDR) for your organization — only SIP-based telephony calls, not voice agent calls.
 
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
@@ -64,10 +68,8 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 |-------------|--------|----------|------------------------------------------------------|
 | page        | integer | No      | Page number for pagination (default = 1)             |
 | page_size   | integer | No      | Number of records per page (default = 20)            |
-| start_date  | string  | No      | Filter calls from this date (ISO 8601 format)        |
-| end_date    | string  | No      | Filter calls until this date (ISO 8601 format)       |
 | call_type   | string  | No      | Filter by call direction: `inbound` or `outbound`    |
-| call_status | string  | No      | Filter by status: `completed`, `missed`, or `failed` |
+| call_status | string  | No      | Filter by status: `completed`, `notConnected`, or `failed` |
 
 
 
@@ -75,24 +77,33 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 
 | Field       | Type    | Description              |
 |-------------|---------|--------------------------|
-| count       | integer | Total number of call logs |
+| count       | integer | Total number of CDRs     |
 | status_code | integer | HTTP status code          |
 | message     | string  | Response message          |
-| data        | array   | Array of call log objects |
+| data        | array   | Array of CDR objects      |
 
-### Call Log Object Fields
+### CDR Object Fields
 
 | Field              | Type    | Description                                            |
 |--------------------|---------|--------------------------------------------------------|
+| id                 | integer | Unique call record ID                                  |
 | source_number      | string  | The number that initiated the call                     |
 | destination_number | string  | The number that received the call                      |
 | call_type          | string  | Direction of call: `outbound`, `inbound`               |
-| call_status        | string  | Outcome: `completed`, `missed`, `failed`               |
+| call_status        | string  | Outcome: `completed`, `notConnected`, `failed`         |
+| bridge             | object  | `{ id, name }` of the bridge, or `null`                |
 | creation_time      | string  | Timestamp when the call was created/scheduled          |
-| start_time         | string  | Timestamp when the call was answered (null if missed)  |
-| end_time           | string  | Timestamp when the call ended (null if missed)         |
-| call_duration      | integer | Duration of the call in seconds                        |
-| end_reason         | string  | Reason the call ended (e.g., `caller_hangup`, `no_answer`) |
+| start_time         | string  | Timestamp when the call was answered                   |
+| end_time           | string  | Timestamp when the call ended                          |
+| call_duration      | number  | Duration of the call in seconds                        |
+| end_reason         | string  | Reason the call ended                                  |
+| failure_source     | string  | Which side a failure originated on (`null` if none)    |
+| sip_cause          | string  | Human-readable SIP cause (`null` if none)              |
+
+<Note>
+This CDR surface returns **telephony SIP records only** — it intentionally omits
+agent / space / organization attribution (voice-agent call logs live elsewhere).
+</Note>
 
 
 
@@ -102,7 +113,7 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
-| 200         | Success - Call logs fetched successfully         |
+| 200         | Success - CDRs fetched successfully              |
 | 400         | Bad Request - Invalid filter parameters          |
 | 401         | Unauthorized - Invalid or missing API token      |
 | 403         | Forbidden - Invalid organization handle          |
@@ -121,30 +132,28 @@ const headers = {
   'Org-Handle': 'your-org-handle'
 };
 
-// Get call logs with filters
-const getCallLogs = async (filters = {}) => {
+// Get CDRs with filters
+const getCDRs = async (filters = {}) => {
   const params = {
     page: 1,
     page_size: 20,
     ...filters
   };
   const response = await axios.get(
-    'https://unpod.ai/api/v2/platform/call-logs/',
+    'https://unpod.ai/api/v2/platform/cdr/',
     { headers, params }
   );
-  console.log(`Total call logs: ${response.data.count}`);
+  console.log(`Total CDRs: ${response.data.count}`);
   response.data.data.forEach(log => {
     console.log(`${log.call_type} call to ${log.destination_number}: ${log.call_status} (${log.call_duration}s)`);
   });
   return response.data.data;
 };
 
-// Example: Get outbound completed calls from a date range
-getCallLogs({
+// Example: Get outbound completed calls
+getCDRs({
   call_type: 'outbound',
-  call_status: 'completed',
-  start_date: '2026-02-01',
-  end_date: '2026-02-07'
+  call_status: 'completed'
 });
 ```
 
@@ -156,36 +165,29 @@ headers = {
     'Org-Handle': 'your-org-handle'
 }
 
-def get_call_logs(page: int = 1, page_size: int = 20, **filters):
-    """Get call logs with optional filters"""
-    url = 'https://unpod.ai/api/v2/platform/call-logs/'
+def get_cdrs(page: int = 1, page_size: int = 20, **filters):
+    """Get CDRs with optional filters"""
+    url = 'https://unpod.ai/api/v2/platform/cdr/'
     params = {'page': page, 'page_size': page_size, **filters}
     response = requests.get(url, headers=headers, params=params)
     data = response.json()
-    print(f"Total call logs: {data['count']}")
+    print(f"Total CDRs: {data['count']}")
     for log in data['data']:
         print(f"{log['call_type']} to {log['destination_number']}: {log['call_status']} ({log['call_duration']}s)")
     return data['data']
 
-# Example: Get outbound completed calls from a date range
-get_call_logs(
+# Example: Get outbound completed calls
+get_cdrs(
     page=1,
     page_size=20,
     call_type='outbound',
-    call_status='completed',
-    start_date='2026-02-01',
-    end_date='2026-02-07'
+    call_status='completed'
 )
 ```
 
 ```bash cURL
-# Get call logs with filters
-curl -X GET "https://unpod.ai/api/v2/platform/call-logs/?page=1&page_size=20&call_type=outbound&call_status=completed" \
-  -H "Org-Handle: your-org-handle" \
-  -H "Authorization: Token your-api-token"
-
-# Get call logs for a specific date range
-curl -X GET "https://unpod.ai/api/v2/platform/call-logs/?start_date=2026-02-01&end_date=2026-02-07" \
+# Get CDRs with filters
+curl -X GET "https://unpod.ai/api/v2/platform/cdr/?page=1&page_size=20&call_type=outbound&call_status=completed" \
   -H "Org-Handle: your-org-handle" \
   -H "Authorization: Token your-api-token"
 ```
@@ -194,9 +196,7 @@ curl -X GET "https://unpod.ai/api/v2/platform/call-logs/?start_date=2026-02-01&e
 
 ## Best Practices
 
-1. **Date Filtering**: Always use `start_date` and `end_date` to limit results to relevant time windows
-2. **Pagination**: Use `page` and `page_size` for large datasets to avoid timeouts
-3. **Call Status Filtering**: Filter by `call_status` to focus on specific outcomes (completed, missed, failed)
-4. **Org-Handle**: Ensure the correct organization handle is included - it determines which org's logs are returned
-5. **Duration Analysis**: Use `call_duration` to calculate average call durations and identify performance trends
-6. **Security**: Keep API tokens secure and rotate them regularly
+1. **Pagination**: Use `page` and `page_size` for large datasets to avoid timeouts
+2. **Call Status Filtering**: Filter by `call_status` to focus on specific outcomes
+3. **Org-Handle**: Ensure the correct organization handle is included
+4. **Security**: Keep API tokens secure and rotate them regularly

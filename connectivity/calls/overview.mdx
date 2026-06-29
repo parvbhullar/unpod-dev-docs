@@ -1,0 +1,69 @@
+---
+title: 'Telephony Overview'
+icon: 'activity'
+description: 'Per-number lifecycle: connection state, termination, agent link, sync state'
+openapi: 'GET /api/v2/platform/telephony/overview/'
+---
+
+A per-number lifecycle overview for your organization: one row per `ASSIGNED` number on
+your bridges, exposing `connection_state`, termination kind, agent link, and the
+projection `sync_state`. This endpoint is DB-only — it never live-probes the projection
+planes, so it stays fast and never errors on a missing projection. Secrets are masked.
+
+<Note>
+**Prerequisites:** API Token + Org-Handle. See [Authentication](/api/get-started/authentication).
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                          |
+|---------------|--------|----------|--------------------------------------|
+| Authorization | string | Yes      | `Token <your-api-key>`               |
+| Org-Handle    | string | Yes      | Organization domain handle           |
+| Product-Id    | string | No       | Optional product filter              |
+
+### Row fields
+
+| Field            | Type    | Description                                  |
+|------------------|---------|----------------------------------------------|
+| number_id        | integer | Number id                                    |
+| number           | string  | E.164 number                                 |
+| bridge_slug      | string  | Bridge the number is on                      |
+| connection_state | string  | e.g. `LINKED`, `NOT_LINKED`                  |
+| termination_kind | string  | `sip` (carrier) or `agent`                   |
+| agent_id         | string  | Linked agent handle (null for carrier)       |
+| sync_state       | string  | Projection sync state                        |
+| sync_detail      | string  | Extra sync detail (nullable)                 |
+
+<ResponseExample>
+
+```json 200
+{
+  "status_code": 200,
+  "message": "Telephony overview fetched successfully.",
+  "data": [
+    {
+      "number_id": 501,
+      "number": "+15551234567",
+      "bridge_slug": "support-bridge",
+      "connection_state": "LINKED",
+      "termination_kind": "sip",
+      "agent_id": null,
+      "sync_state": "synced",
+      "sync_detail": null
+    }
+  ]
+}
+```
+
+```json 206
+{ "message": "Please provide Org-Handle in headers" }
+```
+
+</ResponseExample>
+
+```bash cURL
+curl -s "https://qa3.unpod.tv/api/v2/platform/telephony/overview/" \
+  -H "Authorization: Token <your-api-key>" \
+  -H "Org-Handle: <your-org-handle>"
+```

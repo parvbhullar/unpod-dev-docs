@@ -1,0 +1,98 @@
+---
+title: 'Attach Numbers to Trunk'
+icon: 'link'
+description: 'Map one or more numbers to a SIP trunk and get the origin endpoint'
+openapi: 'POST /api/v2/platform/telephony/trunks/{id}/attach-numbers/'
+---
+
+Map one or more numbers to this trunk — the **Leg-A** (BYO carrier) path. The bridge is
+auto-resolved and hidden. The response returns the trunk-level **origin endpoint**: the
+shared SBC ingress your carrier sends inbound calls to, the mapped DIDs, and the accepted
+source IPs.
+
+<Note>
+**Prerequisites:** API Token + Org-Handle. See [Authentication](/api/get-started/authentication).
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                                            |
+|---------------|--------|----------|--------------------------------------------------------|
+| Authorization | string | Yes      | `Token <your-api-key>`                                 |
+| Org-Handle    | string | Yes      | Organization domain handle                             |
+| Product-Id    | string | No       | Product scope for the auto-resolved bridge (default `unpod.dev`) |
+| Content-Type  | string | Yes      | `application/json`                                     |
+
+### Path parameters
+
+| Name | Type    | Required | Description |
+|------|---------|----------|-------------|
+| id   | integer | Yes      | Trunk id    |
+
+### Request body
+
+| Field       | Type      | Required | Description                                 |
+|-------------|-----------|----------|---------------------------------------------|
+| number_ids  | integer[] | Yes      | Numbers to map (deduped, order preserved)   |
+| bridge_slug | string    | No       | Explicit bridge; auto-resolved when omitted |
+| region      | string    | No       | Region hint (e.g. `IN`)                     |
+
+### Origin endpoint
+
+| Field               | Type      | Description                                    |
+|---------------------|-----------|------------------------------------------------|
+| ingress             | string    | SBC ingress URI your carrier dials in to       |
+| dids                | string[]  | The numbers successfully mapped                |
+| accepted_source_ips | string[]  | The trunk's source-IP allow-list               |
+| region              | string    | Resolved bridge region                         |
+
+### Partial success
+
+`201` if at least one number maps, else `400`. Each `data.numbers` entry reports
+`ok`/`error` independently.
+
+<ResponseExample>
+
+```json 201
+{
+  "status_code": 201,
+  "message": "Numbers mapped to trunk.",
+  "data": {
+    "trunk_id": 21,
+    "origin_endpoint": {
+      "ingress": "sip:sip.unpod.tel",
+      "dids": ["+15551234567"],
+      "accepted_source_ips": ["1.2.3.4", "5.6.7.0/24"],
+      "region": "us-east"
+    },
+    "numbers": [
+      { "number_id": 501, "number": "+15551234567", "connection_state": "NOT_LINKED", "ok": true }
+    ]
+  }
+}
+```
+
+```json 400
+{
+  "status_code": 400,
+  "message": "No numbers could be mapped.",
+  "data": {
+    "trunk_id": 21,
+    "origin_endpoint": { "ingress": "sip:sip.unpod.tel", "dids": [], "accepted_source_ips": ["1.2.3.4"], "region": null },
+    "numbers": [
+      { "number_id": 501, "ok": false, "error": "Number not found or not available to this organization." }
+    ]
+  }
+}
+```
+
+</ResponseExample>
+
+```bash cURL
+curl -s -X POST "https://qa3.unpod.tv/api/v2/platform/telephony/trunks/21/attach-numbers/" \
+  -H "Authorization: Token <your-api-key>" \
+  -H "Org-Handle: <your-org-handle>" \
+  -H "Product-Id: unpod.dev" \
+  -H "Content-Type: application/json" \
+  -d '{"number_ids": [501]}'
+```

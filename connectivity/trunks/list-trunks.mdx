@@ -1,0 +1,66 @@
+---
+title: 'List Trunks'
+icon: 'list'
+description: "List your organization's SIP trunks"
+openapi: 'GET /api/v2/platform/telephony/trunks/'
+---
+
+List the SIP trunks (carrier credentials) owned by your organization, newest first.
+Secrets (`auth_password`) are masked in the response.
+
+<Note>
+**Prerequisites:** API Token + Org-Handle. See [Authentication](/api/get-started/authentication).
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                |
+|---------------|--------|----------|----------------------------|
+| Authorization | string | Yes      | `Token <your-api-key>`     |
+| Org-Handle    | string | Yes      | Organization domain handle |
+
+### Trunk object fields
+
+| Field         | Type    | Description                                            |
+|---------------|---------|--------------------------------------------------------|
+| id            | integer | Trunk id (use in attach / detach / delete)             |
+| name          | string  | Display name                                           |
+| sip_url       | string  | Carrier SIP URL / host                                 |
+| transport     | string  | `tcp`, `udp`, or `tls`                                 |
+| port          | string  | SIP port (default `5060`)                              |
+| auth_username | string  | SIP auth username (nullable)                           |
+| auth_password | string  | Masked — only the last 4 chars shown                   |
+| allowed_ips   | string  | Comma-separated source-IP allow-list                   |
+| active        | boolean | Whether the trunk is active                            |
+| org_handle    | string  | Owning organization handle                             |
+
+<ResponseExample>
+
+```json 200
+{
+  "status_code": 200,
+  "message": "Trunks fetched successfully.",
+  "data": [
+    {
+      "id": 12,
+      "name": "Acme Primary Trunk",
+      "sip_url": "sip:sip.acme-voice.com",
+      "transport": "tcp",
+      "port": "5060",
+      "auth_username": null,
+      "auth_password": null,
+      "allowed_ips": "",
+      "active": true,
+      "org_handle": "acme.co"
+    }
+  ]
+}
+```
+
+</ResponseExample>
+
+```bash cURL
+curl -s "https://qa3.unpod.tv/api/v2/platform/telephony/trunks/" \
+  -H "Authorization: Token <your-api-key>" \
+  -H "Org-Handle: <your-org-handle>"
+```

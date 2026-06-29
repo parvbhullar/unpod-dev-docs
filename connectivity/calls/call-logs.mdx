@@ -1,0 +1,64 @@
+---
+title: 'Call Detail Records (CDR)'
+icon: 'file-text'
+description: 'Fetch telephony call detail records with filtering and pagination'
+openapi: 'GET /api/v2/platform/cdr/'
+---
+
+Fetch telephony call detail records (CDR) for your organization — inbound and
+outbound SIP calls with status, timing, duration, and end reason.
+
+<Note>
+**Prerequisites:** API Token + Org-Handle. See [Authentication](/api/get-started/authentication).
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                          |
+|---------------|--------|----------|--------------------------------------|
+| Authorization | string | Yes      | `Token <your-api-key>`               |
+| Org-Handle    | string | Yes      | Organization domain handle           |
+
+### Query parameters
+
+| Name        | Type    | Description                                  |
+|-------------|---------|----------------------------------------------|
+| page        | integer | Page number (default `1`)                    |
+| page_size   | integer | Rows per page (default `20`)                 |
+| call_type   | string  | `inbound` or `outbound`                      |
+| call_status | string  | `completed`, `notConnected`, or `failed`     |
+
+<ResponseExample>
+
+```json 200
+{
+  "count": 643,
+  "status_code": 200,
+  "message": "Call logs fetched successfully",
+  "data": [
+    {
+      "id": 33364,
+      "call_status": "completed",
+      "end_reason": "call.in-progress.sip-completed-call",
+      "call_type": "outbound",
+      "bridge": { "id": 12, "name": "Acme Primary Bridge" },
+      "creation_time": "2025-11-08T05:32:29Z",
+      "start_time": "2025-11-08T05:29:43Z",
+      "end_time": "2025-11-08T05:32:28.686639Z",
+      "call_duration": 165.686639,
+      "source_number": "+15551234567",
+      "destination_number": "+15559876543",
+      "failure_source": null,
+      "sip_cause": null
+    }
+  ]
+}
+```
+
+</ResponseExample>
+
+```bash cURL
+curl -s "https://qa3.unpod.tv/api/v2/platform/cdr/?page_size=5" \
+  -H "Authorization: Token <your-api-key>" \
+  -H "Org-Handle: <your-org-handle>"
+```

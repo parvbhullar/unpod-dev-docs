@@ -148,6 +148,46 @@
         ]
       },
       {
+        "tab": "Telephony",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "book-open",
+            "pages": [
+              "connectivity/introduction",
+              "connectivity/quickstart"
+            ]
+          },
+          {
+            "group": "Numbers",
+            "icon": "hash",
+            "pages": [
+              "connectivity/numbers/list-numbers"
+            ]
+          },
+          {
+            "group": "Trunks",
+            "icon": "git-branch",
+            "pages": [
+              "connectivity/trunks/list-trunks",
+              "connectivity/trunks/create-trunk",
+              "connectivity/trunks/get-trunk",
+              "connectivity/trunks/attach-numbers",
+              "connectivity/trunks/detach-numbers",
+              "connectivity/trunks/delete-trunk"
+            ]
+          },
+          {
+            "group": "Calls",
+            "icon": "phone",
+            "pages": [
+              "connectivity/calls/overview",
+              "connectivity/calls/call-logs"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "Platform",
         "groups": [
           {

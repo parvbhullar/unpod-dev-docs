@@ -40,8 +40,8 @@ asyncio.run(main())
 |---|---|---|---|
 | `name` | `str` | required | Display name for the pipe |
 | `voice_profile` | `str \| None` | `None` | Voice profile ID (`vp_...`) |
-| `agent_id` | `str \| None` | `None` | ID of your `AgentRunner` brain - links the pipe to your runner worker |
-| `agent_endpoint` | `str \| None` | `None` | HTTP endpoint for the dialog brain (HTTPAdapter) |
+| `agent_id` | `str \| None` | `None` | ID of your `AgentRunner` brain - links the pipe to your runner worker (preferred) |
+| `agent_endpoint` | `str \| None` | `None` | Static **WebSocket** URL (`wss://...`) of your `AgentRunner` bridge - a fallback used when no runner has registered for `agent_id`. Not an HTTP URL. |
 | `recording` | `bool` | `False` | Enable call recording |
 | `max_call_duration_s` | `int` | `3600` | Hard cap in seconds (default 1 hour) |
 
@@ -70,7 +70,7 @@ asyncio.run(main())
 | `name` | `str` | Display name |
 | `voice_profile_id` | `str \| None` | Voice profile ID |
 | `agent_id` | `str \| None` | Your `AgentRunner` brain ID |
-| `agent_endpoint` | `str \| None` | HTTP dialog endpoint |
+| `agent_endpoint` | `str \| None` | Static `wss://` URL of your `AgentRunner` bridge (fallback for `agent_id`) |
 | `recording` | `bool` | Recording enabled |
 | `max_call_duration_s` | `int` | Call duration hard cap |
 | `created` | `datetime` | Creation timestamp |
@@ -144,60 +144,20 @@ asyncio.run(main())
 
 ---
 
-## Using a Pipe with an HTTP Dialog Endpoint
+## How the Pipe Reaches Your Brain
 
-If you already have a chatbot or API (in any language) and want to make it voice-enabled, point the pipe at an HTTP endpoint. Unpod calls your endpoint on every user turn, you return the reply.
+The pipe never calls your brain over HTTP. On every call the orchestrator dispatches the session to a **worker**, and the worker connects to your `AgentRunner` over a **WebSocket bridge** (text in / text out). There are two ways the pipe finds that runner:
 
-```python
-import asyncio
-from unpod import AsyncClient
-
-async def main():
-    async with AsyncClient(api_key="sk_...") as client:
-        pipe = await client.pipes.create(
-            name="Webhook Bot",
-            voice_profile="vp_en_male_std",
-            agent_endpoint="https://your-api.example.com/dialog/turn",
-        )
-        print("Pipe with HTTP endpoint:", pipe.pipe_id)
-
-asyncio.run(main())
-```
-
-### HTTP Protocol
-
-Unpod sends a `POST` request on every user turn:
-
-```
-POST https://your-api.example.com/dialog/turn
-Content-Type: application/json
-
-{
-  "text": "I'd like to reschedule my appointment",
-  "context": {
-    "call_id": "call_abc123",
-    "session_id": "sess_xyz789",
-    "turn_number": 3,
-    "direction": "inbound",
-    "user_number": "+919876543210",
-    "data": {}
-  }
-}
-```
-
-Your endpoint must respond with:
-
-```json
-{
-  "text": "Sure, I can help with that. What date works for you?"
-}
-```
+1. **By `agent_id` (preferred).** Run an `AgentRunner` with the same `agent_id` as the pipe. It self-registers its bridge `serving_url`; the orchestrator picks a registered, least-loaded runner per call. You never hardcode a URL.
+2. **By `agent_endpoint` (static fallback).** Set the pipe's `agent_endpoint` to a fixed `wss://...` bridge URL. Used only when no runner is registered for `agent_id`. This is a **WebSocket** URL, not an HTTP endpoint.
 
 <Note>
-This protocol is **not** OpenAI-compatible. It is a simple text-in / text-out interface - your endpoint owns all LLM or chatbot logic. You can forward to OpenAI, Gemini, a rules engine, or anything else under the hood.
+`agent_endpoint` is **not** an HTTP webhook - the orchestrator does not `POST` to it. It is the WebSocket bridge URL your `AgentRunner` serves on.
 </Note>
 
-Alternatively, use the `HTTPAdapter` inside an `AgentRunner` entrypoint to call a remote endpoint from within the [SDK](https://github.com/unpod-ai/unpod-python-sdk):
+## Bridging a Remote HTTP Brain
+
+If you already have a chatbot or API (any language) and want to voice-enable it, run an `AgentRunner` and set its dialog brain to an `HTTPAdapter`. The adapter `POST`s each user turn to your endpoint from inside the runner:
 
 ```python
 from unpod import AgentRunner, CallContext
@@ -211,6 +171,34 @@ async def handle_call(ctx: CallContext) -> None:
 
 AgentRunner(entrypoint=handle_call, agent_id="my-bot").start()
 ```
+
+### HTTPAdapter Protocol
+
+The `HTTPAdapter` sends a `POST` on every user turn:
+
+```
+POST https://your-api.example.com/dialog/turn
+Content-Type: application/json
+
+{
+  "text": "I'd like to reschedule my appointment",
+  "context": { ... },
+  "session_id": "sess_xyz789",
+  "system_instructions": ["..."]   // present only after assist() is called
+}
+```
+
+Your endpoint must respond with:
+
+```json
+{
+  "text": "Sure, I can help with that. What date works for you?"
+}
+```
+
+<Note>
+This protocol is **not** OpenAI-compatible. It is a simple text-in / text-out interface - your endpoint owns all LLM or chatbot logic. Forward to OpenAI, Gemini, a rules engine, or anything else under the hood. See [Adapters](/speech-stack/adapters) for the full `HTTPAdapter` contract (streaming, `assist()`, error surfaces).
+</Note>
 
 ---
 

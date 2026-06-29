@@ -85,15 +85,15 @@ async def on_user_turn(text: str) -> None:
 
 ### Switch flows mid-call (graph engine)
 
-`switch_flow` is a **graph-engine** feature - build the machine with a `FlowSet`
-and `engine="flow"`. On the Playbook engine, model the same behaviour with
+`switch_flow` is a **graph-engine** feature - build the machine with a `FlowSet`.
+On the Playbook engine, model the same behaviour with
 multiple `journeys` and `interrupts` in one playbook instead.
 
 ```python
 from superdialog import DialogMachine, Flow, FlowSet
 
 flows = FlowSet({"triage": Flow.load("triage.json"), "billing": Flow.load("billing.json")})
-ctx.session.dialog_machine = DialogMachine(flows, llm="anthropic/claude-haiku-4-5", engine="flow")
+ctx.session.dialog_machine = DialogMachine(flows, llm="anthropic/claude-haiku-4-5")
 
 @ctx.session.on("user_turn")
 async def on_user_turn(text: str) -> None:

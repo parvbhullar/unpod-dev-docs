@@ -28,11 +28,11 @@ m.active_llm      # str: model used on the last turn
 
 ## 2. Stream metrics to your dashboard
 
-The runner fires a `metric` event you can forward anywhere:
+The session fires a `metric` event you can forward anywhere:
 
 ```python
-@runner.on("metric")
-async def _(ctx: CallContext, metric: CallMetrics) -> None:
+@ctx.session.on("metric")
+async def _(metric) -> None:
     push_to_grafana(metric)
 ```
 

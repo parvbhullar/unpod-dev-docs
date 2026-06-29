@@ -71,10 +71,10 @@ The `CallContext` tells you how the session arrived:
 
 ```python
 async def handle_call(ctx: CallContext) -> None:
-    if ctx.direction == "inbound_phone":
-        # caller dialled a number
-    elif ctx.direction == "web":
-        # user connected from browser or app
+    if ctx.direction == "inbound":
+        # caller dialled a number, or a client connected
+    elif ctx.direction == "outbound":
+        # your backend initiated the call
 
     ctx.session.dialog_machine = DialogMachine("agent.yaml", llm="anthropic/claude-haiku-4-5")
     await ctx.session.run()

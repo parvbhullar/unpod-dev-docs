@@ -77,7 +77,7 @@ the full status progression and how to poll for completion.
 The `data` and `instructions` you pass to `calls.create()` are available on the `CallContext`:
 
 ```python
-from superdialog import DialogMachine
+from superdialog import DialogMachine, Flow
 from unpod import AgentRunner, CallContext
 
 async def handle_call(ctx: CallContext) -> None:
@@ -92,7 +92,7 @@ async def handle_call(ctx: CallContext) -> None:
     appt_time = ctx.data.get("appointment_time", "")
 
     ctx.session.dialog_machine = DialogMachine(
-        "reminder.yaml",
+        Flow.load("reminder.yaml"),
         llm="anthropic/claude-haiku-4-5",
     )
     # Inject the personalization as an assist directive
@@ -260,13 +260,13 @@ async def process_callback_queue(queue: list[dict]) -> None:
 import asyncio
 from unpod import AsyncClient
 
-async def get_transcript(call_id: str) -> None:
+async def get_transcript(session_id: str) -> None:
     async with AsyncClient(api_key="sk_...") as client:
-        transcript = await client.transcripts.get(call_id)
-        for turn in transcript.turns:
-            print(f"[{turn.speaker}] {turn.text}")
+        session = await client.transcripts.get(session_id)
+        for entry in session.transcript:
+            print(f"[{entry.role}] {entry.content}")
 
-asyncio.run(get_transcript("cal_..."))
+asyncio.run(get_transcript("sess_..."))
 ```
 
 ---

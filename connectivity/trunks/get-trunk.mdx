@@ -1,0 +1,59 @@
+---
+title: 'Get Trunk'
+icon: 'search'
+description: 'Fetch a single SIP trunk by id'
+openapi: 'GET /api/v2/platform/telephony/trunks/{id}/'
+---
+
+Fetch a single SIP trunk by its `id`. Only trunks owned by your organization are
+returned — anything else is `404`. Secrets are masked.
+
+<Note>
+**Prerequisites:** API Token + Org-Handle. See [Authentication](/api/get-started/authentication).
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                |
+|---------------|--------|----------|----------------------------|
+| Authorization | string | Yes      | `Token <your-api-key>`     |
+| Org-Handle    | string | Yes      | Organization domain handle |
+
+### Path parameters
+
+| Name | Type    | Required | Description |
+|------|---------|----------|-------------|
+| id   | integer | Yes      | Trunk id    |
+
+<ResponseExample>
+
+```json 200
+{
+  "status_code": 200,
+  "message": "Trunk fetched successfully.",
+  "data": {
+    "id": 12,
+    "name": "Acme Primary Trunk",
+    "sip_url": "sip:sip.acme-voice.com",
+    "transport": "tcp",
+    "port": "5060",
+    "auth_username": null,
+    "auth_password": null,
+    "allowed_ips": "",
+    "active": true,
+    "org_handle": "acme.co"
+  }
+}
+```
+
+```json 404
+{ "status_code": 404, "message": "Trunk not found." }
+```
+
+</ResponseExample>
+
+```bash cURL
+curl -s "https://qa3.unpod.tv/api/v2/platform/telephony/trunks/12/" \
+  -H "Authorization: Token <your-api-key>" \
+  -H "Org-Handle: <your-org-handle>"
+```

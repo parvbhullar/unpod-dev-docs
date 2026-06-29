@@ -1,0 +1,82 @@
+---
+title: 'Create Trunk'
+icon: 'plus-circle'
+description: 'Create a SIP trunk (carrier credential) for your organization'
+openapi: 'POST /api/v2/platform/telephony/trunks/'
+---
+
+Create a SIP trunk — your carrier credential. Once created, [map numbers to it](/connectivity/trunks/attach-numbers)
+to receive inbound calls. The response masks `auth_password`.
+
+<Note>
+**Prerequisites:** API Token + Org-Handle. See [Authentication](/api/get-started/authentication).
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                |
+|---------------|--------|----------|----------------------------|
+| Authorization | string | Yes      | `Token <your-api-key>`     |
+| Org-Handle    | string | Yes      | Organization domain handle |
+| Content-Type  | string | Yes      | `application/json`         |
+
+### Request body
+
+| Field         | Type      | Required | Description                                        |
+|---------------|-----------|----------|----------------------------------------------------|
+| name          | string    | Yes      | Display name for the trunk                         |
+| sip_url       | string    | Yes      | Carrier SIP URL / host                             |
+| auth_username | string    | No       | SIP auth username                                  |
+| auth_password | string    | No       | SIP auth password (masked in responses)            |
+| transport     | string    | No       | `tcp` (default), `udp`, or `tls`                   |
+| port          | string    | No       | SIP port (default `5060`)                          |
+| source_ips    | string[]  | No       | Carrier source-IP allow-list (CIDR allowed)        |
+
+<ResponseExample>
+
+```json 201
+{
+  "status_code": 201,
+  "message": "Trunk created successfully.",
+  "data": {
+    "id": 21,
+    "name": "My Carrier Trunk",
+    "sip_url": "sip:carrier.net",
+    "transport": "tcp",
+    "port": "5060",
+    "auth_username": "user",
+    "auth_password": "pass",
+    "allowed_ips": "1.2.3.4,5.6.7.0/24",
+    "active": true,
+    "org_handle": "acme.co"
+  }
+}
+```
+
+```json 400
+{
+  "status_code": 400,
+  "message": "Invalid trunk payload",
+  "error": { "sip_url": ["This field is required."] }
+}
+```
+
+</ResponseExample>
+
+```bash cURL
+curl -s -X POST "https://qa3.unpod.tv/api/v2/platform/telephony/trunks/" \
+  -H "Authorization: Token <your-api-key>" \
+  -H "Org-Handle: <your-org-handle>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Carrier Trunk",
+    "sip_url": "sip:carrier.net",
+    "auth_username": "user",
+    "auth_password": "pass",
+    "transport": "tcp",
+    "port": "5060",
+    "source_ips": ["1.2.3.4", "5.6.7.0/24"]
+  }'
+```
+
+<Tip>Copy the returned `id` — you'll need it to attach numbers, fetch, or delete the trunk.</Tip>

@@ -1,0 +1,81 @@
+---
+title: 'Quickstart'
+icon: 'rocket'
+description: 'Bring your SIP carrier, map a number, and route a call in under 5 minutes'
+---
+
+This walkthrough takes you from zero to a number mapped onto your own SIP carrier. You'll
+need your **API Token** and **Org-Handle** — see [Authentication](/api/get-started/authentication).
+
+<Steps>
+  <Step title="Set your credentials">
+    Every request uses these two headers (writes also send `Content-Type: application/json`):
+
+    ```bash
+    export BASE="https://qa3.unpod.tv"
+    export AUTH="Authorization: Token <your-api-key>"
+    export ORG="Org-Handle: <your-org-handle>"
+    ```
+
+    <Tip>Get your `Org-Handle` from [Get All Organizations](/api/space/organizations) — the `domain_handle` field.</Tip>
+  </Step>
+
+  <Step title="See the numbers available to you">
+    List the unassigned numbers in your org's pool. Note an `id` to use later.
+
+    ```bash
+    curl -s "$BASE/api/v2/platform/telephony/numbers/" -H "$AUTH" -H "$ORG"
+    ```
+
+    See [List Numbers](/connectivity/numbers/list-numbers).
+  </Step>
+
+  <Step title="Create a trunk (your SIP carrier credential)">
+    ```bash
+    curl -s -X POST "$BASE/api/v2/platform/telephony/trunks/" \
+      -H "$AUTH" -H "$ORG" -H "Content-Type: application/json" \
+      -d '{
+        "name": "My Carrier Trunk",
+        "sip_url": "sip:carrier.net",
+        "auth_username": "user",
+        "auth_password": "pass",
+        "transport": "tcp",
+        "port": "5060",
+        "source_ips": ["1.2.3.4", "5.6.7.0/24"]
+      }'
+    ```
+
+    The response returns the new trunk `id` (e.g. `21`). Copy it. See [Create Trunk](/connectivity/trunks/create-trunk).
+  </Step>
+
+  <Step title="Map a number to the trunk">
+    Replace `21` with your trunk id and `501` with a number id from Step 2.
+
+    ```bash
+    curl -s -X POST "$BASE/api/v2/platform/telephony/trunks/21/attach-numbers/" \
+      -H "$AUTH" -H "$ORG" -H "Product-Id: unpod.dev" \
+      -H "Content-Type: application/json" \
+      -d '{"number_ids": [501]}'
+    ```
+
+    The response includes the **origin endpoint** — the SBC ingress your carrier sends
+    inbound calls to, plus the accepted source IPs. See [Attach Numbers to Trunk](/connectivity/trunks/attach-numbers).
+  </Step>
+
+  <Step title="Confirm the lifecycle">
+    ```bash
+    curl -s "$BASE/api/v2/platform/telephony/overview/" -H "$AUTH" -H "$ORG"
+    ```
+
+    Each number shows `connection_state`, termination kind, agent link, and `sync_state`.
+    See [Telephony Overview](/connectivity/calls/overview).
+  </Step>
+</Steps>
+
+## What next
+
+<CardGroup cols={2}>
+  <Card title="Tear down" icon="trash-2" href="/connectivity/trunks/detach-numbers">
+    Detach numbers, then delete the trunk when you're done.
+  </Card>
+</CardGroup>
