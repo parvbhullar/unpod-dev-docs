@@ -35,21 +35,21 @@ header. See [Authentication](/api/get-started/authentication).
 
 ```mermaid
 flowchart LR
-  A["📞<br/>Inbound<br/>Call"] -->|SIP INVITE| B["📡<br/>SIP<br/>Carrier"]
-  B -->|Route| C["🔗<br/>Trunk<br/>Origin Endpoint"]
-  C -->|Match| D["📱<br/>DID/Number<br/>E.164"]
-  D -->|Bridge| E["🤖<br/>Voice AI<br/>Agent"]
+  A["📞<br/><b>Inbound Call</b>"] e1@==>|① SIP INVITE| B["📡<br/><b>SIP Carrier</b>"]
+  B e2@==>|② Route| C["🔗<br/><b>Trunk</b><br/>Origin Endpoint"]
+  C e3@==>|③ Match| D["📱<br/><b>DID / Number</b><br/>E.164"]
+  D e4@==>|④ Bridge| E["🤖<br/><b>Voice AI Agent</b>"]
 
-  A -.->|1| B
-  B -.->|2| C
-  C -.->|3| D
-  D -.->|4| E
+  e1@{ animate: true }
+  e2@{ animate: true }
+  e3@{ animate: true }
+  e4@{ animate: true }
 
-  style A fill:#e74c3c,color:#fff,stroke:#c0392b,stroke-width:3px,color:#fff
-  style B fill:#3498db,color:#fff,stroke:#2980b9,stroke-width:2px
-  style C fill:#9b59b6,color:#fff,stroke:#8e44ad,stroke-width:2px
-  style D fill:#2ecc71,color:#fff,stroke:#27ae60,stroke-width:2px
-  style E fill:#f39c12,color:#fff,stroke:#e67e22,stroke-width:3px
+  classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
+  classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
+  class A,E ep;
+  class B,C,D pp;
+  linkStyle default stroke:#9a90ff,stroke-width:2.5px;
 ```
 
 <Steps>

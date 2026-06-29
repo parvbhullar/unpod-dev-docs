@@ -1,0 +1,235 @@
+---
+title: 'Integrations'
+icon: 'plug'
+description: 'Every provider Unpod plugs into — telephony carriers, voice runtimes, STT, TTS, LLMs, dialog brains, and observability. Mix and match the full stack.'
+---
+
+Unpod is built ground-up for **AI-first interconnectivity**. Telephony brings the
+audio in over SIP or WebSocket; the speech stack transcribes and synthesizes it;
+your brain drives the conversation. Every layer is provider-agnostic — swap one
+without touching the rest.
+
+<Note>
+You compose four independent layers: **carrier** (who delivers the call) →
+**voice runtime** (where the pipeline runs) → **speech** (STT + TTS) → **brain**
+(what generates the reply). Pick best-of-breed at each layer; Unpod wires them
+together and fails over automatically.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Telephony & carriers" icon="phone" href="#telephony--sip-carriers">
+    Bring your own SIP carrier and route numbers to agents.
+  </Card>
+  <Card title="Voice runtimes" icon="cloud" href="#voice-runtimes">
+    LiveKit, Pipecat, VAPI, or native Unpod Voice.
+  </Card>
+  <Card title="Speech (STT / TTS)" icon="audio-waveform" href="#speech-to-text-stt">
+    16 STT and 15 TTS engines behind a single Voice Profile.
+  </Card>
+  <Card title="Dialog brains" icon="bot" href="#dialog-brains">
+    Any LLM, agent framework, or HTTP service drives the call.
+  </Card>
+</CardGroup>
+
+## Telephony / SIP carriers
+
+Unpod is BYO-carrier. Create a trunk with your carrier credentials, attach
+numbers, and inbound calls reach your agents.
+
+| Carrier | How | Status |
+|---|---|---|
+| **Any SIP trunk** (Twilio, Telnyx, Plivo, Vonage, SignalWire, your SBC…) | [Create a trunk](/connectivity/trunks/create-trunk) with `sip_url` + auth + source-IP allow-list | GA |
+| **Twilio** | Elastic SIP Trunking → point at your Unpod origin endpoint | GA |
+| **LiveKit SIP** | Native LiveKit SIP gateway (inbound via webhook or poller) | GA |
+
+<Card title="Connect a carrier" icon="git-branch" href="/connectivity/introduction">
+  The trunk + number + origin-endpoint model, end to end.
+</Card>
+
+## Voice runtimes
+
+The same brain object runs in any host. Pick where the pipeline lives.
+
+<CardGroup cols={3}>
+  <Card title="Unpod Voice" icon="cloud" href="/superdialog/embedding-guides/unpod-voice">
+    Native `AgentRunner` session — numbers and SIP handled for you. No extra server.
+  </Card>
+  <Card title="LiveKit" icon="phone" href="/superdialog/embedding-guides/livekit">
+    Low-latency SIP/WebRTC streaming via the `DialogMachineLLM` plugin.
+  </Card>
+  <Card title="Pipecat" icon="mic" href="/superdialog/embedding-guides/pipecat">
+    Drop-in `FrameProcessor` for open-source Pipecat pipelines.
+  </Card>
+  <Card title="VAPI" icon="waypoints" href="/connectivity/introduction">
+    Managed voice-agent platform — driven through the provider layer.
+  </Card>
+  <Card title="FastAPI" icon="server" href="/superdialog/embedding-guides/fastapi">
+    REST endpoint for text chatbots and web widgets.
+  </Card>
+  <Card title="Raw WebSocket" icon="globe" href="/speech-stack/websocket">
+    Stream raw audio frames directly into the bridge.
+  </Card>
+</CardGroup>
+
+## Speech-to-Text (STT)
+
+STT and TTS are bundled into a [Voice Profile](/speech-stack/voice-profiles) —
+you browse and select; Unpod manages keys and failover. You never wire a provider
+SDK yourself. These are the engines available under the hood:
+
+| Provider | Notable | Provider | Notable |
+|---|---|---|---|
+| **Deepgram** | nova-2 / nova-3, keyterms | **Soniox** | realtime, language ID |
+| **Cartesia** | low-latency | **Sarvam** | Indic, auto-detect |
+| **AssemblyAI** | — | **OpenAI** | whisper-1 |
+| **Google** | Cloud Speech | **Groq** | whisper-large-v3-turbo |
+| **Gladia** | — | **Speechmatics** | — |
+| **AWS Transcribe** | — | **Azure Speech** | — |
+| **FAL** | — | **Smallest.AI** | — |
+| **Gnani** | Indic custom | **LiveKit gateway** | meta-provider |
+
+## Text-to-Speech (TTS)
+
+| Provider | Notable | Provider | Notable |
+|---|---|---|---|
+| **Cartesia** | sonic, pronunciation dict | **ElevenLabs** | realistic voices |
+| **Sarvam** | bulbul, Indic | **Deepgram** | aura voices |
+| **OpenAI** | gpt-4o-mini-tts | **Google** | Cloud TTS |
+| **AWS Polly** | — | **Azure** | — |
+| **LMNT** | blizzard | **Groq** | playai-tts |
+| **Inworld** | — | **Smallest.AI** | 22 languages |
+| **Soniox** | realtime | **Gnani** | vachana, Indic |
+| **LiveKit gateway** | meta-provider | | |
+
+<Card title="Voice Profiles" icon="audio-waveform" href="/speech-stack/voice-profiles">
+  Browse profiles, filter by language, and attach one to a Speech Pipe.
+</Card>
+
+## LLMs
+
+Brains backed by a raw model resolve through three swappable backends — pick by
+URI prefix or env. The default reaches 100+ providers.
+
+| Backend | Selector | Reaches |
+|---|---|---|
+| **any-llm** | `anyllm/` (default) | Official provider SDKs — `anthropic/`, `openai/`, `google/`, `groq/`… |
+| **LiteLLM** | `litellm/` | 100+ providers, plus `vllm/`, `ollama/`, `custom/` |
+| **OpenAI native** | `oai/` | OpenAI API, LiveKit inference gateway, OpenAI-compatible endpoints |
+
+Common model URIs: `anthropic/claude-haiku-4-5`, `openai/gpt-4.1-mini`,
+`google/gemini-*`, `groq/llama-*`. Resilience (timeout / retry / cross-provider
+hedge) wraps any of them.
+
+## Dialog brains
+
+The brain slot is `ctx.session.dialog_machine`. Assign any of these — all
+importable from `unpod.adapters` — or any object satisfying the
+[`DialogAdapter` protocol](/speech-stack/adapters#the-dialogadapter-protocol).
+
+<CardGroup cols={3}>
+  <Card title="SuperDialog" icon="sparkles" href="/superdialog/introduction">
+    Playbook-driven agent. Auto-wrapped. `pip install unpod[dialog]`
+  </Card>
+  <Card title="Anthropic" icon="bot" href="/speech-stack/adapters#bundled-adapters">
+    Wrap an `AsyncAnthropic` client. Real token streaming.
+  </Card>
+  <Card title="OpenAI" icon="bot" href="/speech-stack/adapters#bundled-adapters">
+    Wrap an `AsyncOpenAI` client. Streams via Chat Completions.
+  </Card>
+  <Card title="LangChain" icon="link" href="/speech-stack/adapters#bundled-adapters">
+    Any `Runnable` (chain, agent, graph). `pip install unpod[langchain]`
+  </Card>
+  <Card title="HTTP brain" icon="webhook" href="/speech-stack/adapters#bundled-adapters">
+    Any language — point at a remote endpoint. Ships in base `unpod`.
+  </Card>
+  <Card title="MCP server" icon="network" href="/speech-stack/adapters#bundled-adapters">
+    Model Context Protocol server as a brain. `unpod[mcp]` *(preview)*
+  </Card>
+</CardGroup>
+
+| Adapter | Constructor | Wraps | Install |
+|---|---|---|---|
+| `SuperDialogAdapter` | `(dm)` | superdialog `DialogMachine` / `LLMAgent` | `unpod[dialog]` |
+| `AnthropicAdapter` | `(client, model="claude-haiku-4-5-20251001", system_prompt=None, max_tokens=1024)` | `anthropic.AsyncAnthropic` | `anthropic` |
+| `OpenAIAdapter` | `(client, model="gpt-4o-mini", system_prompt=None)` | `openai.AsyncOpenAI` | `openai` |
+| `LangChainAdapter` | `(chain, input_key="messages")` | LangChain `Runnable` | `unpod[langchain]` |
+| `HTTPAdapter` | `(url, headers=None, timeout_s=10.0)` | Remote HTTP endpoint | base `unpod` |
+| `MCPAdapter` | `(server_url, tools=None, llm="anthropic/claude-haiku-4-5", headers=None)` | MCP server *(preview)* | `unpod[mcp]` |
+
+Any object with `turn()` / `stream()` / `assist()` is a valid brain — the protocol
+is `@runtime_checkable`, no base class required. Slack bots, Discord agents, and
+proprietary engines plug in the same way.
+
+<CardGroup cols={2}>
+  <Card title="Adapters reference" icon="code" href="/speech-stack/adapters">
+    Full protocol, streaming behavior, `assist()` semantics, error surfaces.
+  </Card>
+  <Card title="Bring your agent" icon="puzzle" href="/speech-stack/bring-your-agent">
+    Worked examples and the custom-adapter pattern.
+  </Card>
+</CardGroup>
+
+## Observability & tools
+
+| Integration | Use | Install |
+|---|---|---|
+| **Langfuse** | Session tracing, generation + tool-call observability, evals | `superdialog[langfuse]` |
+| **MCP** | Tool calls over stdio or SSE | `superdialog[mcp]` |
+| **FAISS / ChromaDB** | Vector memory / RAG index | bundled |
+| **Mem0 · LlamaIndex** | Long-term memory + retrieval | bundled |
+| **Tavily · Exa** | Web / AI search tools | bundled |
+
+<Card title="Observability" icon="activity" href="/speech-stack/observability">
+  Wire Langfuse and inspect live sessions.
+</Card>
+
+## Official SDKs
+
+<CardGroup cols={2}>
+  <Card title="Python SDK" icon="code" href="https://github.com/unpod-ai/unpod-python-sdk">
+    `pip install unpod` — management, connectivity, and all dialog adapters.
+  </Card>
+  <Card title="REST API" icon="webhook" href="/api/overview">
+    Language-agnostic. Drive telephony, agents, and calls over HTTP from any stack.
+  </Card>
+</CardGroup>
+
+<Note>
+Python is the only first-party SDK today. Other languages integrate through the
+[REST API](/api/overview) or an [HTTP brain](/speech-stack/adapters#bundled-adapters).
+</Note>
+
+## Prerequisites
+
+<Steps>
+  <Step title="API credentials">
+    An **API Token** and **Org-Handle**. See [Authentication](/api/get-started/authentication).
+  </Step>
+  <Step title="A number routed to an agent">
+    Bring a number and attach it to a trunk → agent. See the [Quickstart](/connectivity/quickstart).
+  </Step>
+  <Step title="The SDK installed">
+    `pip install unpod` plus the extra for your brain (`unpod[dialog]`, `unpod[langchain]`, `unpod[mcp]`).
+  </Step>
+  <Step title="A voice profile">
+    Pick STT + TTS by selecting a [Voice Profile](/speech-stack/voice-profiles) — no provider keys needed.
+  </Step>
+</Steps>
+
+## Choose your integration
+
+| If you want to… | Carrier | Runtime | Brain |
+|---|---|---|---|
+| Ship a playbook-driven agent fast | any SIP | Unpod Voice | **SuperDialog** |
+| Drive a call with a raw Claude / GPT | any SIP | Unpod Voice / LiveKit | **Anthropic** / **OpenAI** |
+| Reuse an existing LangChain chain | any SIP | any | **LangChain** |
+| Keep logic in another language | any SIP | any | **HTTP brain** |
+| Orchestrate tools via MCP | any SIP | any | **MCP** *(preview)* |
+| Run the lowest-latency phone pipeline | any SIP | **LiveKit** | any |
+| Build a text / web chatbot | — | **FastAPI** | any |
+
+<Warning>
+`session.run()` calls only `stream()`. A single-chunk `stream()` fallback
+produces choppy, high-latency audio. Implement real token streaming — see
+[Streaming is the hot path](/speech-stack/bring-your-agent#streaming-is-the-hot-path).
+</Warning>

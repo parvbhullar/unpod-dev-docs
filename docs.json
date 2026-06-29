@@ -155,7 +155,8 @@
             "icon": "book-open",
             "pages": [
               "connectivity/introduction",
-              "connectivity/quickstart"
+              "connectivity/quickstart",
+              "connectivity/integrations"
             ]
           },
           {
