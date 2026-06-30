@@ -1,0 +1,221 @@
+---
+title: 'Integrations & SDKs'
+sidebarTitle: 'Overview'
+icon: 'blocks'
+description: 'Connect Unpod to every major AI voice platform — Vapi, LiveKit, Twilio, Daily and more — over global SIP trunking and a single REST API.'
+---
+
+Unpod is built ground-up for **AI-first interconnectivity**. Route telephone audio
+straight into any major voice platform using **SIP trunking** or **WebSocket
+streaming** — no custom bridges required. Every provider plugs into the same
+trunk → number → agent model, configurable from the **Console** or the **REST API**.
+
+<Note>
+Two ways to connect any platform: the **Dashboard** (no-code, click-through in the
+Unpod Studio) or the **API** (programmatic, language-agnostic REST). Pick either —
+they drive the same underlying trunk.
+</Note>
+
+## Supported Platforms
+
+<div className="int-eyebrow">Voice platforms</div>
+
+<div className="int-grid">
+
+  <a className="int-card" href="/telephony/integrations/vapi/dashboard">
+    <span className="int-badge live">Live</span>
+    <img className="int-logo" src="/logo/integrations/vapi.svg" alt="Vapi" />
+    <span className="int-name">Vapi</span>
+    <span className="int-sub">Production AI voice agents</span>
+  </a>
+
+  <a className="int-card" href="/telephony/integrations/livekit/dashboard">
+    <span className="int-badge live">Live</span>
+    <img className="int-logo" src="/logo/integrations/livekit.svg" alt="LiveKit" />
+    <span className="int-name">LiveKit</span>
+    <span className="int-sub">Low-latency SIP streaming</span>
+  </a>
+
+  <a className="int-card" href="/telephony/integrations/elevenlabs/dashboard">
+    <span className="int-badge live">Live</span>
+    <img className="int-logo" src="/logo/integrations/elevenlabs.svg" alt="ElevenLabs" />
+    <span className="int-name">ElevenLabs</span>
+    <span className="int-sub">Realistic TTS voices</span>
+  </a>
+
+  <a className="int-card int-soon" href="/telephony/integrations/ultravox">
+    <span className="int-badge">Soon</span>
+    <img className="int-logo" src="/logo/integrations/ultravox.svg" alt="Ultravox" />
+    <span className="int-name">Ultravox</span>
+    <span className="int-sub">Multilingual speech model</span>
+  </a>
+
+  <a className="int-card int-soon" href="/telephony/integrations/websockets">
+    <span className="int-badge">Soon</span>
+    <img className="int-logo" src="/logo/integrations/websockets.svg" alt="WebSockets" />
+    <span className="int-name">WebSockets</span>
+    <span className="int-sub">Raw audio streaming</span>
+  </a>
+
+  <a className="int-card int-soon" href="/telephony/integrations/daily/dashboard">
+    <span className="int-badge">Soon</span>
+    <img className="int-logo" src="/logo/integrations/daily.svg" alt="Daily" />
+    <span className="int-name">Daily</span>
+    <span className="int-sub">Multi-party voice &amp; video</span>
+  </a>
+
+  {/* Hidden until launch — Twilio
+  <a className="int-card" href="/telephony/integrations/twilio/dashboard">
+    <span className="int-badge live">Live</span>
+    <img className="int-logo" src="/logo/integrations/twilio.svg" alt="Twilio" />
+    <span className="int-name">Twilio</span>
+    <span className="int-sub">Global programmable voice</span>
+  </a>
+  */}
+
+  {/* Hidden until launch — Pipecat
+  <a className="int-card" href="/telephony/integrations/pipecat">
+    <span className="int-badge live">Live</span>
+    <img className="int-logo" src="/logo/integrations/pipecat.svg" alt="Pipecat" />
+    <span className="int-name">Pipecat</span>
+    <span className="int-sub">Open-source voice pipeline</span>
+  </a>
+  */}
+
+  {/* Hidden until launch — Retell AI
+  <a className="int-card int-soon" href="/telephony/integrations/retell">
+    <span className="int-badge">Soon</span>
+    <img className="int-logo" src="/logo/integrations/retell.svg" alt="Retell AI" />
+    <span className="int-name">Retell AI</span>
+    <span className="int-sub">No-code conversational agents</span>
+  </a>
+  */}
+
+  {/* Hidden until launch — Bolna.ai
+  <a className="int-card int-soon" href="/telephony/integrations/bolna">
+    <span className="int-badge">Soon</span>
+    <img className="int-logo" src="/logo/integrations/bolna.svg" alt="Bolna" />
+    <span className="int-name">Bolna.ai</span>
+    <span className="int-sub">India-first voice agents</span>
+  </a>
+  */}
+
+  {/* Hidden until launch — Dograh
+  <a className="int-card int-soon" href="/telephony/integrations/dograh">
+    <span className="int-badge">Soon</span>
+    <img className="int-logo" src="/logo/integrations/dograh.svg" alt="Dograh" />
+    <span className="int-name">Dograh</span>
+    <span className="int-sub">Self-hosted voice agents</span>
+  </a>
+  */}
+
+  {/* Hidden until launch — OpenAI Realtime
+  <a className="int-card int-soon" href="/telephony/integrations/openai-realtime">
+    <span className="int-badge">Soon</span>
+    <img className="int-logo" src="/logo/integrations/openai.svg" alt="OpenAI Realtime" />
+    <span className="int-name">OpenAI Realtime</span>
+    <span className="int-sub">GPT-4o voice over SIP</span>
+  </a>
+  */}
+
+  {/* Hidden until launch — WebRTC
+  <a className="int-card int-soon" href="/telephony/integrations/webrtc">
+    <span className="int-badge">Soon</span>
+    <img className="int-logo" src="/logo/integrations/webrtc.svg" alt="WebRTC" />
+    <span className="int-name">WebRTC</span>
+    <span className="int-sub">In-browser softphone</span>
+  </a>
+  */}
+
+</div>
+
+## Official SDKs
+
+<div className="int-eyebrow">Build in your language</div>
+
+<div className="int-grid">
+
+  <a className="int-card" href="https://github.com/unpod-ai/unpod-python-sdk">
+    <span className="int-badge live">Live</span>
+    <img className="int-logo" src="/logo/integrations/python.svg" alt="Python" />
+    <span className="int-name">Python SDK</span>
+    <span className="int-sub"><code>pip install unpod</code></span>
+  </a>
+
+  <a className="int-card" href="/api/overview">
+    <span className="int-badge live">Live</span>
+    <img className="int-logo" src="/logo/integrations/rest.svg" alt="REST API" />
+    <span className="int-name">REST API</span>
+    <span className="int-sub">Language-agnostic HTTP</span>
+  </a>
+
+  <a className="int-card int-soon" href="/api/overview">
+    <span className="int-badge">Soon</span>
+    <img className="int-logo" src="/logo/integrations/nodejs.svg" alt="Node.js" />
+    <span className="int-name">Node.js SDK</span>
+    <span className="int-sub">npm package</span>
+  </a>
+
+  <a className="int-card int-soon" href="/api/overview">
+    <span className="int-badge">Soon</span>
+    <img className="int-logo" src="/logo/integrations/ruby.svg" alt="Ruby" />
+    <span className="int-name">Ruby SDK</span>
+    <span className="int-sub">gem install</span>
+  </a>
+
+  <a className="int-card int-soon" href="/api/overview">
+    <span className="int-badge">Soon</span>
+    <img className="int-logo" src="/logo/integrations/go.svg" alt="Go" />
+    <span className="int-name">Go SDK</span>
+    <span className="int-sub">go get</span>
+  </a>
+
+  <a className="int-card int-soon" href="/api/overview">
+    <span className="int-badge">Soon</span>
+    <img className="int-logo" src="/logo/integrations/csharp.svg" alt="C#" />
+    <span className="int-name">C# / .NET SDK</span>
+    <span className="int-sub">NuGet package</span>
+  </a>
+
+</div>
+
+<Note>
+Python is the only first-party SDK today. Other languages integrate through the
+[REST API](/api/overview) or an [HTTP brain](/speech-stack/adapters#bundled-adapters)
+until native SDKs ship.
+</Note>
+
+## Prerequisites
+
+<Steps>
+  <Step title="Create an Unpod account">
+    Sign up and grab an **API Token** + **Org-Handle**. See [Authentication](/api/get-started/authentication).
+  </Step>
+  <Step title="Provision a phone number">
+    Bring a number into your org so calls have a DID. See the [Quickstart](/telephony/quickstart).
+  </Step>
+  <Step title="Create a SIP trunk">
+    A trunk holds your carrier credentials and exposes the origin endpoint. See [Create a trunk](/telephony/trunks/create-trunk).
+  </Step>
+  <Step title="Follow the platform guide">
+    Pick a platform above and run its **Dashboard** or **API** integration guide.
+  </Step>
+</Steps>
+
+## Getting Started
+
+| If you want to… | Recommended platform |
+|---|---|
+| Ship production AI voice agents fast | **Vapi** |
+| Run the lowest-latency phone pipeline | **LiveKit** |
+| Build multi-party voice + video | **Daily** |
+| Drive calls programmatically from any stack | **REST API** |
+
+<CardGroup cols={2}>
+  <Card title="Connect Vapi" icon="bolt" href="/telephony/integrations/vapi/dashboard">
+    The fastest path — Dashboard or API, your choice.
+  </Card>
+  <Card title="Telephony model" icon="git-branch" href="/telephony/introduction">
+    How trunks, numbers, and agents fit together end to end.
+  </Card>
+</CardGroup>

@@ -1,0 +1,47 @@
+---
+title: 'Ultravox'
+icon: 'languages'
+description: 'Ultravox integration for Unpod — multilingual speech model. Coming soon.'
+---
+
+<Note>
+**Coming soon.** Ultravox isn't a one-click provider in Unpod yet. Here's the planned
+model and what you can use today.
+</Note>
+
+**Ultravox** — Multilingual speech model.
+
+## How it will work
+
+Ultravox will connect over **SIP trunking** to run its multilingual speech model against live calls.
+
+<div className="uf-flow">
+  <div className="uf-node">
+    <span className="uf-ic">📞</span>
+    <span className="uf-t">Call</span>
+    <span className="uf-s">Inbound / outbound</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">SIP</span></div>
+  <div className="uf-node is-accent">
+    <span className="uf-ic">🔗</span>
+    <span className="uf-t">Unpod trunk</span>
+    <span className="uf-s">Routing + failover</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">route</span></div>
+  <div className="uf-node">
+    <span className="uf-ic">🌐</span>
+    <span className="uf-t">Ultravox agent</span>
+    <span className="uf-s">Multilingual</span>
+  </div>
+</div>
+
+## Want it sooner?
+
+<CardGroup cols={2}>
+  <Card title="Request early access" icon="bell" href="https://discord.gg/7kQ4ewNSHZ">
+    Ping us on Discord and we'll prioritise Ultravox.
+  </Card>
+  <Card title="Use a live provider" icon="blocks" href="/telephony/integrations/overview">
+    Vapi, LiveKit, Twilio and Daily are ready today.
+  </Card>
+</CardGroup>

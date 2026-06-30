@@ -1,0 +1,47 @@
+---
+title: 'Retell AI'
+icon: 'bot'
+description: 'Retell AI integration for Unpod — no-code conversational agents. Coming soon.'
+---
+
+<Note>
+**Coming soon.** Retell AI isn't a one-click provider in Unpod yet. Here's the planned
+model and what you can use today.
+</Note>
+
+**Retell AI** — No-code conversational agents.
+
+## How it will work
+
+Retell will connect over **SIP trunking**: register a Retell SIP credential, create a matching trunk in the Unpod Console, and route a number to your Retell agent — the same trunk → number → agent model as the live providers.
+
+<div className="uf-flow">
+  <div className="uf-node">
+    <span className="uf-ic">📞</span>
+    <span className="uf-t">Call</span>
+    <span className="uf-s">Inbound / outbound</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">SIP</span></div>
+  <div className="uf-node is-accent">
+    <span className="uf-ic">🔗</span>
+    <span className="uf-t">Unpod trunk</span>
+    <span className="uf-s">Routing + failover</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">route</span></div>
+  <div className="uf-node">
+    <span className="uf-ic">🤖</span>
+    <span className="uf-t">Retell AI agent</span>
+    <span className="uf-s">No-code agents</span>
+  </div>
+</div>
+
+## Want it sooner?
+
+<CardGroup cols={2}>
+  <Card title="Request early access" icon="bell" href="https://discord.gg/7kQ4ewNSHZ">
+    Ping us on Discord and we'll prioritise Retell AI.
+  </Card>
+  <Card title="Use a live provider" icon="blocks" href="/telephony/integrations/overview">
+    Vapi, LiveKit, Twilio and Daily are ready today.
+  </Card>
+</CardGroup>

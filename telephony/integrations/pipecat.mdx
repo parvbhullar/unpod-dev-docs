@@ -1,0 +1,71 @@
+---
+title: 'Pipecat'
+icon: 'git-merge'
+description: 'Run the Unpod brain inside an open-source Pipecat voice pipeline — drop-in FrameProcessor, fully self-hosted.'
+---
+
+Pipecat is an **open-source voice pipeline** you host yourself. Unlike the SIP-trunk
+providers, you don't configure Pipecat as a carrier — instead you drop the Unpod
+brain **into** a Pipecat pipeline as a `FrameProcessor`. Audio that Pipecat captures
+flows through your `DialogMachine`, and the reply streams back out the same pipeline.
+
+<Note>
+Pipecat is a **runtime**, not a SIP provider. There's no Dashboard/API provider
+config — you wire it in code. The full, working integration lives in the embedding guide.
+</Note>
+
+<Card title="Pipecat embedding guide" icon="mic" href="/superdialog/embedding-guides/pipecat">
+  The drop-in `FrameProcessor`, install steps, and a complete pipeline example.
+</Card>
+
+## How it fits
+
+<div className="uf-flow">
+  <div className="uf-node">
+    <span className="uf-ic">🎙️</span>
+    <span className="uf-t">Mic / SIP audio</span>
+    <span className="uf-s">Any Pipecat transport</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">① frames</span></div>
+  <div className="uf-node is-accent">
+    <span className="uf-ic">⚙️</span>
+    <span className="uf-t">Pipecat pipeline</span>
+    <span className="uf-s">STT · VAD · TTS stages</span>
+  </div>
+  <div className="uf-arrow is-loop">
+    <span className="uf-line fwd"><span className="uf-lbl">② user turn</span></span>
+    <span className="uf-line bak"><span className="uf-lbl">③ reply tokens</span></span>
+  </div>
+  <div className="uf-node is-brain">
+    <span className="uf-ic">🧠</span>
+    <span className="uf-t">Unpod FrameProcessor</span>
+    <span className="uf-s">DialogMachine</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">④ TTS stream</span></div>
+  <div className="uf-node">
+    <span className="uf-ic">🔊</span>
+    <span className="uf-t">Audio out</span>
+    <span className="uf-s">Low-latency reply</span>
+  </div>
+</div>
+
+- **Bring audio in** — any Pipecat transport (WebRTC, Daily, telephony) feeds frames.
+- **Insert the brain** — add the Unpod `FrameProcessor` so each user turn drives your `DialogMachine`.
+- **Stream the reply** — tokens stream back through Pipecat's TTS stage for low latency.
+
+## When to pick Pipecat
+
+| Choose Pipecat when… | Otherwise consider |
+|---|---|
+| You want a fully self-hosted, open-source pipeline | **Vapi** (managed) |
+| You already run a Pipecat app and want to add a brain | **Unpod Voice** (native runtime) |
+| You need fine control over each pipeline stage | **LiveKit** (low-latency SIP) |
+
+<CardGroup cols={2}>
+  <Card title="Bring your agent" icon="puzzle" href="/speech-stack/bring-your-agent">
+    The adapter pattern any runtime uses.
+  </Card>
+  <Card title="All platforms" icon="blocks" href="/telephony/integrations/overview">
+    Back to the integrations overview.
+  </Card>
+</CardGroup>

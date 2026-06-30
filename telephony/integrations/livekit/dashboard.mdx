@@ -1,0 +1,116 @@
+---
+title: 'LiveKit (Dashboard)'
+sidebarTitle: 'Dashboard'
+icon: 'layout-dashboard'
+description: 'Connect LiveKit to Unpod with no code — connect a number in the Unpod Studio, then point a LiveKit SIP trunk at it for low-latency streaming.'
+---
+
+The **no-code** path. Connect your number in the Unpod Studio to get an **Unpod SIP
+trunk** (one endpoint, inbound + outbound), then create matching trunks in the
+**LiveKit Cloud** console using those credentials. Prefer code? See the
+[API guide](/telephony/integrations/livekit/api).
+
+<Note>
+**You need:** an Unpod number on a Bridge, a **LiveKit Cloud** project, and a
+**LiveKit agent** to answer inbound calls. The Unpod trunk carries both inbound and
+outbound — no separate provider setup.
+</Note>
+
+<Tip>
+We only show the **Unpod-side** screens here. Treat your LiveKit API Secret and SIP
+trunk credentials as secrets — never paste them into shared docs or screenshots.
+</Tip>
+
+## Part 1 — Get the LiveKit SIP URI
+
+In the **LiveKit Cloud** dashboard, open **Settings → Project** (General) and copy the
+**SIP URI** — it looks like `sip:<project-id>.sip.livekit.cloud`. You paste this into the
+Unpod trunk next so outbound calls reach LiveKit.
+
+## Part 2 — Connect the number in Unpod
+
+<Steps>
+  <Step title="Connect your number">
+    In **Telephony**, select your number (shown as **Not Linked**) and click **Connect**
+    to set up its SIP trunk.
+    <img src="/images/livekit/unpod-connect-number.png" alt="Unpod — number Not Linked, Connect" />
+  </Step>
+
+  <Step title="Point the trunk at LiveKit">
+    In the trunk panel, set the **Trunk Origin Endpoint Details**:
+    - **SIP URI / address** — paste the **LiveKit SIP URI** from Part 1
+      (e.g. `sip:3i5bvr312d9.sip.livekit.cloud`).
+    - **Port** `5060`, **Transport** `TCP` (or `UDP` / `TLS` to match LiveKit).
+    - **Allowed IPs / CIDR** — optional source allow-list.
+
+    Click **Save**. The number then shows **Linked · Unpod SIP Trunk**.
+    <img src="/images/livekit/unpod-edit-trunk-sip-uri.png" alt="Unpod — trunk SIP URI pointing at LiveKit" />
+  </Step>
+
+  <Step title="Copy the origin-endpoint credentials">
+    Under **Origin Endpoint Details** copy these — you'll use them in LiveKit next:
+    - **Address** — e.g. `sip-lb1.unpod.tel`
+    - **Port** / **Protocol** — `5060` / `UDP`
+    - **Username** and **Password** (under **Authentication**)
+    <img src="/images/livekit/unpod-trunk-linked.png" alt="Unpod — linked trunk origin endpoint credentials" />
+  </Step>
+</Steps>
+
+## Part 3 — Create the trunks in LiveKit
+
+In the LiveKit console, go to **Telephony → SIP trunks** and click **Create new trunk**.
+You can fill the form fields or use the **JSON editor** tab. Create two trunks using the
+Unpod credentials from Part 1.
+
+<Steps>
+  <Step title="Inbound trunk">
+    Click **Create new trunk**, set **Trunk direction** to **Inbound**, then set:
+    - `name` — a label for the trunk.
+    - `numbers` — your Unpod phone number (E.164, e.g. `+918071539111`).
+
+    Inbound calls from Unpod will match this trunk by number.
+  </Step>
+
+  <Step title="Outbound trunk">
+    Click **Create new trunk**, set **Trunk direction** to **Outbound**, then map the
+    Unpod values:
+    - `address` ← Unpod **Address** (e.g. `sip-lb1.unpod.tel`)
+    - `numbers` ← your Unpod phone number
+    - `authUsername` ← Unpod **Username**
+    - `authPassword` ← Unpod **Password**
+  </Step>
+</Steps>
+
+## Part 4 — Route inbound to your agent
+
+In **Telephony → Dispatch rules**, click **Create new dispatch rule** so inbound calls
+land in a room your agent joins. Use the form or **JSON editor**:
+
+- **Rule type** — **Individual** (`dispatchRuleIndividual`)
+- **Room prefix** — `call-`
+- **Agent name** — must match your deployed agent name **exactly** (for explicit dispatch)
+
+A single Individual dispatch rule is usually the only routing config you need.
+
+## Publish
+
+Back in the Unpod Studio, click **Publish** to activate the configuration. The number
+is then ready for inbound and outbound calls.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| LiveKit can't place calls | Wrong outbound address or auth | Re-copy **Address** + **Username/Password** from the Unpod origin endpoint |
+| Inbound not arriving | Number not on the inbound trunk | Confirm the Unpod number is in the inbound trunk's `numbers` (E.164) |
+| Call connects, agent silent | Dispatch rule / agent name mismatch | Make **Agent Name** match the deployed agent exactly |
+| Number not reachable | Config not published | Click **Publish** in the Unpod Studio |
+
+<CardGroup cols={2}>
+  <Card title="Do it with code" icon="terminal" href="/telephony/integrations/livekit/api">
+    Same flow over the REST API.
+  </Card>
+  <Card title="All platforms" icon="blocks" href="/telephony/integrations/overview">
+    Back to the integrations overview.
+  </Card>
+</CardGroup>

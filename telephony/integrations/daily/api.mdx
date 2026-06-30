@@ -1,0 +1,88 @@
+---
+title: 'Daily (API)'
+sidebarTitle: 'API'
+icon: 'terminal'
+description: 'Connect Daily to Unpod programmatically — create the provider configuration and bind it to a Bridge over the REST API.'
+---
+
+The **programmatic** path: list providers → create a Daily configuration → connect
+it to your Bridge. Prefer clicks? See the [Dashboard guide](/telephony/integrations/daily/dashboard).
+
+<Note>
+**Base URL:** `https://unpod.ai/api/v2/platform/`
+Every request needs `Authorization: Token <your-api-key>` and an `Org-Handle` header.
+See [Authentication](/api/get-started/authentication).
+</Note>
+
+## Prerequisites
+
+- An Unpod **API Token** and **Org-Handle**.
+- A **Bridge** with a number attached — note its `slug`.
+- A Daily **API Key** from the Daily Dashboard → Developers.
+
+## 1. Find the Daily provider
+
+```bash cURL
+curl https://unpod.ai/api/v2/platform/telephony/providers/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE"
+```
+
+```json Response
+{
+  "status_code": 200,
+  "data": [ { "id": 5, "name": "Daily", "slug": "daily" } ]
+}
+```
+
+## 2. Create the Daily provider configuration
+
+```bash cURL
+curl -X POST https://unpod.ai/api/v2/platform/telephony/providers-configurations/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "daily",
+    "account_sid": "my-daily-config",
+    "auth_token": "<YOUR_DAILY_API_KEY>"
+  }'
+```
+
+```json Response (201)
+{
+  "status_code": 201,
+  "message": "Provider configuration created successfully.",
+  "data": { "id": 44, "provider": "daily", "created_at": "2026-02-07T10:00:00Z" }
+}
+```
+
+## 3. Connect the configuration to your Bridge
+
+```bash cURL
+curl -X POST \
+  https://unpod.ai/api/v2/platform/telephony/bridges/$BRIDGE_SLUG/connect-provider/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{ "provider_config_id": 44 }'
+```
+
+The number on that Bridge now routes through Daily.
+
+## Troubleshooting
+
+| Status | Meaning | Fix |
+|---|---|---|
+| `400` | Invalid API key | Re-check the Daily key in `auth_token` |
+| `401` | Bad Unpod token | Verify `Authorization: Token …` |
+| `409` | Config already exists | Reuse the existing `provider_config_id` |
+
+<CardGroup cols={2}>
+  <Card title="No-code version" icon="layout-dashboard" href="/telephony/integrations/daily/dashboard">
+    The same flow in the Studio UI.
+  </Card>
+  <Card title="Provider API reference" icon="server" href="/api/provider/create-provider">
+    Full request/response schemas.
+  </Card>
+</CardGroup>

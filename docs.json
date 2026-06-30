@@ -159,7 +159,44 @@
             "icon": "book-open",
             "pages": [
               "telephony/introduction",
-              "telephony/quickstart",
+              "telephony/quickstart"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "icon": "blocks",
+            "pages": [
+              "telephony/integrations/overview",
+              {
+                "group": "Vapi",
+                "pages": [
+                  "telephony/integrations/vapi/dashboard",
+                  "telephony/integrations/vapi/api"
+                ]
+              },
+              {
+                "group": "LiveKit",
+                "pages": [
+                  "telephony/integrations/livekit/dashboard",
+                  "telephony/integrations/livekit/api"
+                ]
+              },
+              {
+                "group": "ElevenLabs",
+                "pages": [
+                  "telephony/integrations/elevenlabs/dashboard",
+                  "telephony/integrations/elevenlabs/api"
+                ]
+              },
+              {
+                "group": "Daily",
+                "pages": [
+                  "telephony/integrations/daily/dashboard",
+                  "telephony/integrations/daily/api"
+                ]
+              },
+              "telephony/integrations/ultravox",
+              "telephony/integrations/websockets",
               "telephony/integrations"
             ]
           },

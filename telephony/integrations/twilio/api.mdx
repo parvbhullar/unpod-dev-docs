@@ -1,0 +1,105 @@
+---
+title: 'Twilio (API)'
+sidebarTitle: 'API'
+icon: 'terminal'
+description: 'Connect Twilio to Unpod programmatically — create the provider configuration and bind it to a Bridge over the REST API.'
+---
+
+The **programmatic** path: list providers → create a Twilio configuration → connect
+it to your Bridge. Prefer clicks? See the [Dashboard guide](/telephony/integrations/twilio/dashboard).
+
+<Note>
+**Base URL:** `https://unpod.ai/api/v2/platform/`
+Every request needs `Authorization: Token <your-api-key>` and an `Org-Handle` header.
+See [Authentication](/api/get-started/authentication).
+</Note>
+
+## Prerequisites
+
+- An Unpod **API Token** and **Org-Handle**.
+- A **Bridge** with a number attached — note its `slug`.
+- A Twilio **Account SID** (`AC…`) and **Auth Token**.
+
+## 1. Find the Twilio provider
+
+```bash cURL
+curl https://unpod.ai/api/v2/platform/telephony/providers/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE"
+```
+
+```json Response
+{
+  "status_code": 200,
+  "data": [ { "id": 1, "name": "Twilio", "slug": "twilio" } ]
+}
+```
+
+## 2. Create the Twilio provider configuration
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://unpod.ai/api/v2/platform/telephony/providers-configurations/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "twilio",
+    "account_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "auth_token": "<YOUR_TWILIO_AUTH_TOKEN>"
+  }'
+```
+```python Python
+import requests
+
+H = {"Authorization": f"Token {TOKEN}", "Org-Handle": ORG_HANDLE,
+     "Content-Type": "application/json"}
+payload = {
+    "provider": "twilio",
+    "account_sid": TWILIO_ACCOUNT_SID,
+    "auth_token": TWILIO_AUTH_TOKEN,
+}
+r = requests.post(
+    "https://unpod.ai/api/v2/platform/telephony/providers-configurations/",
+    headers=H, json=payload)
+config_id = r.json()["data"]["id"]
+```
+</CodeGroup>
+
+```json Response (201)
+{
+  "status_code": 201,
+  "message": "Provider configuration created successfully.",
+  "data": { "id": 42, "provider": "twilio", "account_sid": "ACxxxx…", "created_at": "2026-02-07T10:00:00Z" }
+}
+```
+
+## 3. Connect the configuration to your Bridge
+
+```bash cURL
+curl -X POST \
+  https://unpod.ai/api/v2/platform/telephony/bridges/$BRIDGE_SLUG/connect-provider/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{ "provider_config_id": 42 }'
+```
+
+The number on that Bridge now routes through Twilio.
+
+## Troubleshooting
+
+| Status | Meaning | Fix |
+|---|---|---|
+| `400` | Invalid SID/token | Re-check the `AC…` SID and Auth Token |
+| `401` | Bad Unpod token | Verify `Authorization: Token …` |
+| `409` | Config already exists | Reuse the existing `provider_config_id` |
+
+<CardGroup cols={2}>
+  <Card title="No-code version" icon="layout-dashboard" href="/telephony/integrations/twilio/dashboard">
+    The same flow in the Studio UI.
+  </Card>
+  <Card title="Provider API reference" icon="server" href="/api/provider/create-provider">
+    Full request/response schemas.
+  </Card>
+</CardGroup>

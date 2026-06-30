@@ -1,0 +1,150 @@
+---
+title: 'Vapi (API)'
+sidebarTitle: 'API'
+icon: 'terminal'
+description: 'Connect Vapi to Unpod programmatically — create the provider configuration and bind it to a Bridge over the REST API.'
+---
+
+This is the **programmatic** path. Everything the [Dashboard guide](/telephony/integrations/vapi/dashboard)
+does with clicks, you do here with three REST calls: list providers → create a Vapi
+configuration → connect it to your Bridge.
+
+<Note>
+**Base URL:** `https://unpod.ai/api/v2/platform/`
+Every request needs `Authorization: Token <your-api-key>` and an `Org-Handle` header.
+See [Authentication](/api/get-started/authentication).
+</Note>
+
+## Prerequisites
+
+- An Unpod **API Token** and **Org-Handle**.
+- A **Bridge** with a number attached — note its `slug`. See [Create a trunk](/telephony/trunks/create-trunk).
+- A Vapi **API key** from `dashboard.vapi.ai → API Keys`.
+
+## 1. Find the Vapi provider
+
+List the supported providers and note the `slug` for Vapi.
+
+<CodeGroup>
+```bash cURL
+curl https://unpod.ai/api/v2/platform/telephony/providers/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE"
+```
+```python Python
+import requests
+
+H = {"Authorization": f"Token {TOKEN}", "Org-Handle": ORG_HANDLE}
+r = requests.get(
+    "https://unpod.ai/api/v2/platform/telephony/providers/", headers=H)
+providers = r.json()["data"]
+vapi = next(p for p in providers if p["slug"] == "vapi")
+print(vapi["id"], vapi["slug"])
+```
+</CodeGroup>
+
+```json Response
+{
+  "status_code": 200,
+  "message": "Voice infra providers fetched successfully.",
+  "data": [
+    { "id": 3, "name": "Vapi", "slug": "vapi" }
+  ]
+}
+```
+
+## 2. Create the Vapi provider configuration
+
+Register your Vapi key against your org. The secret is never returned.
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://unpod.ai/api/v2/platform/telephony/providers-configurations/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "vapi",
+    "account_sid": "my-vapi-config",
+    "auth_token": "<YOUR_VAPI_API_KEY>"
+  }'
+```
+```python Python
+payload = {
+    "provider": "vapi",
+    "account_sid": "my-vapi-config",
+    "auth_token": VAPI_API_KEY,
+}
+r = requests.post(
+    "https://unpod.ai/api/v2/platform/telephony/providers-configurations/",
+    headers={**H, "Content-Type": "application/json"}, json=payload)
+config_id = r.json()["data"]["id"]
+```
+</CodeGroup>
+
+```json Response (201)
+{
+  "status_code": 201,
+  "message": "Provider configuration created successfully.",
+  "data": { "id": 42, "provider": "vapi", "created_at": "2026-02-07T10:00:00Z" }
+}
+```
+
+<Note>
+`auth_token` carries the Vapi API key. `account_sid` is a label you choose. See the
+full schema on [Create Provider](/api/provider/create-provider).
+</Note>
+
+## 3. Connect the configuration to your Bridge
+
+Bind the configuration (by `id`) to the Bridge that holds your number.
+
+<CodeGroup>
+```bash cURL
+curl -X POST \
+  https://unpod.ai/api/v2/platform/telephony/bridges/$BRIDGE_SLUG/connect-provider/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{ "provider_config_id": 42 }'
+```
+```python Python
+r = requests.post(
+    f"https://unpod.ai/api/v2/platform/telephony/bridges/{BRIDGE_SLUG}/connect-provider/",
+    headers={**H, "Content-Type": "application/json"},
+    json={"provider_config_id": config_id})
+print(r.json()["message"])
+```
+</CodeGroup>
+
+The number on that Bridge now routes through Vapi for inbound and outbound calls.
+
+## 4. Place a test call
+
+Trigger an outbound call through the Calls API to confirm the wiring.
+
+```bash cURL
+curl -X POST https://unpod.ai/api/v2/platform/calls/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{ "to": "+15551234567", "bridge": "'"$BRIDGE_SLUG"'" }'
+```
+
+## Troubleshooting
+
+| Status | Meaning | Fix |
+|---|---|---|
+| `400` | Bad credentials | Re-check the Vapi API key in `auth_token` |
+| `401` | Bad Unpod token | Verify `Authorization: Token …` |
+| `403` | Wrong org | Verify the `Org-Handle` header |
+| `409` | Config already exists | Reuse the existing `provider_config_id` |
+
+<CardGroup cols={2}>
+  <Card title="No-code version" icon="layout-dashboard" href="/telephony/integrations/vapi/dashboard">
+    The same flow in the Studio UI.
+  </Card>
+  <Card title="Provider API reference" icon="server" href="/api/provider/overview">
+    Full request/response schemas.
+  </Card>
+</CardGroup>

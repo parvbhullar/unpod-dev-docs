@@ -1,0 +1,53 @@
+---
+title: 'ElevenLabs'
+icon: 'audio-lines'
+description: 'ElevenLabs integration for Unpod — realistic TTS voices. Coming soon.'
+---
+
+<Note>
+**Coming soon.** ElevenLabs isn't a one-click provider in Unpod yet. Here's the planned
+model and what you can use today.
+</Note>
+
+**ElevenLabs** — Realistic TTS voices.
+
+## How it will work
+
+A first-class **ElevenLabs voice-agent** provider is on the roadmap, joining its existing role as a TTS engine.
+
+<div className="uf-flow">
+  <div className="uf-node">
+    <span className="uf-ic">📞</span>
+    <span className="uf-t">Call</span>
+    <span className="uf-s">Inbound / outbound</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">SIP</span></div>
+  <div className="uf-node is-accent">
+    <span className="uf-ic">🔗</span>
+    <span className="uf-t">Unpod trunk</span>
+    <span className="uf-s">Routing + failover</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">route</span></div>
+  <div className="uf-node">
+    <span className="uf-ic">🗣️</span>
+    <span className="uf-t">ElevenLabs agent</span>
+    <span className="uf-s">Realistic voices</span>
+  </div>
+</div>
+
+## Available today
+
+<Tip>
+ElevenLabs is **already available today** as a TTS engine inside a [Voice Profile](/speech-stack/voice-profiles) — pick it for realistic synthesis, no keys to wire.
+</Tip>
+
+## Want it sooner?
+
+<CardGroup cols={2}>
+  <Card title="Request early access" icon="bell" href="https://discord.gg/7kQ4ewNSHZ">
+    Ping us on Discord and we'll prioritise ElevenLabs.
+  </Card>
+  <Card title="Use a live provider" icon="blocks" href="/telephony/integrations/overview">
+    Vapi, LiveKit, Twilio and Daily are ready today.
+  </Card>
+</CardGroup>

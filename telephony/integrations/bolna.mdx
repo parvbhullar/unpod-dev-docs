@@ -1,0 +1,47 @@
+---
+title: 'Bolna.ai'
+icon: 'bot'
+description: 'Bolna.ai integration for Unpod — india-first voice agents. Coming soon.'
+---
+
+<Note>
+**Coming soon.** Bolna.ai isn't a one-click provider in Unpod yet. Here's the planned
+model and what you can use today.
+</Note>
+
+**Bolna.ai** — India-first voice agents.
+
+## How it will work
+
+Bolna will connect over **SIP trunking** — register the trunk, map a number, and route inbound/outbound calls to your Bolna agent.
+
+<div className="uf-flow">
+  <div className="uf-node">
+    <span className="uf-ic">📞</span>
+    <span className="uf-t">Call</span>
+    <span className="uf-s">Inbound / outbound</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">SIP</span></div>
+  <div className="uf-node is-accent">
+    <span className="uf-ic">🔗</span>
+    <span className="uf-t">Unpod trunk</span>
+    <span className="uf-s">Routing + failover</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">route</span></div>
+  <div className="uf-node">
+    <span className="uf-ic">🤖</span>
+    <span className="uf-t">Bolna.ai agent</span>
+    <span className="uf-s">India-first</span>
+  </div>
+</div>
+
+## Want it sooner?
+
+<CardGroup cols={2}>
+  <Card title="Request early access" icon="bell" href="https://discord.gg/7kQ4ewNSHZ">
+    Ping us on Discord and we'll prioritise Bolna.ai.
+  </Card>
+  <Card title="Use a live provider" icon="blocks" href="/telephony/integrations/overview">
+    Vapi, LiveKit, Twilio and Daily are ready today.
+  </Card>
+</CardGroup>
