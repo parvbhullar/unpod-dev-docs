@@ -190,8 +190,7 @@
               },
               "telephony/integrations/daily",
               "telephony/integrations/ultravox",
-              "telephony/integrations/websockets",
-              "telephony/integrations"
+              "telephony/integrations/websockets"
             ]
           },
           {

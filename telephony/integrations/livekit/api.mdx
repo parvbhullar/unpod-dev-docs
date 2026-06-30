@@ -2,11 +2,13 @@
 title: 'LiveKit (API)'
 sidebarTitle: 'API'
 icon: 'terminal'
-description: 'Connect LiveKit to Unpod programmatically — create the provider configuration and bind it to a Bridge over the REST API.'
+description: 'Set up the Unpod side of a LiveKit integration over the REST API — create a SIP trunk to LiveKit and attach your number.'
 ---
 
-The **programmatic** path: list providers → create a LiveKit configuration → connect
-it to your Bridge. Prefer clicks? See the [Dashboard guide](/telephony/integrations/livekit/dashboard).
+The **programmatic** path for the **Unpod side**: create a SIP trunk pointed at your
+LiveKit SIP URI and attach your number. The trunk's **origin endpoint** is what you then
+use to create the matching trunks in the LiveKit console — see the
+[Dashboard guide](/telephony/integrations/livekit/dashboard) for the LiveKit-side screens.
 
 <Note>
 **Base URL:** `https://unpod.ai/api/v2/platform/`
@@ -17,104 +19,119 @@ See [Authentication](/api/get-started/authentication).
 ## Prerequisites
 
 - An Unpod **API Token** and **Org-Handle**.
-- A **Bridge** with a number attached — note its `slug`.
-- LiveKit **API Key**, **API Secret**, **Base URL**, and **SIP URL** from `cloud.livekit.io`.
+- A number in your org (we'll fetch its `id` below).
+- Your **LiveKit SIP URI** from the LiveKit Cloud dashboard (**Settings → Project**),
+  e.g. `sip:<project-id>.sip.livekit.cloud`.
 
-## 1. Find the LiveKit provider
+## 1. Find your number
 
 ```bash cURL
-curl https://unpod.ai/api/v2/platform/telephony/providers/ \
+curl https://unpod.ai/api/v2/platform/telephony/numbers/ \
   -H "Authorization: Token $UNPOD_TOKEN" \
   -H "Org-Handle: $ORG_HANDLE"
 ```
 
-```json Response
+```json Response (200)
 {
   "status_code": 200,
-  "data": [ { "id": 4, "name": "LiveKit", "slug": "livekit" } ]
+  "message": "Telephony numbers fetched successfully.",
+  "data": [
+    { "id": 501, "number": "+15551234567", "state": "NOT_ASSIGNED", "active": true }
+  ]
 }
 ```
 
-## 2. Create the LiveKit provider configuration
+<Card title="List Numbers reference" icon="hash" href="/telephony/numbers/list-numbers">
+  Full request/response schema.
+</Card>
 
-LiveKit needs a key **and** secret. Pass the API key as `account_sid` and the secret
-as `auth_token`; include the URLs in `metadata`.
+## 2. Create the SIP trunk to LiveKit
 
-<CodeGroup>
+Point the trunk's `sip_url` at your LiveKit SIP URI. One trunk carries both inbound and outbound.
+
 ```bash cURL
-curl -X POST https://unpod.ai/api/v2/platform/telephony/providers-configurations/ \
+curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/ \
   -H "Authorization: Token $UNPOD_TOKEN" \
   -H "Org-Handle: $ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{
-    "provider": "livekit",
-    "account_sid": "<LIVEKIT_API_KEY>",
-    "auth_token": "<LIVEKIT_API_SECRET>",
-    "metadata": {
-      "base_url": "wss://your-project.livekit.cloud",
-      "sip_url": "sip:your-project.sip.livekit.cloud"
-    }
+    "name": "LiveKit trunk",
+    "sip_url": "sip:<project-id>.sip.livekit.cloud",
+    "transport": "tcp",
+    "port": "5060"
   }'
 ```
-```python Python
-import requests
-
-H = {"Authorization": f"Token {TOKEN}", "Org-Handle": ORG_HANDLE,
-     "Content-Type": "application/json"}
-payload = {
-    "provider": "livekit",
-    "account_sid": LIVEKIT_API_KEY,
-    "auth_token": LIVEKIT_API_SECRET,
-    "metadata": {
-        "base_url": "wss://your-project.livekit.cloud",
-        "sip_url": "sip:your-project.sip.livekit.cloud",
-    },
-}
-r = requests.post(
-    "https://unpod.ai/api/v2/platform/telephony/providers-configurations/",
-    headers=H, json=payload)
-config_id = r.json()["data"]["id"]
-```
-</CodeGroup>
 
 ```json Response (201)
 {
   "status_code": 201,
-  "message": "Provider configuration created successfully.",
-  "data": { "id": 43, "provider": "livekit", "created_at": "2026-02-07T10:00:00Z" }
+  "message": "Trunk created successfully.",
+  "data": { "id": 21, "name": "LiveKit trunk", "sip_url": "sip:<project-id>.sip.livekit.cloud", "transport": "tcp", "port": "5060", "active": true }
 }
 ```
 
-## 3. Connect the configuration to your Bridge
+<Card title="Create Trunk reference" icon="plus-circle" href="/telephony/trunks/create-trunk">
+  All request fields (`sip_url`, `auth_username`, `auth_password`, `transport`, `port`, `source_ips`).
+</Card>
+
+## 3. Attach your number to the trunk
+
+Map the number from step 1 (its `id`) to the trunk from step 2 (its `id`). The response
+returns the **origin endpoint** — the address + creds you use in LiveKit.
 
 ```bash cURL
-curl -X POST \
-  https://unpod.ai/api/v2/platform/telephony/bridges/$BRIDGE_SLUG/connect-provider/ \
+curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/21/attach-numbers/ \
   -H "Authorization: Token $UNPOD_TOKEN" \
   -H "Org-Handle: $ORG_HANDLE" \
   -H "Content-Type: application/json" \
-  -d '{ "provider_config_id": 43 }'
+  -d '{ "number_ids": [501] }'
 ```
 
-The number on that Bridge now streams over LiveKit SIP.
+```json Response (201)
+{
+  "status_code": 201,
+  "message": "Numbers mapped to trunk.",
+  "data": {
+    "trunk_id": 21,
+    "origin_endpoint": {
+      "ingress": "sip:sip-lb1.unpod.tel",
+      "dids": ["+15551234567"],
+      "accepted_source_ips": [],
+      "region": "ap-south"
+    }
+  }
+}
+```
 
-<Note>
-Want to drive the LiveKit pipeline directly in Python instead of via SIP trunking?
-Use the native [LiveKit embedding guide](/superdialog/embedding-guides/livekit) with
-the `DialogMachineLLM` plugin.
-</Note>
+The `origin_endpoint.ingress` (plus the trunk's `auth_username` / `auth_password`) is what
+you enter when creating the LiveKit outbound trunk.
+
+<Card title="Attach Numbers reference" icon="link" href="/telephony/trunks/attach-numbers">
+  Path params, request body, and the full origin-endpoint response.
+</Card>
+
+## Next: configure the LiveKit side
+
+The Unpod side is done. In the LiveKit console create the **inbound** + **outbound** SIP
+trunks (using the origin endpoint above) and a **dispatch rule** to route inbound calls
+to your agent. That's LiveKit's own setup — follow their guide.
+
+<Card title="LiveKit SIP trunk setup" icon="arrow-up-right-from-square" href="https://docs.livekit.io/telephony/start/sip-trunk-setup/">
+  Create the inbound/outbound trunks and dispatch rule in the LiveKit console.
+</Card>
 
 ## Troubleshooting
 
 | Status | Meaning | Fix |
 |---|---|---|
-| `400` | Bad credentials / URLs | Re-check key, secret, `base_url`, `sip_url` |
+| `400` on `/trunks/` | Missing `sip_url` | Send your `sip:<project-id>.sip.livekit.cloud` |
+| `400` on attach | Number not in org | Use a valid `id` from **GET /numbers/** |
 | `401` | Bad Unpod token | Verify `Authorization: Token …` |
-| `409` | Config already exists | Reuse the existing `provider_config_id` |
+| `403` | Wrong org | Verify the `Org-Handle` header |
 
 <CardGroup cols={2}>
   <Card title="No-code version" icon="layout-dashboard" href="/telephony/integrations/livekit/dashboard">
-    The same flow in the Studio UI.
+    The same setup in the Studio UI.
   </Card>
   <Card title="LiveKit embedding" icon="cloud" href="/superdialog/embedding-guides/livekit">
     Run the brain inside a LiveKit agent.

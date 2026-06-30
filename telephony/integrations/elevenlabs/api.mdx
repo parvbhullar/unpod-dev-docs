@@ -2,13 +2,13 @@
 title: 'ElevenLabs (API)'
 sidebarTitle: 'API'
 icon: 'terminal'
-description: 'Connect ElevenLabs to Unpod programmatically — create a SIP trunk to ElevenLabs, attach your number, register the ElevenLabs provider, and bind it to a Bridge.'
+description: 'Set up the Unpod side of an ElevenLabs integration over the REST API — create a SIP trunk to ElevenLabs and attach your number.'
 ---
 
-The **programmatic** path. This is the **hybrid** model: a **SIP trunk** carries the
-audio to ElevenLabs, and an **ElevenLabs provider configuration** (your ElevenLabs API
-key) lets Unpod manage the agent side. Prefer clicks? See the
-[Dashboard guide](/telephony/integrations/elevenlabs/dashboard).
+The **programmatic** path for the **Unpod side**: create a SIP trunk pointed at ElevenLabs
+and attach your number. The trunk's **origin endpoint** is what you then register in
+ElevenLabs as a BYO SIP trunk — see the [Dashboard guide](/telephony/integrations/elevenlabs/dashboard)
+for the ElevenLabs-side screens.
 
 <Note>
 **Base URL:** `https://unpod.ai/api/v2/platform/`
@@ -19,13 +19,33 @@ See [Authentication](/api/get-started/authentication).
 ## Prerequisites
 
 - An Unpod **API Token** and **Org-Handle**.
-- A **number** in your org — note its `number_id` (and a **Bridge** `slug`).
-- An ElevenLabs **API Key** (ElevenLabs Dashboard → Profile → API Keys) and a
-  **Conversational AI agent** (with a First Message + voice).
+- A number in your org (we'll fetch its `id` below).
 
-## 1. Create the SIP trunk to ElevenLabs
+## 1. Find your number
 
-Point the trunk's `sip_url` at ElevenLabs' SIP host.
+```bash cURL
+curl https://unpod.ai/api/v2/platform/telephony/numbers/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE"
+```
+
+```json Response (200)
+{
+  "status_code": 200,
+  "message": "Telephony numbers fetched successfully.",
+  "data": [
+    { "id": 501, "number": "+15551234567", "state": "NOT_ASSIGNED", "active": true }
+  ]
+}
+```
+
+<Card title="List Numbers reference" icon="hash" href="/telephony/numbers/list-numbers">
+  Full request/response schema.
+</Card>
+
+## 2. Create the SIP trunk to ElevenLabs
+
+Point the trunk's `sip_url` at ElevenLabs' SIP host. One trunk carries both inbound and outbound.
 
 ```bash cURL
 curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/ \
@@ -48,9 +68,14 @@ curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/ \
 }
 ```
 
-<Tip>Copy the returned trunk `id` — you need it in the next step.</Tip>
+<Card title="Create Trunk reference" icon="plus-circle" href="/telephony/trunks/create-trunk">
+  All request fields (`sip_url`, `auth_username`, `auth_password`, `transport`, `port`, `source_ips`).
+</Card>
 
-## 2. Attach your number to the trunk
+## 3. Attach your number to the trunk
+
+Map the number from step 1 (its `id`) to the trunk from step 2 (its `id`). The response
+returns the **origin endpoint** — the address + creds you register in ElevenLabs.
 
 ```bash cURL
 curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/21/attach-numbers/ \
@@ -68,7 +93,7 @@ curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/21/attach-numbers
     "trunk_id": 21,
     "origin_endpoint": {
       "ingress": "sip:sip-lb1.unpod.tel",
-      "dids": ["+918071539111"],
+      "dids": ["+15551234567"],
       "accepted_source_ips": [],
       "region": "ap-south"
     }
@@ -76,70 +101,35 @@ curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/21/attach-numbers
 }
 ```
 
-The `origin_endpoint.ingress` is the **address you give ElevenLabs** for the outbound
-trunk in step 5.
+The `origin_endpoint.ingress` (plus the trunk's `auth_username` / `auth_password`) is what
+you enter in ElevenLabs' BYO SIP trunk.
 
-## 3. Register the ElevenLabs provider (API key)
+<Card title="Attach Numbers reference" icon="link" href="/telephony/trunks/attach-numbers">
+  Path params, request body, and the full origin-endpoint response.
+</Card>
 
-This stores your ElevenLabs API key so Unpod can manage the agent side.
+## Next: configure the ElevenLabs side
 
-```bash cURL
-curl -X POST https://unpod.ai/api/v2/platform/telephony/providers-configurations/ \
-  -H "Authorization: Token $UNPOD_TOKEN" \
-  -H "Org-Handle: $ORG_HANDLE" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "provider": "elevenlabs",
-    "account_sid": "my-elevenlabs-config",
-    "auth_token": "<YOUR_ELEVENLABS_API_KEY>"
-  }'
-```
+The Unpod side is done. In ElevenLabs, import the number **from SIP trunk** (outbound
+Address = the origin endpoint above), then attach your Conversational AI agent. That's
+ElevenLabs' own setup — follow their guide.
 
-```json Response (201)
-{
-  "status_code": 201,
-  "message": "Provider configuration created successfully.",
-  "data": { "id": 47, "provider": "elevenlabs", "created_at": "2026-02-07T10:00:00Z" }
-}
-```
-
-## 4. Connect the provider configuration to your Bridge
-
-```bash cURL
-curl -X POST \
-  https://unpod.ai/api/v2/platform/telephony/bridges/$BRIDGE_SLUG/connect-provider/ \
-  -H "Authorization: Token $UNPOD_TOKEN" \
-  -H "Org-Handle: $ORG_HANDLE" \
-  -H "Content-Type: application/json" \
-  -d '{ "provider_config_id": 47 }'
-```
-
-## 5. Finish on the ElevenLabs side
-
-In ElevenLabs **Agents → Phone Numbers → Import a phone number from SIP trunk**:
-
-- **Phone Number** — your Unpod number (E.164).
-- **Outbound trunk → Address** — the `origin_endpoint.ingress` from step 2
-  (hostname only, no `sip:` prefix, e.g. `sip-lb1.unpod.tel`), Transport `TCP`.
-- **Attach** your Conversational AI **agent**.
-
-See the [Dashboard guide](/telephony/integrations/elevenlabs/dashboard) for the full
-ElevenLabs-side screens.
+<Card title="ElevenLabs SIP trunking docs" icon="arrow-up-right-from-square" href="https://elevenlabs.io/docs/eleven-agents/phone-numbers/sip-trunking">
+  Import the number from SIP trunk, set transport/encryption, and attach the agent.
+</Card>
 
 ## Troubleshooting
 
-| Status / symptom | Meaning | Fix |
+| Status | Meaning | Fix |
 |---|---|---|
 | `400` on `/trunks/` | Missing `sip_url` | Send `sip:sip.rtc.elevenlabs.io:5060;transport=tcp` |
-| `400` on attach | Number not in org | Use a valid `number_id` from your org |
-| `400` on provider config | Invalid ElevenLabs key | Re-check `auth_token` |
+| `400` on attach | Number not in org | Use a valid `id` from **GET /numbers/** |
 | `401` | Bad Unpod token | Verify `Authorization: Token …` |
-| `409` | Config already exists | Reuse the existing `provider_config_id` |
-| Inbound silent | Agent missing First Message/voice | Set both on the ElevenLabs agent |
+| `403` | Wrong org | Verify the `Org-Handle` header |
 
 <CardGroup cols={2}>
   <Card title="No-code version" icon="layout-dashboard" href="/telephony/integrations/elevenlabs/dashboard">
-    The same hybrid flow in the Studio UI.
+    The same setup in the Studio UI.
   </Card>
   <Card title="Trunk API reference" icon="server" href="/telephony/trunks/create-trunk">
     Full SIP trunk request/response schemas.
