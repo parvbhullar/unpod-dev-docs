@@ -2,12 +2,12 @@
 title: 'LiveKit (API)'
 sidebarTitle: 'API'
 icon: 'terminal'
-description: 'Set up the Unpod side of a LiveKit integration over the REST API — create a SIP trunk to LiveKit and attach your number.'
+description: 'Set up the Unpod side of a LiveKit integration over the REST API - create a SIP trunk to LiveKit and attach your number.'
 ---
 
 The **programmatic** path for the **Unpod side**: create a SIP trunk pointed at your
 LiveKit SIP URI and attach your number. The trunk's **origin endpoint** is what you then
-use to create the matching trunks in the LiveKit console — see the
+use to create the matching trunks in the LiveKit console - see the
 [Dashboard guide](/telephony/integrations/livekit/dashboard) for the LiveKit-side screens.
 
 <Note>
@@ -77,7 +77,7 @@ curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/ \
 ## 3. Attach your number to the trunk
 
 Map the number from step 1 (its `id`) to the trunk from step 2 (its `id`). The response
-returns the **origin endpoint** — the address + creds you use in LiveKit.
+returns the **origin endpoint** - the address + creds you use in LiveKit.
 
 ```bash cURL
 curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/21/attach-numbers/ \
@@ -110,14 +110,86 @@ you enter when creating the LiveKit outbound trunk.
   Path params, request body, and the full origin-endpoint response.
 </Card>
 
-## Next: configure the LiveKit side
+## Configure the LiveKit side
 
-The Unpod side is done. In the LiveKit console create the **inbound** + **outbound** SIP
-trunks (using the origin endpoint above) and a **dispatch rule** to route inbound calls
-to your agent. That's LiveKit's own setup — follow their guide.
+The Unpod side is done. LiveKit's SIP API is served over **Twirp HTTP** at
+`{LIVEKIT_URL}/twirp/livekit.SIP/<Method>`. Authenticate with a **LiveKit access token**
+(JWT with a SIP admin grant) - mint one with `lk token create --sip-admin` or a server SDK.
 
-<Card title="LiveKit SIP trunk setup" icon="arrow-up-right-from-square" href="https://docs.livekit.io/telephony/start/sip-trunk-setup/">
-  Create the inbound/outbound trunks and dispatch rule in the LiveKit console.
+```bash Env
+export LIVEKIT_URL="https://<project-id>.livekit.cloud"
+export LIVEKIT_TOKEN="<access-token-with-sip-admin>"
+```
+
+### 4. Create the inbound trunk
+
+```bash cURL
+curl -X POST "$LIVEKIT_URL/twirp/livekit.SIP/CreateSIPInboundTrunk" \
+  -H "Authorization: Bearer $LIVEKIT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "trunk": {
+      "name": "Unpod inbound",
+      "numbers": ["+15551234567"]
+    }
+  }'
+```
+
+```json Response
+{ "sip_trunk_id": "ST_inbound123", "name": "Unpod inbound", "numbers": ["+15551234567"] }
+```
+
+### 5. Create the outbound trunk
+
+```bash cURL
+curl -X POST "$LIVEKIT_URL/twirp/livekit.SIP/CreateSIPOutboundTrunk" \
+  -H "Authorization: Bearer $LIVEKIT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "trunk": {
+      "name": "Unpod outbound",
+      "address": "sip-lb1.unpod.tel",
+      "destination_country": "US",
+      "transport": "SIP_TRANSPORT_TCP",
+      "numbers": ["+15551234567"],
+      "auth_username": "<unpod trunk username>",
+      "auth_password": "<unpod trunk password>"
+    }
+  }'
+```
+
+```json Response
+{ "sip_trunk_id": "ST_outbound456", "name": "Unpod outbound", "address": "sip-lb1.unpod.tel" }
+```
+
+`trunk.address` = your `origin_endpoint.ingress` host (no `sip:` prefix).
+
+### 6. Create the dispatch rule
+
+```bash cURL
+curl -X POST "$LIVEKIT_URL/twirp/livekit.SIP/CreateSIPDispatchRule" \
+  -H "Authorization: Bearer $LIVEKIT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "dispatch_rule": {
+      "rule": { "dispatchRuleIndividual": { "roomPrefix": "call-" } }
+    },
+    "trunk_ids": ["ST_inbound123"]
+  }'
+```
+
+```json Response
+{ "sip_dispatch_rule_id": "SDR_abc789", "trunk_ids": ["ST_inbound123"] }
+```
+
+<Note>
+The same calls are available via the **`lk` CLI** (`lk sip inbound create <file>`) and the
+server SDKs (Go `SIPClient`, JS `SipClient`, Python `sip_service`). Field shapes follow
+LiveKit's SIP proto - confirm in their API reference.
+</Note>
+
+<Card title="LiveKit SIP API reference" icon="arrow-up-right-from-square" href="https://docs.livekit.io/sip/api/">
+  Full trunk + dispatch-rule API and SDK usage (this is LiveKit's API).
 </Card>
 
 ## Troubleshooting
@@ -128,12 +200,3 @@ to your agent. That's LiveKit's own setup — follow their guide.
 | `400` on attach | Number not in org | Use a valid `id` from **GET /numbers/** |
 | `401` | Bad Unpod token | Verify `Authorization: Token …` |
 | `403` | Wrong org | Verify the `Org-Handle` header |
-
-<CardGroup cols={2}>
-  <Card title="No-code version" icon="layout-dashboard" href="/telephony/integrations/livekit/dashboard">
-    The same setup in the Studio UI.
-  </Card>
-  <Card title="LiveKit embedding" icon="cloud" href="/superdialog/embedding-guides/livekit">
-    Run the brain inside a LiveKit agent.
-  </Card>
-</CardGroup>

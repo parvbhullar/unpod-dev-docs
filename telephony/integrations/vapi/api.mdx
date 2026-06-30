@@ -2,12 +2,12 @@
 title: 'Vapi (API)'
 sidebarTitle: 'API'
 icon: 'terminal'
-description: 'Set up the Unpod side of a Vapi integration over the REST API — create a SIP trunk to Vapi and attach your number.'
+description: 'Set up the Unpod side of a Vapi integration over the REST API - create a SIP trunk to Vapi and attach your number.'
 ---
 
 The **programmatic** path for the **Unpod side**: create a SIP trunk pointed at Vapi and
 attach your number. The trunk's **origin endpoint** is what you then register in Vapi as a
-BYO SIP trunk — see the [Dashboard guide](/telephony/integrations/vapi/dashboard) for the
+BYO SIP trunk - see the [Dashboard guide](/telephony/integrations/vapi/dashboard) for the
 Vapi-side screens.
 
 <Note>
@@ -77,7 +77,7 @@ curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/ \
 ## 3. Attach your number to the trunk
 
 Map the number from step 1 (its `id`) to the trunk from step 2 (its `id`). The response
-returns the **origin endpoint** — the address + creds you register in Vapi.
+returns the **origin endpoint** - the address + creds you register in Vapi.
 
 ```bash cURL
 curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/21/attach-numbers/ \
@@ -110,14 +110,48 @@ you enter in Vapi's BYO SIP trunk.
   Path params, request body, and the full origin-endpoint response.
 </Card>
 
-## Next: configure the Vapi side
+## Configure the Vapi side
 
-The Unpod side is done. Register the origin endpoint in Vapi as a **BYO SIP trunk**
-(credential → phone number), then assign your assistant. That's Vapi's own API — follow
-their guide.
+The Unpod side is done. Register the origin endpoint in Vapi as a **BYO SIP trunk**, then
+import the number. These are **Vapi's own APIs** (`api.vapi.ai`, `Authorization: Bearer <vapi-key>`).
+
+### 4. Create the BYO SIP trunk credential
+
+```bash cURL
+curl -X POST https://api.vapi.ai/credential \
+  -H "Authorization: Bearer $VAPI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "byo-sip-trunk",
+    "name": "Unpod trunk",
+    "gateways": [{ "ip": "sip-lb1.unpod.tel", "inboundEnabled": true }],
+    "outboundAuthenticationPlan": {
+      "authUsername": "<unpod trunk username>",
+      "authPassword": "<unpod trunk password>"
+    }
+  }'
+```
+
+`gateways[].ip` = your Unpod `origin_endpoint.ingress` (host only, no `sip:`). Copy the
+returned credential `id`.
+
+### 5. Import the number
+
+```bash cURL
+curl -X POST https://api.vapi.ai/phone-number \
+  -H "Authorization: Bearer $VAPI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "byo-phone-number",
+    "number": "+15551234567",
+    "credentialId": "<credential id from step 4>"
+  }'
+```
+
+Then assign your assistant to the number (inbound).
 
 <Card title="Vapi SIP trunk docs" icon="arrow-up-right-from-square" href="https://docs.vapi.ai/advanced/sip/sip-trunk">
-  Create the BYO SIP trunk credential with your Unpod `ingress` + auth, import the number, and route calls.
+  Full BYO SIP trunk credential + phone-number reference (fields may change - this is Vapi's API).
 </Card>
 
 ## Troubleshooting
@@ -128,12 +162,3 @@ their guide.
 | `400` on attach | Number not in org | Use a valid `id` from **GET /numbers/** |
 | `401` | Bad Unpod token | Verify `Authorization: Token …` |
 | `403` | Wrong org | Verify the `Org-Handle` header |
-
-<CardGroup cols={2}>
-  <Card title="No-code version" icon="layout-dashboard" href="/telephony/integrations/vapi/dashboard">
-    The same setup in the Studio UI.
-  </Card>
-  <Card title="Trunk API reference" icon="server" href="/telephony/trunks/create-trunk">
-    Full SIP trunk request/response schemas.
-  </Card>
-</CardGroup>

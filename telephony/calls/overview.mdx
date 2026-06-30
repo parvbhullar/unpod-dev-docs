@@ -7,7 +7,7 @@ openapi: 'GET /api/v2/platform/telephony/overview/'
 
 A per-number lifecycle overview for your organization: one row per `ASSIGNED` number on
 your bridges, exposing `connection_state`, termination kind, agent link, and the
-projection `sync_state`. This endpoint is DB-only — it never live-probes the projection
+projection `sync_state`. This endpoint is DB-only - it never live-probes the projection
 planes, so it stays fast and never errors on a missing projection. Secrets are masked.
 
 <Note>

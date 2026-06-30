@@ -2,7 +2,7 @@
 title: 'ElevenLabs (Dashboard)'
 sidebarTitle: 'Dashboard'
 icon: 'layout-dashboard'
-description: 'Connect ElevenLabs to Unpod with no code — connect a number in the Unpod Studio, then import it into ElevenLabs Conversational AI over SIP.'
+description: 'Connect ElevenLabs to Unpod with no code - connect a number in the Unpod Studio, then import it into ElevenLabs Conversational AI over SIP.'
 ---
 
 The **no-code** path. Connect your number in the Unpod Studio to get an **Unpod SIP
@@ -17,7 +17,7 @@ Conversational AI** over SIP and attach an agent. Prefer code? See the
 
 <Tip>
 We only show the **Unpod-side** screens here. Treat your SIP trunk username/password as
-secrets — never paste them into shared docs or screenshots.
+secrets - never paste them into shared docs or screenshots.
 </Tip>
 
 ## How it fits
@@ -48,21 +48,21 @@ secrets — never paste them into shared docs or screenshots.
   </div>
 </div>
 
-## Part 1 — Connect the number in Unpod
+## Part 1 - Connect the number in Unpod
 
 <Steps>
   <Step title="Connect your number">
     In **Telephony**, select your number (shown as **Not Linked**) and click **Connect**
     to set up its SIP trunk.
-    <img src="/images/elevenlabs/unpod-connect-number.png" alt="Unpod — number Not Linked, Connect" />
+    <img src="/images/elevenlabs/unpod-connect-number.png" alt="Unpod - number Not Linked, Connect" />
   </Step>
 
   <Step title="Point the trunk at ElevenLabs (inbound)">
     In the trunk panel, set the **Trunk Origin Endpoint Details** to ElevenLabs' SIP host:
-    - **SIP URI / address** — `sip:sip.rtc.elevenlabs.io:5060;transport=tcp`
+    - **SIP URI / address** - `sip:sip.rtc.elevenlabs.io:5060;transport=tcp`
       (or port `5061` with `transport=tls` for TLS).
     - **Port** `5060` (TCP) / `5061` (TLS).
-    - **Allowed IPs / CIDR** — optional source allow-list.
+    - **Allowed IPs / CIDR** - optional source allow-list.
 
     Click **Save**. The number then shows **Linked · Unpod SIP Trunk**.
 
@@ -73,46 +73,46 @@ secrets — never paste them into shared docs or screenshots.
   </Step>
 
   <Step title="Copy the origin-endpoint credentials">
-    Under **Origin Endpoint Details** copy these — you'll paste them into ElevenLabs next:
-    - **Address** — e.g. `sip-lb1.unpod.tel`
-    - **Port** / **Protocol** — `5060` / `TCP`
+    Under **Origin Endpoint Details** copy these - you'll paste them into ElevenLabs next:
+    - **Address** - e.g. `sip-lb1.unpod.tel`
+    - **Port** / **Protocol** - `5060` / `TCP`
     - **Username** and **Password** (under **Authentication**)
-    <img src="/images/elevenlabs/unpod-trunk-linked.png" alt="Unpod — linked trunk origin endpoint credentials" />
+    <img src="/images/elevenlabs/unpod-trunk-linked.png" alt="Unpod - linked trunk origin endpoint credentials" />
   </Step>
 </Steps>
 
-## Part 2 — Import the number into ElevenLabs
+## Part 2 - Import the number into ElevenLabs
 
 In the **ElevenLabs Agents** dashboard, open the **Phone Numbers** section.
 
 <Steps>
   <Step title="Open Phone Numbers → Import">
     Click **Import number**, then choose **Import a phone number from SIP trunk**.
-    <img src="/images/elevenlabs/el-phone-numbers.png" alt="ElevenLabs — Phone Numbers, Import number" />
+    <img src="/images/elevenlabs/el-phone-numbers.png" alt="ElevenLabs - Phone Numbers, Import number" />
   </Step>
 
   <Step title="Basic configuration">
     In the **Import SIP Trunk** panel set:
-    - **Label** — a descriptive name.
-    - **Phone Number** — your Unpod number in E.164 (e.g. `+918071539111`), or a SIP
+    - **Label** - a descriptive name.
+    - **Phone Number** - your Unpod number in E.164 (e.g. `+918071539111`), or a SIP
       extension / identifier.
-    <img src="/images/elevenlabs/el-import-sip-trunk.png" alt="ElevenLabs — Import SIP Trunk panel" />
+    <img src="/images/elevenlabs/el-import-sip-trunk.png" alt="ElevenLabs - Import SIP Trunk panel" />
   </Step>
 
   <Step title="Inbound configuration">
     Under **Inbound Configuration** (forwards calls to the ElevenLabs SIP server):
-    - **Media Encryption** — `Allowed` (use `Required` with TLS for production).
-    - **Allowed Numbers** *(optional)* — leave empty to allow all.
-    - **Allowed Source IP Addresses** *(optional)* — `0.0.0.0/0` to allow all (TCP/TLS only;
+    - **Media Encryption** - `Allowed` (use `Required` with TLS for production).
+    - **Allowed Numbers** *(optional)* - leave empty to allow all.
+    - **Allowed Source IP Addresses** *(optional)* - `0.0.0.0/0` to allow all (TCP/TLS only;
       restrict in production).
   </Step>
 
-  <Step title="Outbound trunk — point back at Unpod">
+  <Step title="Outbound trunk - point back at Unpod">
     So ElevenLabs can send calls to Unpod, enter the Unpod origin-endpoint values from Part 1:
-    - **Address** — your Unpod address, **hostname only, no `sip:` prefix** (e.g. `sip-lb1.unpod.tel`).
-    - **Transport Type** — `TCP` (or `TLS`).
-    - **Media Encryption** — `Allowed` (use `Required` with TLS for production).
-    - **SIP Trunk Username** / **SIP Trunk Password** — the Unpod **Username** / **Password**.
+    - **Address** - your Unpod address, **hostname only, no `sip:` prefix** (e.g. `sip-lb1.unpod.tel`).
+    - **Transport Type** - `TCP` (or `TLS`).
+    - **Media Encryption** - `Allowed` (use `Required` with TLS for production).
+    - **SIP Trunk Username** / **SIP Trunk Password** - the Unpod **Username** / **Password**.
 
     Click **Import**.
   </Step>
@@ -123,7 +123,7 @@ In the **ElevenLabs Agents** dashboard, open the **Phone Numbers** section.
 Your system must support **G711 or G722** codecs (8 kHz / 16 kHz) or resample.
 </Tip>
 
-## Part 3 — Attach your agent
+## Part 3 - Attach your agent
 
 <Steps>
   <Step title="Attach the inbound agent">

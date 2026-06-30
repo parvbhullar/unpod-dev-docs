@@ -6,7 +6,7 @@ description: 'Connect phone numbers, SIP trunks, and calls to your Unpod Voice A
 
 The **Connectivity** APIs are the telephony control plane for Unpod. They let you bring
 your own carrier (BYO-SIP), map phone numbers to that carrier, route numbers to your
-Voice AI agents, and observe the per-number call lifecycle — all over a single REST surface.
+Voice AI agents, and observe the per-number call lifecycle - all over a single REST surface.
 
 <Note>
 **Base URL:** `https://qa3.unpod.tv/api/v2/platform/`
@@ -27,7 +27,7 @@ header. See [Authentication](/api/get-started/authentication).
   </Card>
   <Card title="Calls" icon="phone" href="/telephony/calls/overview">
     Observe the lifecycle: which numbers are linked, to which agent or carrier, and the
-    projection sync state — plus full call logs.
+    projection sync state - plus full call logs.
   </Card>
 </CardGroup>
 
@@ -74,16 +74,16 @@ There is one primary termination path:
 
 | Path | What it does | Endpoint |
 |------|--------------|----------|
-| **Leg A — BYO carrier** | Map a number to your SIP trunk; the carrier sends inbound calls to your origin endpoint. | [Attach Numbers to Trunk](/telephony/trunks/attach-numbers) |
+| **Leg A - BYO carrier** | Map a number to your SIP trunk; the carrier sends inbound calls to your origin endpoint. | [Attach Numbers to Trunk](/telephony/trunks/attach-numbers) |
 
 ## Key concepts
 
-- **DID/Number** — a phone number in E.164 format (e.g. `+15551234567`).
-- **Trunk** — a SIP carrier credential (`sip_url`, `transport`, `port`, auth, source-IP allow-list). Secrets are always masked in responses.
-- **Origin endpoint** — the shared SBC ingress (`sip:<host>`) the carrier sends inbound calls to, plus the accepted source IPs and mapped DIDs.
-- **Bridge** — the routing entity numbers attach onto. It is **auto-resolved and hidden** on the Connectivity surface — you never manage it directly here.
-- **Partial success** — attach/detach operate on a list; each number reports `ok`/`error` independently.
+- **DID/Number** - a phone number in E.164 format (e.g. `+15551234567`).
+- **Trunk** - a SIP carrier credential (`sip_url`, `transport`, `port`, auth, source-IP allow-list). Secrets are always masked in responses.
+- **Origin endpoint** - the shared SBC ingress (`sip:<host>`) the carrier sends inbound calls to, plus the accepted source IPs and mapped DIDs.
+- **Bridge** - the routing entity numbers attach onto. It is **auto-resolved and hidden** on the Connectivity surface - you never manage it directly here.
+- **Partial success** - attach/detach operate on a list; each number reports `ok`/`error` independently.
 
 <Card title="Get started in 5 minutes" icon="rocket" href="/telephony/quickstart">
-  Create a trunk, map a number, and confirm the lifecycle — step by step.
+  Create a trunk, map a number, and confirm the lifecycle - step by step.
 </Card>

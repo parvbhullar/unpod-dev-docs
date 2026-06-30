@@ -5,7 +5,7 @@ description: 'Bring your SIP carrier, map a number, and route a call in under 5 
 ---
 
 This walkthrough takes you from zero to a number mapped onto your own SIP carrier. You'll
-need your **API Token** and **Org-Handle** — see [Authentication](/api/get-started/authentication).
+need your **API Token** and **Org-Handle** - see [Authentication](/api/get-started/authentication).
 
 <Steps>
   <Step title="Set your credentials">
@@ -17,7 +17,7 @@ need your **API Token** and **Org-Handle** — see [Authentication](/api/get-sta
     export ORG="Org-Handle: <your-org-handle>"
     ```
 
-    <Tip>Get your `Org-Handle` from [Get All Organizations](/api/space/organizations) — the `domain_handle` field.</Tip>
+    <Tip>Get your `Org-Handle` from [Get All Organizations](/api/space/organizations) - the `domain_handle` field.</Tip>
   </Step>
 
   <Step title="See the numbers available to you">
@@ -58,7 +58,7 @@ need your **API Token** and **Org-Handle** — see [Authentication](/api/get-sta
       -d '{"number_ids": [501]}'
     ```
 
-    The response includes the **origin endpoint** — the SBC ingress your carrier sends
+    The response includes the **origin endpoint** - the SBC ingress your carrier sends
     inbound calls to, plus the accepted source IPs. See [Attach Numbers to Trunk](/telephony/trunks/attach-numbers).
   </Step>
 
@@ -76,9 +76,9 @@ need your **API Token** and **Org-Handle** — see [Authentication](/api/get-sta
 
 <CardGroup cols={2}>
   <Card title="Detach numbers" icon="unlink" href="/telephony/trunks/detach-numbers">
-    Step 1 — unmap numbers from the trunk, returning them to `NOT_ASSIGNED`.
+    Step 1 - unmap numbers from the trunk, returning them to `NOT_ASSIGNED`.
   </Card>
   <Card title="Delete trunk" icon="trash-2" href="/telephony/trunks/delete-trunk">
-    Step 2 — remove the trunk and its credential once numbers are detached.
+    Step 2 - remove the trunk and its credential once numbers are detached.
   </Card>
 </CardGroup>

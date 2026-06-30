@@ -1,17 +1,17 @@
 ---
 title: 'Pipecat'
 icon: 'git-merge'
-description: 'Run the Unpod brain inside an open-source Pipecat voice pipeline — drop-in FrameProcessor, fully self-hosted.'
+description: 'Run the Unpod brain inside an open-source Pipecat voice pipeline - drop-in FrameProcessor, fully self-hosted.'
 ---
 
 Pipecat is an **open-source voice pipeline** you host yourself. Unlike the SIP-trunk
-providers, you don't configure Pipecat as a carrier — instead you drop the Unpod
+providers, you don't configure Pipecat as a carrier - instead you drop the Unpod
 brain **into** a Pipecat pipeline as a `FrameProcessor`. Audio that Pipecat captures
 flows through your `DialogMachine`, and the reply streams back out the same pipeline.
 
 <Note>
 Pipecat is a **runtime**, not a SIP provider. There's no Dashboard/API provider
-config — you wire it in code. The full, working integration lives in the embedding guide.
+config - you wire it in code. The full, working integration lives in the embedding guide.
 </Note>
 
 <Card title="Pipecat embedding guide" icon="mic" href="/superdialog/embedding-guides/pipecat">
@@ -49,9 +49,9 @@ config — you wire it in code. The full, working integration lives in the embed
   </div>
 </div>
 
-- **Bring audio in** — any Pipecat transport (WebRTC, Daily, telephony) feeds frames.
-- **Insert the brain** — add the Unpod `FrameProcessor` so each user turn drives your `DialogMachine`.
-- **Stream the reply** — tokens stream back through Pipecat's TTS stage for low latency.
+- **Bring audio in** - any Pipecat transport (WebRTC, Daily, telephony) feeds frames.
+- **Insert the brain** - add the Unpod `FrameProcessor` so each user turn drives your `DialogMachine`.
+- **Stream the reply** - tokens stream back through Pipecat's TTS stage for low latency.
 
 ## When to pick Pipecat
 

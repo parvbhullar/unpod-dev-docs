@@ -43,7 +43,7 @@ openapi: 'GET /api/v2/platform/cdr/'
 
 # Get Call Detail Records (CDR)
 
-Retrieve telephony call detail records (CDR) for your organization — only SIP-based telephony calls, not voice agent calls.
+Retrieve telephony call detail records (CDR) for your organization - only SIP-based telephony calls, not voice agent calls.
 
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
@@ -101,7 +101,7 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 | sip_cause          | string  | Human-readable SIP cause (`null` if none)              |
 
 <Note>
-This CDR surface returns **telephony SIP records only** — it intentionally omits
+This CDR surface returns **telephony SIP records only** - it intentionally omits
 agent / space / organization attribution (voice-agent call logs live elsewhere).
 </Note>
 

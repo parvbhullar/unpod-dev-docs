@@ -54,8 +54,8 @@ Source on GitHub: [unpod-ai/unpod-python-sdk](https://github.com/unpod-ai/unpod-
 
 <Tip>
 **Where to get your keys:**
-- **`UNPOD_API_KEY`** — [unpod.ai/api-keys](https://unpod.ai/api-keys/) → create a new key
-- **`ANTHROPIC_API_KEY`** — your own key from [console.anthropic.com](https://console.anthropic.com) → **API Keys**. Use any provider you want — OpenAI, Gemini, etc. The variable name is just an example.
+- **`UNPOD_API_KEY`** - [unpod.ai/api-keys](https://unpod.ai/api-keys/) → create a new key
+- **`ANTHROPIC_API_KEY`** - your own key from [console.anthropic.com](https://console.anthropic.com) → **API Keys**. Use any provider you want - OpenAI, Gemini, etc. The variable name is just an example.
 </Tip>
 
 Create a `.env` file in your project root and add the API keys:
@@ -66,7 +66,7 @@ Create a `.env` file in your project root and add the API keys:
     UNPOD_API_KEY="sk_..."
     ANTHROPIC_API_KEY="sk-ant-..."
 
-    # Local dev overrides — remove for production
+    # Local dev overrides - remove for production
     UNPOD_SERVICE_BASE_URL=http://localhost:8000/platform
     UNPOD_ORCHESTRATOR_URL=ws://localhost:8000
     ```
@@ -90,7 +90,7 @@ Create a `.env` file in your project root and add the API keys:
 - REST: `https://<host>/platform`
 - Runner/orchestrator: `wss://<host>`
 
-For local dev, set `UNPOD_SERVICE_BASE_URL` and `UNPOD_ORCHESTRATOR_URL` separately — `UNPOD_BASE_URL` does not work for local services.
+For local dev, set `UNPOD_SERVICE_BASE_URL` and `UNPOD_ORCHESTRATOR_URL` separately - `UNPOD_BASE_URL` does not work for local services.
 </Note>
 
 <Note>
@@ -342,13 +342,13 @@ No npm package needed for local dev. Open the Supervoice web dashboard:
 http://localhost:3100
 ```
 
-Point it at your pipe — it handles microphone capture, session token exchange,
+Point it at your pipe - it handles microphone capture, session token exchange,
 and the audio bridge. The same `AgentRunner` from Step 7T handles both phone
 and browser sessions with no changes.
 
 <Note>
 `@unpod/web-sdk` is not yet published on npm. `localhost:3100` is the local
-Supervoice UI — start it before opening the browser demo.
+Supervoice UI - start it before opening the browser demo.
 </Note>
 
 ### Step 8W - Run Your Agent
