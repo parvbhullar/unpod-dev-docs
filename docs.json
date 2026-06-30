@@ -188,13 +188,7 @@
                   "telephony/integrations/elevenlabs/api"
                 ]
               },
-              {
-                "group": "Daily",
-                "pages": [
-                  "telephony/integrations/daily/dashboard",
-                  "telephony/integrations/daily/api"
-                ]
-              },
+              "telephony/integrations/daily",
               "telephony/integrations/ultravox",
               "telephony/integrations/websockets",
               "telephony/integrations"
