@@ -38,11 +38,11 @@ numbers, and inbound calls reach your agents.
 
 | Carrier | How | Status |
 |---|---|---|
-| **Any SIP trunk** (Twilio, Telnyx, Plivo, Vonage, SignalWire, your SBC…) | [Create a trunk](/connectivity/trunks/create-trunk) with `sip_url` + auth + source-IP allow-list | GA |
+| **Any SIP trunk** (Twilio, Telnyx, Plivo, Vonage, SignalWire, your SBC…) | [Create a trunk](/telephony/trunks/create-trunk) with `sip_url` + auth + source-IP allow-list | GA |
 | **Twilio** | Elastic SIP Trunking → point at your Unpod origin endpoint | GA |
 | **LiveKit SIP** | Native LiveKit SIP gateway (inbound via webhook or poller) | GA |
 
-<Card title="Connect a carrier" icon="git-branch" href="/connectivity/introduction">
+<Card title="Connect a carrier" icon="git-branch" href="/telephony/introduction">
   The trunk + number + origin-endpoint model, end to end.
 </Card>
 
@@ -60,7 +60,7 @@ The same brain object runs in any host. Pick where the pipeline lives.
   <Card title="Pipecat" icon="mic" href="/superdialog/embedding-guides/pipecat">
     Drop-in `FrameProcessor` for open-source Pipecat pipelines.
   </Card>
-  <Card title="VAPI" icon="waypoints" href="/connectivity/introduction">
+  <Card title="VAPI" icon="waypoints" href="/telephony/introduction">
     Managed voice-agent platform — driven through the provider layer.
   </Card>
   <Card title="FastAPI" icon="server" href="/superdialog/embedding-guides/fastapi">
@@ -206,7 +206,7 @@ Python is the only first-party SDK today. Other languages integrate through the
     An **API Token** and **Org-Handle**. See [Authentication](/api/get-started/authentication).
   </Step>
   <Step title="A number routed to an agent">
-    Bring a number and attach it to a trunk → agent. See the [Quickstart](/connectivity/quickstart).
+    Bring a number and attach it to a trunk → agent. See the [Quickstart](/telephony/quickstart).
   </Step>
   <Step title="The SDK installed">
     `pip install unpod` plus the extra for your brain (`unpod[dialog]`, `unpod[langchain]`, `unpod[mcp]`).

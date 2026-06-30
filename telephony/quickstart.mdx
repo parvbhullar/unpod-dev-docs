@@ -27,7 +27,7 @@ need your **API Token** and **Org-Handle** — see [Authentication](/api/get-sta
     curl -s "$BASE/api/v2/platform/telephony/numbers/" -H "$AUTH" -H "$ORG"
     ```
 
-    See [List Numbers](/connectivity/numbers/list-numbers).
+    See [List Numbers](/telephony/numbers/list-numbers).
   </Step>
 
   <Step title="Create a trunk (your SIP carrier credential)">
@@ -45,7 +45,7 @@ need your **API Token** and **Org-Handle** — see [Authentication](/api/get-sta
       }'
     ```
 
-    The response returns the new trunk `id` (e.g. `21`). Copy it. See [Create Trunk](/connectivity/trunks/create-trunk).
+    The response returns the new trunk `id` (e.g. `21`). Copy it. See [Create Trunk](/telephony/trunks/create-trunk).
   </Step>
 
   <Step title="Map a number to the trunk">
@@ -59,7 +59,7 @@ need your **API Token** and **Org-Handle** — see [Authentication](/api/get-sta
     ```
 
     The response includes the **origin endpoint** — the SBC ingress your carrier sends
-    inbound calls to, plus the accepted source IPs. See [Attach Numbers to Trunk](/connectivity/trunks/attach-numbers).
+    inbound calls to, plus the accepted source IPs. See [Attach Numbers to Trunk](/telephony/trunks/attach-numbers).
   </Step>
 
   <Step title="Confirm the lifecycle">
@@ -68,17 +68,17 @@ need your **API Token** and **Org-Handle** — see [Authentication](/api/get-sta
     ```
 
     Each number shows `connection_state`, termination kind, agent link, and `sync_state`.
-    See [Telephony Overview](/connectivity/calls/overview).
+    See [Telephony Overview](/telephony/calls/overview).
   </Step>
 </Steps>
 
 ## What next
 
 <CardGroup cols={2}>
-  <Card title="Detach numbers" icon="unlink" href="/connectivity/trunks/detach-numbers">
+  <Card title="Detach numbers" icon="unlink" href="/telephony/trunks/detach-numbers">
     Step 1 — unmap numbers from the trunk, returning them to `NOT_ASSIGNED`.
   </Card>
-  <Card title="Delete trunk" icon="trash-2" href="/connectivity/trunks/delete-trunk">
+  <Card title="Delete trunk" icon="trash-2" href="/telephony/trunks/delete-trunk">
     Step 2 — remove the trunk and its credential once numbers are detached.
   </Card>
 </CardGroup>

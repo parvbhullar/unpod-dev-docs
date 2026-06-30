@@ -17,15 +17,15 @@ header. See [Authentication](/api/get-started/authentication).
 ## The three building blocks
 
 <CardGroup cols={3}>
-  <Card title="Numbers" icon="hash" href="/connectivity/numbers/list-numbers">
+  <Card title="Numbers" icon="hash" href="/telephony/numbers/list-numbers">
     Your phone numbers (DIDs). List the pool available to your org and attach a number
     to an agent so inbound calls reach it.
   </Card>
-  <Card title="Trunks" icon="git-branch" href="/connectivity/trunks/list-trunks">
+  <Card title="Trunks" icon="git-branch" href="/telephony/trunks/list-trunks">
     A trunk is your SIP carrier credential. Create one, map numbers to it, and get back
     the carrier ingress (the *origin endpoint*).
   </Card>
-  <Card title="Calls" icon="phone" href="/connectivity/calls/overview">
+  <Card title="Calls" icon="phone" href="/telephony/calls/overview">
     Observe the lifecycle: which numbers are linked, to which agent or carrier, and the
     projection sync state — plus full call logs.
   </Card>
@@ -74,7 +74,7 @@ There is one primary termination path:
 
 | Path | What it does | Endpoint |
 |------|--------------|----------|
-| **Leg A — BYO carrier** | Map a number to your SIP trunk; the carrier sends inbound calls to your origin endpoint. | [Attach Numbers to Trunk](/connectivity/trunks/attach-numbers) |
+| **Leg A — BYO carrier** | Map a number to your SIP trunk; the carrier sends inbound calls to your origin endpoint. | [Attach Numbers to Trunk](/telephony/trunks/attach-numbers) |
 
 ## Key concepts
 
@@ -84,6 +84,6 @@ There is one primary termination path:
 - **Bridge** — the routing entity numbers attach onto. It is **auto-resolved and hidden** on the Connectivity surface — you never manage it directly here.
 - **Partial success** — attach/detach operate on a list; each number reports `ok`/`error` independently.
 
-<Card title="Get started in 5 minutes" icon="rocket" href="/connectivity/quickstart">
+<Card title="Get started in 5 minutes" icon="rocket" href="/telephony/quickstart">
   Create a trunk, map a number, and confirm the lifecycle — step by step.
 </Card>

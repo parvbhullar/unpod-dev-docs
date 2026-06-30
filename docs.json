@@ -17,6 +17,10 @@
     "dark": "/logo/white.svg",
     "href": "https://unpod.dev"
   },
+  "feedback": {
+    "suggestEdit": false,
+    "raiseIssue": false
+  },
   "navigation": {
     "tabs": [
       {
@@ -154,36 +158,36 @@
             "group": "Getting Started",
             "icon": "book-open",
             "pages": [
-              "connectivity/introduction",
-              "connectivity/quickstart",
-              "connectivity/integrations"
+              "telephony/introduction",
+              "telephony/quickstart",
+              "telephony/integrations"
             ]
           },
           {
             "group": "Numbers",
             "icon": "hash",
             "pages": [
-              "connectivity/numbers/list-numbers"
+              "telephony/numbers/list-numbers"
             ]
           },
           {
             "group": "Trunks",
             "icon": "git-branch",
             "pages": [
-              "connectivity/trunks/list-trunks",
-              "connectivity/trunks/create-trunk",
-              "connectivity/trunks/get-trunk",
-              "connectivity/trunks/attach-numbers",
-              "connectivity/trunks/detach-numbers",
-              "connectivity/trunks/delete-trunk"
+              "telephony/trunks/list-trunks",
+              "telephony/trunks/create-trunk",
+              "telephony/trunks/get-trunk",
+              "telephony/trunks/attach-numbers",
+              "telephony/trunks/detach-numbers",
+              "telephony/trunks/delete-trunk"
             ]
           },
           {
             "group": "Calls",
             "icon": "phone",
             "pages": [
-              "connectivity/calls/overview",
-              "connectivity/calls/call-logs"
+              "telephony/calls/overview",
+              "telephony/calls/call-logs"
             ]
           }
         ]
@@ -396,11 +400,11 @@
             "group": "Guides",
             "icon": "newspaper",
             "pages": [
-              "blog/index",
-              "blog/getting-started-with-unpod-api",
+              "guides/index",
+              "guides/getting-started-with-unpod-api",
               "platform/build-an-agent",
-              "blog/self-hosting-unpod",
-              "blog/understanding-telephony",
+              "guides/self-hosting-unpod",
+              "guides/understanding-telephony",
               "api/post-call-data"
             ]
           }
