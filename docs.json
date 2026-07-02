@@ -133,7 +133,8 @@
             "icon": "code",
             "pages": [
               "superdialog/api-reference",
-              "superdialog/cli"
+              "superdialog/cli",
+              "superdialog/evals"
             ]
           },
           {

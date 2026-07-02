@@ -1,0 +1,122 @@
+---
+title: "A/B Evals"
+icon: 'scale-balanced'
+description: "A/B-evaluate a playbook on the SuperDialog engine against a vanilla LLM handed the same playbook — scored from the transcript alone, so both are judged by an identical rubric."
+---
+
+## What it answers
+
+`superdialog eval` answers one question: **does running your playbook on the
+SuperDialog engine beat handing the same playbook to a raw LLM as a flat system
+prompt?**
+
+It drives two modes over one dataset and scores both from the conversation
+**transcript only** — never from engine internals — so the playbook and the
+vanilla baseline face an identical rubric. Use it to justify adopting the
+engine, to catch regressions, or to expose your playbook to any external
+benchmark.
+
+<Note>
+This is different from `superdialog optimize` and the persona-eval loop in the
+[API Reference](/superdialog/api-reference#replay-and-the-eval-bridge). That
+loop asks "is this playbook good enough, and how do I improve its prose?" — the
+A/B harness here asks "is the playbook **machinery** earning its keep over a
+plain prompt?"
+</Note>
+
+## The two modes
+
+| Mode | What runs |
+|---|---|
+| `playbook` | The full Director + Talker checkpoint runtime loading your playbook |
+| `vanilla` | One raw LLM handed the playbook file as a single flat system prompt |
+
+The runner only sees `str` in / `str` out, so a mode is just a factory that
+returns a conversation endpoint. Endpoints ship for in-process playbook /
+vanilla, a remote HTTP SuperDialog server, and any OpenAI-compatible model.
+
+## Headline metrics
+
+| Metric | Kind | Reads |
+|---|---|---|
+| `task_success` | LLM judge (0–1) | full transcript vs the case goal |
+| `slot_accuracy` | LLM judge (0–1) | transcript vs `ground_truth_slots` |
+| `guardrail` | LLM judge (hard gate) | each guardrail-probe reply |
+| `efficiency` | pure code | user turns + assistant latency p50/p95 |
+
+<Warning>
+`guardrail` is a **hard gate**. If either mode complies with a probe attack,
+that case's composite score is zeroed and it counts toward the
+`guardrail_violation_rate` — no matter how well it did on the other metrics.
+</Warning>
+
+## Run it
+
+Two phases: build the dataset once (offline, commit it), then A/B-run it.
+
+```bash
+# 1. Build <playbook>.evalcases.yaml — personas auto-generated, probes injected
+superdialog eval gen-dataset --playbook spa.yaml --n-probes 8
+
+# 2. A/B both modes → report.json (full) + report.md (headline table + drilldown)
+superdialog eval run \
+  --playbook spa.yaml --dataset spa.evalcases.yaml \
+  --modes vanilla,playbook \
+  --agent-model openai/gpt-4.1-mini \
+  --judge-model openai/gpt-4.1-mini \
+  --metrics task_success,slot_accuracy,guardrail,efficiency \
+  --out ./eval-out
+```
+
+Useful `eval run` flags:
+
+| Flag | Default | Description |
+|---|---|---|
+| `--modes` | `vanilla,playbook` | Which modes to compare |
+| `--agent-model` | `openai/gpt-4.1-mini` | Model both modes answer with |
+| `--director-model` / `--talker-model` | agent model | Per-role LLMs for playbook mode |
+| `--judge-model` | `openai/gpt-4.1-mini` | LLM that scores the transcripts |
+| `--user-model` | agent model | LLM that simulates the persona / caller |
+| `--metrics` | all four | Comma-separated headline metrics |
+| `--repeats` | `1` | Runs per case (average out variance) |
+
+The dataset format mirrors the RAGAS single-/multi-turn shape: each case carries
+a persona, `ground_truth_slots`, and a list of probes.
+
+## Serve it to an external benchmark
+
+Expose the playbook as an OpenAI-compatible endpoint and grade it like any other
+model:
+
+```bash
+superdialog eval serve --playbook spa.yaml --port 8000
+# POST /v1/chat/completions  →  the playbook answers as the "model"
+```
+
+## RAGAS is optional (and version-pinned)
+
+The custom LLM judges produce every headline metric with **no RAGAS installed**.
+RAGAS metrics are opt-in via the `ragas` extra:
+
+```bash
+pip install superdialog[ragas]
+```
+
+<Warning>
+SuperDialog ships **two** RAGAS-based harnesses on incompatible RAGAS lines:
+the A/B `ragas` extra (RAGAS 0.4.3) and the separate `benchmark` extra
+(RAGAS 0.2.x, used by `superdialog benchmark`). They **cannot co-install** —
+pick one extra per environment. With `uv`, they are declared conflicting so the
+project still resolves; with `pip`, install only one.
+</Warning>
+
+## Legacy session audit
+
+The older single-session audit lives under the same command group:
+
+```bash
+superdialog eval flow --flow kyc.json --traversal session.json
+```
+
+See the [CLI Reference](/superdialog/cli#superdialog-eval) for every `eval`
+subcommand.

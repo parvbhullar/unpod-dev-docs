@@ -106,14 +106,56 @@ playbook explicitly.
 
 ## `superdialog eval`
 
-Audit a recorded session or run a synthetic eval.
+A subcommand group: the **playbook-vs-vanilla A/B harness** plus the legacy
+single-session audit. Full guide: [A/B Evals](/superdialog/evals).
 
 ```bash
-superdialog eval --flow kyc.json --traversal session.json
+superdialog eval gen-dataset --playbook spa.yaml --n-probes 8     # build the dataset
+superdialog eval run --playbook spa.yaml --dataset spa.evalcases.yaml --out ./eval-out
+superdialog eval serve --playbook spa.yaml --port 8000           # OpenAI-compatible endpoint
+superdialog eval flow --flow kyc.json --traversal session.json   # legacy session audit
 ```
 
-Outputs an audit / comparison report. (For playbook persona evals from Python,
-see `run_eval` in the [API Reference](/superdialog/api-reference#replay-and-the-eval-bridge).)
+| Subcommand | Purpose |
+|---|---|
+| `gen-dataset` | Build `<playbook>.evalcases.yaml` (personas + probes) offline |
+| `run` | A/B both modes over a dataset, write `report.json` + `report.md` |
+| `serve` | Serve the playbook as an OpenAI-compatible endpoint for any benchmark |
+| `flow` | Legacy: audit a recorded session (`--traversal`) or run a synthetic eval |
+
+`eval run` takes `--modes`, `--agent-model`, `--director-model`,
+`--talker-model`, `--judge-model`, `--user-model`, `--metrics`, and `--repeats`
+— see the [A/B Evals](/superdialog/evals) guide. (For playbook persona evals
+from Python, see `run_eval` in the
+[API Reference](/superdialog/api-reference#replay-and-the-eval-bridge).)
+
+---
+
+## `superdialog benchmark`
+
+A separate RAGAS + deterministic harness: replays a dataset's user turns at one
+or more models and scores **raw LLM vs with-SuperDialog** against ground truth
+in one big table.
+
+```bash
+superdialog benchmark --data universal --flow kyc.yaml --prompt raw_system.txt
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--data` | `universal` | Dataset short name or path to a `.jsonl` |
+| `--flow` | dataset's `playbook` | Playbook YAML to run |
+| `--prompt` | - | Raw-LLM system-prompt `.txt` (needed for the raw baseline) |
+| `--models` | `gpt-4o-mini,gpt-4.1-mini,claude-haiku` | Models to score |
+| `--sd-only` / `--raw-only` | - | Restrict to one side |
+| `--no-ragas` | - | Deterministic metrics only (no judge; fast/free) |
+| `--out` | - | Write the report table to this path |
+
+<Note>
+`benchmark` uses the RAGAS 0.2.x line (the `benchmark` extra), while the A/B
+`eval` harness uses RAGAS 0.4.3 (the `ragas` extra). They cannot co-install —
+see [A/B Evals → RAGAS](/superdialog/evals#ragas-is-optional-and-version-pinned).
+</Note>
 
 ---
 
