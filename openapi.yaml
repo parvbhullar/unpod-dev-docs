@@ -5,7 +5,7 @@ info:
   version: 2.0.0
 
 servers:
-  - url: https://qa.unpod.tv/
+  - url: https://unpod.ai/
     description: QA
   - url: https://unpod.ai/
     description: Production
