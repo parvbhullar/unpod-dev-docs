@@ -2,87 +2,87 @@
 title: 'Daily (Dashboard)'
 sidebarTitle: 'Dashboard'
 icon: 'layout-dashboard'
-description: 'Connect Daily to Unpod with no code - configure Daily as a provider in the Unpod Studio for multi-party voice and video.'
+description: 'Connect Daily to Unpod with no code - create a SIP trunk on your Unpod number and point it at your Daily SIP dial-in room.'
 ---
 
-The **no-code** path. Configure Daily as a provider in the Unpod Studio and bind it
-to a number for multi-party, web-based voice and video. Prefer code? See the
+The **no-code** path. Create a SIP trunk on your Unpod number, point it at your **Daily
+SIP dial-in** address, then copy the trunk's origin-endpoint credentials so Daily can reach
+Unpod. One trunk carries inbound and outbound. Prefer code? See the
 [API guide](/telephony/integrations/daily/api).
 
 <Note>
-**You need:** an Unpod number on a Bridge, and a Daily account with an **API Key**
-(Daily Dashboard → Developers).
+**You need:** an Unpod number on a Bridge, and a Daily account with **SIP dial-in enabled**
+on a room (this gives you a `sip:...@<your-subdomain>.sip.daily.co` address).
 </Note>
 
-## How it fits
+<Tip>
+We only show the **Unpod-side** screens here. Treat your SIP trunk username/password as
+secrets - never paste them into shared docs or screenshots.
+</Tip>
 
-<div className="uf-flow">
-  <div className="uf-node">
-    <span className="uf-ic">📞</span>
-    <span className="uf-t">Inbound / outbound</span>
-    <span className="uf-s">Phone call</span>
-  </div>
-  <div className="uf-arrow"><span className="uf-lbl">① SIP</span></div>
-  <div className="uf-node is-accent">
-    <span className="uf-ic">🔗</span>
-    <span className="uf-t">Unpod trunk</span>
-    <span className="uf-s">Routing + failover</span>
-  </div>
-  <div className="uf-arrow"><span className="uf-lbl">② config</span></div>
-  <div className="uf-node is-brain">
-    <span className="uf-ic">🟦</span>
-    <span className="uf-t">Daily</span>
-    <span className="uf-s">Voice & video</span>
-  </div>
-  <div className="uf-arrow"><span className="uf-lbl">③ session</span></div>
-  <div className="uf-node">
-    <span className="uf-ic">🤖</span>
-    <span className="uf-t">Your agent</span>
-    <span className="uf-s">Drives the call</span>
-  </div>
-</div>
-
-## Configure the number with Daily
+## Part 1 - Create the trunk in Unpod
 
 <Steps>
-  <Step title="Open Configure on your number">
-    The number is already on your Bridge. Click **Configure** to activate the integration.
+  <Step title="Open Configure → New trunk on your number">
+    In **Telephony**, select your number and click **Configure**. On the **New trunk** tab,
+    set a **Name** you'll recognise and the **trunk origin endpoint**:
+    - **SIP URI / address** - your **Daily SIP dial-in** address
+      (e.g. `sip:endpoint@your-subdomain.sip.daily.co`).
+    - **Port** `5060` and **Transport** (`TCP` / `UDP` / `TLS`).
+    - **Allowed IPs / CIDR** - optional source allow-list.
+
+    Click **Test** to validate, then **Create Trunk**.
+    <img src="/images/vapi/unpod-new-trunk.png" alt="Unpod - configure a new trunk pointing at Daily" />
   </Step>
-  <Step title="Choose a provider">
-    You are redirected to the provider picker. Click **Configure** in front of **Daily**.
-  </Step>
-  <Step title="Enter your Daily credentials">
-    Fill the mandatory fields:
-    - **Name** - any label for this configuration.
-    - **API Key** - your Daily API key, used to access Daily's services.
-  </Step>
-  <Step title="Copy the API key from Daily">
-    In the **Daily Dashboard**, go to **Developers**, copy the **API Key**, and paste
-    it into the portal.
-  </Step>
-  <Step title="Verify and Configure">
-    Click **Verify and Configure**. The configuration appears under **Active Providers**.
-  </Step>
-  <Step title="Attach the provider to your number">
-    Click **Select** next to your Daily configuration under **Active Providers**.
-  </Step>
-  <Step title="Set channels and agent">
-    Open **Settings** and submit:
-    - **Concurrency Channels** - simultaneous sessions allowed.
-    - **Enter Agent** - the agent that drives the session.
-  </Step>
-  <Step title="Publish">
-    Click **Publish** at the top of the dashboard. The number is ready to use.
+
+  <Step title="Copy the origin-endpoint credentials">
+    The number now shows **Linked · Daily**. Under **Origin Endpoint Details** copy the
+    values - Daily uses them to reach Unpod:
+    - **Address** - e.g. `sip-lb1.unpod.tel`
+    - **Port** / **Protocol** - `5060` / `UDP`
+    - **Username** and **Password** (under **Authentication**)
+    <img src="/images/vapi/unpod-trunk-linked.png" alt="Unpod - linked trunk origin endpoint credentials" />
   </Step>
 </Steps>
+
+## Part 2 - Enable SIP dial-in on Daily
+
+Daily has **no fixed SIP host** - each room exposes its own SIP address. Enable SIP dial-in
+so Daily gives you the `sip_uri` you entered in Part 1.
+
+<Steps>
+  <Step title="Turn on SIP dial-in for your room">
+    Enable SIP dial-in on the Daily room (set the room's `sip` property with
+    `sip_mode: "dial-in"`). Daily returns a read-only **`sip_uri`** in the form
+    `sip:<endpoint>@<your-subdomain>.sip.daily.co`. This is **API-only** - Daily has no
+    dashboard screen for it.
+  </Step>
+
+  <Step title="Route calls to your agent">
+    Point that room / SIP dial-in at the agent that should answer, so incoming calls from
+    the Unpod trunk connect to it.
+  </Step>
+</Steps>
+
+<Note>
+Daily's SIP dial-in setup is **API-driven** (room `sip` property / `pinless_dialin`). See
+[Daily's SIP dial-in docs](https://docs.daily.co/guides/products/dial-in-dial-out/sip).
+</Note>
+
+## Part 3 - Publish
+
+Back in the Unpod Studio, click **Publish** to activate the configuration. The number is
+then ready for inbound and outbound calls.
 
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Verify fails | Wrong API key | Re-copy from Daily Dashboard → Developers |
-| No media | Room/region misconfigured | Check the Daily domain and region settings |
-| Agent silent | No agent bound | Set **Enter Agent** in Settings |
+| Trunk **Test** fails in Unpod | Wrong Daily `sip_uri` or transport | Re-copy the room's `sip_uri`; match transport |
+| Daily can't reach the trunk | Wrong origin-endpoint address or auth | Re-copy **Address** + **Username/Password** from the Unpod origin endpoint |
+| Call connects, agent silent | No agent bound to the room | Route the SIP dial-in room to an agent |
+| Inbound not arriving | SIP dial-in not enabled | Set `sip_mode: "dial-in"` on the Daily room |
+| Number not reachable | Config not published | Click **Publish** in the Unpod Studio |
 
 <CardGroup cols={2}>
   <Card title="Do it with code" icon="terminal" href="/telephony/integrations/daily/api">
