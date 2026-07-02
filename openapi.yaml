@@ -875,10 +875,18 @@ paths:
       operationId: getTelephonyNumbers
       summary: Get Telephony Numbers
       tags: [Bridges]
+      description: >
+        List telephony numbers. With Org-Handle: org's own numbers (any state) + pool
+        (NOT_ASSIGNED). Without Org-Handle: pool numbers only.
       security:
         - TokenAuth: []
       parameters:
-        - $ref: '#/components/parameters/OrgHandle'
+        - name: Org-Handle
+          in: header
+          required: false
+          schema:
+            type: string
+          description: "Organization domain handle. Omit to list pool numbers only."
       responses:
         '200':
           description: List of telephony numbers
@@ -886,18 +894,16 @@ paths:
             application/json:
               example:
                 status_code: 200
-                message: "Numbers fetched successfully."
+                message: "Telephony numbers fetched successfully."
                 data:
                   - id: 501
-                    number: "+1234567890"
-                    provider: "twilio"
-                    bridge_slug: "sales-bridge-001"
-                    status: "active"
+                    number: "+15551234567"
+                    state: "ASSIGNED"
+                    active: true
                   - id: 502
-                    number: "+0987654321"
-                    provider: "twilio"
-                    bridge_slug: null
-                    status: "inactive"
+                    number: "+15559876543"
+                    state: "NOT_ASSIGNED"
+                    active: true
         '401':
           $ref: '#/components/responses/Unauthorized'
 

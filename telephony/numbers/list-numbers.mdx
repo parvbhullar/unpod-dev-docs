@@ -5,11 +5,16 @@ description: 'List the telephony numbers available to your organization'
 openapi: 'GET /api/v2/platform/telephony/numbers/'
 ---
 
-Returns the numbers available to your organization - your org's own numbers plus the
-shared unassigned pool. Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numbers).
+Returns the numbers available to you. Behavior depends on the `Org-Handle` header:
+
+- **With Org-Handle** — returns your organization's own numbers (any state) plus the shared
+  unassigned pool (`NOT_ASSIGNED`).
+- **Without Org-Handle** — returns only the shared unassigned pool.
+
+Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numbers).
 
 <Note>
-**Prerequisites:** API Token + Org-Handle. See [Authentication](/api/get-started/authentication).
+**Prerequisites:** API Token. See [Authentication](/api/get-started/authentication).
 </Note>
 
 ### Headers
@@ -17,7 +22,7 @@ shared unassigned pool. Use a number's `id` when attaching it to a [trunk](/tele
 | Name          | Type   | Required | Description                     |
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | `Token <your-api-key>`          |
-| Org-Handle    | string | Yes      | Organization domain handle      |
+| Org-Handle    | string | No       | Organization domain handle      |
 
 ### Number object fields
 
