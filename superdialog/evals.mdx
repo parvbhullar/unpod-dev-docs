@@ -83,6 +83,16 @@ Useful `eval run` flags:
 The dataset format mirrors the RAGAS single-/multi-turn shape: each case carries
 a persona, `ground_truth_slots`, and a list of probes.
 
+Or run both phases in one shot with `eval bench` — it builds the dataset if
+missing (`--regen` rebuilds, `--personas` seeds), A/Bs every `--models` entry
+into its own report directory, and adds `--max-turns` to override each
+persona's turn budget:
+
+```bash
+superdialog eval bench --playbook spa.yaml \
+  --models openai/gpt-4o-mini --max-turns 20 --out ./eval-out
+```
+
 ## Serve it to an external benchmark
 
 Expose the playbook as an OpenAI-compatible endpoint and grade it like any other
