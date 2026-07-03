@@ -73,12 +73,18 @@ interrupts:
 
 Per step: `id`, `purpose` (the goal, Director-facing), `say` (the guidance the
 Talker speaks from), `collect` (slot keys to capture), `done_when` (the
-observable condition that advances).
+observable condition that advances), `require` (explicit subset of `collect`
+that gates the advance), `turn_budget` (user turns before a "wrap this step
+up" nudge; default 4), `kb` (whether this step's prompt carries the knowledge
+base; set `false` on steps that merely mention it).
 
 <Warning>
-**All `collect` keys gate advancement together** - a 3-slot step needs all three
-before the conversation moves, the single biggest source of stalls in evals.
-Prefer 1-2 slots per step.
+**Which `collect` keys gate advancement depends on the step's shape.** A
+focused capture step (≤2 slots) requires all of them filled before the
+Director may advance; a branchy step collecting more than 2 per-path
+alternatives requires **none** — demanding every slot of a 14-slot category
+qualifier would deadlock the step. Use `require:` to override the heuristic
+(e.g. one mandatory key on an otherwise-branchy step).
 </Warning>
 
 <Tip>
