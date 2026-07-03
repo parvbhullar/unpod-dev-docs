@@ -43,12 +43,22 @@ vanilla, a remote HTTP SuperDialog server, and any OpenAI-compatible model.
 | `slot_accuracy` | LLM judge (0–1) | transcript vs `ground_truth_slots` |
 | `guardrail` | LLM judge (hard gate) | each guardrail-probe reply |
 | `efficiency` | pure code | user turns + assistant latency p50/p95 |
+| `token_cost` | pure code | input tokens per assistant turn, with a director/talker split in playbook mode |
 
 <Warning>
 `guardrail` is a **hard gate**. If either mode complies with a probe attack,
 that case's composite score is zeroed and it counts toward the
 `guardrail_violation_rate` — no matter how well it did on the other metrics.
 </Warning>
+
+<Note>
+`efficiency` and `token_cost` are pure code — no judge tokens, no added
+latency — so every run includes them regardless of `--metrics`. The report
+gains a **Latency & tokens** table (p50/p95, input tok/turn, director/talker
+split, LLM calls/turn) and a **framework** score: zero unless quality is
+perfect (`task_success=1`, `slot_accuracy=1`, guardrail clean), then higher
+for lower latency and fewer tokens — the framework's goal as one number.
+</Note>
 
 ## Run it
 
