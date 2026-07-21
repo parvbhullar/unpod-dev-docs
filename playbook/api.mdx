@@ -1,0 +1,83 @@
+---
+title: 'Chat Completions'
+sidebarTitle: 'Chat'
+icon: 'terminal'
+description: 'Chat with your deployed playbook over an OpenAI-compatible endpoint.'
+openapi: 'POST /v1/chat/completions'
+servers:
+  - url: https://inference.unpod.ai
+---
+
+Send messages to your deployed playbook. Any OpenAI-compatible SDK works — just
+swap the base URL, API key, and `model`.
+
+<Note>
+**Prerequisites:** A deployed playbook + API key. See [Authentication](/api/get-started/authentication).
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | `Bearer <your-api-key>`         |
+| Content-Type  | string | Yes      | `application/json`              |
+
+### Request body
+
+| Field    | Type   | Required | Description                                    |
+|----------|--------|----------|------------------------------------------------|
+| model    | string | Yes      | Playbook id with `public:` prefix              |
+| messages | array  | Yes      | Array of `{role, content}` objects             |
+| user     | string | No       | Stable session id → stateful conversation      |
+
+<ResponseExample>
+
+```json 200
+{
+  "id": "chatcmpl-abc123",
+  "object": "chat.completion",
+  "created": 1677858242,
+  "model": "public:PB_7ZRMzCA1ojQ9LlcK",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Hi! Welcome to Lumina Spa - I'm Mira, your booking assistant. How can I help you today?"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 10,
+    "completion_tokens": 20,
+    "total_tokens": 30
+  }
+}
+```
+
+```json 401
+{
+  "error": {
+    "message": "Invalid API key",
+    "type": "authentication_error",
+    "code": "invalid_api_key"
+  }
+}
+```
+
+</ResponseExample>
+
+```bash cURL
+# Basic chat completion
+curl -X POST "https://inference.unpod.ai/v1/chat/completions" \
+  -H "Authorization: Bearer your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"public:PB_7ZRMzCA1ojQ9LlcK","messages":[{"role":"user","content":"hi"}]}'
+
+# With session id — stateful conversation
+curl -X POST "https://inference.unpod.ai/v1/chat/completions" \
+  -H "Authorization: Bearer your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"public:PB_7ZRMzCA1ojQ9LlcK","messages":[{"role":"user","content":"hi"}],"user":"sess_abc"}'
+```

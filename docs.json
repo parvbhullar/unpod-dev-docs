@@ -41,6 +41,38 @@
         ]
       },
       {
+        "tab": "Playbooks",
+        "groups": [
+          {
+            "group": "Overview",
+            "icon": "book-open",
+            "pages": [
+              "playbook/why-playbooks",
+              "playbook/what-is-a-playbook",
+              "playbook/playground",
+              "playbook/library"
+            ]
+          },
+          {
+            "group": "Build with the Playground",
+            "icon": "wand-sparkles",
+            "pages": [
+              "playbook/build-an-agent",
+              "playbook/test-by-voice",
+              "playbook/optimize",
+              "playbook/publish-and-share"
+            ]
+          },
+          {
+            "group": "API Endpoint",
+            "icon": "terminal",
+            "pages": [
+              "playbook/api"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "Speech Stack",
         "groups": [
           {

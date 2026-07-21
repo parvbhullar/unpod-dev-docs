@@ -1,0 +1,91 @@
+---
+title: "What is a playbook"
+icon: 'book'
+description: "A playbook is a short, plain-language document that tells the agent who it is, what it must accomplish, and when a step is done. Checkpoints gate outcomes, not utterances - and a fast Talker plus an async Director run the whole thing."
+---
+
+## In one sentence
+
+A **playbook** describes an outcome-driven conversation in plain language.
+Instead of drawing a flow chart with every branch, or stuffing everything into
+one prompt, you write **checkpoints** - the things that must be true before the
+conversation moves on.
+
+<Note>
+New here? Read [Why playbooks](/playbook/why-playbooks) first - it explains the
+problem playbooks solve versus prompt-based and graph-based agents.
+</Note>
+
+## Checkpoints gate outcomes, not utterances
+
+The engine decides what to *say* each turn. The checkpoints decide when the
+conversation is allowed to *move on*. You describe the destination; you do not
+script every sentence.
+
+```yaml Example checkpoint
+- id: confirm_appointment
+  goal: Confirm the caller's Friday 4pm appointment.
+  done_when: The caller has said yes to a time, or asked to reschedule.
+  say: Offer Friday 4pm first, fall back to 5pm.
+```
+
+That is the whole mental model: **checkpoints gate outcomes, not utterances.**
+
+## The parts of a playbook
+
+| Part | What it is |
+|---|---|
+| **Persona** | Who the agent is and how it sounds - the voice and tone a caller hears. |
+| **Opening** | The first line the agent says when the conversation starts. |
+| **Checkpoints** | The ordered outcomes that must be met. Each has a `goal` and a `done_when`. |
+| **`done_when` / `advance_when`** | The plain-language condition that lets the conversation leave a checkpoint. |
+| **Slots** | The pieces of data to capture along the way (order number, callback, a chosen time). |
+| **Interrupts** | Conditions that can fire from any step - "goodbye", "I'm busy" - to end or redirect gracefully. |
+
+```yaml A small, complete playbook
+persona: A warm, efficient scheduling assistant for Dr. Lee's clinic.
+opening: "Hi, this is Dr. Lee's office calling to confirm your appointment."
+checkpoints:
+  - id: confirm_time
+    goal: Confirm the Friday 4pm slot, or offer 5pm.
+    done_when: The caller accepts a time or asks to reschedule.
+  - id: wrap_up
+    goal: Read back the confirmed time and say goodbye.
+    done_when: The caller has heard the confirmed time.
+```
+
+## How it runs: Talker + Director
+
+A playbook is fast because two roles run at once:
+
+<CardGroup cols={2}>
+  <Card title="Talker" icon="megaphone">
+    Streams every spoken reply the moment it can, so the caller hears a natural,
+    immediate response - no waiting on bookkeeping.
+  </Card>
+  <Card title="Director" icon="brain">
+    Runs **asynchronously**: reads the transcript, extracts slot data, judges
+    whether a checkpoint's `done_when` is met, and runs any tools - over an
+    event-sourced log.
+  </Card>
+</CardGroup>
+
+<Card title="The full checkpoint model" icon="lightbulb" href="/superdialog/thinking-in-playbooks">
+  Go deeper on `done_when` / `advance_when`, slots, and interrupts in the
+  mental-model guide.
+</Card>
+
+## Where playbooks come from
+
+You rarely hand-write the YAML from scratch. You author a playbook by **talking
+to a builder agent in the Playground** - describe the job, and it writes the
+checkpoints for you.
+
+<CardGroup cols={2}>
+  <Card title="What is the Playground" icon="wand-sparkles" href="/playbook/playground">
+    The browser app where you author, test, optimize, and ship a playbook.
+  </Card>
+  <Card title="Build an agent playbook" icon="mic" href="/playbook/build-an-agent">
+    The hands-on walkthrough: describe an agent and watch its playbook appear.
+  </Card>
+</CardGroup>
