@@ -352,6 +352,7 @@
               "api/overview",
               "api/get-started/quickstart",
               "api/get-started/authentication",
+              "api/changelog",
               "api/post-call-data"
             ]
           },
@@ -522,6 +523,10 @@
     {
       "source": "/",
       "destination": "/get-started/why-unpod"
+    },
+    {
+      "source": "/blog/getting-started-with-unpod-api",
+      "destination": "/guides/getting-started-with-unpod-api"
     }
   ]
 }

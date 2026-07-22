@@ -5,7 +5,13 @@ description: 'How Unpod routes calls through bridges, SIP providers, and phone n
 icon: 'phone'
 ---
 
-**May 27, 2026 · 7 min read**
+<Info>
+**Last updated:** July 22, 2026 · **API version:** v2 · **Tested against:** `openapi.yaml` 2.0.0 · 7 min read
+</Info>
+
+<Warning>
+API examples use the production host `https://unpod.ai/`, the `/api/v2/platform/` path prefix, and `Authorization: Token`. The legacy `api.unpod.ai/api/v1/` + `Bearer` scheme is deprecated.
+</Warning>
 
 ---
 
@@ -77,16 +83,17 @@ Go to **Dev Platform → Telephony → Bridges → Create Bridge**:
 ### Creating a Bridge via API
 
 ```bash
-curl -X POST https://api.unpod.ai/api/v1/bridges/ \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "support-bridge",
-    "slug": "support-bridge",
-    "provider_id": 1,
-    "agent_handle": "aria-support"
+    "name": "Support Bridge",
+    "slug": "support-bridge"
   }'
 ```
+
+A bridge is created with just a `name` and `slug`. Attach a provider afterward with the [connect-provider](/api/telephony/connect-provider-to-bridge) endpoint (`POST /api/v2/platform/telephony/bridges/{slug}/connect-provider/`).
 
 ---
 
@@ -102,20 +109,17 @@ Unpod provisions real phone numbers through your connected SIP provider. Numbers
 | Toll-Free | 800/888/877 numbers | Enterprise support lines |
 | International | Non-US numbers | Global operations |
 
-### Provisioning a Number
+### Listing Your Numbers
+
+Numbers are provisioned through your connected SIP provider (via the Dashboard or your provider's portal), then attached to trunks/bridges. The API exposes numbers as read-only - list them with:
 
 ```bash
-curl -X POST https://api.unpod.ai/api/v1/numbers/ \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "country": "US",
-    "area_code": "415",
-    "bridge_slug": "support-bridge"
-  }'
+curl "https://unpod.ai/api/v2/platform/telephony/numbers/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle"
 ```
 
-The number is immediately active and routed to your bridge once assigned.
+To attach numbers to a trunk, use the [attach-numbers](/telephony/trunks/attach-numbers) endpoint (`POST /api/v2/platform/telephony/trunks/{id}/attach-numbers/`). Once assigned to a bridge, a number is active and routed.
 
 ---
 
@@ -138,18 +142,21 @@ Total setup latency target: **under 300ms** from first word to agent response st
 For outbound (agent-initiated) calls, create a Task via API:
 
 ```bash
-curl -X POST https://api.unpod.ai/api/v1/tasks/ \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+curl -X POST "https://unpod.ai/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/create/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \
   -d '{
-    "agent_handle": "aria-support",
-    "phone_number": "+14155550100",
-    "bridge_slug": "support-bridge",
-    "space_token": "sp_abc123"
+    "pilot": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+    "context": "Support follow-up call",
+    "schedule": { "type": "now" },
+    "documents": [
+      { "name": "John Doe", "contact_number": "14155550100" }
+    ]
   }'
 ```
 
-Unpod dials the number, connects it through the bridge, and the agent begins the conversation.
+Tasks are scoped to a space (`space_token` in the path) and take the agent `pilot` handle plus a `documents` array of contacts. Unpod dials each number through the space's bridge, and the agent begins the conversation. See the full [create-task reference](/api/execution/create-task).
 
 ---
 
@@ -158,15 +165,16 @@ Unpod dials the number, connects it through the bridge, and the agent begins the
 One bridge can route to different agents based on custom logic. Use the API to update bridge routing dynamically:
 
 ```bash
-curl -X PATCH https://api.unpod.ai/api/v1/bridges/support-bridge/ \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+curl -X PATCH "https://unpod.ai/api/v2/platform/telephony/bridges/support-bridge/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \
   -d '{
-    "agent_handle": "billing-agent"
+    "name": "Support Bridge — Billing Hours"
   }'
 ```
 
-Combine this with your own IVR or pre-call webhook to build intelligent call routing before the AI agent picks up.
+The bridge `PATCH` endpoint updates bridge fields such as `name`. To change which provider/agent a bridge routes to, use the [connect-provider](/api/telephony/connect-provider-to-bridge) / [disconnect-provider](/api/telephony/disconnect-provider-from-bridge) endpoints. Combine this with your own IVR or pre-call webhook to build intelligent call routing before the AI agent picks up.
 
 ---
 
