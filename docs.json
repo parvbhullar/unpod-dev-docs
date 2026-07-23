@@ -73,6 +73,54 @@
         ]
       },
       {
+        "tab": "SuperDialog",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "book-open",
+            "pages": [
+              "superdialog/introduction",
+              "superdialog/quickstart",
+              "superdialog/thinking-in-playbooks"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "icon": "layers",
+            "pages": [
+              "superdialog/architecture",
+              "superdialog/playbooks",
+              "superdialog/flows",
+              "superdialog/tools",
+              "superdialog/sessions",
+              "superdialog/playground"
+            ]
+          },
+          {
+            "group": "Reference",
+            "icon": "code",
+            "pages": [
+              "superdialog/api-reference",
+              "superdialog/cli",
+              "superdialog/evals"
+            ]
+          },
+          {
+            "group": "Embedding Guides",
+            "icon": "plug",
+            "pages": [
+              "superdialog/embedding-guides/overview",
+              "superdialog/embedding-guides/unpod-voice",
+              "superdialog/embedding-guides/cli",
+              "superdialog/embedding-guides/livekit",
+              "superdialog/embedding-guides/pipecat",
+              "superdialog/embedding-guides/fastapi",
+              "superdialog/embedding-guides/testing"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "Speech Stack",
         "groups": [
           {
@@ -132,54 +180,6 @@
               "speech-stack/setup-checklist",
               "speech-stack/deploy",
               "speech-stack/recordings-transcripts"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "SuperDialog",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "icon": "book-open",
-            "pages": [
-              "superdialog/introduction",
-              "superdialog/quickstart",
-              "superdialog/thinking-in-playbooks"
-            ]
-          },
-          {
-            "group": "Core Concepts",
-            "icon": "layers",
-            "pages": [
-              "superdialog/architecture",
-              "superdialog/playbooks",
-              "superdialog/flows",
-              "superdialog/tools",
-              "superdialog/sessions",
-              "superdialog/playground"
-            ]
-          },
-          {
-            "group": "Reference",
-            "icon": "code",
-            "pages": [
-              "superdialog/api-reference",
-              "superdialog/cli",
-              "superdialog/evals"
-            ]
-          },
-          {
-            "group": "Embedding Guides",
-            "icon": "plug",
-            "pages": [
-              "superdialog/embedding-guides/overview",
-              "superdialog/embedding-guides/unpod-voice",
-              "superdialog/embedding-guides/cli",
-              "superdialog/embedding-guides/livekit",
-              "superdialog/embedding-guides/pipecat",
-              "superdialog/embedding-guides/fastapi",
-              "superdialog/embedding-guides/testing"
             ]
           }
         ]
