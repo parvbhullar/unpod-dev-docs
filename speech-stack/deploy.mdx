@@ -5,38 +5,53 @@ description: 'Run AgentRunner in production: reachability, authentication, scali
 ---
 
 An `AgentRunner` is a long-lived process: it registers with the Unpod
-orchestrator over WSS, heartbeats (at an interval the orchestrator assigns on
-registration), and serves a bridge connection per call. Provisioning is covered
+orchestrator over WSS and heartbeats (at an interval the orchestrator assigns on
+registration). Under the default `dial_out` transport it then **dials out** to a
+per-call bridge each time a call is assigned; under the legacy `serve` transport
+it instead hosts a bridge connection per call. Provisioning is covered
 by the [Setup Checklist](/speech-stack/setup-checklist); this page is what
 changes when you leave your laptop.
+
+<Note>
+Since v2 the runner defaults to the `dial_out` transport: both the control
+connection and the per-call bridge are **outbound** from the runner, so a runner
+behind NAT needs no public reachability, `serving_url`, or `agent_secret`. The
+reachability and authentication steps below apply only when you opt into the
+legacy `transport="serve"` model. See
+[AgentRunner constructor](/speech-stack/agent-runner#constructor).
+</Note>
 
 ## What production needs
 
 A production deployment should have:
 
-- A public `serving_url` so Unpod can reach the runner bridge
-- An `agent_secret` so inbound bridge connections are signed and verified
 - A stable `UNPOD_API_KEY` — **required by the `AgentRunner`** for the orchestrator connection. For the management client (`AsyncClient`/`Client`), `UNPOD_PLATFORM_TOKEN` (+ `UNPOD_ORG_HANDLE`) is preferred and falls back to `UNPOD_API_KEY`
 - A clear `agent_id` shared by every replica of the same agent
 - Capacity limits (`max_sessions`, `permits_per_minute`) that match your traffic
 - Shutdown handling so active calls can drain before the process exits
 - Observability for active calls, failures, and latency
+- **(legacy `serve` transport only)** a public `serving_url` so Unpod can reach the runner bridge, and an `agent_secret` so inbound bridge connections are signed and verified
 
 If you are writing docs for app developers, this is the minimum contract:
 
 1. Set the environment variables.
-2. Expose the runner publicly.
-3. Lock down the bridge with `UNPOD_AGENT_SECRET`.
-4. Run multiple replicas with the same `agent_id` when you need scale.
-5. Restart the process under a supervisor.
+2. Run multiple replicas with the same `agent_id` when you need scale.
+3. Restart the process under a supervisor.
+4. **(legacy `serve` transport only)** expose the runner publicly and lock down the bridge with `UNPOD_AGENT_SECRET`.
 
 ## Production checklist
 
-### 1. Reachability - `serving_url`
+### 1. Reachability - `serving_url` (legacy `serve` transport only)
 
-The runner serves a per-call bridge that Unpod dials into. It binds to
-`0.0.0.0:8765` by default; in production, tell the orchestrator where that
-bridge is publicly reachable:
+<Note>
+This step applies only to `transport="serve"`. Under the default `dial_out`
+transport the runner never listens — it dials out to the bridge URL delivered in
+each `job.assign` frame — so no public reachability is needed.
+</Note>
+
+In `serve` mode the runner hosts a per-call bridge that Unpod dials into. It
+binds to `0.0.0.0:8765` by default; in production, tell the orchestrator where
+that bridge is publicly reachable:
 
 ```bash
 export UNPOD_RUNNER_URL="wss://agents.example.com:8765"
@@ -45,11 +60,17 @@ export UNPOD_RUNNER_URL="wss://agents.example.com:8765"
 (or pass `serving_url=...` to `AgentRunner`). The host/port must be reachable
 from Unpod.
 
-### 2. Authentication - `agent_secret`
+### 2. Authentication - `agent_secret` (legacy `serve` transport only)
 
-With an agent secret set, every inbound bridge connection is HMAC-verified
-(signed URLs, replay-protected). Without one, the runner accepts unsigned
-connections - acceptable only for local dev.
+<Note>
+Also `serve`-only. Under the default `dial_out` transport the per-call bridge is
+authenticated by the per-call token embedded in the `job.assign` `bridge_url`, so
+`agent_secret` is ignored (the constructor warns if you pass it).
+</Note>
+
+In `serve` mode, with an agent secret set, every inbound bridge connection is
+HMAC-verified (signed URLs, replay-protected). Without one, the runner accepts
+unsigned connections - acceptable only for local dev.
 
 ```bash
 export UNPOD_AGENT_SECRET="a-long-random-secret"
@@ -83,11 +104,16 @@ UNPOD_API_KEY=sk_... UNPOD_AGENT_SECRET=... python agent.py
 On `SIGTERM` the runner stops accepting dispatches and drains active calls for
 up to `drain_timeout_s` before exiting - container- and systemd-friendly.
 
-<Warning>
-The runner does not reconnect on its own if the orchestrator WebSocket drops -
-run it under a supervisor with restart-on-exit (systemd `Restart=always`,
-Kubernetes restart policy, Docker `--restart`).
-</Warning>
+<Note>
+Under the default `dial_out` transport the runner **auto-reconnects** its
+orchestrator control socket with jittered exponential backoff (1s → 30s cap) and
+re-registers under the same `worker_id`; in-flight calls ride their own bridge
+sockets and survive a control-socket drop. Still run it under a supervisor with
+restart-on-exit (systemd `Restart=always`, Kubernetes restart policy, Docker
+`--restart`) to recover from process crashes and from a non-retriable transport
+rejection (an orchestrator too old to acknowledge `dial_out`). The legacy
+`transport="serve"` model does **not** auto-reconnect.
+</Note>
 
 ## Environment summary
 
@@ -95,8 +121,10 @@ For a production runner, the usual minimum `.env` looks like this:
 
 ```bash
 UNPOD_API_KEY="sk_..."              # required by the AgentRunner
-UNPOD_AGENT_SECRET="long-random-secret"
 UNPOD_BASE_URL="api.unpod.ai"
+
+# Legacy transport="serve" only (ignored under the default dial_out transport):
+UNPOD_AGENT_SECRET="long-random-secret"
 UNPOD_RUNNER_URL="wss://agents.example.com:8765"
 
 # Management client (AsyncClient/Client) — preferred proxy-mode auth:

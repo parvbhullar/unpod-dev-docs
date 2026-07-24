@@ -244,7 +244,7 @@ policies:
 
 | Block | Key fields |
 |---|---|
-| **Checkpoint** | `goal`, `slots`, `guidance`, `advance_when`, `gate` (`soft`/`hard`), `say_verbatim`, `never_say`, `auto`, `pipeline`, `on_failure`, `terminal` + `outcome`, `turn_budget` |
+| **Checkpoint** | `goal`, `slots`, `guidance`, `advance_when`, `gate` (`soft`/`hard`), `say_verbatim`, `never_say`, `exit_say` (post-capture pitch; `then_say` in the simple format), `auto`, `pipeline`, `on_failure`, `terminal` + `outcome`, `turn_budget` |
 | **SlotSpec** | `type`, `required`, `values` (enum), `authoritative` (tool-written only), `invalidates`, `description` |
 | **AdvanceRule** | `when` (prose or expr), `judge` (`llm`/`expr`), `to` (checkpoint ref), `requires` (slots that must be filled/confirmed), `set` (slot writes on advance) |
 | **ToolSpec** | `type` (`http`/`python`), `method`/`url`/`headers`/`body` (sandboxed Jinja), `store_response_as`, `env_updates`, `run_once`, `when`, `timeout` |

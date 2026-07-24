@@ -5,9 +5,10 @@ description: 'How a call flows end to end, every state it moves through, voicema
 ---
 
 Every call - whether you start it or a caller rings in - ends up the same way:
-your agent and the caller are two participants in a LiveKit room, and Unpod
-bridges the audio between them while streaming transcripts to your
-`AgentRunner`. This page traces both directions, the states a call moves
+a Unpod media worker and the caller are the two participants in a LiveKit room,
+and the worker bridges the audio while streaming transcripts to your
+`AgentRunner` over a separate text-only bridge. Your dialog brain never joins the
+room or touches audio. This page traces both directions, the states a call moves
 through, and how it can end.
 
 <Frame>
@@ -66,9 +67,10 @@ concurrency limit.
     row moves to `ringing`, and you get a `session_id`.
   </Step>
   <Step title="Your agent joins and talks">
-    Your `AgentRunner` is connected to the same room. Audio flows; transcripts
-    stream to your dialog logic. The call row moves to `active`, then
-    `completed` on hangup.
+    A Unpod media worker joins the room and bridges the caller's audio;
+    transcripts stream to your `AgentRunner` over its text bridge and reply text
+    comes back for TTS. The call row moves to `active`, then `completed` on
+    hangup.
   </Step>
 </Steps>
 
@@ -85,9 +87,9 @@ sequenceDiagram
     API->>Q: enqueue
     Q->>Q: per-account concurrency check
     Q->>LK: create room + dial to_number
-    LK-->>Agent: agent joins same room
-    LK-->>Agent: caller audio
-    Agent-->>LK: agent audio
+    LK-->>Agent: media worker bridges call; runner connects (text)
+    LK-->>Agent: caller transcript (text)
+    Agent-->>LK: reply text (synthesised to speech on Unpod's side)
     Note over API: status: pending → ringing → active → completed
 ```
 
@@ -111,9 +113,10 @@ already live and Unpod connects your agent to it.
   <Step title="Unpod resolves your pipe">
     Unpod matches the dialed number to your Speech Pipe and its voice profile.
   </Step>
-  <Step title="Your agent joins the live room">
-    Unpod connects your `AgentRunner` to the room the caller is already in.
-    Audio and transcripts start immediately.
+  <Step title="Your agent is bridged to the live call">
+    A Unpod media worker joins the room the caller is already in and bridges the
+    audio; transcripts start streaming to your `AgentRunner` over its text
+    bridge immediately.
   </Step>
 </Steps>
 

@@ -114,6 +114,7 @@ superdialog eval gen-dataset --playbook spa.yaml --n-probes 8     # build the da
 superdialog eval run --playbook spa.yaml --dataset spa.evalcases.yaml --out ./eval-out
 superdialog eval bench --playbook spa.yaml --models openai/gpt-4o-mini --max-turns 20  # one shot
 superdialog eval serve --playbook spa.yaml --port 8000           # OpenAI-compatible endpoint
+superdialog eval suite --config suites.yaml --tier smoke         # CI-able behavioral gate
 superdialog eval flow --flow kyc.json --traversal session.json   # legacy session audit
 ```
 
@@ -123,6 +124,7 @@ superdialog eval flow --flow kyc.json --traversal session.json   # legacy sessio
 | `run` | A/B both modes over a dataset, write `report.json` + `report.md` |
 | `bench` | One shot: gen dataset (if missing) + A/B every `--models` entry, one report dir each |
 | `serve` | Serve the playbook as an OpenAI-compatible endpoint for any benchmark |
+| `suite` | Run a suite registry as a CI gate; assert behavioral expectations (`--tier smoke\|full`, `--only`, `--force`) |
 | `flow` | Legacy: audit a recorded session (`--traversal`) or run a synthetic eval |
 
 `eval run` takes `--modes`, `--agent-model`, `--director-model`,

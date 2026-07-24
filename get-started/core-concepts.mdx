@@ -105,7 +105,10 @@ The per-call metadata envelope your entrypoint receives:
 `async def entrypoint(ctx: CallContext)`. It carries `call_id`, `session_id`,
 `agent_id`, `direction` (`"inbound"` or `"outbound"`), `user_number`, any
 `instructions` and `data` from dispatch, and the live `session` you control the
-call through.
+call through. It also exposes `runner_id` - the runner's own configured
+`agent_id`. On a multi-tenant runner the call's `agent_id` (the agent the call
+was dispatched to) and `runner_id` can differ; use `runner_id` when you need to
+know which pool this process registered under.
 
 ### Space
 

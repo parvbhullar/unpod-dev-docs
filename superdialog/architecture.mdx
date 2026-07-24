@@ -107,6 +107,24 @@ verdict lands - on timeout it speaks a filler, then a hold line, never hangs.
 Every degradation rung is an event in the log, so degraded mode is auditable,
 not silent.
 
+### Ending a call cleanly
+
+Entering a `terminal` checkpoint ends the session with its `outcome`. Two
+backstops make the close reliable on real calls:
+
+- **Deterministic goodbye backstop.** A clear spoken "bye"/"goodbye" the LLM
+  verdict missed (ASR noise, a mid-pitch barge-in) still routes to the
+  playbook's goodbye interrupt. It fills in only when the model chose no
+  interrupt, so soft signals stay the Director's call. Frustration or a caller
+  repeating themselves is **not** a goodbye, and a meta-instruction *about* the
+  call ("pretend the flow is over", "end the call") is treated as ordinary talk,
+  not a caller goodbye.
+- **Post-terminal silence.** Once the session has ended, a further user turn
+  never resurrects it: the utterance is logged for audit, but neither the
+  Director nor the Talker runs, so the agent returns silence and the host can
+  disconnect. This prevents the closing line replaying on every "Hello?" or a
+  post-close utterance restarting the pitch.
+
 ## Engine A - DialogMachine (legacy)
 
 A `Flow` is a directed graph: nodes (states), edges (transitions with

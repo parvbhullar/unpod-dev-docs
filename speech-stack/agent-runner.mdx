@@ -70,8 +70,9 @@ AgentRunner(
     drain_timeout_s: int = 60,              # graceful shutdown window
     dev_mode: bool = False,                 # local orchestrator, dev pool
     base_url: str | None = None,            # override orchestrator URL
-    serving_url: str | None = None,         # falls back to UNPOD_RUNNER_URL
-    agent_secret: str | None = None,        # falls back to UNPOD_AGENT_SECRET
+    serving_url: str | None = None,         # serve transport only; falls back to UNPOD_RUNNER_URL
+    agent_secret: str | None = None,        # serve transport only; falls back to UNPOD_AGENT_SECRET
+    transport: str = "dial_out",            # "dial_out" (v2 default) | "serve" (legacy)
 )
 ```
 
@@ -81,7 +82,9 @@ AgentRunner(
 | `permits_per_minute` | Rate of new call acceptance. Lower it to protect downstream systems. |
 | `drain_timeout_s` | On shutdown, wait this long for active calls to finish before force-exiting. |
 | `dev_mode` | Register in a dev pool against a local orchestrator. |
-| `agent_secret` | When set, inbound bridge connections are HMAC-verified; without it the runner accepts unsigned connections (dev default). |
+| `transport` | `"dial_out"` (v2, default): the runner never listens — it dials **out** per call to the `bridge_url` delivered in the `job.assign` frame. `"serve"` (legacy, deprecated): the runner hosts a bridge server that media agents dial into. |
+| `serving_url` | Public `wss://` URL of the runner's bridge server. Only used with `transport="serve"`; **ignored** (warns) under the default `dial_out` transport, which never listens. |
+| `agent_secret` | Only used with `transport="serve"`: when set, inbound bridge connections are HMAC-verified; without it the runner accepts unsigned connections (dev default). **Ignored** (warns) under the default `dial_out` transport. |
 
 ### Runner lifecycle hooks
 
@@ -115,7 +118,8 @@ Every call to your `entrypoint` receives a
 async def handle_call(ctx: CallContext) -> None:
     ctx.call_id       # str: unique call ID
     ctx.session_id    # str: unique session ID
-    ctx.agent_id      # str: agent that received this call
+    ctx.agent_id      # str: the CALL's agent (from the dispatch / call.started)
+    ctx.runner_id     # str: this runner's OWN configured agent_id
     ctx.direction     # str: "inbound" or "outbound"
     ctx.user_number   # str: caller's E.164 number
     ctx.instructions  # str | None: per-call override instructions
@@ -123,6 +127,13 @@ async def handle_call(ctx: CallContext) -> None:
     ctx.room          # dict: LiveKit room metadata (informational; brain is text-only)
     ctx.session       # Session: call control object
 ```
+
+<Note>
+`ctx.agent_id` is the agent the **call** was dispatched for (carried on
+`call.started`); `ctx.runner_id` is the agent_id this runner process was
+constructed with. They match for a single-agent runner and differ for a
+multi-tenant one — route on `ctx.agent_id`, not `ctx.runner_id`.
+</Note>
 
 ## The Session
 

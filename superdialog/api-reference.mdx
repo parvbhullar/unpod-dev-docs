@@ -206,6 +206,7 @@ agent = PlaybookAgent(
 | `guidance` | Talker prose; Jinja over `{slots, views, results}` |
 | `say_verbatim` | Exact line; bypasses the Talker LLM |
 | `never_say` | Hard prohibitions injected into the Talker view |
+| `exit_say` | One-shot line spoken on the turn that *leaves* this checkpoint via a director rule (post-capture pitch); never on interrupt/policy advances. Simple format authors it as `then_say` |
 | `advance_when` | Ordered `AdvanceRule` list (outcome gates) |
 | `gate` | `soft` (default) or `hard` (barrier; `requires` need *confirmed* slots) |
 | `auto` | Speak verbatim once, then advance without user input |

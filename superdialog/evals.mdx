@@ -91,7 +91,9 @@ Useful `eval run` flags:
 | `--repeats` | `1` | Runs per case (average out variance) |
 
 The dataset format mirrors the RAGAS single-/multi-turn shape: each case carries
-a persona, `ground_truth_slots`, and a list of probes.
+a persona, `ground_truth_slots`, and a list of probes. A persona may also define
+`afterlife_probes` — utterances sent *after* the session ends, asserted on by the
+suite runner's `silent_afterlife` check (above).
 
 Or run both phases in one shot with `eval bench` — it builds the dataset if
 missing (`--regen` rebuilds, `--personas` seeds), A/Bs every `--models` entry
@@ -102,6 +104,65 @@ persona's turn budget:
 superdialog eval bench --playbook spa.yaml \
   --models openai/gpt-4o-mini --max-turns 20 --out ./eval-out
 ```
+
+## Gate a suite in CI
+
+`eval run` and `eval bench` produce scores you eyeball. `superdialog eval suite`
+turns a set of benches into a one-command, CI-able **behavioral regression
+gate**: each suite pins a playbook, dataset, and models to the *expectations*
+that made the run worth doing (this case must fire the goodbye interrupt, that
+control must **not**; this case must not answer after it ended).
+
+```bash
+superdialog eval suite --config suites.yaml --tier smoke   # cheap pre-merge signal
+superdialog eval suite --config suites.yaml --tier full    # run everything
+superdialog eval suite --config suites.yaml --only realestate-disconnect --force
+```
+
+The registry is YAML — one entry per suite:
+
+```yaml
+suites:
+  - name: realestate-disconnect
+    playbook: examples/playbooks/realestate_site_visit.simple.yaml
+    dataset: examples/datasets/realestate_disconnect.evalcases.yaml
+    models: [livekit/google/gemma-4-31b-it]
+    judge: openai/gpt-4.1-mini
+    user_model: openai/gpt-4.1-mini
+    fallback_judge: livekit/openai/gpt-4o-mini   # retried on provider quota (429)
+    fallback_user: livekit/openai/gpt-4o-mini
+    max_turns: 14
+    smoke_cases: [explicit-disconnect-mid, objecting-but-staying-pooja]
+    min_composite: 0.6
+    expect:
+      explicit-disconnect-mid:   {goodbye: fired,  min_task_success: 0.7}
+      objecting-but-staying-pooja: {goodbye: absent, min_turns: 4}
+```
+
+Each `expect` entry asserts one case's behavior from the run's report and log:
+
+| Expectation | Asserts |
+|---|---|
+| `goodbye` | `fired` / `absent` — did the goodbye interrupt fire (matched via `goodbye_signal`, default `interrupt:global_goodbye`) |
+| `min_turns` | Conversation length floor — encodes "not ended prematurely" for a control persona who legitimately closes once finished |
+| `no_reentry` | Route integrity — no checkpoint is re-entered after the flow moved past it (a restart/regression). Skip on playbooks with `resume: true` interrupts |
+| `silent_afterlife` | Post-end **afterlife probes** (utterances sent *after* the session ended) draw **no** reply — an ended session that answers is a zombie. Requires the persona to define `afterlife_probes` |
+| `no_repeat_replies` | No assistant reply exactly repeats the previous one (closing/parrot loops) |
+| `min_task_success` | Per-case `task_success` floor |
+| `min_composite` | Suite-level composite-mean floor |
+
+<Note>
+**Tiers, skip-if-unchanged, and quota fallback.** `--tier smoke` runs only each
+suite's `smoke_cases`; `--tier full` runs everything. A content hash of
+playbook + dataset + params is stamped in the out dir, so unchanged suites are
+skipped unless `--force`. A run that dies on provider quota
+(`insufficient_quota` / `429`) is retried once with the suite's
+`fallback_judge` / `fallback_user`; **behavioral** checks (goodbye, route,
+afterlife, repeats) always gate, but score floors (`task_success`,
+`composite`) downgrade to **advisory** under the fallback judge since they were
+calibrated against the primary one. The command exits non-zero if any suite
+fails or errors.
+</Note>
 
 ## Serve it to an external benchmark
 
