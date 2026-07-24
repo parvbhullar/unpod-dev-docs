@@ -84,8 +84,11 @@ Any object with these three methods is a valid brain - no base class required
 async def turn(self, text: str, context: dict | None = None) -> str
     # Return a complete response. Not called during live calls.
 
-async def stream(self, text: str, context: dict | None = None) -> AsyncIterator[str]
+async def stream(self, text: str, context: dict | None = None, language: str | None = None) -> AsyncIterator[str]
     # Yield response tokens. THE hot path - session.run() calls this.
+    # `language` is the per-turn language code (from UserTextEvent.extra).
+    # Custom adapters MUST accept the kwarg even if they ignore it, else
+    # session.run() raises TypeError on the first turn.
 
 def assist(self, text: str) -> None
     # Inject a system instruction before the next turn.
@@ -218,7 +221,7 @@ async def entrypoint(ctx: CallContext) -> None:
 
 Common hooks: `call_start`, `user_turn`, `agent_turn`, `user_partial`,
 `interruption`, `call_end`, `error` (the registry also accepts `tool_call`,
-`tool_result`, `silence`, and `metric`). See
+`tool_result`, `silence`, `state`, `metric`, `llm_call`, and `turn_complete`). See
 [Session](/get-started/core-concepts#session) for the full control surface.
 
 ## Writing a custom adapter
@@ -231,8 +234,11 @@ class MyAdapter:
         """Return complete response. Called for non-streaming use."""
         return my_agent.respond(text)
 
-    async def stream(self, text: str, context: dict | None = None):
-        """Yield response tokens. THIS is the hot path used by session.run()."""
+    async def stream(
+        self, text: str, context: dict | None = None, language: str | None = None
+    ):
+        """Yield response tokens. THIS is the hot path used by session.run().
+        Accept `language` even if unused — session.run() always passes it."""
         async for token in my_agent.stream(text):
             yield token
 

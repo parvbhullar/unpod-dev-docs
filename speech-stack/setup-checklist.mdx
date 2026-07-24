@@ -139,7 +139,9 @@ AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `UNPOD_API_KEY` | Yes | Your Unpod API key |
+| `UNPOD_API_KEY` | Yes | Direct-mode Bearer key. **Required by the `AgentRunner`** (orchestrator connection); also the management-client fallback when `UNPOD_PLATFORM_TOKEN` is unset |
+| `UNPOD_PLATFORM_TOKEN` | No | Backend-core DRF token — enables management **proxy mode** (preferred for the `AsyncClient`/`Client`). Falls back to `UNPOD_API_KEY` if unset |
+| `UNPOD_ORG_HANDLE` | No | Org handle sent as the `Org-Handle` header alongside `UNPOD_PLATFORM_TOKEN` (required for org-scoped / telephony endpoints) |
 | `UNPOD_BASE_URL` | No | Single shared endpoint. REST derives `https://<host>/platform` and the runner derives `wss://<host>` |
 | `UNPOD_SERVICE_BASE_URL` | No | Management REST override only. Takes precedence over `UNPOD_BASE_URL` when set |
 | `UNPOD_ORCHESTRATOR_URL` | No | Runner WebSocket override only. Takes precedence over `UNPOD_BASE_URL` when set |

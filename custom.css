@@ -8,7 +8,8 @@
 /* Scoped to the top navbar only, so in-page cards/links that
    point at the Playground stay normal. */
 #navbar a[href*="superdialog.unpod.ai/playground"],
-header a[href*="superdialog.unpod.ai/playground"] {
+header a[href*="superdialog.unpod.ai/playground"],
+a[href*="superdialog.unpod.ai/playground"] {
   position: relative;
   display: inline-flex !important;
   align-items: center;
@@ -26,13 +27,15 @@ header a[href*="superdialog.unpod.ai/playground"] {
 }
 
 #navbar a[href*="superdialog.unpod.ai/playground"]:hover,
-header a[href*="superdialog.unpod.ai/playground"]:hover {
+header a[href*="superdialog.unpod.ai/playground"]:hover,
+a[href*="superdialog.unpod.ai/playground"]:hover {
   transform: translateY(-1px) scale(1.04);
   box-shadow: 0 8px 22px rgba(121, 108, 255, 0.45);
 }
 
 #navbar a[href*="superdialog.unpod.ai/playground"] *,
-header a[href*="superdialog.unpod.ai/playground"] * {
+header a[href*="superdialog.unpod.ai/playground"] *,
+a[href*="superdialog.unpod.ai/playground"] * {
   color: #fff !important;
   fill: currentColor;
 }
@@ -49,9 +52,42 @@ header a[href*="superdialog.unpod.ai/playground"] * {
 
 @media (prefers-reduced-motion: reduce) {
   #navbar a[href*="superdialog.unpod.ai/playground"],
-  header a[href*="superdialog.unpod.ai/playground"] {
+  header a[href*="superdialog.unpod.ai/playground"],
+  a[href*="superdialog.unpod.ai/playground"] {
     animation: none;
   }
+}
+
+/* ---- Right-align the external tab-row links -----------------
+   Dashboard | GitHub | Playground are added as tabs (docs.json) and render
+   inline after "Guides" as direct flex children of `.nav-tabs`. Push them to
+   the far right (above the "On this page" panel) with margin-left:auto on the
+   first one (Dashboard) — flex carries GitHub + Playground along. */
+.nav-tabs {
+  flex-grow: 1 !important;   /* fill the bar's free space so margin-left:auto has room */
+  min-width: 0 !important;
+}
+.nav-tabs > .nav-tabs-item[href="https://unpod.ai"],
+.nav-tabs > a[href="https://unpod.ai"] {
+  margin-left: auto !important;  /* right-align Dashboard + GitHub + Playground */
+}
+/* The tab bar is w-full but offset by the 19rem sidebar, so it overflows the
+   viewport on the right by ~16rem — margin-left:auto alone pushed the group
+   off-screen. Cancel that overflow on the last tab so the group lands fully
+   visible, ending near the "On this page" column. */
+.nav-tabs > a[href*="superdialog.unpod.ai/playground"] {
+  /* 16rem cancels the bar's right overflow (flush to edge); +3rem leaves the
+     same ~48px gap after Playground as the px-12 gap before "Get Started". */
+  margin-right: 19rem !important;
+  /* slim the pill: hug content (override h-full), tight padding, no glow */
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0.38rem 0.95rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.3 !important;
+  align-self: center !important;
+  animation: pg-shimmer 4s linear infinite !important;  /* keep shimmer, drop pg-pulse */
+  box-shadow: none !important;
 }
 
 /* ============================================================

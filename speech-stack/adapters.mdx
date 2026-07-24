@@ -17,13 +17,24 @@ class DialogAdapter(Protocol):
     async def turn(self, text: str, context: dict | None = None) -> str:
         """Return a complete response string. NOT called during live calls."""
 
-    async def stream(self, text: str, context: dict | None = None) -> AsyncIterator[str]:
+    async def stream(
+        self, text: str, context: dict | None = None, language: str | None = None
+    ) -> AsyncIterator[str]:
         """Yield response tokens. HOT PATH - session.run() calls this on
-        every user turn and streams tokens directly to the voice bridge."""
+        every user turn and streams tokens directly to the voice bridge.
+        `language` is the per-turn language code (from `UserTextEvent.extra`),
+        forwarded by `session.run()`. Custom adapters MUST accept the kwarg
+        even if they ignore it."""
 
     def assist(self, text: str) -> None:
         """Inject a system instruction before the next turn."""
 ```
+
+<Warning>
+`stream()` now receives a `language` keyword argument on every turn. Any custom
+adapter whose `stream()` does not accept `language=...` raises `TypeError` on the
+first user turn. Add `language: str | None = None` to the signature.
+</Warning>
 
 <Warning>
 `session.run()` calls only `stream()`. A single-chunk `stream()` fallback
@@ -65,7 +76,7 @@ All importable from `unpod.adapters`:
 | `OpenAIAdapter` | Real token streaming via `chat.completions.create(stream=True)` |
 | `AnthropicAdapter` | Real token streaming via `messages.stream()` |
 | `LangChainAdapter` | Real streaming via the chain's `.astream()` |
-| `SuperDialogAdapter` | Delegates to `dm.turn(text, stream=True)` |
+| `SuperDialogAdapter` | Delegates to `dm.turn(text, stream=True[, language=…])` — `language` is passed through only when the wrapped machine's `turn()` accepts it |
 | `HTTPAdapter` | **Single chunk** - one POST round-trip, full reply yielded once |
 | `MCPAdapter` | Falls back to `turn()`, which is not implemented yet |
 

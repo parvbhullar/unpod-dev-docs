@@ -151,6 +151,9 @@ LiveKit/litellm-style URIs route to any provider:
 
 On the Playbook engine, `llm` drives both the Talker and the Director unless you
 split them with `director_llm=` (a strong model to judge, a fast model to speak).
+The model now loads from the playbook YAML `llm:` block (`{provider, model,
+director}`) — see [Playbooks](/superdialog/playbooks#the-full-format); the
+persona-level `llm` setting is deprecated and warns.
 
 ## Adapter pattern
 

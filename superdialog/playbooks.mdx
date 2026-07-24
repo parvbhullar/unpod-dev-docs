@@ -65,18 +65,57 @@ interrupts:
 |---|---|
 | `goal` | The call's mission statement - what makes this call a win. |
 | `persona` | `identity` (who the agent is), `name`, `language` (first is default), `voice_style` (tone, pacing). Compiles into the persona the Talker sees every turn. |
-| `playbook` | Ordered steps. Each becomes a checkpoint in a single journey `main`, **chained linearly**: step N's `done_when` advances to step N+1. Reordering re-wires the chain. |
+| `opening` / `closing` | Optional greeting / sign-off prose. `opening` seeds the first step's guidance when it has no `say`. |
+| `playbook` | Ordered steps. Each becomes a checkpoint in a single journey `main`, **chained linearly by default**: step N's `done_when` advances to step N+1. Override with `then:` (explicit target) or `branches:` (conditional routing); reordering the list re-wires the default chain. |
 | `facts` | Grounding data (pricing, policies) the agent may recite - never invent beyond it. |
 | `objections` | `{trigger, handle}` steering, handled *within* a step. |
 | `boundaries` | Compliance "NEVER…" rules (prose-enforced). |
 | `interrupts` | Global jumps judged from any step (`{when, to}`). |
+| `fallback_actions` | Ordered fallback steering when the caller stalls or goes off-script. |
 
-Per step: `id`, `purpose` (the goal, Director-facing), `say` (the guidance the
-Talker speaks from), `collect` (slot keys to capture), `done_when` (the
-observable condition that advances), `require` (explicit subset of `collect`
-that gates the advance), `turn_budget` (user turns before a "wrap this step
-up" nudge; default 4), `kb` (whether this step's prompt carries the knowledge
-base; set `false` on steps that merely mention it).
+Also valid at the top level: `name`, `channel`, `tone`, `call_type`, `timezone`,
+`memory_enabled`, `followup_enabled`, and the multi-entity toggles `multi_entity` /
+`supervisor`. **Any key not in this set raises at load** (see [Strict validation](#strict-validation)).
+
+Per step:
+
+| Field | Meaning |
+|---|---|
+| `id` | Checkpoint id; addressable as `main.<id>` in logs, metrics, replay. |
+| `purpose` | The goal (Director-facing). |
+| `say` | Guidance the Talker speaks from. |
+| `collect` | Slot keys to capture. |
+| `done_when` | Observable condition that advances (one `judge: llm` rule). |
+| `require` | Explicit subset of `collect` that gates the advance. |
+| `turn_budget` | User turns before a "wrap this step up" nudge (default 4). |
+| `kb` | Whether this step's prompt carries the knowledge base; set `false` on steps that only mention it. |
+| `then` | Step id to advance to when `done_when` holds, instead of the next list element. Unknown targets and self-targets are rejected at load. |
+| `terminal` + `outcome` | Mark the step as a call ending (default `outcome: closed`), recorded on `SessionEnd`. Any step can be terminal now — not only the last. `outcome` on a non-terminal step is rejected. |
+| `branches` | Multi-way routing, judged in author order **ahead of** `done_when`. Each entry is `{when, to, requires?}` — note the target key is `to`, not `then`. A branch may not target the default next step or itself; terminal steps cannot have branches. |
+| `then_say` | A line delivered *while advancing out of* this step (post-capture pitch), rendered Jinja over slots. Guidance written after the capture in `say` is unreachable, so use `then_say`. Never spoken on interrupt/policy advances; rejected on terminal steps. |
+| `entity` / `gate` | Advanced: turn owner (`caller`/`agent`) and per-step `soft`/`hard` gate. |
+
+**Routing example** — a fallback that closes the call and a step that branches on the answer:
+
+```yaml
+playbook:
+  - id: pitch_visit
+    say: "Offer the site visit; handle the objection on hesitation."
+    done_when: "Customer accepts or is open to the visit."
+    then_say: "Great — let me lock that in."     # spoken while advancing out
+    branches:
+      - when: "Customer firmly declines after the objection was handled."
+        to: advisor_callback                      # `to`, not `then`
+  - id: advisor_callback
+    say: "Capture a callback time, then close politely."
+    collect: [callback_time]
+    done_when: "Callback time captured."
+    then: close                                   # jump past the default next step
+  - id: close
+    say: "Thank them and say goodbye."
+    terminal: true
+    outcome: callback_scheduled
+```
 
 <Warning>
 **Which `collect` keys gate advancement depends on the step's shape.** A
@@ -93,12 +132,28 @@ exit never completed a single call (a satisfied caller loops until the turn
 cap); the same playbook with goodbye/busy interrupts completed every call.
 </Tip>
 
+### Strict validation
+
+Keys the format does not recognize — a typo'd `done_wehn`, an invented top-level
+`language_lock:` — **raise at load** with the dotted path of every offender,
+instead of being silently dropped (config theater: you think it's set, the
+runtime never sees it). For live loaders that must not kill a call over a stale
+authored file, downgrade to a warning:
+
+```python
+from superdialog.playbook.simple import simple_to_playbook, load_simple
+
+pb = simple_to_playbook(doc, strict=False)   # warn instead of raise
+pb = load_simple(path, strict=False)
+```
+
 ### What the simple format cannot express
 
-When you need any of these, move to the full format:
+Multiple terminals/outcomes, per-step `gate` and `then`/`branches` routing are
+now all expressible in the simple format (above). When you need any of these,
+move to the full format:
 
-- Multiple terminals / outcomes (booked vs callback vs do-not-call in metrics)
-- `gate: hard`, pipelines, tools (transactional steps - holds, payments)
+- Pipelines and tools (transactional steps - holds, payments)
 - `judge: expr` rules (machine-evaluated transitions - zero LLM cost)
 - Typed/required slots, `never_say`, `say_verbatim`, silence policy, multiple journeys
 
@@ -113,6 +168,11 @@ Everything the engine can do, stated explicitly. The conversation layer is
 
 ```yaml
 persona: "You are Asha, a friendly golf-course booking assistant."
+
+llm:                          # the model loads from here (top-level persona `llm` is deprecated)
+  provider: anthropic
+  model: claude-haiku-4-5
+  director: anthropic/claude-haiku-4-5    # optional: separate Director model
 
 views:                        # computed, LLM-free exprs; shown as reference data
   hold_valid_until: "results.hold.data.valid_until"
@@ -175,6 +235,9 @@ policies:
     max_prompts: 2
     prompts: ["Can you hear me?", "Are you there?"]
     then: booking.close
+  hold_timeout: 4.0           # max wait before the hold line is spoken (default 4.0s)
+  filler: "Ek second…"        # author barrier line while the Director settles
+  hold_line: "Still working on it, bear with me."   # spoken after hold_timeout
 ```
 
 ### The building blocks
@@ -186,6 +249,8 @@ policies:
 | **AdvanceRule** | `when` (prose or expr), `judge` (`llm`/`expr`), `to` (checkpoint ref), `requires` (slots that must be filled/confirmed), `set` (slot writes on advance) |
 | **ToolSpec** | `type` (`http`/`python`), `method`/`url`/`headers`/`body` (sandboxed Jinja), `store_response_as`, `env_updates`, `run_once`, `when`, `timeout` |
 | **PipelineSpec** | ordered `steps`, each with typed `on: {ok, failed, http_<code>}` branches and capped `retry` |
+| **LLMConfig** (`llm:`) | `provider`, `model`, optional `director` — the model-loading path (persona-level `llm` is deprecated and warns) |
+| **Policies** (`policies:`) | `silence`, `hold_timeout` (default 4.0), `filler` + `hold_line` (author-facing barrier lines spoken while the Director settles) |
 
 Validation runs on load and raises on unknown checkpoint/pipeline/tool refs,
 duplicate ids, undeclared `requires` keys, and the reserved `pipeline` result

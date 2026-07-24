@@ -120,6 +120,7 @@ async def handle_call(ctx: CallContext) -> None:
     ctx.user_number   # str: caller's E.164 number
     ctx.instructions  # str | None: per-call override instructions
     ctx.data          # dict: metadata from dispatch (e.g. CRM data)
+    ctx.room          # dict: LiveKit room metadata (informational; brain is text-only)
     ctx.session       # Session: call control object
 ```
 
@@ -214,6 +215,13 @@ m.tokens.input    # int - m.tokens.output
 m.active_llm      # str: model used on the last turn
 ```
 
+<Note>
+Latency/cost/token fields populate only if you feed the tracker via
+`metrics.record_turn(...)` (e.g. from the `turn_complete` hook). Out of the box
+only `duration_s` is meaningful — for real per-turn numbers use the `llm_call` /
+`turn_complete` hooks. See [Metrics, Cost & Observability](/speech-stack/observability).
+</Note>
+
 ### Session API reference
 
 | Method | Signature | Description |
@@ -240,7 +248,7 @@ via the Management SDK, targeting it by session ID:
 ```python
 from unpod import AsyncClient
 
-async with AsyncClient(api_key="sk_...") as client:
+async with AsyncClient(api_key="sk_...") as client:  # or set UNPOD_PLATFORM_TOKEN + UNPOD_ORG_HANDLE (preferred) and pass no args
     await client.sessions.end(session_id)
 
     await client.sessions.transfer(          # warm handoff supported here

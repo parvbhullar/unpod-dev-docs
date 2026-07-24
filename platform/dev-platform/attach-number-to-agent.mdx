@@ -48,7 +48,7 @@ async def main():
     async with AsyncClient(auth=JWTAuth("<jwt>", org_handle="acme")) as client:
         numbers = await client.telephony.numbers.list()
         for n in numbers:
-            print(n.id, n.number, n.state)
+            print(n.number, n.status)
 
 asyncio.run(main())
 ```
@@ -63,20 +63,20 @@ numbers = await client.telephony.numbers.list()
 
 ### Number fields
 
+Every verb on this plane takes the **E.164 number** — the internal id is not exposed.
+
 | Field | Type | Description |
 |---|---|---|
-| `id` | `int` | Telephony number ID |
-| `number` | `str` | E.164 format, e.g. `+14155550100` |
-| `state` | `str \| None` | `NOT_ASSIGNED`, `ASSIGNED`, … |
-| `country` | `str \| None` | ISO 3166-1 alpha-2 country code |
+| `number` | `str \| None` | E.164 format, e.g. `+14155550100` |
+| `status` | `str \| None` | `not_assigned` (attachable), `assigned`, or `closed` |
 
 ---
 
 ## Attach Numbers to an Agent
 
-Map one or more numbers to an agent. The bridge is resolved automatically; each
-number reports its own outcome (partial-success), so one bad id never fails the
-rest.
+Map one or more numbers to an agent **by E.164 number** (not id — Django resolves
+it). The bridge is resolved automatically; each number reports its own outcome
+(partial-success), so one bad number never fails the rest.
 
 ```python
 import asyncio
@@ -86,7 +86,7 @@ async def main():
     async with AsyncClient(auth=JWTAuth("<jwt>", org_handle="acme")) as client:
         nums = await client.telephony.numbers.list()
         res = await client.telephony.numbers.attach(
-            [n.id for n in nums[:2]],
+            [n.number for n in nums[:2]],
             agent_id="asst_sales",
         )
         print(res.agent_id, res.message)
@@ -127,9 +127,34 @@ bind one later by calling `attach` again with the same number and an `agent_id`:
 
 ```python
 # provision now, bind later
-await client.telephony.numbers.attach([number_id])
+await client.telephony.numbers.attach(["+14155550100"])
 # ...later
-await client.telephony.numbers.attach([number_id], agent_id="asst_sales")
+await client.telephony.numbers.attach(["+14155550100"], agent_id="asst_sales")
+```
+
+### Attach to a pipe instead of an agent
+
+Pass `attach_type="pipeline"` with a `pipe_id` to terminate the number on a
+Speech Pipe rather than an agent. `attach_type` defaults to `"agent"`.
+
+```python
+await client.telephony.numbers.attach(
+    ["+14155550100"], attach_type="pipeline", pipe_id="pipe_xyz",
+)
+```
+
+---
+
+## Detach Numbers
+
+Release numbers by E.164 number — the inverse of `attach`. The termination,
+agent, and pipe are read from the stored record. The number is **released, not
+deleted**, so it stays available for a later re-attach.
+
+```python
+res = await client.telephony.numbers.detach(["+14155550100"])
+for r in res.numbers:
+    print(r.number, "released" if r.ok else r.error)
 ```
 
 ---
@@ -177,7 +202,7 @@ async def attach_first(agent_id: str) -> None:
         nums = await client.telephony.numbers.list()
         if not nums:
             raise RuntimeError("No numbers available")
-        res = await client.telephony.numbers.attach([nums[0].id], agent_id=agent_id)
+        res = await client.telephony.numbers.attach([nums[0].number], agent_id=agent_id)
         row = res.numbers[0]
         print("attached" if row.ok else f"failed: {row.error}", nums[0].number)
 
@@ -190,16 +215,16 @@ asyncio.run(attach_first("asst_sales"))
 import asyncio
 from unpod import AsyncClient, JWTAuth
 
-async def attach_all(number_ids: list[int], agent_id: str) -> None:
+async def attach_all(numbers: list[str], agent_id: str) -> None:
     async with AsyncClient(auth=JWTAuth("<jwt>", org_handle="acme")) as client:
-        res = await client.telephony.numbers.attach(number_ids, agent_id=agent_id)
+        res = await client.telephony.numbers.attach(numbers, agent_id=agent_id)
         ok = [r.number for r in res.numbers if r.ok]
         bad = [(r.number_id, r.error) for r in res.numbers if not r.ok]
         print("attached:", ok)
         if bad:
             print("failed:", bad)
 
-asyncio.run(attach_all([1, 2, 3], "asst_sales"))
+asyncio.run(attach_all(["+14155550100", "+14155550101"], "asst_sales"))
 ```
 
 ---

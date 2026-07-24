@@ -16,7 +16,7 @@ A production deployment should have:
 
 - A public `serving_url` so Unpod can reach the runner bridge
 - An `agent_secret` so inbound bridge connections are signed and verified
-- A stable `UNPOD_API_KEY` for the management API
+- A stable `UNPOD_API_KEY` — **required by the `AgentRunner`** for the orchestrator connection. For the management client (`AsyncClient`/`Client`), `UNPOD_PLATFORM_TOKEN` (+ `UNPOD_ORG_HANDLE`) is preferred and falls back to `UNPOD_API_KEY`
 - A clear `agent_id` shared by every replica of the same agent
 - Capacity limits (`max_sessions`, `permits_per_minute`) that match your traffic
 - Shutdown handling so active calls can drain before the process exits
@@ -94,10 +94,14 @@ Kubernetes restart policy, Docker `--restart`).
 For a production runner, the usual minimum `.env` looks like this:
 
 ```bash
-UNPOD_API_KEY="sk_..."
+UNPOD_API_KEY="sk_..."              # required by the AgentRunner
 UNPOD_AGENT_SECRET="long-random-secret"
 UNPOD_BASE_URL="api.unpod.ai"
 UNPOD_RUNNER_URL="wss://agents.example.com:8765"
+
+# Management client (AsyncClient/Client) — preferred proxy-mode auth:
+UNPOD_PLATFORM_TOKEN="..."          # falls back to UNPOD_API_KEY if unset
+UNPOD_ORG_HANDLE="acme"             # required for org-scoped / telephony calls
 ```
 
 If you override URLs in code instead of `.env`, keep the same precedence rules:

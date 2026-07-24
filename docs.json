@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "maple",
   "name": "Unpod AI",
    "customCss": "/custom.css",
   "icons": {
@@ -486,30 +486,26 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "Dashboard",
+        "icon": "layout-dashboard",
+        "href": "https://unpod.ai"
+      },
+      {
+        "tab": "GitHub",
+        "icon": "github",
+        "href": "https://github.com/unpod-ai/unpod"
+      },
+      {
+        "tab": "Playground",
+        "icon": "play",
+        "href": "https://superdialog.unpod.ai/playground?tab=preview"
       }
     ],
     "global": {
       "anchors": []
     }
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "GitHub",
-        "icon": "github",
-        "href": "https://github.com/unpod-ai/unpod"
-      },
-      {
-        "label": "Dashboard",
-        "icon": "layout-dashboard",
-        "href": "https://unpod.ai"
-      },
-      {
-        "label": "Playground",
-        "icon": "play",
-        "href": "https://superdialog.unpod.ai/playground?tab=preview"
-      }
-    ]
   },
   "footer": {
     "socials": {

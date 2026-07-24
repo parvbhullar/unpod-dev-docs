@@ -64,8 +64,9 @@ the full status progression and how to poll for completion.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `pipe_id` | `str` | Yes | Speech Pipe to use for the call |
 | `to_number` | `str` | Yes | Destination number (E.164) |
+| `agent_id` | `str \| None` | Conditional | Agent to route the call to. Takes priority over `pipe_id`; when set, the platform resolves the pipe bound to that agent server-side |
+| `pipe_id` | `str \| None` | Conditional | Speech Pipe to use. Provide `agent_id` **or** `pipe_id` (`agent_id` wins if both are given) |
 | `from_number` | `str` | No | Caller ID. If omitted, Unpod uses a number attached to the Speech Pipe |
 | `instructions` | `str \| None` | No | Runtime instruction override for this call |
 | `data` | `dict \| None` | No | Arbitrary metadata passed to your entrypoint via `ctx.data` |
