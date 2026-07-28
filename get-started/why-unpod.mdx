@@ -1,94 +1,50 @@
 ---
 title: 'Why Unpod'
 icon: 'rocket'
-description: 'The agents your team already built - chatbots, LangChain pipelines - map straight to voice. Speech is the missing discipline, and Unpod owns it.'
+description: 'The intelligence layer for real-time agents.'
 ---
 
-## The problem
+Unpod runs the intelligence of a real-time agent: a playbook + a small model
+trained on your use case - or any third-party model - with the speech and
+telephony infra to run it. Adoption is one endpoint change.
 
-Your team has already built the hard part. The chatbot works. The LangChain
-agent answers questions in production. The brain exists - prompted, tested,
-shipped.
+<CardGroup cols={3}>
+  <Card title="Personalised" icon="target">
+    A model trained on your data and workflows - not a 100-page prompt on a
+    general model.
+  </Card>
+  <Card title="Fast & cheap" icon="zap">
+    ~1B-parameter models built for realtime. Cheaper to run, faster to answer.
+  </Card>
+  <Card title="Your stack stays" icon="plug">
+    LiveKit, Pipecat, Vapi, chat - or our phone number. No re-platform.
+  </Card>
+</CardGroup>
 
-Voice is where it stalls. **Speech is a different engineering discipline, not
-more AI work.** Telephony, SIP, carrier accounts, STT/TTS providers, voice
-activity detection, barge-in, endpointing, audio transport, scaling under
-load - none of it exists in a software team's stack, and none of it makes
-your agent any smarter.
+## Deploy at any depth
 
-Teams routinely spend three or four months wiring this up before their agent
-takes a single real call. That time buys no product differentiation. Every
-voice startup rebuilds the same plumbing.
+| Mode | I/O | Live in |
+|---|---|---|
+| [SLM inference](/get-started/slm-inference) - the brain | text in, text out | 1 URL swap |
+| [STS inference](/get-started/sts-inference) - the voice | audio in, audio out | 1 WebSocket |
+| [Voice Agent](/get-started/voice-agent) - the agent | a phone number | 1 click |
 
-Unpod closes the gap: the agent you already have maps straight to voice. Text
-in, text out, a phone number on the front. You keep building the brain; Unpod
-does the speaking.
-
-## What Unpod handles vs what you write
-
-The line is sharp: the wire between Unpod and your code carries **text, not audio**. Your code never sees a packet, a codec, or a SIP message. It receives transcribed text and returns text. Audio never leaves Unpod's infrastructure.
-
-| Unpod handles | You write |
-|---|---|
-| Telephony, SIP, carriers | The agent's brain - one entrypoint |
-| Phone numbers (provision or bring your own) | LLM choice and prompts |
-| STT, TTS, and provider failover | Conversation flows and logic |
-| VAD, barge-in, endpointing | Tools and business logic |
-| Audio transport (phone, WebSocket, WebRTC) | Per-call memory and state |
-| Scaling, dispatch, and orchestration | |
-| Recordings and transcripts | |
-
-In practice your entire integration is a function that receives a call and runs a dialog:
-
-```python
-from superdialog import DialogMachine, Flow
-from unpod import AgentRunner, CallContext
-
-flow = Flow.load("support.json")
-
-async def handle_call(ctx: CallContext) -> None:
-    ctx.session.dialog_machine = DialogMachine(flow=flow, llm="anthropic/claude-haiku-4-5")
-    await ctx.session.run()
-
-AgentRunner(entrypoint=handle_call, agent_id="agt_...").start()
-```
-
-(Illustrative - the [Quickstart](/get-started/quickstart) walks through the
-runnable version, no flow file needed.)
-
-No pipeline configuration. No WebRTC. No SIP. No carrier account. No audio handling. If you already have an HTTP endpoint or a LangChain agent, you can point Unpod at it with no SDK code at all.
+Each mode adds one layer. Pick by what you already run.
 
 <Frame>
   <img src="/images/diagrams/where-unpod-sits.svg" alt="Animated architecture diagram showing Unpod between raw telephony providers and agent platforms." />
 </Frame>
 
-For where this sits in the larger architecture, see [Core Concepts](/get-started/core-concepts).
-
-## Vs the alternatives
-
-The honest comparison is about what you own and how long it takes to get to a real call.
-
-**Rolling your own** (or using a pipeline framework like Pipecat or an audio platform like LiveKit): you assemble and run every component - STT provider, TTS provider, VAD, transport, endpointing, scaling. Maximum control, maximum setup. Phone numbers mean a SIP trunk and a carrier account. Expect months before the first production call, and ongoing operational ownership of the speech layer forever.
-
-**Unpod:** you bring the agent; the speech layer is managed. Numbers provision directly, voice profiles configure STT/TTS with automatic failover, and dispatch and scaling are handled for you. Expect hours to your first call.
-
-Choose to roll your own when you need fine-grained control over the audio pipeline or already run that infrastructure. Choose Unpod when your value is the agent logic and you do not want to become a telephony team.
-
-For the full feature-by-feature comparison, see
-[Unpod vs Pipecat vs LiveKit](/get-started/vs-competition).
-
-Unpod's core components are open source - you can self-host the full stack or use the managed cloud. See [Self-Hosting](/platform/self-hosting/quickstart).
-
 ## Start building
 
 <CardGroup cols={3}>
-  <Card title="Quickstart" icon="play" href="/get-started/quickstart">
-    Talk to your own voice agent in the browser in about five minutes. No phone number needed.
+  <Card title="Start Here" icon="signpost" href="/get-started/start-here">
+    Pick your deployment in one screen.
   </Card>
-  <Card title="SuperDialog" icon="git-branch" href="/superdialog/introduction">
-    The dialog framework. Turn a prompt or flow graph into an executable conversation - pure text in, pure text out.
+  <Card title="Playground" icon="play" href="https://superdialog.unpod.ai/playground?tab=preview">
+    Build and hear an agent in the browser. No account needed.
   </Card>
-  <Card title="Platform (no-code)" icon="layout-dashboard" href="/platform/introduction">
-    Build, configure, and run agents from the hosted UI. No SDK required.
+  <Card title="GitHub" icon="github" href="https://github.com/unpod-ai/unpod">
+    Open source, MIT. Self-host the full stack.
   </Card>
 </CardGroup>

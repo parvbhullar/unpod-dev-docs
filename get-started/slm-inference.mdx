@@ -1,0 +1,86 @@
+---
+title: 'Use as SLM inference'
+icon: 'brain'
+description: 'Your stack gets a trained brain. One URL swap.'
+---
+
+A playbook + a small model trained on your use case - or any third-party
+model - served as one OpenAI-compatible endpoint. Text in, text out. Your
+orchestration, speech, and transport stay exactly where they are.
+
+## How it connects
+
+| Your stack | You swap | Unpod runs |
+|---|---|---|
+| LiveKit · Pipecat · Vapi · chat app | the LLM base URL (or the `llm=` slot) | playbook + model, sessions, memory |
+
+## Go live in 3 steps
+
+### 1. Get an endpoint
+
+Build and publish a playbook in the [Playground](https://superdialog.unpod.ai/playground),
+then open **Deploy as Endpoint → Manage API Keys**. You get the endpoint, a
+model id (`public:PB_...`), and prefilled snippets. See
+[Publish & Share](/playbook/publish-and-share).
+
+### 2. Point your stack at it
+
+<Tabs>
+  <Tab title="Any OpenAI client">
+    ```bash
+    curl -X POST "https://inference.unpod.ai/v1/chat/completions" \
+      -H "Authorization: Bearer $UNPOD_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"model":"public:PB_7ZRMzCA1ojQ9LlcK","messages":[{"role":"user","content":"hi"}],"user":"sess_abc"}'
+    ```
+    Any OpenAI-compatible SDK works - swap base URL, key, and model. `user` is
+    your session id, so the conversation stays stateful across calls.
+  </Tab>
+  <Tab title="LiveKit">
+    ```python
+    from livekit.agents import Agent, AgentSession
+    from superdialog import DialogMachine
+    from superdialog.adapters.livekit import DialogMachineLLM
+
+    dm = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")
+
+    async def entrypoint(ctx):
+        await AgentSession().start(agent=Agent(llm=DialogMachineLLM(dm)), room=ctx.room)
+    ```
+    The playbook runs in-process in the `llm=` slot. Full guide:
+    [LiveKit embedding](/superdialog/embedding-guides/livekit).
+  </Tab>
+  <Tab title="Pipecat">
+    ```python
+    from superdialog import DialogMachine
+    from superdialog.adapters.pipecat import make_processor
+
+    agent = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")
+    processor = make_processor(agent)  # place between STT and TTS
+    ```
+    Full guide: [Pipecat embedding](/superdialog/embedding-guides/pipecat).
+  </Tab>
+</Tabs>
+
+### 3. Test it
+
+`curl` the endpoint, or talk to the same playbook in the
+[Playground Preview](https://superdialog.unpod.ai/playground?tab=preview).
+Same brain, same behaviour.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Endpoint API" icon="terminal" href="/playbook/api">
+    Full request/response reference.
+  </Card>
+  <Card title="Build a playbook" icon="wand-sparkles" href="/playbook/build-an-agent">
+    Describe the job; the playbook writes itself.
+  </Card>
+  <Card title="Embedding guides" icon="plug" href="/superdialog/embedding-guides/overview">
+    LiveKit, Pipecat, FastAPI, CLI.
+  </Card>
+  <Card title="What is a playbook?" icon="book-open" href="/playbook/what-is-a-playbook">
+    Persona, checkpoints, slots - the format.
+  </Card>
+</CardGroup>

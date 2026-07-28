@@ -31,10 +31,13 @@
             "icon": "rocket",
             "pages": [
               "get-started/why-unpod",
+              "get-started/start-here",
+              "get-started/slm-inference",
+              "get-started/sts-inference",
+              "get-started/voice-agent",
               "get-started/quickstart",
               "get-started/first-phone-call",
               "get-started/core-concepts",
-              "get-started/choose-your-path",
               "get-started/vs-competition"
             ]
           }
@@ -523,6 +526,10 @@
     {
       "source": "/blog/getting-started-with-unpod-api",
       "destination": "/guides/getting-started-with-unpod-api"
+    },
+    {
+      "source": "/get-started/choose-your-path",
+      "destination": "/get-started/start-here"
     }
   ]
 }

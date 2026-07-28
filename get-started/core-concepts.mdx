@@ -12,6 +12,19 @@ your code carries text, not audio.** Unpod owns the phone call, the speech, and
 the carriers. You own the brain that decides what to say. Everything below
 follows from that split.
 
+## Three Ways to Deploy
+
+Unpod's intelligence — a playbook + a small model trained on your use case, or
+any third-party model — deploys at three depths. Each adds one layer:
+
+| Mode | I/O | Live in |
+|---|---|---|
+| [SLM inference](/get-started/slm-inference) | text in, text out | 1 URL swap |
+| [STS inference](/get-started/sts-inference) | audio in, audio out | 1 WebSocket |
+| [Voice Agent](/get-started/voice-agent) | a phone number | 1 click |
+
+Not sure which? [Start Here](/get-started/start-here).
+
 ## Architecture at a Glance
 
 A single inbound call, end to end:

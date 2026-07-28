@@ -1,0 +1,74 @@
+---
+title: 'Use as STS inference'
+icon: 'audio-waveform'
+description: 'Speech in, speech out, brain included. One WebSocket session.'
+---
+
+The full speech loop - STT, VAD, barge-in, TTS - plus the same playbook +
+small model (or third-party model) brain, served as one realtime session.
+Your app or telephony connects; Unpod runs the conversation.
+
+## How it connects
+
+A **Speech Pipe** bundles a voice profile with an agent. Sessions reach it
+from the web over WebSocket or from a phone number over SIP - same agent,
+same behaviour, either way.
+
+## Go live in 3 steps
+
+### 1. Create a Speech Pipe
+
+```python
+pipe = await client.pipes.create(
+    name="Support Bot",
+    voice_profile="vp_en_female_hd",   # from voice_profiles.list()
+    agent_id="my-bot",
+)
+```
+
+### 2. Connect a session
+
+<Tabs>
+  <Tab title="Web / mobile">
+    ```javascript
+    import { UnpodSession } from "@unpod/web-sdk";
+
+    const session = new UnpodSession({ token });  // short-lived token from your backend
+    await session.connect();                      // mic + speaker, full duplex
+    session.on("agent_reply", (text) => console.log("Agent:", text));
+    ```
+    Mint tokens server-side with `client.sessions.create_token(pipe_id=...)`.
+    Protocol and auth: [WebSocket sessions](/speech-stack/websocket).
+  </Tab>
+  <Tab title="Telephony / SIP">
+    Attach a [number](/speech-stack/numbers) to the pipe - provision from
+    Unpod or bring your own over a [trunk](/speech-stack/trunks). LiveKit SIP
+    works too: [LiveKit integration](/telephony/integrations/livekit/api).
+  </Tab>
+</Tabs>
+
+Raw audio-frame WebSocket streaming for custom transports is on the
+[roadmap](/telephony/integrations/websockets).
+
+### 3. Test it
+
+Call the number, or open your web session and talk. Recordings and
+transcripts land automatically - see
+[Recordings & Transcripts](/speech-stack/recordings-transcripts).
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="WebSocket sessions" icon="plug" href="/speech-stack/websocket">
+    Session tokens, events, capabilities.
+  </Card>
+  <Card title="Voice profiles" icon="audio-waveform" href="/speech-stack/voice-profiles">
+    STT + TTS bundles per language, with failover.
+  </Card>
+  <Card title="Speech pipes" icon="workflow" href="/speech-stack/pipes">
+    The unit that wires voice, agent, and numbers.
+  </Card>
+  <Card title="Bring your agent" icon="bot" href="/speech-stack/bring-your-agent">
+    Point a pipe at any HTTP endpoint or LangChain brain.
+  </Card>
+</CardGroup>
