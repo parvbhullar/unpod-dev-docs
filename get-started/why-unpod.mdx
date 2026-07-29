@@ -1,28 +1,51 @@
 ---
 title: 'Why Unpod'
 icon: 'rocket'
-description: 'Train an agent on your use case. Use it like a model.'
+description: 'The intelligence & memory layer for realtime AI.'
 ---
 
 Train an agent on your use case. Use it like a model - over chat, realtime
 voice, or a phone number.
 
-A playbook + a small model trained on your workflows - or any third-party
-model - served over whichever surface fits your stack. Your orchestration,
-speech, and transport stay exactly where they are.
+## Why realtime agents fail
 
-<CardGroup cols={3}>
-  <Card title="Personalised" icon="target">
-    A model trained on your data and workflows - not a 100-page prompt on a
-    general model.
+Speech is solved. Telephony is solved. The layer that runs the conversation
+is where projects stall.
+
+<CardGroup cols={2}>
+  <Card title="Prompts lose the plot" icon="file-warning">
+    Every top model drops ~39% from single-turn to multi-turn - mostly
+    unreliability, not capability. Take a wrong turn and the conversation
+    never recovers. Prompt-tuning plateaus around 85%: nothing in a
+    100-page prompt is addressable, so nothing is testable.
   </Card>
-  <Card title="Fast & cheap" icon="zap">
-    ~1B-parameter models built for realtime. Cheaper to run, faster to answer.
-  </Card>
-  <Card title="Your stack stays" icon="plug">
-    LiveKit, Pipecat, Vapi, chat - or our phone number. No re-platform.
+  <Card title="Big models miss the beat" icon="timer">
+    Humans swap turns in ~200ms; past ~700ms a caller hears a machine. The
+    LLM is ~70% of that budget, and frontier models spend 1.1-1.4s before
+    their first token - the whole budget, on one hop.
   </Card>
 </CardGroup>
+
+## What Unpod runs
+
+<CardGroup cols={3}>
+  <Card title="Playbooks" icon="git-branch">
+    Conversations as checkpoints and outcomes, not prose. Every step is
+    addressable - so it can be simulated, fixed, and regression-tested.
+  </Card>
+  <Card title="Small trained models" icon="zap">
+    ~1B parameters trained on your workflows. Answers land inside the voice
+    budget, cost a fraction of frontier inference, and your data never
+    leaves for a frontier lab.
+  </Card>
+  <Card title="Memory" icon="brain">
+    State that survives the turn and the call. Pass a session id and the
+    agent picks up where it left off - across turns, across calls.
+  </Card>
+</CardGroup>
+
+Bring your own model instead if you prefer - the playbook and memory run the
+same way over any third-party model.
 
 ## Use it like a model
 
@@ -32,7 +55,8 @@ speech, and transport stay exactly where they are.
 | [Realtime](/get-started/realtime) | audio in, audio out | 1 WebSocket |
 | [Phone](/get-started/phone) | a phone number | 1 click |
 
-Same trained agent, three ways in. Pick by what you already run.
+Same trained agent, three ways in. Your orchestration, speech, and transport
+stay where they are.
 
 <Frame>
   <img src="/images/diagrams/where-unpod-sits.svg" alt="Animated architecture diagram showing Unpod between raw telephony providers and agent platforms." />
