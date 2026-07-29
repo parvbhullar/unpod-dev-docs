@@ -31,8 +31,7 @@
             "pages": [
               "get-started/why-unpod",
               "get-started/getting-started",
-              "get-started/core-concepts",
-              "get-started/vs-competition"
+              "get-started/core-concepts"
             ]
           },
           {
@@ -42,7 +41,8 @@
               "get-started/realtime",
               "get-started/phone",
               "get-started/quickstart",
-              "get-started/first-phone-call"
+              "get-started/first-phone-call",
+              "get-started/vs-competition"
             ]
           }
         ]
