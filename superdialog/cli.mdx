@@ -1,6 +1,5 @@
 ---
 title: "CLI Reference"
-icon: 'terminal'
 description: "All superdialog command-line commands - the playbook-default workflow first, the legacy flow-graph commands second."
 ---
 
@@ -71,6 +70,86 @@ advance.
 
 **When to use:** during playbook (or legacy flow) design, prompt tuning, and
 eval-dataset collection - before any voice infrastructure is involved.
+
+The CLI reads `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` from your environment.
+
+### The build loop
+
+<Steps>
+  <Step title="Generate">
+    `superdialog generate` a playbook from a plain-language prompt.
+  </Step>
+  <Step title="Chat">
+    Full end-to-end dialog in the terminal - same logic, same LLM calls, same
+    tool execution, nothing but Python.
+  </Step>
+  <Step title="Iterate">
+    Refine the prose, slots, and advance rules. Repeat.
+  </Step>
+  <Step title="Embed">
+    Only once it behaves correctly, wire it into
+    [LiveKit](/superdialog/embedding-guides/livekit),
+    [PipeCat](/superdialog/embedding-guides/pipecat), a
+    [FastAPI endpoint](/superdialog/embedding-guides/fastapi), or
+    [Unpod Voice Infra](/superdialog/embedding-guides/unpod-voice).
+  </Step>
+</Steps>
+
+### Which engine am I on?
+
+The status line tells you:
+
+| Status line | Engine |
+|---|---|
+| `[checkpoint=<id> ended=<bool>]` | Playbook engine (the default) |
+| `[<ms>ms]` | Legacy DialogMachine (`--mode flow`) |
+
+A bare `--flow x.json` shows the checkpoint form - flow JSON is compiled onto
+the Playbook engine.
+
+### REPL loop in Python
+
+For more control - custom tools, a split Talker/Director, or to inspect the
+event log:
+
+```python
+import asyncio
+from superdialog import DialogMachine
+
+agent = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")  # any format
+
+async def main():
+    while True:
+        user = input("> ")
+        if user.strip() in ("quit", "exit"):
+            break
+        reply = await agent.turn(user)
+        print(reply.text)
+
+asyncio.run(main())
+```
+
+<Note>
+**Inspect the event log.** Drop to `PlaybookAgent` and
+`agent.event_log.to_jsonl()` is the audit artifact - every utterance, slot
+write, advance, and tool call, replayable offline:
+
+```python
+from superdialog.playbook import Playbook, PlaybookAgent, httpx_http
+
+agent = PlaybookAgent(
+    playbook=Playbook.load("kyc.yaml"),
+    talker_llm=talker, director_llm=director, http=httpx_http,
+)
+```
+</Note>
+
+<Note>
+**Legacy graph engine in code.** Construct
+`DialogMachine(Flow.load("kyc.json"), llm=..., engine="flow",
+traversal_dir="./traversal_history")` and drive the same loop - see
+[Traversal history](#traversal-history-graph-engine).
+</Note>
 
 ---
 

@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
   "name": "Unpod AI",
-   "customCss": "/custom.css",
+  "customCss": "/custom.css",
   "icons": {
     "library": "lucide"
   },
@@ -48,145 +48,74 @@
         ]
       },
       {
-        "tab": "Playbooks",
+        "tab": "Build Agents",
         "groups": [
           {
-            "group": "Overview",
-            "icon": "book-open",
+            "group": "No code - Playground",
             "pages": [
-              "playbook/why-playbooks",
-              "playbook/what-is-a-playbook",
               "playbook/playground",
-              "playbook/library"
-            ]
-          },
-          {
-            "group": "Build with the Playground",
-            "icon": "wand-sparkles",
-            "pages": [
+              "playbook/what-is-a-playbook",
               "playbook/build-an-agent",
               "playbook/test-by-voice",
               "playbook/optimize",
-              "playbook/publish-and-share"
+              "playbook/publish-and-share",
+              "playbook/library",
+              "playbook/api",
+              "playbook/developer-setup"
             ]
           },
           {
-            "group": "API Endpoint",
-            "icon": "terminal",
-            "pages": [
-              "playbook/api"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "SuperDialog",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "icon": "book-open",
+            "group": "Python - SuperDialog",
             "pages": [
               "superdialog/introduction",
               "superdialog/quickstart",
-              "superdialog/thinking-in-playbooks"
-            ]
-          },
-          {
-            "group": "Core Concepts",
-            "icon": "layers",
-            "pages": [
-              "superdialog/architecture",
+              "superdialog/thinking-in-playbooks",
               "superdialog/playbooks",
-              "superdialog/flows",
               "superdialog/tools",
               "superdialog/sessions",
-              "superdialog/playground"
-            ]
-          },
-          {
-            "group": "Reference",
-            "icon": "code",
-            "pages": [
-              "superdialog/api-reference",
+              "superdialog/flows",
+              "superdialog/playground",
+              "superdialog/embedding-guides/testing",
+              "superdialog/evals",
+              "superdialog/architecture",
               "superdialog/cli",
-              "superdialog/evals"
+              "superdialog/api-reference"
             ]
           },
           {
-            "group": "Embedding Guides",
-            "icon": "plug",
+            "group": "Embed in your stack",
             "pages": [
               "superdialog/embedding-guides/overview",
-              "superdialog/embedding-guides/unpod-voice",
-              "superdialog/embedding-guides/cli",
               "superdialog/embedding-guides/livekit",
               "superdialog/embedding-guides/pipecat",
               "superdialog/embedding-guides/fastapi",
-              "superdialog/embedding-guides/testing"
+              "superdialog/embedding-guides/unpod-voice"
             ]
           }
         ]
       },
       {
-        "tab": "Speech Stack",
+        "tab": "Run Agents",
         "groups": [
           {
-            "group": "Getting Started",
-            "icon": "book-open",
+            "group": "Speech stack",
             "pages": [
-              "speech-stack/introduction"
-            ]
-          },
-          {
-            "group": "Speech",
-            "icon": "audio-waveform",
-            "pages": [
-              "speech-stack/voice-profiles",
-              "speech-stack/pipes"
-            ]
-          },
-          {
-            "group": "Connectivity",
-            "icon": "plug",
-            "pages": [
+              "speech-stack/introduction",
+              "speech-stack/setup-checklist",
+              "speech-stack/pipes",
               "speech-stack/numbers",
-              "speech-stack/trunks",
-              "speech-stack/websocket"
-            ]
-          },
-          {
-            "group": "Dialog",
-            "icon": "layers",
-            "pages": [
+              "speech-stack/voice-profiles",
+              "speech-stack/websocket",
               "speech-stack/bring-your-agent",
               "speech-stack/adapters",
-              "speech-stack/level-up-superdialog"
-            ]
-          },
-          {
-            "group": "Calls",
-            "icon": "phone-outgoing",
-            "pages": [
-              "speech-stack/call-lifecycle",
-              "speech-stack/outbound-calls"
-            ]
-          },
-          {
-            "group": "Session",
-            "icon": "phone",
-            "pages": [
+              "speech-stack/level-up-superdialog",
               "speech-stack/agent-runner",
+              "speech-stack/call-lifecycle",
               "speech-stack/hooks-events",
-              "speech-stack/observability"
-            ]
-          },
-          {
-            "group": "Production",
-            "icon": "rocket",
-            "pages": [
-              "speech-stack/setup-checklist",
-              "speech-stack/deploy",
-              "speech-stack/recordings-transcripts"
+              "speech-stack/outbound-calls",
+              "speech-stack/recordings-transcripts",
+              "speech-stack/observability",
+              "speech-stack/deploy"
             ]
           }
         ]
@@ -550,6 +479,18 @@
     {
       "source": "/get-started/voice-agent",
       "destination": "/get-started/phone"
+    },
+    {
+      "source": "/playbook/why-playbooks",
+      "destination": "/playbook/what-is-a-playbook"
+    },
+    {
+      "source": "/superdialog/embedding-guides/cli",
+      "destination": "/superdialog/cli"
+    },
+    {
+      "source": "/speech-stack/trunks",
+      "destination": "/speech-stack/numbers#trunks"
     }
   ]
 }

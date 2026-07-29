@@ -1,6 +1,5 @@
 ---
 title: "What is a playbook"
-icon: 'book'
 description: "A playbook is a short, plain-language document that tells the agent who it is, what it must accomplish, and when a step is done. Checkpoints gate outcomes, not utterances - and a fast Talker plus an async Director run the whole thing."
 ---
 
@@ -11,10 +10,21 @@ Instead of drawing a flow chart with every branch, or stuffing everything into
 one prompt, you write **checkpoints** - the things that must be true before the
 conversation moves on.
 
-<Note>
-New here? Read [Why playbooks](/playbook/why-playbooks) first - it explains the
-problem playbooks solve versus prompt-based and graph-based agents.
-</Note>
+## Why not a big prompt or a graph
+
+A big prompt fails by **confusion** - the longer it grows, the more the model
+skips rules. A hand-drawn graph fails by **latency and rigidity** - extra model
+calls per node, and real callers walk off your edges.
+
+| | Big prompt | Rigid graph | **Playbook** |
+|---|---|---|---|
+| **Steering** | One long prompt | Every edge hand-drawn | Checkpoints - declare the outcome |
+| **Off-script caller** | Drifts | Hits an unhandled state | Engine finds the path |
+| **Latency** | One call per turn | Extra calls per node | Talker streams, Director judges async |
+| **Changing it** | Rewrite the wall of text | Rewire the graph | Add or edit a checkpoint |
+
+The full model - and when a graph still earns its place - is in
+[Thinking in playbooks](/superdialog/thinking-in-playbooks).
 
 ## Checkpoints gate outcomes, not utterances
 

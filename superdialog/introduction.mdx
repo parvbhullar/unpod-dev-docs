@@ -1,15 +1,17 @@
 ---
 title: "What is SuperDialog?"
-icon: 'book-open'
 description: "A conversation framework with two engines behind one Agent protocol - the Playbook engine (default) for fluid conversations, and the legacy DialogMachine graph runtime. Pure text in, pure text out."
 ---
 
 ## Overview
 
-SuperDialog is the **brain** layer for conversational systems - it works
-anywhere, and shines on Unpod. It takes a prompt or an authored artifact and
-turns it into a running conversation runtime - managing turn-by-turn logic,
-tool calls, outcome tracking, and conversation memory.
+**`pip install superdialog` - no account, no API key.** SuperDialog is an
+open-source Python framework that runs in your own process. Unpod's hosted
+voice is one place to run it, alongside LiveKit, Pipecat, and FastAPI.
+
+It is the **brain** layer for conversational systems: it takes a prompt or an
+authored artifact and turns it into a running conversation runtime - managing
+turn-by-turn logic, tool calls, outcome tracking, and conversation memory.
 
 <Frame>
   <img src="/images/diagrams/superdialog-text-loop.svg" alt="Animated SuperDialog text loop diagram showing user text entering the Agent protocol, agent.turn using tools and state, and reply text coming back." />
