@@ -1,0 +1,76 @@
+---
+title: 'Getting Started'
+icon: 'play'
+description: 'Your first request against a trained agent, in about 2 minutes.'
+---
+
+## Prerequisites
+
+- An Unpod account and API key - [unpod.ai/api-keys](https://unpod.ai/api-keys/),
+  or from the Playground's **Deploy as Endpoint → Manage API Keys**.
+- Basic REST knowledge. That's it - no SDK required for this page.
+
+## Authentication
+
+Every request carries one header:
+
+```
+Authorization: Bearer $UNPOD_API_KEY
+```
+
+## Your first request
+
+Every trained agent is callable over the same
+[chat/completions](/playbook/api) shape you already know. `model` is the
+agent - here, a public example playbook:
+
+```bash
+curl https://inference.unpod.ai/v1/chat/completions \
+  -H "Authorization: Bearer $UNPOD_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"public:PB_7ZRMzCA1ojQ9LlcK","messages":[{"role":"user","content":"hi"}]}'
+```
+
+```json
+{
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "Hi! Welcome to Lumina Spa - I'm Mira, your booking assistant. How can I help you today?"
+      },
+      "finish_reason": "stop"
+    }
+  ]
+}
+```
+
+Not a generic reply - a trained persona, following its own playbook.
+
+## Keep the conversation
+
+Add a `user` id and the agent remembers the thread across requests:
+
+```bash
+curl https://inference.unpod.ai/v1/chat/completions \
+  -H "Authorization: Bearer $UNPOD_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"public:PB_7ZRMzCA1ojQ9LlcK","messages":[{"role":"user","content":"hi"}],"user":"sess_abc"}'
+```
+
+## Go further
+
+<CardGroup cols={2}>
+  <Card title="Train your own" icon="wand-sparkles" href="/playbook/build-an-agent">
+    Describe your use case in the Playground; the playbook writes itself.
+  </Card>
+  <Card title="Use it over chat" icon="terminal" href="/get-started/chat">
+    Drop the endpoint into LiveKit, Pipecat, or any chat workflow.
+  </Card>
+  <Card title="Use it in realtime" icon="audio-waveform" href="/get-started/realtime">
+    Give it a voice - speech in, speech out, brain included.
+  </Card>
+  <Card title="Put it on a number" icon="phone" href="/get-started/phone">
+    No code - publish straight to a live phone number.
+  </Card>
+</CardGroup>

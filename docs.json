@@ -31,10 +31,31 @@
             "icon": "rocket",
             "pages": [
               "get-started/why-unpod",
-              "get-started/start-here",
-              "get-started/slm-inference",
-              "get-started/sts-inference",
-              "get-started/voice-agent",
+              "get-started/getting-started"
+            ]
+          },
+          {
+            "group": "Train your agent",
+            "icon": "wand-sparkles",
+            "pages": [
+              "playbook/build-an-agent",
+              "playbook/test-by-voice",
+              "playbook/optimize"
+            ]
+          },
+          {
+            "group": "Use it like a model",
+            "icon": "terminal",
+            "pages": [
+              "get-started/chat",
+              "get-started/realtime",
+              "get-started/phone"
+            ]
+          },
+          {
+            "group": "Learn more",
+            "icon": "book-open",
+            "pages": [
               "get-started/quickstart",
               "get-started/first-phone-call",
               "get-started/core-concepts",
@@ -529,7 +550,23 @@
     },
     {
       "source": "/get-started/choose-your-path",
-      "destination": "/get-started/start-here"
+      "destination": "/get-started/getting-started"
+    },
+    {
+      "source": "/get-started/start-here",
+      "destination": "/get-started/getting-started"
+    },
+    {
+      "source": "/get-started/slm-inference",
+      "destination": "/get-started/chat"
+    },
+    {
+      "source": "/get-started/sts-inference",
+      "destination": "/get-started/realtime"
+    },
+    {
+      "source": "/get-started/voice-agent",
+      "destination": "/get-started/phone"
     }
   ]
 }
