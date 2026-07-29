@@ -207,8 +207,7 @@ superdialog eval flow --flow kyc.json --traversal session.json   # legacy sessio
 | `flow` | Legacy: audit a recorded session (`--traversal`) or run a synthetic eval |
 
 `eval run` takes `--modes`, `--agent-model`, `--director-model`,
-`--talker-model`, `--judge-model`, `--user-model`, `--metrics`, and `--repeats`
-— see the [A/B Evals](/superdialog/evals) guide. (For playbook persona evals
+`--talker-model`, `--judge-model`, `--user-model`, `--metrics`, and `--repeats` - see the [A/B Evals](/superdialog/evals) guide. (For playbook persona evals
 from Python, see `run_eval` in the
 [API Reference](/superdialog/api-reference#replay-and-the-eval-bridge).)
 
@@ -236,8 +235,7 @@ superdialog benchmark --data universal --flow kyc.yaml --prompt raw_system.txt
 
 <Note>
 `benchmark` uses the RAGAS 0.2.x line (the `benchmark` extra), while the A/B
-`eval` harness uses RAGAS 0.4.3 (the `ragas` extra). They cannot co-install —
-see [A/B Evals → RAGAS](/superdialog/evals#ragas-is-optional-and-version-pinned).
+`eval` harness uses RAGAS 0.4.3 (the `ragas` extra). They cannot co-install - see [A/B Evals → RAGAS](/superdialog/evals#ragas-is-optional-and-version-pinned).
 </Note>
 
 ---

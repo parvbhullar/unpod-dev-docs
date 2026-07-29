@@ -1,6 +1,6 @@
 ---
 title: "A/B Evals"
-description: "A/B-evaluate a playbook on the SuperDialog engine against a vanilla LLM handed the same playbook — scored from the transcript alone, so both are judged by an identical rubric."
+description: "A/B-evaluate a playbook on the SuperDialog engine against a vanilla LLM handed the same playbook - scored from the transcript alone, so both are judged by an identical rubric."
 ---
 
 ## What it answers
@@ -10,7 +10,7 @@ SuperDialog engine beat handing the same playbook to a raw LLM as a flat system
 prompt?**
 
 It drives two modes over one dataset and scores both from the conversation
-**transcript only** — never from engine internals — so the playbook and the
+**transcript only** - never from engine internals - so the playbook and the
 vanilla baseline face an identical rubric. Use it to justify adopting the
 engine, to catch regressions, or to expose your playbook to any external
 benchmark.
@@ -18,7 +18,7 @@ benchmark.
 <Note>
 This is different from `superdialog optimize` and the persona-eval loop in the
 [API Reference](/superdialog/api-reference#replay-and-the-eval-bridge). That
-loop asks "is this playbook good enough, and how do I improve its prose?" — the
+loop asks "is this playbook good enough, and how do I improve its prose?" - the
 A/B harness here asks "is the playbook **machinery** earning its keep over a
 plain prompt?"
 </Note>
@@ -47,16 +47,16 @@ vanilla, a remote HTTP SuperDialog server, and any OpenAI-compatible model.
 <Warning>
 `guardrail` is a **hard gate**. If either mode complies with a probe attack,
 that case's composite score is zeroed and it counts toward the
-`guardrail_violation_rate` — no matter how well it did on the other metrics.
+`guardrail_violation_rate` - no matter how well it did on the other metrics.
 </Warning>
 
 <Note>
-`efficiency` and `token_cost` are pure code — no judge tokens, no added
-latency — so every run includes them regardless of `--metrics`. The report
+`efficiency` and `token_cost` are pure code - no judge tokens, no added
+latency - so every run includes them regardless of `--metrics`. The report
 gains a **Latency & tokens** table (p50/p95, input tok/turn, director/talker
 split, LLM calls/turn) and a **framework** score: zero unless quality is
 perfect (`task_success=1`, `slot_accuracy=1`, guardrail clean), then higher
-for lower latency and fewer tokens — the framework's goal as one number.
+for lower latency and fewer tokens - the framework's goal as one number.
 </Note>
 
 ## Run it
@@ -64,7 +64,7 @@ for lower latency and fewer tokens — the framework's goal as one number.
 Two phases: build the dataset once (offline, commit it), then A/B-run it.
 
 ```bash
-# 1. Build <playbook>.evalcases.yaml — personas auto-generated, probes injected
+# 1. Build <playbook>.evalcases.yaml - personas auto-generated, probes injected
 superdialog eval gen-dataset --playbook spa.yaml --n-probes 8
 
 # 2. A/B both modes → report.json (full) + report.md (headline table + drilldown)
@@ -91,10 +91,10 @@ Useful `eval run` flags:
 
 The dataset format mirrors the RAGAS single-/multi-turn shape: each case carries
 a persona, `ground_truth_slots`, and a list of probes. A persona may also define
-`afterlife_probes` — utterances sent *after* the session ends, asserted on by the
+`afterlife_probes` - utterances sent *after* the session ends, asserted on by the
 suite runner's `silent_afterlife` check (above).
 
-Or run both phases in one shot with `eval bench` — it builds the dataset if
+Or run both phases in one shot with `eval bench` - it builds the dataset if
 missing (`--regen` rebuilds, `--personas` seeds), A/Bs every `--models` entry
 into its own report directory, and adds `--max-turns` to override each
 persona's turn budget:
@@ -118,7 +118,7 @@ superdialog eval suite --config suites.yaml --tier full    # run everything
 superdialog eval suite --config suites.yaml --only realestate-disconnect --force
 ```
 
-The registry is YAML — one entry per suite:
+The registry is YAML - one entry per suite:
 
 ```yaml
 suites:
@@ -142,10 +142,10 @@ Each `expect` entry asserts one case's behavior from the run's report and log:
 
 | Expectation | Asserts |
 |---|---|
-| `goodbye` | `fired` / `absent` — did the goodbye interrupt fire (matched via `goodbye_signal`, default `interrupt:global_goodbye`) |
-| `min_turns` | Conversation length floor — encodes "not ended prematurely" for a control persona who legitimately closes once finished |
-| `no_reentry` | Route integrity — no checkpoint is re-entered after the flow moved past it (a restart/regression). Skip on playbooks with `resume: true` interrupts |
-| `silent_afterlife` | Post-end **afterlife probes** (utterances sent *after* the session ended) draw **no** reply — an ended session that answers is a zombie. Requires the persona to define `afterlife_probes` |
+| `goodbye` | `fired` / `absent` - did the goodbye interrupt fire (matched via `goodbye_signal`, default `interrupt:global_goodbye`) |
+| `min_turns` | Conversation length floor - encodes "not ended prematurely" for a control persona who legitimately closes once finished |
+| `no_reentry` | Route integrity - no checkpoint is re-entered after the flow moved past it (a restart/regression). Skip on playbooks with `resume: true` interrupts |
+| `silent_afterlife` | Post-end **afterlife probes** (utterances sent *after* the session ended) draw **no** reply - an ended session that answers is a zombie. Requires the persona to define `afterlife_probes` |
 | `no_repeat_replies` | No assistant reply exactly repeats the previous one (closing/parrot loops) |
 | `min_task_success` | Per-case `task_success` floor |
 | `min_composite` | Suite-level composite-mean floor |
@@ -185,8 +185,7 @@ pip install superdialog[ragas]
 <Warning>
 SuperDialog ships **two** RAGAS-based harnesses on incompatible RAGAS lines:
 the A/B `ragas` extra (RAGAS 0.4.3) and the separate `benchmark` extra
-(RAGAS 0.2.x, used by `superdialog benchmark`). They **cannot co-install** —
-pick one extra per environment. With `uv`, they are declared conflicting so the
+(RAGAS 0.2.x, used by `superdialog benchmark`). They **cannot co-install** - pick one extra per environment. With `uv`, they are declared conflicting so the
 project still resolves; with `pip`, install only one.
 </Warning>
 

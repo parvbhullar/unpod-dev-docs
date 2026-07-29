@@ -74,7 +74,6 @@
               "superdialog/tools",
               "superdialog/sessions",
               "superdialog/flows",
-              "superdialog/playground",
               "superdialog/embedding-guides/testing",
               "superdialog/evals",
               "superdialog/architecture",
@@ -491,6 +490,10 @@
     {
       "source": "/speech-stack/trunks",
       "destination": "/speech-stack/numbers#trunks"
+    },
+    {
+      "source": "/superdialog/playground",
+      "destination": "/playbook/playground"
     }
   ]
 }

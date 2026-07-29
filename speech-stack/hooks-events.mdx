@@ -142,7 +142,7 @@ async def on_call_end(final_state: str) -> None:
 | Scope | Event | Arguments | Description |
 |---|---|---|---|
 | Runner | `call_start` | `ctx: CallContext` | Call dispatched to this runner |
-| Runner | `call_end` | `ctx: CallContext, state: str` | Call finished — `state` is `"ended"` or `"failed"` |
+| Runner | `call_end` | `ctx: CallContext, state: str` | Call finished - `state` is `"ended"` or `"failed"` |
 | Session | `call_start` | _(none)_ | Session loop started |
 | Session | `user_turn` | `text: str` | User utterance transcribed |
 | Session | `user_partial` | `text: str` | Interim (partial) transcription |
@@ -154,7 +154,7 @@ async def on_call_end(final_state: str) -> None:
 | Session | `turn_complete` | `turn_id, ttfa_ms, asr_ms, llm_ttft_ms, tts_ttfb_ms, stt_ms, tts_ms, from_node, to_node, llm_call_count, llm_total_ms, user_text, agent_text` | Turn finished, full stage latencies |
 | Session | `tool_call` / `tool_result` / `silence` | _(varies)_ | Also registrable |
 | Session | `error` | `code, message, severity, source` | Session-level error |
-| Session | `call_end` | `state: str` | Session loop exited — `state` is `"hangup"` or `"error"` (distinct from the runner-level `"ended"`/`"failed"`) |
+| Session | `call_end` | `state: str` | Session loop exited - `state` is `"hangup"` or `"error"` (distinct from the runner-level `"ended"`/`"failed"`) |
 
 ---
 

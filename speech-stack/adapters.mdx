@@ -75,7 +75,7 @@ All importable from `unpod.adapters`:
 | `OpenAIAdapter` | Real token streaming via `chat.completions.create(stream=True)` |
 | `AnthropicAdapter` | Real token streaming via `messages.stream()` |
 | `LangChainAdapter` | Real streaming via the chain's `.astream()` |
-| `SuperDialogAdapter` | Delegates to `dm.turn(text, stream=True[, language=…])` — `language` is passed through only when the wrapped machine's `turn()` accepts it |
+| `SuperDialogAdapter` | Delegates to `dm.turn(text, stream=True[, language=…])` - `language` is passed through only when the wrapped machine's `turn()` accepts it |
 | `HTTPAdapter` | **Single chunk** - one POST round-trip, full reply yielded once |
 | `MCPAdapter` | Falls back to `turn()`, which is not implemented yet |
 

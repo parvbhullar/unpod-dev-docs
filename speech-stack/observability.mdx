@@ -29,7 +29,7 @@ async def _(turn_id, ttfa_ms, asr_ms, llm_ttft_ms, tts_ttfb_ms, stt_ms, tts_ms,
 <Note>
 `llm_call` and `turn_complete` carry the actual per-turn latency and token data.
 The `CallMetrics` snapshot below (`metrics.live()`) only populates if you feed it
-from these hooks — see the caveat in Layer 2.
+from these hooks - see the caveat in Layer 2.
 </Note>
 
 ## 2. Live per-call snapshot (opt-in)
@@ -52,7 +52,7 @@ m.active_llm      # str: model used on the last turn
 
 <Warning>
 The latency/cost/token fields populate **only if you call
-`metrics.record_turn(...)` yourself** — typically from the `turn_complete` hook
+`metrics.record_turn(...)` yourself** - typically from the `turn_complete` hook
 above. The SDK does not auto-fill them, so out of the box only `duration_s` is
 meaningful. For real numbers, use the per-turn hooks (Layer 1) or the post-call
 transcript timing (Layer 5).
@@ -85,7 +85,7 @@ correct (lower) rate.
 ## 4. Langfuse tracing
 
 When `LANGFUSE_SECRET_KEY` is set, the SDK emits per-turn spans plus a generation
-span per LLM call (with token usage). No wiring needed — set the key and traces
+span per LLM call (with token usage). No wiring needed - set the key and traces
 appear in Langfuse. When unset, tracing is a no-op.
 
 ```bash
@@ -105,17 +105,16 @@ s.failed_last_hour
 s.mean_call_duration_s
 ```
 
-Poll this on a timer for liveness dashboards — see
+Poll this on a timer for liveness dashboards - see
 [AgentRunner & Sessions](/speech-stack/agent-runner#running-in-production).
 
 ## 6. Post-call timing
 
 After the call, the transcript carries a per-turn, per-stage latency breakdown
-(`audio_ingress_ms`, `stt_ms`, `bridge_to_dev_ms`, `dev_brain_ms`, `tts_ms`) —
-see [Recordings & Transcripts](/speech-stack/recordings-transcripts).
+(`audio_ingress_ms`, `stt_ms`, `bridge_to_dev_ms`, `dev_brain_ms`, `tts_ms`) - see [Recordings & Transcripts](/speech-stack/recordings-transcripts).
 
 <Tip>
 High `dev_brain_ms` with healthy `stt_ms`/`tts_ms` means the latency is in
-YOUR brain — usually a `stream()` that is not actually streaming. See
+YOUR brain - usually a `stream()` that is not actually streaming. See
 [Streaming is the hot path](/speech-stack/bring-your-agent#streaming-is-the-hot-path).
 </Tip>

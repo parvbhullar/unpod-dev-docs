@@ -81,7 +81,7 @@ AgentRunner(
 | `permits_per_minute` | Rate of new call acceptance. Lower it to protect downstream systems. |
 | `drain_timeout_s` | On shutdown, wait this long for active calls to finish before force-exiting. |
 | `dev_mode` | Register in a dev pool against a local orchestrator. |
-| `transport` | `"dial_out"` (v2, default): the runner never listens — it dials **out** per call to the `bridge_url` delivered in the `job.assign` frame. `"serve"` (legacy, deprecated): the runner hosts a bridge server that media agents dial into. |
+| `transport` | `"dial_out"` (v2, default): the runner never listens - it dials **out** per call to the `bridge_url` delivered in the `job.assign` frame. `"serve"` (legacy, deprecated): the runner hosts a bridge server that media agents dial into. |
 | `serving_url` | Public `wss://` URL of the runner's bridge server. Only used with `transport="serve"`; **ignored** (warns) under the default `dial_out` transport, which never listens. |
 | `agent_secret` | Only used with `transport="serve"`: when set, inbound bridge connections are HMAC-verified; without it the runner accepts unsigned connections (dev default). **Ignored** (warns) under the default `dial_out` transport. |
 
@@ -131,7 +131,7 @@ async def handle_call(ctx: CallContext) -> None:
 `ctx.agent_id` is the agent the **call** was dispatched for (carried on
 `call.started`); `ctx.runner_id` is the agent_id this runner process was
 constructed with. They match for a single-agent runner and differ for a
-multi-tenant one — route on `ctx.agent_id`, not `ctx.runner_id`.
+multi-tenant one - route on `ctx.agent_id`, not `ctx.runner_id`.
 </Note>
 
 ## The Session
@@ -228,7 +228,7 @@ m.active_llm      # str: model used on the last turn
 <Note>
 Latency/cost/token fields populate only if you feed the tracker via
 `metrics.record_turn(...)` (e.g. from the `turn_complete` hook). Out of the box
-only `duration_s` is meaningful — for real per-turn numbers use the `llm_call` /
+only `duration_s` is meaningful - for real per-turn numbers use the `llm_call` /
 `turn_complete` hooks. See [Metrics, Cost & Observability](/speech-stack/observability).
 </Note>
 

@@ -34,9 +34,9 @@ script every sentence.
 
 ```yaml Example checkpoint
 - id: confirm_appointment
-  goal: Confirm the caller's Friday 4pm appointment.
-  done_when: The caller has said yes to a time, or asked to reschedule.
+  purpose: Confirm the caller's Friday 4pm appointment.
   say: Offer Friday 4pm first, fall back to 5pm.
+  done_when: The caller has said yes to a time, or asked to reschedule.
 ```
 
 That is the whole mental model: **checkpoints gate outcomes, not utterances.**
@@ -47,7 +47,7 @@ That is the whole mental model: **checkpoints gate outcomes, not utterances.**
 |---|---|
 | **Persona** | Who the agent is and how it sounds - the voice and tone a caller hears. |
 | **Opening** | The first line the agent says when the conversation starts. |
-| **Checkpoints** | The ordered outcomes that must be met. Each has a `goal` and a `done_when`. |
+| **Steps (checkpoints)** | The ordered outcomes that must be met. Each has a `purpose` and a `done_when`. |
 | **`done_when` / `advance_when`** | The plain-language condition that lets the conversation leave a checkpoint. |
 | **Slots** | The pieces of data to capture along the way (order number, callback, a chosen time). |
 | **Interrupts** | Conditions that can fire from any step - "goodbye", "I'm busy" - to end or redirect gracefully. |
@@ -56,15 +56,22 @@ Field-by-field reference for both authoring formats is in
 [Playbooks](/superdialog/playbooks).
 
 ```yaml A small, complete playbook
-persona: A warm, efficient scheduling assistant for Dr. Lee's clinic.
+goal: Confirm the caller's appointment for Dr. Lee's clinic.
+persona:
+  name: Mira
+  identity: A warm, efficient scheduling assistant for Dr. Lee's clinic.
+  voice_style: Calm, brisk, never pushy.
 opening: "Hi, this is Dr. Lee's office calling to confirm your appointment."
-checkpoints:
+playbook:
   - id: confirm_time
-    goal: Confirm the Friday 4pm slot, or offer 5pm.
+    purpose: Confirm the Friday 4pm slot, or offer 5pm.
+    say: Offer Friday 4pm first, fall back to 5pm.
     done_when: The caller accepts a time or asks to reschedule.
   - id: wrap_up
-    goal: Read back the confirmed time and say goodbye.
+    purpose: Read back the confirmed time and say goodbye.
     done_when: The caller has heard the confirmed time.
+    terminal: true
+    outcome: confirmed
 ```
 
 ## How it runs: Talker + Director

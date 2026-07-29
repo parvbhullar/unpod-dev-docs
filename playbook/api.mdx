@@ -7,7 +7,7 @@ servers:
   - url: https://inference.unpod.ai
 ---
 
-Send messages to your deployed playbook. Any OpenAI-compatible SDK works — just
+Send messages to your deployed playbook. Any OpenAI-compatible SDK works - just
 swap the base URL, API key, and `model`.
 
 <Note>
@@ -74,7 +74,7 @@ curl -X POST "https://inference.unpod.ai/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -d '{"model":"public:PB_7ZRMzCA1ojQ9LlcK","messages":[{"role":"user","content":"hi"}]}'
 
-# With session id — stateful conversation
+# With session id - stateful conversation
 curl -X POST "https://inference.unpod.ai/v1/chat/completions" \
   -H "Authorization: Bearer your-api-key" \
   -H "Content-Type: application/json" \

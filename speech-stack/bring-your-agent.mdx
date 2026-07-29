@@ -237,7 +237,7 @@ class MyAdapter:
         self, text: str, context: dict | None = None, language: str | None = None
     ):
         """Yield response tokens. THIS is the hot path used by session.run().
-        Accept `language` even if unused — session.run() always passes it."""
+        Accept `language` even if unused - session.run() always passes it."""
         async for token in my_agent.stream(text):
             yield token
 
