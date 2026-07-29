@@ -52,6 +52,9 @@ That is the whole mental model: **checkpoints gate outcomes, not utterances.**
 | **Slots** | The pieces of data to capture along the way (order number, callback, a chosen time). |
 | **Interrupts** | Conditions that can fire from any step - "goodbye", "I'm busy" - to end or redirect gracefully. |
 
+Field-by-field reference for both authoring formats is in
+[Playbooks](/superdialog/playbooks).
+
 ```yaml A small, complete playbook
 persona: A warm, efficient scheduling assistant for Dr. Lee's clinic.
 opening: "Hi, this is Dr. Lee's office calling to confirm your appointment."
@@ -79,6 +82,9 @@ A playbook is fast because two roles run at once:
     event-sourced log.
   </Card>
 </CardGroup>
+
+Turn ordering, the event-sourced log, and why the Director never blocks the
+Talker are covered in [Architecture](/superdialog/architecture).
 
 <Card title="The full checkpoint model" icon="lightbulb" href="/superdialog/thinking-in-playbooks">
   Go deeper on `done_when` / `advance_when`, slots, and interrupts in the

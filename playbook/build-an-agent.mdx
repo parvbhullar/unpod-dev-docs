@@ -6,9 +6,9 @@ description: "Describe the agent you want in plain English - or drop in a PDF or
 ## The idea
 
 You do not start from a blank YAML file. You **talk to a builder agent** in the
-left-hand chat, tell it what you want, and it authors the playbook. The result
-appears live in the **Editor** tab on the right, where you can refine it in
-chat or edit it by hand.
+left-hand chat and it authors the playbook live into the **Editor** tab on the
+right - refine it in chat or edit it by hand. Full tour of the screen:
+[The Playground](/playbook/playground).
 
 <a className="pg-cta" href="https://superdialog.unpod.ai/playground" target="_blank" rel="noreferrer">
   <span className="pg-cta__icon">▶</span>
@@ -38,7 +38,8 @@ and the checkpoints needed to reach the outcome.
 <Tip>
 Describe the **goal and the guardrails**, not the exact words. "Collect the
 order number before offering a refund" is a checkpoint the engine can enforce;
-scripting every sentence fights the model instead of steering it.
+scripting every sentence fights the model instead of steering it. Why that
+works: [Thinking in playbooks](/superdialog/thinking-in-playbooks).
 </Tip>
 
 ### Start from a document or a URL
@@ -76,11 +77,6 @@ good playbooks out of the box, and each option is tagged for its strength -
 Override it only if you have a preference - it controls the *builder*, not the
 model your finished agent will run on (that is set in
 [Test by voice](/playbook/test-by-voice)).
-
-<Tip>
-Paste a website or doc link in the composer and the builder agent reads it before
-authoring - the hint under the box says so.
-</Tip>
 
 ## Step 3 - Watch it land in the Editor
 
@@ -129,6 +125,9 @@ Agent** (a phone number) and **Deploy as Endpoint** (an API).
   not scripts.
 - The **fallbacks** you mentioned are present (offer 5pm; escalate politely).
 - Any **slots** you need to capture (order number, callback) have a checkpoint.
+
+Outcome-shaped checkpoints and slots in depth:
+[Thinking in playbooks](/superdialog/thinking-in-playbooks).
 
 ## Next step
 

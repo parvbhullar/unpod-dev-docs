@@ -28,7 +28,7 @@ the read-only catalog when you create the pipe; you do not create one.
 Provisioning uses the **Management API** - the REST half of the [SDK](https://github.com/unpod-ai/unpod-python-sdk), reached
 through `AsyncClient`. It reads `UNPOD_API_KEY` and derives its REST endpoint
 from `UNPOD_BASE_URL` (`https://<host>/platform`) - both set in the
-[Quickstart](/get-started/quickstart#set-your-environment).
+[Quickstart](/get-started/quickstart#step-2-set-your-environment).
 
 If you need one-off overrides in code, pass `base_url=` to `AsyncClient` or
 `AgentRunner`; those arguments win over `.env` for that process only.
@@ -92,7 +92,7 @@ the SIP connections that carry calls between a telephony provider and Unpod. If
 Register one with `client.trunks.create(...)` before running the setup above.
 You configure a trunk once; after that you work with numbers, not SIP. See
 [Trunks](/speech-stack/numbers#trunks) for both trunk types, or the
-[Setup Checklist](/speech-stack/setup-checklist) for the full production path.
+[Provisioning checklist](/speech-stack/setup-checklist) for the full production path.
 
 ## Answer an inbound call
 

@@ -15,17 +15,15 @@ adapters do not know which engine they are driving.
   <img src="/images/diagrams/superdialog-engines-contract.svg" alt="Animated SuperDialog engine contract diagram showing host platforms flowing through adapters, SessionWorker, the Agent protocol, and then branching to PlaybookAgent and DialogMachine engines." />
 </Frame>
 
-- **Engine B - Playbook (default).** The checkpoint-compound runtime for fluid
-  conversations. Checkpoints gate *outcomes*, not utterances; a fast Talker
-  streams every spoken turn while an async Director extracts, judges, and steers
-  over an event-sourced log. This is where new investment goes.
-- **Engine A - DialogMachine (legacy).** The graph-railed state machine. A flow
-  graph decides every transition; the LLM speaks within the rails. Fully
-  supported; existing flows keep working - by default, compiled onto Engine B.
+- **Engine B - Playbook (default).** Checkpoint-compound runtime: a Talker and a
+  Director over an event-sourced log. Internals below.
+- **Engine A - DialogMachine (legacy).** Graph-railed state machine, fully
+  supported; flow JSON runs compiled onto Engine B by default.
 
 `DialogMachine(source, llm, *, engine=...)` is the recommended way in and drives
 either engine - the Playbook engine by default, the legacy graph runtime with
-`engine="flow"`.
+`engine="flow"`. What each engine is for:
+[What is SuperDialog?](/superdialog/introduction).
 
 ## Library shape
 
@@ -129,8 +127,7 @@ backstops make the close reliable on real calls:
 A `Flow` is a directed graph: nodes (states), edges (transitions with
 natural-language conditions), and declarative actions. The graph decides what is
 *possible*; the LLM picks among the outgoing edges. Every transition is
-authored and every reachable path is enumerable - strong where determinism is
-the point.
+authored and every reachable path is enumerable.
 
 <Frame>
   <img src="/images/diagrams/superdialog-runtime.svg" alt="Animated SuperDialog runtime diagram showing user text entering DialogMachine.turn, loading a node, building a prompt, calling the LLM, running tools, updating state, advancing an edge, and returning a turn result to CLI, FastAPI, LiveKit, or Unpod hosts." />
@@ -144,11 +141,12 @@ dm = DialogMachine(Flow.load("kyc.json"), llm="anthropic/claude-haiku-4-5", engi
 reply = await dm.turn("hello")
 ```
 
-Flexibility on this engine is rail-shaped, and each turn costs a route decision
-plus a speak call - exactly the friction the Playbook engine removes. By
-default, flow JSON runs **compiled onto Engine B** (`compile_flow`); you only
-opt into the original runtime with `engine="flow"`. See
-[Flows](/superdialog/flows) for graph authoring and migration.
+Each turn costs a route decision plus a speak call - the friction Engine B
+removes, and the trade-off is weighed in
+[Thinking in Playbooks](/superdialog/thinking-in-playbooks). By default, flow
+JSON runs **compiled onto Engine B** (`compile_flow`); you only opt into the
+original runtime with `engine="flow"`. See [Flows](/superdialog/flows) for graph
+authoring and migration.
 
 ## Model URI resolver
 

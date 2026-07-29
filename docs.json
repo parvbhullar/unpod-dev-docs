@@ -51,7 +51,7 @@
         "tab": "Build Agents",
         "groups": [
           {
-            "group": "No code - Playground",
+            "group": "Playground (no code)",
             "pages": [
               "playbook/playground",
               "playbook/what-is-a-playbook",
@@ -65,7 +65,7 @@
             ]
           },
           {
-            "group": "Python - SuperDialog",
+            "group": "SuperDialog Framework",
             "pages": [
               "superdialog/introduction",
               "superdialog/quickstart",

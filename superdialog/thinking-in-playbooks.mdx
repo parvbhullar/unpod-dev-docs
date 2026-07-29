@@ -28,6 +28,10 @@ checkpoint is a call-center-script unit with four parts:
 - **`guidance`** - prose the agent speaks from (it owns the wording)
 - **`advance_when`** - an ordered list of rules that move the conversation forward
 
+Those are the **full format** names. The **simple format** spells the same four
+`purpose` / `collect` / `say` / `done_when`; both compile to one checkpoint - see
+[Playbooks](/superdialog/playbooks).
+
 <Frame>
   <img src="/images/diagrams/playbook-checkpoint-model.svg" alt="Animated Playbook checkpoint model diagram showing goal, slots, guidance, and advance rules inside a checkpoint, free conversation within it, and movement to the next checkpoint when an outcome is met." />
 </Frame>
@@ -108,13 +112,14 @@ Every checkpoint has a `gate`. This is where fluidity meets reliability:
   model guess can never push past a hard gate on its own.
 
 ```yaml
-- id: take_payment
-  goal: "Charge the deposit."
-  gate: hard                 # waits for confirmed slots before proceeding
-  advance_when:
-    - when: "deposit charged"
-      to: booking.confirmed
-      requires: [card_token, amount]
+playbook:
+  - id: take_payment
+    purpose: "Charge the deposit."
+    say: "Confirm the amount, then take the card."
+    collect: [card_token, amount]
+    require: [card_token, amount]   # must be confirmed, not just extracted
+    gate: hard                      # waits for that before the gated line
+    done_when: "Deposit charged."
 ```
 
 ## Why one streaming call, not two
@@ -123,17 +128,13 @@ A rigid graph has to make two LLM calls per turn: one to decide which edge
 fires, then one to speak. For voice, that adds latency before the caller hears
 anything.
 
-The Playbook engine splits the work across two roles that share one
-event-sourced log:
-
-- A fast **Talker** streams every spoken turn with **one** LLM call - tokens go
-  straight to the host (and to TTS for voice).
-- An async **Director** does the judging - extract slots, evaluate advance
-  rules, run tools - **off the speech path**.
+A playbook splits the turn instead: a fast **Talker** streams the spoken reply
+in one LLM call, while an async **Director** extracts slots and judges advance
+rules **off the speech path**.
 
 The caller hears the agent immediately; correctness converges a beat behind.
-Barge-in is safe by construction: aborting the stream cancels *speech*, never
-the state. (The full runtime is in [Architecture](/superdialog/architecture).)
+Full runtime - ordering, the event log, barge-in safety - in
+[Architecture](/superdialog/architecture).
 
 ## When a graph still fits
 

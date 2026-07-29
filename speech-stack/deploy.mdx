@@ -8,7 +8,7 @@ orchestrator over WSS and heartbeats (at an interval the orchestrator assigns on
 registration). Under the default `dial_out` transport it then **dials out** to a
 per-call bridge each time a call is assigned; under the legacy `serve` transport
 it instead hosts a bridge connection per call. Provisioning is covered
-by the [Setup Checklist](/speech-stack/setup-checklist); this page is what
+by the [Provisioning checklist](/speech-stack/setup-checklist); this page is what
 changes when you leave your laptop.
 
 <Note>
@@ -24,7 +24,7 @@ legacy `transport="serve"` model. See
 
 A production deployment should have:
 
-- A stable `UNPOD_API_KEY` — **required by the `AgentRunner`** for the orchestrator connection. For the management client (`AsyncClient`/`Client`), `UNPOD_PLATFORM_TOKEN` (+ `UNPOD_ORG_HANDLE`) is preferred and falls back to `UNPOD_API_KEY`
+- A stable `UNPOD_API_KEY` - **required by the `AgentRunner`** for the orchestrator connection ([full variable table](/speech-stack/setup-checklist#environment-variables))
 - A clear `agent_id` shared by every replica of the same agent
 - Capacity limits (`max_sessions`, `permits_per_minute`) that match your traffic
 - Shutdown handling so active calls can drain before the process exits
@@ -44,8 +44,8 @@ If you are writing docs for app developers, this is the minimum contract:
 
 <Note>
 This step applies only to `transport="serve"`. Under the default `dial_out`
-transport the runner never listens — it dials out to the bridge URL delivered in
-each `job.assign` frame — so no public reachability is needed.
+transport the runner never listens - it dials out to the bridge URL delivered in
+each `job.assign` frame - so no public reachability is needed.
 </Note>
 
 In `serve` mode the runner hosts a per-call bridge that Unpod dials into. It
@@ -116,22 +116,21 @@ rejection (an orchestrator too old to acknowledge `dial_out`). The legacy
 
 ## Environment summary
 
-For a production runner, the usual minimum `.env` looks like this:
+The minimum production `.env` - every variable defined in the
+[Provisioning checklist](/speech-stack/setup-checklist#environment-variables):
 
 ```bash
 UNPOD_API_KEY="sk_..."              # required by the AgentRunner
 UNPOD_BASE_URL="api.unpod.ai"
+UNPOD_PLATFORM_TOKEN="..."          # management client; falls back to UNPOD_API_KEY
+UNPOD_ORG_HANDLE="acme"             # org-scoped / telephony calls
 
 # Legacy transport="serve" only (ignored under the default dial_out transport):
 UNPOD_AGENT_SECRET="long-random-secret"
 UNPOD_RUNNER_URL="wss://agents.example.com:8765"
-
-# Management client (AsyncClient/Client) — preferred proxy-mode auth:
-UNPOD_PLATFORM_TOKEN="..."          # falls back to UNPOD_API_KEY if unset
-UNPOD_ORG_HANDLE="acme"             # required for org-scoped / telephony calls
 ```
 
-If you override URLs in code instead of `.env`, keep the same precedence rules:
+Constructor arguments beat the environment:
 
 - `AgentRunner(base_url=...)` overrides `UNPOD_ORCHESTRATOR_URL`
 - `AgentRunner(serving_url=...)` overrides `UNPOD_RUNNER_URL`

@@ -89,28 +89,31 @@ Per step:
 | `turn_budget` | User turns before a "wrap this step up" nudge (default 4). |
 | `kb` | Whether this step's prompt carries the knowledge base; set `false` on steps that only mention it. |
 | `then` | Step id to advance to when `done_when` holds, instead of the next list element. Unknown targets and self-targets are rejected at load. |
-| `terminal` + `outcome` | Mark the step as a call ending (default `outcome: closed`), recorded on `SessionEnd`. Any step can be terminal now — not only the last. `outcome` on a non-terminal step is rejected. |
-| `branches` | Multi-way routing, judged in author order **ahead of** `done_when`. Each entry is `{when, to, requires?}` — note the target key is `to`, not `then`. A branch may not target the default next step or itself; terminal steps cannot have branches. |
+| `terminal` + `outcome` | Mark the step as a call ending (default `outcome: closed`), recorded on `SessionEnd`. Any step can be terminal now - not only the last. `outcome` on a non-terminal step is rejected. |
+| `branches` | Multi-way routing, judged in author order **ahead of** `done_when`. Each entry is `{when, to, requires?}` - note the target key is `to`, not `then`. A branch may not target the default next step or itself; terminal steps cannot have branches. |
 | `then_say` | A line delivered *while advancing out of* this step (post-capture pitch), rendered Jinja over slots. Guidance written after the capture in `say` is unreachable, so use `then_say`. Never spoken on interrupt/policy advances; rejected on terminal steps. |
 | `entity` / `gate` | Advanced: turn owner (`caller`/`agent`) and per-step `soft`/`hard` gate. |
 
-**Routing example** — a fallback that closes the call and a step that branches on the answer:
+**Routing example** - a branch off the default chain, and two terminal outcomes:
 
 ```yaml
 playbook:
   - id: pitch_visit
     say: "Offer the site visit; handle the objection on hesitation."
     done_when: "Customer accepts or is open to the visit."
-    then_say: "Great — let me lock that in."     # spoken while advancing out
+    then_say: "Great - let me lock that in."     # spoken while advancing out
     branches:
       - when: "Customer firmly declines after the objection was handled."
-        to: advisor_callback                      # `to`, not `then`
+        to: advisor_callback     # `to`, not `then`; never the default next step
+  - id: book_visit               # pitch_visit's default next step
+    say: "Confirm the slot, read it back, and say goodbye."
+    terminal: true               # a terminal step need not be the last one
+    outcome: visit_booked
   - id: advisor_callback
-    say: "Capture a callback time, then close politely."
+    say: "Capture a callback time."
     collect: [callback_time]
     done_when: "Callback time captured."
-    then: close                                   # jump past the default next step
-  - id: close
+  - id: close                    # advisor_callback's default next step
     say: "Thank them and say goodbye."
     terminal: true
     outcome: callback_scheduled
@@ -120,7 +123,7 @@ playbook:
 **Which `collect` keys gate advancement depends on the step's shape.** A
 focused capture step (≤2 slots) requires all of them filled before the
 Director may advance; a branchy step collecting more than 2 per-path
-alternatives requires **none** — demanding every slot of a 14-slot category
+alternatives requires **none** - demanding every slot of a 14-slot category
 qualifier would deadlock the step. Use `require:` to override the heuristic
 (e.g. one mandatory key on an otherwise-branchy step).
 </Warning>
@@ -133,8 +136,8 @@ cap); the same playbook with goodbye/busy interrupts completed every call.
 
 ### Strict validation
 
-Keys the format does not recognize — a typo'd `done_wehn`, an invented top-level
-`language_lock:` — **raise at load** with the dotted path of every offender,
+Keys the format does not recognize - a typo'd `done_wehn`, an invented top-level
+`language_lock:` - **raise at load** with the dotted path of every offender,
 instead of being silently dropped (config theater: you think it's set, the
 runtime never sees it). For live loaders that must not kill a call over a stale
 authored file, downgrade to a warning:
@@ -207,6 +210,9 @@ journeys:
       - id: close
         terminal: true        # session ends on entry
         outcome: confirmed    # label for metrics and host hangup
+      - id: handoff
+        terminal: true        # the `on_failure` target declared above
+        outcome: escalated
 
 tools:
   - id: hold_slot
@@ -248,7 +254,7 @@ policies:
 | **AdvanceRule** | `when` (prose or expr), `judge` (`llm`/`expr`), `to` (checkpoint ref), `requires` (slots that must be filled/confirmed), `set` (slot writes on advance) |
 | **ToolSpec** | `type` (`http`/`python`), `method`/`url`/`headers`/`body` (sandboxed Jinja), `store_response_as`, `env_updates`, `run_once`, `when`, `timeout` |
 | **PipelineSpec** | ordered `steps`, each with typed `on: {ok, failed, http_<code>}` branches and capped `retry` |
-| **LLMConfig** (`llm:`) | `provider`, `model`, optional `director` — the model-loading path (persona-level `llm` is deprecated and warns) |
+| **LLMConfig** (`llm:`) | `provider`, `model`, optional `director` - the model-loading path (persona-level `llm` is deprecated and warns) |
 | **Policies** (`policies:`) | `silence`, `hold_timeout` (default 4.0), `filler` + `hold_line` (author-facing barrier lines spoken while the Director settles) |
 
 Validation runs on load and raises on unknown checkpoint/pipeline/tool refs,

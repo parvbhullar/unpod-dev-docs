@@ -46,6 +46,9 @@ class TextLLM:
 talker = TextLLM(resolve_llm("anthropic/claude-haiku-4-5"))   # fast: speaks
 director = TextLLM(resolve_llm("anthropic/claude-opus-4-7"))  # strong: judges
 ```
+
+Why two models, and how the Director steers the Talker without stalling it:
+[Architecture](/superdialog/architecture).
 </Note>
 
 ## Choose your host

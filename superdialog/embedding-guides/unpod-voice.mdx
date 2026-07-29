@@ -65,59 +65,37 @@ AgentRunner(
 
 ---
 
-## Step 3 - Create and register your Speech Pipe
+## Step 3 - Register a Speech Pipe (once)
+
+A Speech Pipe is the voice front-end calls arrive on. Create one, attach a
+number, and give it the **same `agent_id`** your `AgentRunner` uses - a mismatch
+is the most common first-run failure.
 
 ```python
-import asyncio
-from unpod import AsyncClient
-
-async def setup():
-    async with AsyncClient() as client:
-        profiles = await client.voice_profiles.list(language="en")
-        pipe = await client.pipes.create(
-            name="KYC Bot",
-            voice_profile=profiles[0].profile_id,
-            agent_id="kyc-bot",    # must match AgentRunner(agent_id=...)
-            recording=True,
-        )
-
-        numbers = await client.numbers.list()
-        if numbers:
-            await client.numbers.attach(numbers[0].id, pipe_id=pipe.pipe_id)
-
-        print(f"Speech Pipe: {pipe.pipe_id}, Number: {numbers[0].number if numbers else 'none'}")
-
-asyncio.run(setup())
+pipe = await client.pipes.create(
+    name="KYC Bot",
+    voice_profile=profiles[0].profile_id,
+    agent_id="kyc-bot",        # must match AgentRunner(agent_id=...)
+    recording=True,
+)
+await client.numbers.attach(numbers[0].id, pipe_id=pipe.pipe_id)
 ```
+
+Full script, env vars, and voice-profile lookup:
+[Provisioning checklist](/speech-stack/setup-checklist).
 
 ---
 
 ## Complete example
 
+The long-lived runner process. Pipe and number are provisioned once beforehand
+- see [Provisioning checklist](/speech-stack/setup-checklist).
+
 ```python
-import asyncio
-import os
 from superdialog import DialogMachine, PythonTool
-from unpod import AgentRunner, AsyncClient, CallContext
+from unpod import AgentRunner, CallContext
 
-# --- One-time setup (run once) ---
-
-async def setup():
-    async with AsyncClient() as client:
-        profiles = await client.voice_profiles.list(language="en")
-        pipe = await client.pipes.create(
-            name="KYC Bot",
-            voice_profile=profiles[0].profile_id,
-            agent_id="kyc-bot",
-            recording=True,
-        )
-        numbers = await client.numbers.list()
-        if numbers:
-            await client.numbers.attach(numbers[0].id, pipe_id=pipe.pipe_id)
-
-# asyncio.run(setup())   # Run once to provision
-
-# --- Playbook (built with `superdialog generate` or generate_simple_playbook) ---
+# --- Tools (playbook built with `superdialog generate`) ---
 
 def lookup_aadhaar(partial: str) -> dict:
     """Look up customer by partial Aadhaar."""

@@ -156,7 +156,10 @@ The pipe never calls your brain over HTTP. On every call the orchestrator dispat
 
 ## Bridging a Remote HTTP Brain
 
-If you already have a chatbot or API (any language) and want to voice-enable it, run an `AgentRunner` and set its dialog brain to an `HTTPAdapter`. The adapter `POST`s each user turn to your endpoint from inside the runner:
+Already have a chatbot or API in any language? Run an `AgentRunner` whose dialog
+brain is an `HTTPAdapter`. It `POST`s each user turn to your endpoint from inside
+the runner - text in, text out, **not** OpenAI-compatible. Your endpoint keeps all
+LLM logic.
 
 ```python
 from unpod import AgentRunner, CallContext
@@ -171,33 +174,20 @@ async def handle_call(ctx: CallContext) -> None:
 AgentRunner(entrypoint=handle_call, agent_id="my-bot").start()
 ```
 
-### HTTPAdapter Protocol
-
-The `HTTPAdapter` sends a `POST` on every user turn:
-
-```
-POST https://your-api.example.com/dialog/turn
-Content-Type: application/json
-
+```jsonc
+// POST https://your-api.example.com/dialog/turn
 {
   "text": "I'd like to reschedule my appointment",
-  "context": { ... },
+  "context": { },
   "session_id": "sess_xyz789",
-  "system_instructions": ["..."]   // present only after assist() is called
+  "system_instructions": ["..."]   // only after assist() is called
 }
+// 200 response
+{ "text": "Sure - what date works for you?" }
 ```
 
-Your endpoint must respond with:
-
-```json
-{
-  "text": "Sure, I can help with that. What date works for you?"
-}
-```
-
-<Note>
-This protocol is **not** OpenAI-compatible. It is a simple text-in / text-out interface - your endpoint owns all LLM or chatbot logic. Forward to OpenAI, Gemini, a rules engine, or anything else under the hood. See [Adapters](/speech-stack/adapters) for the full `HTTPAdapter` contract (streaming, `assist()`, error surfaces).
-</Note>
+Streaming, `assist()`, and error surfaces:
+[Adapters](/speech-stack/adapters).
 
 ---
 
