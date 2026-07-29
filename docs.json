@@ -28,38 +28,21 @@
         "groups": [
           {
             "group": "Start Here",
-            "icon": "rocket",
             "pages": [
               "get-started/why-unpod",
-              "get-started/getting-started"
-            ]
-          },
-          {
-            "group": "Train your agent",
-            "icon": "wand-sparkles",
-            "pages": [
-              "playbook/build-an-agent",
-              "playbook/test-by-voice",
-              "playbook/optimize"
+              "get-started/getting-started",
+              "get-started/core-concepts",
+              "get-started/vs-competition"
             ]
           },
           {
             "group": "Use it like a model",
-            "icon": "terminal",
             "pages": [
               "get-started/chat",
               "get-started/realtime",
-              "get-started/phone"
-            ]
-          },
-          {
-            "group": "Learn more",
-            "icon": "book-open",
-            "pages": [
+              "get-started/phone",
               "get-started/quickstart",
-              "get-started/first-phone-call",
-              "get-started/core-concepts",
-              "get-started/vs-competition"
+              "get-started/first-phone-call"
             ]
           }
         ]
