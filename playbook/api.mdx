@@ -1,33 +1,130 @@
 ---
-title: "Chat Completions"
+title: "Endpoint API"
 sidebarTitle: "Endpoint API"
-description: 'Chat with your deployed playbook over an OpenAI-compatible endpoint.'
+description: "Call your published playbook over an OpenAI-compatible chat/completions endpoint."
 openapi: 'POST /v1/chat/completions'
 servers:
   - url: https://inference.unpod.ai
 ---
 
-Send messages to your deployed playbook. Any OpenAI-compatible SDK works - just
-swap the base URL, API key, and `model`.
+Publishing a playbook as an endpoint gives you an OpenAI-compatible API. Any
+OpenAI SDK works - swap the base URL, the API key, and the `model`.
+
+| | |
+|---|---|
+| **Base URL** | `https://inference.unpod.ai` |
+| **Route** | `POST /v1/chat/completions` |
+| **Auth** | `Authorization: Bearer <your-api-key>` |
 
 <Note>
-**Prerequisites:** A deployed playbook + API key. See [Authentication](/api/get-started/authentication).
+**Prerequisites:** a published playbook and an endpoint key. Publish, then open
+**Deploy as Endpoint → Manage API Keys** - see
+[Publish & share](/playbook/publish-and-share#deploy-as-endpoint).
 </Note>
+
+<Warning>
+This endpoint uses `Bearer` auth at `inference.unpod.ai`. It is **not** the
+platform REST API, which uses `Authorization: Token` at `unpod.ai` - see
+[platform authentication](/api/get-started/authentication) for that one.
+</Warning>
+
+## Request
 
 ### Headers
 
-| Name          | Type   | Required | Description                     |
-|---------------|--------|----------|---------------------------------|
-| Authorization | string | Yes      | `Bearer <your-api-key>`         |
-| Content-Type  | string | Yes      | `application/json`              |
+| Name | Required | Value |
+|---|---|---|
+| `Authorization` | Yes | `Bearer <your-api-key>` |
+| `Content-Type` | Yes | `application/json` |
 
-### Request body
+### Body
 
-| Field    | Type   | Required | Description                                    |
-|----------|--------|----------|------------------------------------------------|
-| model    | string | Yes      | Playbook id with `public:` prefix              |
-| messages | array  | Yes      | Array of `{role, content}` objects             |
-| user     | string | No       | Stable session id → stateful conversation      |
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `model` | string | Yes | Your playbook id, `public:` prefixed - e.g. `public:PB_7ZRMzCA1ojQ9LlcK` |
+| `messages` | array | Yes | `{role, content}` objects, as in the OpenAI API |
+| `user` | string | No | A stable session id. Pass the same value across requests and the agent keeps its state. |
+
+## Keep a conversation going
+
+Without `user`, each request is independent. With it, the agent remembers the
+thread - the checkpoint it reached, the slots it filled - across requests.
+
+```bash
+-d '{"model":"public:PB_...","messages":[{"role":"user","content":"hi"}],"user":"sess_abc"}'
+```
+
+Use one id per caller or per conversation, not one per process.
+
+## Examples
+
+<Tabs>
+  <Tab title="cURL">
+    ```bash
+    curl -X POST "https://inference.unpod.ai/v1/chat/completions" \
+      -H "Authorization: Bearer $UNPOD_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "model": "public:PB_7ZRMzCA1ojQ9LlcK",
+        "messages": [{"role": "user", "content": "hi"}],
+        "user": "sess_abc"
+      }'
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    from openai import OpenAI
+
+    client = OpenAI(
+        base_url="https://inference.unpod.ai/v1",
+        api_key=os.environ["UNPOD_API_KEY"],
+    )
+
+    reply = client.chat.completions.create(
+        model="public:PB_7ZRMzCA1ojQ9LlcK",
+        messages=[{"role": "user", "content": "hi"}],
+        user="sess_abc",
+    )
+    print(reply.choices[0].message.content)
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    import OpenAI from "openai";
+
+    const client = new OpenAI({
+      baseURL: "https://inference.unpod.ai/v1",
+      apiKey: process.env.UNPOD_API_KEY,
+    });
+
+    const reply = await client.chat.completions.create({
+      model: "public:PB_7ZRMzCA1ojQ9LlcK",
+      messages: [{ role: "user", content: "hi" }],
+      user: "sess_abc",
+    });
+    console.log(reply.choices[0].message.content);
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go
+    cfg := openai.DefaultConfig(os.Getenv("UNPOD_API_KEY"))
+    cfg.BaseURL = "https://inference.unpod.ai/v1"
+    client := openai.NewClientWithConfig(cfg)
+
+    reply, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+        Model:    "public:PB_7ZRMzCA1ojQ9LlcK",
+        Messages: []openai.ChatCompletionMessage{{Role: "user", Content: "hi"}},
+        User:     "sess_abc",
+    })
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+Keys carry your account's access. Keep them server-side in a secret manager or
+environment variable - never in client-side code or a committed file. Rotate
+immediately if one leaks.
+</Warning>
 
 <ResponseExample>
 
@@ -67,16 +164,13 @@ swap the base URL, API key, and `model`.
 
 </ResponseExample>
 
-```bash cURL
-# Basic chat completion
-curl -X POST "https://inference.unpod.ai/v1/chat/completions" \
-  -H "Authorization: Bearer your-api-key" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"public:PB_7ZRMzCA1ojQ9LlcK","messages":[{"role":"user","content":"hi"}]}'
+## Next
 
-# With session id - stateful conversation
-curl -X POST "https://inference.unpod.ai/v1/chat/completions" \
-  -H "Authorization: Bearer your-api-key" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"public:PB_7ZRMzCA1ojQ9LlcK","messages":[{"role":"user","content":"hi"}],"user":"sess_abc"}'
-```
+<CardGroup cols={2}>
+  <Card title="Publish & share" icon="share" href="/playbook/publish-and-share">
+    Deploy the playbook and mint a key.
+  </Card>
+  <Card title="Chat surface" icon="terminal" href="/get-started/chat">
+    Drop this endpoint into LiveKit, Pipecat, or any chat workflow.
+  </Card>
+</CardGroup>

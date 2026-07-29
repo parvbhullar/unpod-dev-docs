@@ -111,28 +111,6 @@ proving every node, edge, and action mapped.
 Side-by-side comparison, and when a graph still fits:
 [Thinking in Playbooks](/superdialog/thinking-in-playbooks).
 
-## What ships today (v0.2)
-
-| Capability | Status |
-|---|---|
-| Playbook engine: checkpoints, Talker/Director compound, event-sourced log | ✅ shipped |
-| Real token streaming, barge-in safe (`PlaybookAgent`) | ✅ shipped |
-| Prompt → playbook: `superdialog generate` / `generate_simple_playbook` (default creation path) | ✅ shipped |
-| `DialogMachine(source, llm)` - one entry point, Playbook by default | ✅ shipped |
-| Sandboxed declarative tools and Director pipelines (HTTP + python, retry/middleware) | ✅ shipped |
-| Flow → playbook migration: `compile_flow`, `coverage_report` | ✅ shipped |
-| Replay + persona eval bridge: `replay`, `run_session`, `run_eval` | ✅ shipped |
-| `superdialog eval` CLI (flow audit / synthetic corpus) | ✅ shipped |
-| `superdialog optimize` (playbook run → eval → improve loop) | ✅ shipped |
-| Prompt → flow graph (legacy): `create_dialog_flow` | ✅ v0.1 |
-| Tools: Python callables, HTTP endpoints, MCP servers | ✅ v0.1 |
-| Multi-flow (legacy): `FlowSet` + `switch_flow` | ✅ v0.1 |
-| Adapters: LiveKit, PipeCat, FastAPI, WebSocket | ✅ v0.1 |
-| `SessionWorker` - multi-conversation lifecycle + persistence | ✅ v0.2 |
-| `LLMAgent`, `LangChainAgent` - non-DM brains in SessionWorker | ✅ v0.2 |
-| Distributed stores (Redis, File, SQLite) + RedisLockBackend | 🔜 planned |
-| Voice-event plumbing (silence / barge-in fed into the event log) | 🔜 planned |
-
 ## What it explicitly is not
 
 - **Not a UI flow designer** - that belongs to a downstream tool

@@ -60,8 +60,8 @@
               "playbook/optimize",
               "playbook/publish-and-share",
               "playbook/library",
-              "playbook/api",
-              "playbook/developer-setup"
+              "playbook/developer-setup",
+              "playbook/api"
             ]
           },
           {
