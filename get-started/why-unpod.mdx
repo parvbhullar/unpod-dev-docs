@@ -12,14 +12,14 @@ voice, or a phone number.
 Speech is solved. Telephony is solved. The layer that runs the conversation
 is where projects stall.
 
-<CardGroup cols={2}>
-  <Card title="Prompts lose the plot" icon="file-warning">
+<CardGroup cols={1}>
+  <Card title="Prompts lose the plot" icon="file-warning" horizontal>
     Every top model drops ~39% from single-turn to multi-turn - mostly
     unreliability, not capability. Take a wrong turn and the conversation
     never recovers. Prompt-tuning plateaus around 85%: nothing in a
     100-page prompt is addressable, so nothing is testable.
   </Card>
-  <Card title="Big models miss the beat" icon="timer">
+  <Card title="Big models miss the beat" icon="timer" horizontal>
     Humans swap turns in ~200ms; past ~700ms a caller hears a machine. The
     LLM is ~70% of that budget, and frontier models spend 1.1-1.4s before
     their first token - the whole budget, on one hop.
@@ -28,17 +28,17 @@ is where projects stall.
 
 ## What Unpod runs
 
-<CardGroup cols={3}>
-  <Card title="Playbooks" icon="git-branch">
+<CardGroup cols={1}>
+  <Card title="Playbooks" icon="git-branch" horizontal>
     Conversations as checkpoints and outcomes, not prose. Every step is
     addressable - so it can be simulated, fixed, and regression-tested.
   </Card>
-  <Card title="Context layer" icon="layers">
+  <Card title="Context layer" icon="layers" horizontal>
     Each turn gets only the context it needs - so the agent stays fast on a
     third-party model, or faster on a fine-tuned ~1B SLM trained on your
     workflows. Swap either way without touching the conversation.
   </Card>
-  <Card title="Sessions" icon="repeat">
+  <Card title="Sessions" icon="repeat" horizontal>
     Pass a session id and the agent keeps its state - across turns, and
     across calls.
   </Card>
