@@ -51,7 +51,7 @@
         "tab": "Build Agents",
         "groups": [
           {
-            "group": "Playground (no code)",
+            "group": "Agent Studio",
             "pages": [
               "playbook/playground",
               "playbook/what-is-a-playbook",
