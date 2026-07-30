@@ -59,17 +59,17 @@ a[href*="superdialog.unpod.ai/playground"] * {
 }
 
 /* ---- Right-align the external tab-row links -----------------
-   Dashboard | GitHub | Playground are added as tabs (docs.json) and render
-   inline after "Guides" as direct flex children of `.nav-tabs`. Push them to
-   the far right (above the "On this page" panel) with margin-left:auto on the
-   first one (Dashboard) — flex carries GitHub + Playground along. */
+   GitHub | Playground are added as tabs (docs.json) and render inline after
+   "Guides" as direct flex children of `.nav-tabs`. Push them to the far right
+   (above the "On this page" panel) with margin-left:auto on the first one
+   (GitHub) — flex carries Playground along. */
 .nav-tabs {
   flex-grow: 1 !important;   /* fill the bar's free space so margin-left:auto has room */
   min-width: 0 !important;
 }
-.nav-tabs > .nav-tabs-item[href="https://unpod.ai"],
-.nav-tabs > a[href="https://unpod.ai"] {
-  margin-left: auto !important;  /* right-align Dashboard + GitHub + Playground */
+.nav-tabs > .nav-tabs-item[href*="github.com/unpod-ai/unpod"],
+.nav-tabs > a[href*="github.com/unpod-ai/unpod"] {
+  margin-left: auto !important;  /* right-align GitHub + Playground */
 }
 /* The tab bar is w-full but offset by the 19rem sidebar, so it overflows the
    viewport on the right by ~16rem — margin-left:auto alone pushed the group

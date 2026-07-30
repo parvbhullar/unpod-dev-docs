@@ -423,11 +423,6 @@
         ]
       },
       {
-        "tab": "Dashboard",
-        "icon": "layout-dashboard",
-        "href": "https://unpod.ai"
-      },
-      {
         "tab": "GitHub",
         "icon": "github",
         "href": "https://github.com/unpod-ai/unpod"
