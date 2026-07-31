@@ -6,11 +6,11 @@ description: 'Get numbers directly from Unpod or bring your own, then attach the
 ## Overview
 
 A [Number](/get-started/core-concepts#number) is the phone number callers
-dial; it rides on a [trunk](#trunks) and routes to whatever
-Speech Pipe it is attached to. Phone numbers in Unpod come from two sources:
+dial; it routes to whatever Speech Pipe it is attached to. Phone numbers in
+Unpod come from two sources:
 
-- **Unpod Numbers** - provision numbers directly through the Unpod platform (no external carrier account needed)
-- **BYON (Bring Your Own Number)** - route numbers you already own from any provider over a [trunk](#trunks)
+- **Unpod Numbers** (default) - provision directly from the Unpod platform. No carrier account, no [trunk](#trunks), no SIP.
+- **BYON (Bring Your Own Number)** - route numbers you already own from any provider over a [trunk](#trunks) you register once.
 
 Once a number is in your account, you attach it to a Speech Pipe. All inbound calls to that number are routed to the Speech Pipe's `AgentRunner`.
 

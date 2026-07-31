@@ -13,16 +13,15 @@ provisioning: telling Unpod which number routes to your agent.
 ## Prerequisites
 
 - The agent from the [Quickstart](/get-started/quickstart), running
-- **A registered trunk.** Numbers come from a
-  [trunk](/get-started/core-concepts#trunk) - the SIP connection between a
-  telephony provider and Unpod. Without one you have no numbers to attach, and
-  the setup below stops at step 4.
+- **A number in your account.** Provision one from the dashboard under
+  **Dev Platform → Numbers**. No carrier account, no SIP trunk - see
+  [Numbers](/speech-stack/numbers).
 
-<Warning>
-**Register a trunk before you start.** Run `client.trunks.create(...)` once - see
-[Trunks](/speech-stack/numbers#trunks). You configure a trunk once; after that
-you work with numbers, not SIP.
-</Warning>
+<Note>
+Already own a number elsewhere? You can bring it over a
+[trunk](/speech-stack/numbers#trunks) instead. That is the only path that needs
+carrier credentials.
+</Note>
 
 ## Step 1 - Provision the number
 
@@ -34,8 +33,8 @@ from `UNPOD_BASE_URL` (`https://<host>/platform`) - both set in the
 If you need one-off overrides in code, pass `base_url=` to `AsyncClient` or
 `AgentRunner`; those arguments win over `.env` for that process only.
 
-Run this once to pick a voice profile, create the pipe, sync numbers from your
-trunks, and attach the first available number:
+Run this once to pick a voice profile, create the pipe, and attach a free
+number from your account:
 
 ```python
 # setup.py - run once to provision your phone number
@@ -62,16 +61,15 @@ async def setup() -> None:
         )
         print(f"Created Speech Pipe: {pipe.pipe_id}")
 
-        # 3. Sync numbers from your trunks.
-        summary = await client.numbers.sync()
-        print(f"Sync result: {summary}")  # {"synced": int, "new": int}
-
-        # 4. Attach the first available number to the pipe.
-        available = await client.numbers.list(status="active")
-        if not available:
-            print("No available numbers - register a trunk first.")
+        # 3. Find a number in your account that is not attached yet.
+        numbers = await client.numbers.list(status="active")
+        free = [n for n in numbers if n.pipe_id is None]
+        if not free:
+            print("No free numbers - provision one under Dev Platform -> Numbers.")
             return
-        number = await client.numbers.attach(available[0].number_id, pipe.pipe_id)
+
+        # 4. Attach it to the pipe.
+        number = await client.numbers.attach(free[0].number_id, pipe.pipe_id)
         print(f"Attached {number.number} -> Speech Pipe {pipe.pipe_id}")
 
 asyncio.run(setup())
@@ -81,10 +79,20 @@ What it does:
 
 1. **`voice_profiles.list()`** - pick a voice from the read-only catalog.
 2. **`pipes.create()`** - bind that voice to your `agent_id`.
-3. **`numbers.sync()`** - pull numbers in from your registered trunks.
-4. **`numbers.attach()`** - route one number to the pipe.
+3. **`numbers.list()`** - find a number in your account with no pipe attached.
+4. **`numbers.attach()`** - route that number to the pipe.
 
-If step 4 finds nothing, you have no trunk - see the prerequisite above.
+If step 3 finds nothing, provision a number from the dashboard first.
+
+<Accordion title="Bringing your own number instead">
+BYON numbers arrive over a trunk you register once, then sync into your account:
+
+```python
+summary = await client.numbers.sync()   # {"synced": int, "new": int}
+```
+
+Full setup: [Trunks](/speech-stack/numbers#trunks).
+</Accordion>
 
 <Note>
 The `agent_id` on the pipe (`"browser-playground"`) is the same string your

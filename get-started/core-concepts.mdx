@@ -34,8 +34,9 @@ A single inbound call, end to end:
 </Frame>
 
 Read it as: a **Caller** enters through a phone number, browser, or mobile app.
-For phone calls, the **Number** routes over a **Trunk** into Unpod's managed
-speech layer. Unpod transcribes the audio with the call's **voice profile**
+For phone calls, the **Number** routes into Unpod's managed speech layer - over
+Unpod's own carrier capacity, or over a **Trunk** you registered if you brought
+your own number. Unpod transcribes the audio with the call's **voice profile**
 (STT) and sends plain text across the **Bridge** over a WebSocket to your
 **AgentRunner**. Your runner hands each turn to your **Agent** (your brain).
 Your reply text crosses back over the Bridge, Unpod synthesises it (TTS), and
@@ -58,10 +59,11 @@ your own (BYON). You never configure a carrier. See
 
 ### Trunk
 
-The SIP connection that carries calls between a telephony provider and Unpod. A
-trunk is the source of phone numbers: you register a trunk, then sync its
-numbers into Unpod. You configure a trunk once; after that you work with numbers,
-not SIP. See [Trunks](/speech-stack/numbers#trunks).
+The SIP connection between your own carrier and Unpod - **only needed for BYON**
+(bringing a number you already own). Numbers provisioned from Unpod need no
+trunk and no carrier account. If you do bring your own, you register the trunk
+once with its SIP credentials and then work with numbers, not SIP. See
+[Trunks](/speech-stack/numbers#trunks).
 
 ### Voice Profile
 
