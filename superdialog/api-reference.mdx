@@ -15,7 +15,7 @@ the **Playbook engine by default**, the legacy graph runtime with
 
 ### Construction
 
-```python
+```python Signature
 DialogMachine(
     source: Flow | FlowSet | Playbook | str | dict,  # path, parsed dict, or object
     llm: str | None = None,             # model URI (Talker, and Director unless split)
@@ -57,7 +57,7 @@ dm = DialogMachine(Flow.load("kyc.json"), llm="...", engine="flow")        # leg
 
 ### `turn`
 
-```python
+```python Signature
 async turn(text, context=None, stream=False) -> Turn | AsyncIterator[StreamChunk]
 ```
 
@@ -109,7 +109,7 @@ and advance rules instead.
 
 ### `generate_simple_playbook` (default)
 
-```python
+```python Signature
 async generate_simple_playbook(prompt, llm, *, max_attempts=3) -> str
 ```
 
@@ -129,7 +129,7 @@ open("playbook.yaml", "w").write(yaml_text)
 
 ### `create_dialog_flow` (legacy)
 
-```python
+```python Signature
 async create_dialog_flow(prompt, llm, **kwargs) -> Flow
 ```
 
@@ -360,7 +360,7 @@ Sessions add lifecycle and persistence on top of any `Agent`-protocol brain -
 
 ### Agent Protocol
 
-```python
+```python Signature
 class Agent(Protocol):
     async def turn(text: str, *, stream: bool = False) -> TurnResult | AsyncIterator[StreamChunk]
     def assist(text: str) -> None
@@ -457,6 +457,9 @@ HTTP `auth` accepts `{"type": "bearer", "token": "..."}` in v0.2 (`basic`,
 ## LLM provider registration
 
 ```python
+import os
+from superdialog import DialogMachine, register_llm_provider
+
 register_llm_provider(
     name="internal",
     base_url="https://llm.company.io/v1",

@@ -75,7 +75,7 @@ async def main():
         profiles = await client.voice_profiles.list(language="en")
         pipe = await client.pipes.create(
             name="Support Bot",
-            voice_profile=profiles[0].id,
+            voice_profile=profiles[0].profile_id,
             agent_id="my-support-agent",
         )
         print("Pipe ID:", pipe.pipe_id)
@@ -148,30 +148,51 @@ Checkpoints, slots, and tools instead of one long prompt - see
 
 ## Step 5 - Talk to it
 
-Start the runner:
+Start the runner and leave it running:
 
 ```bash
 python agent.py
 ```
 
-Then mint a short-lived token for the browser and open the local UI:
-
-```python
-token = await client.sessions.create_token(pipe_id="pipe_...", metadata={"user_id": "usr_123"})
-# hand token.token to the frontend - single-use, check token.expires_at
-```
+You should see it register and wait for calls:
 
 ```
-http://localhost:3100
+AgentRunner registered  agent_id=my-support-agent  transport=dial_out
+Waiting for calls...
 ```
 
-The local Supervoice UI handles microphone capture, the token exchange, and the
-audio bridge. Speak, and your agent answers.
+Now open the Playground in your browser and press to talk:
+
+<Card title="Open the Playground" href="https://superdialog.unpod.ai/playground?tab=preview">
+  Microphone capture, the session token exchange, and the audio bridge - no
+  local UI to run.
+</Card>
 
 <Note>
-`@unpod/web-sdk` is not yet published on npm. Start the local Supervoice UI
-before opening `localhost:3100`.
+Prefer to keep it in the terminal? `superdialog playbook chat --playbook x.yaml`
+talks to a playbook with no infrastructure at all - see
+[CLI](/superdialog/cli).
 </Note>
+
+<Accordion title="Embedding the browser session in your own app">
+Your backend mints a short-lived token per user and the frontend connects with it:
+
+```python
+from unpod import AsyncClient
+
+async def get_session_token(pipe_id: str, user_id: str) -> str:
+    async with AsyncClient() as client:
+        token = await client.sessions.create_token(
+            pipe_id=pipe_id,
+            metadata={"user_id": user_id},
+        )
+        return token.token   # single-use; check token.expires_at
+```
+
+`@unpod/web-sdk` is **not yet published on npm**, so browser embedding is not
+available today. To run the local playground harness from source, see
+[Run it locally](/playbook/developer-setup).
+</Accordion>
 
 ## What Unpod owns vs what you own
 

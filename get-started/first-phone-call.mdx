@@ -67,7 +67,7 @@ async def setup() -> None:
         print(f"Sync result: {summary}")  # {"synced": int, "new": int}
 
         # 4. Attach the first available number to the pipe.
-        available = await client.numbers.list(status="available")
+        available = await client.numbers.list(status="active")
         if not available:
             print("No available numbers - register a trunk first.")
             return
@@ -95,13 +95,12 @@ inbound calls never reach your runner. See
 
 ## Step 2 - Answer an inbound call
 
-This is the agent from the Quickstart, unchanged. The same `entrypoint` and the
-same `AgentRunner` registered against `wss://<UNPOD_BASE_URL>`, using your real
-`UNPOD_API_KEY`:
+Same shape as the Quickstart agent - one `entrypoint`, one `AgentRunner`. The
+brain here is SuperDialog's `LLMAgent` instead of the Anthropic adapter; either
+works, and nothing about the call path changes:
 
 ```python
 # agent.py - standalone runner, no playground server needed
-import asyncio
 import os
 from unpod import AgentRunner, CallContext
 from superdialog import LLMAgent
@@ -121,11 +120,8 @@ def build_runner() -> AgentRunner:
         # unless you pass explicit args here.
     )
 
-async def run_agent() -> None:
-    await build_runner().run()
-
 if __name__ == "__main__":
-    asyncio.run(run_agent())
+    build_runner().start()   # blocking
 ```
 
 Start the runner:

@@ -79,7 +79,7 @@ chunk), so expect a latency penalty proportional to your response length.
 Any object with these three methods is a valid brain - no base class required
 (the protocol is runtime-checkable):
 
-```python
+```python Signature
 async def turn(self, text: str, context: dict | None = None) -> str
     # Return a complete response. Not called during live calls.
 

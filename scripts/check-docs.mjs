@@ -43,9 +43,48 @@ const referenced = new Set(pages);
 const orphans = onDisk.filter((f) => !referenced.has(f) && !allowlist.includes(f));
 const staleAllow = allowlist.filter((f) => !existsSync(join(ROOT, `${f}.mdx`)));
 
+// --- Python snippet health -------------------------------------------------
+// Every ```python fence must parse. Fences tagged `python Signature` are
+// deliberate pseudo-code (constructor / protocol shapes) and are skipped.
+import { execFileSync } from "node:child_process";
+
+const pyErrors = [];
+const pyWarnings = [];
+for (const rel of onDisk) {
+  const text = readFileSync(join(ROOT, `${rel}.mdx`), "utf8");
+  const re = /```python([^\n]*)\n([\s\S]*?)```/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const meta = m[1] || "";
+    if (/Signature|Protocol/i.test(meta)) continue;
+    const line = text.slice(0, m.index).split("\n").length;
+    // dedent: strip the common leading whitespace (fences nested in <Tab> are indented)
+    const raw = m[2].replace(/\s+$/, "").split("\n");
+    const indents = raw.filter((l) => l.trim()).map((l) => l.match(/^ */)[0].length);
+    const pad = indents.length ? Math.min(...indents) : 0;
+    const code = raw.map((l) => l.slice(pad)).join("\n");
+    try {
+      execFileSync("python3", ["-c", "import ast,sys; ast.parse(sys.stdin.read())"], {
+        input: code, stdio: ["pipe", "ignore", "pipe"],
+      });
+    } catch (e) {
+      const msg = String(e.stderr || e.message).trim().split("\n").pop();
+      pyErrors.push(`${rel}.mdx:${line} ${msg}`);
+    }
+    if (/\bos\./.test(code) && !/import os/.test(code)) {
+      pyErrors.push(`${rel}.mdx:${line} uses os. without 'import os'`);
+    }
+    if (/api_key\s*=\s*["']sk_/.test(code)) {
+      pyWarnings.push(`${rel}.mdx:${line} hardcoded sk_ key in a sample`);
+    }
+  }
+}
+if (pyErrors.length) console.error("PYTHON SNIPPET ERRORS:\n  " + pyErrors.join("\n  "));
+if (pyWarnings.length) console.warn(`note: ${pyWarnings.length} snippet(s) hardcode an sk_ key; prefer AsyncClient() reading UNPOD_API_KEY`);
+
 if (missing.length) console.error("MISSING (in docs.json, not on disk):\n  " + missing.join("\n  "));
 if (orphans.length) console.error("ORPHANS (on disk, not in nav or allowlist):\n  " + orphans.join("\n  "));
 if (staleAllow.length) console.error("STALE ALLOWLIST (file no longer exists):\n  " + staleAllow.join("\n  "));
 if (allowlist.length) console.warn(`note: ${allowlist.length} file(s) on allowlist pending absorption`);
-if (missing.length || orphans.length || staleAllow.length) process.exit(1);
-console.log(`OK: ${pages.length} nav pages, 0 missing, 0 unexplained orphans.`);
+if (missing.length || orphans.length || staleAllow.length || pyErrors.length) process.exit(1);
+console.log(`OK: ${pages.length} nav pages, 0 missing, 0 unexplained orphans, all python fences parse.`);

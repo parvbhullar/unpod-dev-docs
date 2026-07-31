@@ -147,8 +147,8 @@ asyncio.run(main())
 
 The pipe never calls your brain over HTTP. On every call the orchestrator dispatches the session to a **worker**, and the worker connects to your `AgentRunner` over a **WebSocket bridge** (text in / text out). There are two ways the pipe finds that runner:
 
-1. **By `agent_id` (preferred).** Run an `AgentRunner` with the same `agent_id` as the pipe. It self-registers its bridge `serving_url`; the orchestrator picks a registered, least-loaded runner per call. You never hardcode a URL.
-2. **By `agent_endpoint` (static fallback).** Set the pipe's `agent_endpoint` to a fixed `wss://...` bridge URL. Used only when no runner is registered for `agent_id`. This is a **WebSocket** URL, not an HTTP endpoint.
+1. **By `agent_id` (preferred).** Run an `AgentRunner` with the same `agent_id` as the pipe. Under the default `dial_out` transport the runner never listens - it registers, then dials **out** to a per-call bridge when a call is assigned. The orchestrator picks a registered, least-loaded runner per call, and you never expose a URL, a tunnel, or a webhook. See [AgentRunner](/speech-stack/agent-runner).
+2. **By `agent_endpoint` (legacy `serve` transport only).** Set the pipe's `agent_endpoint` to a fixed `wss://...` bridge URL that your runner serves. This applies only to `transport="serve"`, which is deprecated - under the default `dial_out` transport nothing listens on that URL. It is a **WebSocket** URL, not an HTTP endpoint.
 
 <Note>
 `agent_endpoint` is **not** an HTTP webhook - the orchestrator does not `POST` to it. It is the WebSocket bridge URL your `AgentRunner` serves on.

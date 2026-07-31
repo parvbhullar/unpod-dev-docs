@@ -24,7 +24,7 @@ You need `SessionWorker` when:
 
 `SessionWorker` works with any brain that implements this Protocol:
 
-```python
+```python Signature
 class Agent(Protocol):
     async def turn(text: str, *, stream: bool = False) -> TurnResult | AsyncIterator[StreamChunk]
     def assist(text: str) -> None

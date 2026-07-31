@@ -39,6 +39,13 @@ pipe = await client.pipes.create(
     ```
     Mint tokens server-side with `client.sessions.create_token(pipe_id=...)`.
     Protocol and auth: [WebSocket sessions](/speech-stack/websocket).
+
+    <Warning>
+    `@unpod/web-sdk` is **not yet published on npm**. Until it ships, reach a
+    browser session through the
+    [Playground](https://superdialog.unpod.ai/playground?tab=preview), or connect
+    over telephony.
+    </Warning>
   </Tab>
   <Tab title="Telephony / SIP">
     Attach a [number](/speech-stack/numbers) to the pipe - provision from

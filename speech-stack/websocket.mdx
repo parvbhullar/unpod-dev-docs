@@ -19,6 +19,13 @@ Your agent code does not change. Speech processing (STT, VAD, barge-in, endpoint
 
 Unpod exposes a standard WebSocket URL per Speech Pipe. Your client connects with a short-lived token:
 
+<Warning>
+`@unpod/web-sdk` is **not yet published on npm**. The snippet below is the
+intended shape, not something you can `npm install` today. To hear an agent in a
+browser now, use the
+[Playground](https://superdialog.unpod.ai/playground?tab=preview).
+</Warning>
+
 ```typescript
 import { UnpodSession } from "@unpod/web-sdk";
 
@@ -70,11 +77,14 @@ Your AgentRunner accepts sessions from all sources on the same `agent_id`. You d
 The `CallContext` tells you how the session arrived:
 
 ```python
+from unpod import CallContext
+from superdialog import DialogMachine
+
 async def handle_call(ctx: CallContext) -> None:
     if ctx.direction == "inbound":
-        # caller dialled a number, or a client connected
+        print("caller dialled a number, or a client connected")
     elif ctx.direction == "outbound":
-        # your backend initiated the call
+        print("your backend initiated the call")
 
     ctx.session.dialog_machine = DialogMachine("agent.yaml", llm="anthropic/claude-haiku-4-5")
     await ctx.session.run()
