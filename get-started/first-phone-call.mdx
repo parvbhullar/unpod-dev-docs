@@ -6,29 +6,30 @@ description: 'Take the agent you built in the browser quickstart to a real inbou
 You built and talked to your agent in the browser in the
 [Quickstart](/get-started/quickstart). Now give it a phone number.
 
-Nothing about the agent changes - same `entrypoint`, same
-[`LLMAgent`](/get-started/core-concepts#agent-brain) brain, same
-[`AgentRunner`](/get-started/core-concepts#agentrunner) against Unpod's hosted
-speech service. The only new work is provisioning: telling Unpod which phone
-number routes to your agent.
+Nothing about the agent changes - same `entrypoint`, same brain, same
+[`AgentRunner`](/get-started/core-concepts#agentrunner). The only new work is
+provisioning: telling Unpod which number routes to your agent.
 
-## What you'll add
+## Prerequisites
 
-- **A [Speech Pipe](/get-started/core-concepts#pipe)** - the configuration entity
-  that binds a voice profile, recording settings, and the `agent_id` that points
-  at your runner.
-- **A [phone number](/get-started/core-concepts#number)** - synced from a
-  [trunk](/get-started/core-concepts#trunk) and attached to that pipe.
+- The agent from the [Quickstart](/get-started/quickstart), running
+- **A registered trunk.** Numbers come from a
+  [trunk](/get-started/core-concepts#trunk) - the SIP connection between a
+  telephony provider and Unpod. Without one you have no numbers to attach, and
+  the setup below stops at step 4.
 
-You reference a [voice profile](/get-started/core-concepts#voice-profile) from
-the read-only catalog when you create the pipe; you do not create one.
+<Warning>
+**Register a trunk before you start.** Run `client.trunks.create(...)` once - see
+[Trunks](/speech-stack/numbers#trunks). You configure a trunk once; after that
+you work with numbers, not SIP.
+</Warning>
 
-## Provision the number
+## Step 1 - Provision the number
 
 Provisioning uses the **Management API** - the REST half of the [SDK](https://github.com/unpod-ai/unpod-python-sdk), reached
 through `AsyncClient`. It reads `UNPOD_API_KEY` and derives its REST endpoint
 from `UNPOD_BASE_URL` (`https://<host>/platform`) - both set in the
-[Quickstart](/get-started/quickstart#step-2-set-your-environment).
+[Quickstart](/get-started/quickstart#step-2-set-two-keys).
 
 If you need one-off overrides in code, pass `base_url=` to `AsyncClient` or
 `AgentRunner`; those arguments win over `.env` for that process only.
@@ -76,6 +77,15 @@ async def setup() -> None:
 asyncio.run(setup())
 ```
 
+What it does:
+
+1. **`voice_profiles.list()`** - pick a voice from the read-only catalog.
+2. **`pipes.create()`** - bind that voice to your `agent_id`.
+3. **`numbers.sync()`** - pull numbers in from your registered trunks.
+4. **`numbers.attach()`** - route one number to the pipe.
+
+If step 4 finds nothing, you have no trunk - see the prerequisite above.
+
 <Note>
 The `agent_id` on the pipe (`"browser-playground"`) is the same string your
 `AgentRunner` registers under in the Quickstart. They must match exactly, or
@@ -83,18 +93,7 @@ inbound calls never reach your runner. See
 [IDs You'll Meet](/get-started/core-concepts#ids-youll-meet).
 </Note>
 
-### You need a trunk first
-
-`numbers.sync()` pulls numbers from your [trunks](/get-started/core-concepts#trunk) -
-the SIP connections that carry calls between a telephony provider and Unpod. If
-`numbers.list(status="available")` comes back empty, you have no trunk yet.
-
-Register one with `client.trunks.create(...)` before running the setup above.
-You configure a trunk once; after that you work with numbers, not SIP. See
-[Trunks](/speech-stack/numbers#trunks) for both trunk types, or the
-[Provisioning checklist](/speech-stack/setup-checklist) for the full production path.
-
-## Answer an inbound call
+## Step 2 - Answer an inbound call
 
 This is the agent from the Quickstart, unchanged. The same `entrypoint` and the
 same `AgentRunner` registered against `wss://<UNPOD_BASE_URL>`, using your real
@@ -145,7 +144,7 @@ The runner does not need to restart when you provision the number. Run `setup.py
 once, then leave the runner up; it serves every inbound call until you stop it.
 </Note>
 
-## Make an outbound call (optional)
+## Step 3 - Make an outbound call (optional)
 
 Inbound is one direction. To have your agent place a call, use `calls.create`
 with the pipe and the destination number:
