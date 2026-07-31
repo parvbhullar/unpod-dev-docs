@@ -5,17 +5,29 @@ description: 'Your first request against a trained agent, in about 2 minutes.'
 
 ## Prerequisites
 
-- An Unpod account and API key - [unpod.ai/api-keys](https://unpod.ai/api-keys/),
-  or from the Playground's **Deploy as Endpoint → Manage API Keys**.
+- An **endpoint key** - publish a playbook, then open **Deploy as Endpoint →
+  Manage API Keys** in the [Playground](https://superdialog.unpod.ai/playground).
 - Basic REST knowledge. That's it - no SDK required for this page.
 
 ## Authentication
 
-Every request carries one header:
+Requests to the Chat API carry one header:
 
 ```
 Authorization: Bearer $UNPOD_API_KEY
 ```
+
+<Note>
+Unpod has two credentials, and they are not interchangeable:
+
+| You are calling | Host | Header | Key from |
+|---|---|---|---|
+| **Chat API** (this page) | `inference.unpod.ai` | `Authorization: Bearer` | Playground → Deploy as Endpoint |
+| **Python SDK** (pipes, numbers, runner) | `api.unpod.ai` | handled by the SDK | [unpod.ai/api-keys](https://unpod.ai/api-keys/) |
+
+The SDK reads its key from `UNPOD_API_KEY` too - set whichever one matches the
+path you are on.
+</Note>
 
 ## Your first request
 

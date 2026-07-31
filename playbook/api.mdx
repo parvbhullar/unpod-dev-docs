@@ -23,9 +23,13 @@ OpenAI SDK works - swap the base URL, the API key, and the `model`.
 </Note>
 
 <Warning>
-This endpoint uses `Bearer` auth at `inference.unpod.ai`. It is **not** the
-platform REST API, which uses `Authorization: Token` at `unpod.ai` - see
-[platform authentication](/api/get-started/authentication) for that one.
+Three surfaces, three auth stories - do not mix them:
+
+| Surface | Host | Auth |
+|---|---|---|
+| **Chat API** (this page) | `inference.unpod.ai` | `Authorization: Bearer <endpoint key>` |
+| Python SDK | `api.unpod.ai` | `UNPOD_API_KEY` (`sk_...`), handled by the SDK |
+| [Platform REST API](/api/get-started/authentication) | `unpod.ai` | `Authorization: Token` + `Org-Handle` |
 </Warning>
 
 ## Request

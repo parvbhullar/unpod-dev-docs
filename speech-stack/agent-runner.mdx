@@ -258,7 +258,7 @@ via the Management SDK, targeting it by session ID:
 ```python
 from unpod import AsyncClient
 
-async with AsyncClient(api_key="sk_...") as client:  # or set UNPOD_PLATFORM_TOKEN + UNPOD_ORG_HANDLE (preferred) and pass no args
+async with AsyncClient() as client:  # reads UNPOD_API_KEY; see setup-checklist for the full credential table
     await client.sessions.end(session_id)
 
     await client.sessions.transfer(          # warm handoff supported here
