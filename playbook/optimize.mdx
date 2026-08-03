@@ -56,18 +56,25 @@ The card has a `Details | Preview` toggle:
 
 ## What gets measured
 
-The v1 metric set reflects what the engine can honestly produce:
+The scorecard shows the engine's four deterministic metrics - computed from the
+transcript without any LLM call - plus one LLM-judged score:
 
 | Metric | Meaning |
 |---|---|
-| **Goal completion** | How often the agent reached the playbook's outcome across simulated callers. |
-| **Answer accuracy** | Whether the agent's answers matched the source material / expected content. |
-| **Slot accuracy** | Whether it captured the required slots (order number, callback, ...) correctly. |
-| **Latency** | Measured from **one real test call** against the candidate - the optimizer itself does not time calls. |
+| **Completion** | How often the agent reached the playbook's outcome and closed cleanly. |
+| **Data capture** | Fraction of the required slots (order number, callback, ...) actually captured in the transcript. |
+| **Smoothness** | Penalises loops: drops as the agent burns extra turns per checkpoint. |
+| **Repairs** | Fraction of agent turns that are re-asks or corrections - lower is better. |
+| **Empathy** | LLM-judged response quality. |
+
+Latency is not scored by the optimizer - the per-model estimates in the Voice
+LLM picker come from real test calls.
 
 <Note>
-Coverage, guardrail, and knowledge-base-hit metrics are later milestones. The
-numbers you see today are real engine output, not estimates.
+Coverage and knowledge-base-hit metrics on this card are later milestones.
+Guardrail scoring exists today in the
+[SuperDialog eval harness](/superdialog/evals), where it is a hard gate. The
+numbers you see here are real engine output, not estimates.
 </Note>
 
 ## Two ways it hardens the playbook

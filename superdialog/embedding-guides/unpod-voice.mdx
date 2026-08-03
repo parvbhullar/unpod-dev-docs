@@ -78,7 +78,7 @@ pipe = await client.pipes.create(
     agent_id="kyc-bot",        # must match AgentRunner(agent_id=...)
     recording=True,
 )
-await client.numbers.attach(numbers[0].id, pipe_id=pipe.pipe_id)
+await client.numbers.attach(number_id=numbers[0].number_id, pipe_id=pipe.pipe_id)
 ```
 
 Full script, env vars, and voice-profile lookup:
@@ -200,11 +200,9 @@ See [Playbooks](/superdialog/playbooks).
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="SDK Setup" icon="code" href="/speech-stack/agent-runner">
-    AgentRunner constructor, credentials, and lifecycle.
-  </Card>
-  <Card title="Session Controls" icon="sliders-horizontal" href="/speech-stack/agent-runner">
-    say(), transfer(), recording controls during live calls.
+  <Card title="AgentRunner & Sessions" icon="code" href="/speech-stack/agent-runner">
+    Constructor, credentials, lifecycle, and live-call controls -
+    say(), transfer(), recording.
   </Card>
   <Card title="Playbooks" icon="book" href="/superdialog/playbooks">
     Author the simple and full playbook formats.

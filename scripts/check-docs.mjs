@@ -25,7 +25,7 @@ const missing = pages.filter((p) => !existsSync(join(ROOT, `${p}.mdx`)));
 
 const allowlistPath = join(ROOT, "scripts", "docs-allowlist.txt");
 const allowlist = existsSync(allowlistPath)
-  ? readFileSync(allowlistPath, "utf8").split("\n").map((s) => s.trim()).filter(Boolean)
+  ? readFileSync(allowlistPath, "utf8").split("\n").map((s) => s.trim()).filter((s) => s && !s.startsWith("#"))
   : [];
 
 const SKIP = new Set(["node_modules", ".git", "snippets", "docs", "scripts", "images", "logo", ".claude"]);

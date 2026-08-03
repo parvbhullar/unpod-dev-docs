@@ -69,7 +69,7 @@ async def setup() -> None:
             return
 
         # 4. Attach it to the pipe.
-        number = await client.numbers.attach(free[0].number_id, pipe.pipe_id)
+        number = await client.numbers.attach(number_id=free[0].number_id, pipe_id=pipe.pipe_id)
         print(f"Attached {number.number} -> Speech Pipe {pipe.pipe_id}")
 
 asyncio.run(setup())

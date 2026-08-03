@@ -44,8 +44,10 @@ That is everything the default setup needs. `UNPOD_API_KEY` authenticates you;
 the provider key is read by whichever LLM you plug in.
 
 <Warning>
-Load `.env` **before** `from unpod import ...` - the SDK reads env vars at
-import time.
+The SDK does not read `.env` by itself. Load it with `load_dotenv()` (as the
+snippets below do) or export the variables in your shell - either way, before
+you construct `AsyncClient()` or `AgentRunner()`, which is when the SDK reads
+them.
 </Warning>
 
 <Accordion title="Pointing at a local or self-hosted stack">

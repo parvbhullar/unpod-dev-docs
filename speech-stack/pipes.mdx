@@ -20,7 +20,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         pipe = await client.pipes.create(
             name="Support Bot",
             voice_profile="vp_en_female_hd",    # from voice_profiles.list()
@@ -53,7 +53,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         pipes = await client.pipes.list()
         for p in pipes:
             print(p.pipe_id, p.name, p.voice_profile_id or "no voice profile")
@@ -84,7 +84,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         pipe = await client.pipes.get("pipe_...")
         print(pipe.name, pipe.voice_profile_id, pipe.recording)
 
@@ -100,7 +100,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         # Update any subset of fields
         pipe = await client.pipes.update(
             "pipe_...",
@@ -127,7 +127,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         # Detach numbers first
         numbers = await client.numbers.list()
         for n in numbers:
@@ -219,10 +219,8 @@ The `agent_id` in `AgentRunner` must match the pipe's `agent_id` in the platform
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="SDK Setup" icon="code" href="/speech-stack/agent-runner">
-    Install and configure the AgentRunner for production.
-  </Card>
-  <Card title="Session Controls" icon="sliders-horizontal" href="/speech-stack/agent-runner">
-    Say, transfer, end, and record during live calls.
+  <Card title="AgentRunner & Sessions" icon="code" href="/speech-stack/agent-runner">
+    Configure the AgentRunner for production and act on live calls -
+    say, transfer, end, record.
   </Card>
 </CardGroup>

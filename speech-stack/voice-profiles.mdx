@@ -29,7 +29,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         # All profiles
         profiles = await client.voice_profiles.list()
 
@@ -70,7 +70,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         profile = await client.voice_profiles.get("vp_en_female_hd")
         print(profile.name, profile.quality, profile.languages)
 
@@ -109,7 +109,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         # List to find the right profile
         profiles = await client.voice_profiles.list(language="en")
         hd_female = next(
@@ -135,7 +135,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         pipe = await client.pipes.update(
             "pipe_...",
             voice_profile="vp_es_male_std",   # switch to Spanish male
@@ -153,7 +153,7 @@ asyncio.run(main())
   <Card title="Speech Pipe" icon="bot" href="/speech-stack/pipes">
     Attach a voice profile when creating or updating a Speech Pipe.
   </Card>
-  <Card title="SDK Setup" icon="code" href="/speech-stack/agent-runner">
+  <Card title="AgentRunner & Sessions" icon="code" href="/speech-stack/agent-runner">
     Install the SDK and configure your runner process.
   </Card>
 </CardGroup>

@@ -30,7 +30,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         call = await client.calls.create(
             pipe_id="pipe_...",
             to_number="+14155550100",    # E.164 format
@@ -77,7 +77,7 @@ the full status progression and how to poll for completion.
 The `data` and `instructions` you pass to `calls.create()` are available on the `CallContext`:
 
 ```python
-from superdialog import DialogMachine, Flow
+from superdialog import DialogMachine
 from unpod import AgentRunner, CallContext
 
 async def handle_call(ctx: CallContext) -> None:
@@ -92,7 +92,7 @@ async def handle_call(ctx: CallContext) -> None:
     appt_time = ctx.data.get("appointment_time", "")
 
     ctx.session.dialog_machine = DialogMachine(
-        Flow.load("reminder.yaml"),
+        "reminder.yaml",
         llm="anthropic/claude-haiku-4-5",
     )
     # Inject the personalization as an assist directive
@@ -120,7 +120,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         call = await client.calls.get("cal_...")
         print(call.call_id, call.status, call.direction)
         # status: "pending", "ringing", "active", "completed", "failed", "cancelled"
@@ -150,7 +150,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         # All outbound calls for a Speech Pipe
         calls = await client.calls.list(
             pipe_id="pipe_...",
@@ -178,7 +178,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         await client.calls.hangup("cal_...")
         print("Call terminated")
 
@@ -203,7 +203,7 @@ contacts = [
 ]
 
 async def dial_all(contacts: list[dict]) -> None:
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         for contact in contacts:
             call = await client.calls.create(
                 pipe_id=PIPE_ID,
@@ -234,7 +234,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def process_callback_queue(queue: list[dict]) -> None:
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         for request in queue:
             # Check if the Speech Pipe is not at capacity before dialing
             # (AgentRunner handles capacity internally - orchestrator rejects if full)
@@ -261,7 +261,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def get_transcript(session_id: str) -> None:
-    async with AsyncClient(api_key="sk_...") as client:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
         session = await client.transcripts.get(session_id)
         for entry in session.transcript:
             print(f"[{entry.role}] {entry.content}")
