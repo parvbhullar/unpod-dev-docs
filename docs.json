@@ -97,21 +97,46 @@
         "tab": "Run Agents",
         "groups": [
           {
-            "group": "Speech stack",
+            "group": "Overview",
+            "icon": "book-open",
             "pages": [
               "speech-stack/introduction",
-              "speech-stack/setup-checklist",
+              "speech-stack/setup-checklist"
+            ]
+          },
+          {
+            "group": "Speech Infrastructure",
+            "icon": "audio-lines",
+            "pages": [
               "speech-stack/pipes",
               "speech-stack/numbers",
-              "speech-stack/voice-profiles",
+              "speech-stack/voice-profiles"
+            ]
+          },
+          {
+            "group": "Connect Your Agent",
+            "icon": "blocks",
+            "pages": [
               "speech-stack/websocket",
               "speech-stack/bring-your-agent",
               "speech-stack/adapters",
-              "speech-stack/level-up-superdialog",
+              "speech-stack/level-up-superdialog"
+            ]
+          },
+          {
+            "group": "Call Runtime",
+            "icon": "activity",
+            "pages": [
               "speech-stack/agent-runner",
               "speech-stack/call-lifecycle",
               "speech-stack/hooks-events",
-              "speech-stack/outbound-calls",
+              "speech-stack/outbound-calls"
+            ]
+          },
+          {
+            "group": "Operate",
+            "icon": "server",
+            "pages": [
               "speech-stack/recordings-transcripts",
               "speech-stack/observability",
               "speech-stack/deploy"
