@@ -786,3 +786,15 @@ div:has(svg[aria-roledescription^="flowchart"]) > [class*="ontrol"] {
   .ul-layer, .ul-layer.is-brand, .ul-layer.is-brand::after,
   .ul-link, .ul-link::before { animation: none; }
 }
+
+/* ============================================================
+   HIDE PAGE FEEDBACK TOOLBAR
+   Mintlify renders "Was this page helpful? Yes / No" plus the
+   "Suggest edits" link inside a single .feedback-toolbar block
+   at the bottom of every page. docs.json feedback flags are set
+   to false; this is the belt-and-braces rule so the bar stays
+   gone regardless of theme defaults.
+   ============================================================ */
+.feedback-toolbar {
+  display: none !important;
+}

@@ -18,6 +18,7 @@
     "href": "https://unpod.ai"
   },
   "feedback": {
+    "thumbsRating": false,
     "suggestEdit": false,
     "raiseIssue": false
   },
