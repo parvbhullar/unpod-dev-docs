@@ -1,0 +1,55 @@
+---
+title: 'Recordings & Transcripts'
+icon: 'file-music'
+description: 'Retrieve call audio and per-turn transcripts - with per-stage latency timing - after calls end.'
+---
+
+Every call can leave two artifacts: an audio **recording** (when the Speech
+Pipe has `recording=True`) and a turn-by-turn **transcript**. Both are
+retrieved through the Management API.
+
+## Recordings
+
+```python
+from unpod import AsyncClient
+
+client = AsyncClient()
+
+sessions = await client.recordings.list()              # all
+sessions = await client.recordings.list(call_id=cid)   # one call
+```
+
+`recordings.list()` returns the **sessions** that have a recording; read the
+download URL off each one:
+
+```python
+s.session_id     # str
+s.call_id        # str | None
+s.duration_s     # int | None
+s.recording_url  # str | None - download / stream URL
+```
+
+<Note>
+Pause and resume recording during a live call (e.g. around card numbers) with
+`ctx.session.recording.pause(reason=...)` / `.resume()` - see
+[AgentRunner & Sessions](/speech-stack/agent-runner#recording-control).
+</Note>
+
+## Transcripts
+
+```python
+sessions = await client.transcripts.list()       # sessions that have a transcript
+session = await client.transcripts.get(session_id)
+```
+
+`transcripts.list()`/`.get()` return **sessions**; the turns live on
+`session.transcript`:
+
+```python
+for entry in session.transcript:
+    print(entry.role, entry.content)   # role: "agent" | "user"
+    entry.timestamp                    # datetime | None
+```
+
+This is the post-call complement to the live metrics in
+[Observability](/speech-stack/observability).

@@ -1,5 +1,6 @@
 ---
 title: 'Delete Bridge'
+icon: 'trash-2'
 description: 'Permanently delete a telephony bridge'
 openapi: 'DELETE /api/v2/platform/telephony/bridges/{slug}/'
 ---
@@ -119,8 +120,8 @@ curl -X DELETE "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-
 ## Best Practices
 
 1. **Disconnect First**: Always [disconnect the provider from the bridge](/api/telephony/disconnect-provider-from-bridge) before deleting it
-2. **Irreversible**: Deletion is permanent — verify the correct `slug` before proceeding
-3. **204 Response**: A successful delete returns HTTP 204 with no body — handle this in your code
-4. **Error Handling**: Handle 404 gracefully — the bridge may have already been deleted
+2. **Irreversible**: Deletion is permanent - verify the correct `slug` before proceeding
+3. **204 Response**: A successful delete returns HTTP 204 with no body - handle this in your code
+4. **Error Handling**: Handle 404 gracefully - the bridge may have already been deleted
 5. **Pre-check**: Use [Get Bridge by Slug](/api/telephony/get-bridge-by-slug) to verify the bridge exists and check for active numbers before deletion
 6. **Security**: Keep API tokens secure and rotate them regularly

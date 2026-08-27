@@ -1,0 +1,237 @@
+---
+title: 'Phone Numbers'
+icon: 'hash'
+description: 'Get numbers directly from Unpod or bring your own, then attach them to your Speech Pipes.'
+---
+
+## Overview
+
+A [Number](/get-started/core-concepts#number) is the phone number callers
+dial; it routes to whatever Speech Pipe it is attached to. Phone numbers in
+Unpod come from two sources:
+
+- **Unpod Numbers** (default) - provision directly from the Unpod platform. No carrier account, no [trunk](#trunks), no SIP.
+- **BYON (Bring Your Own Number)** - route numbers you already own from any provider over a [trunk](#trunks) you register once.
+
+Once a number is in your account, you attach it to a Speech Pipe. All inbound calls to that number are routed to the Speech Pipe's `AgentRunner`.
+
+<Note>
+Support for Twilio, Telnyx, and Plivo numbers is coming soon - you will be able to import numbers from these providers directly into Unpod.
+</Note>
+
+---
+
+## Number Sources
+
+| Source | Description |
+|---|---|
+| **Unpod** | Provision numbers directly from the Unpod platform |
+| **BYON** | Bring numbers from your existing provider |
+| **Twilio** | Coming soon |
+| **Telnyx** | Coming soon |
+| **Plivo** | Coming soon |
+
+---
+
+## Getting Numbers from Unpod
+
+Numbers provisioned through Unpod are immediately available in your account. You can browse and acquire them from the dashboard under **Dev Platform -> Numbers**.
+
+Once provisioned, list them via the SDK:
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        numbers = await client.numbers.list()
+        for n in numbers:
+            print(n.number_id, n.number, n.status, n.pipe_id or "unattached")
+
+asyncio.run(main())
+```
+
+---
+
+## Trunks
+
+A [Trunk](/get-started/core-concepts#trunk) is your carrier connection - the SIP
+capacity numbers ride on. Bring your own carrier (Twilio, Tata, …), register it
+once with its SIP credentials, then work with numbers, not SIP. BYON numbers
+arrive this way.
+
+<Steps>
+  <Step title="Add the trunk">
+    **Dev Platform -> Telephony -> Add Trunk -> BYO SIP**. Provide the carrier's
+    **SIP domain** (e.g. `sip.your-carrier.com`) and **auth username / password**.
+  </Step>
+  <Step title="Point the carrier at Unpod">
+    Set inbound routing to the Unpod SIP endpoint shown in the dashboard.
+  </Step>
+  <Step title="Sync">
+    Click **Sync** on the trunk, or run `await client.numbers.sync()`. The trunk's
+    numbers appear in your account, ready to attach to a [Speech Pipe](/speech-stack/pipes).
+  </Step>
+</Steps>
+
+### Register a trunk via the SDK
+
+Field names match the dashboard.
+
+```python
+from unpod import AsyncClient
+from unpod.models import TrunkCreate, ByoConfigCreate
+
+client = AsyncClient()
+
+trunk = await client.trunks.create(TrunkCreate(
+    name="tata-byo",
+    type="byo",
+    byo_config=ByoConfigCreate(
+        provider="tata",
+        sip_domain="sip.tata.in",
+        auth_username="user",
+        auth_password="secret",
+        transport="tls",   # default
+    ),
+))
+```
+
+### List and delete trunks
+
+```python
+trunks = await client.trunks.list()
+await client.trunks.delete(trunk.trunk_id)
+```
+
+### Sync numbers off a trunk
+
+```python
+result = await client.numbers.sync()   # {"synced": int, "new": int}
+```
+
+One-time provisioning end to end (profile, pipe, number, env vars):
+[Provisioning checklist](/speech-stack/setup-checklist).
+
+---
+
+## Listing Numbers
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        # All numbers
+        numbers = await client.numbers.list()
+
+        # Filter by status or country
+        active = await client.numbers.list(status="active")
+        us_numbers = await client.numbers.list(country="US")
+        byon = await client.numbers.list(trunk_type="byo")
+
+        for n in numbers:
+            print(n.number_id, n.number, n.status, n.pipe_id or "unattached")
+
+asyncio.run(main())
+```
+
+### Number fields
+
+| Field | Type | Description |
+|---|---|---|
+| `number_id` | `str` | Unique number ID (`num_...`) |
+| `number` | `str` | E.164 format, e.g. `+14155550100` |
+| `status` | `str` | `active`, `inactive`, `pending` |
+| `trunk_type` | `str` | `unpod` or `byo` |
+| `pipe_id` | `str \| None` | Attached Speech Pipe, or `None` if free |
+| `country` | `str` | ISO 3166-1 alpha-2 country code |
+
+---
+
+## Attaching a Number to a Speech Pipe
+
+A number can be attached to exactly one Speech Pipe at a time. Inbound calls to that number are routed to the Speech Pipe's configured runners.
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        number = await client.numbers.attach(
+            number_id="num_...",
+            pipe_id="pipe_...",
+        )
+        print("Attached:", number.number, "-> pipe", number.pipe_id)
+
+asyncio.run(main())
+```
+
+---
+
+## Detaching a Number
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        number = await client.numbers.detach("num_...")
+        print("Detached:", number.number)
+
+asyncio.run(main())
+```
+
+---
+
+## Common Patterns
+
+### Find the first free number and attach it
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def attach_first_free(pipe_id: str) -> None:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        numbers = await client.numbers.list(status="active")
+        free = [n for n in numbers if n.pipe_id is None]
+        if not free:
+            raise RuntimeError("No free numbers available")
+        await client.numbers.attach(number_id=free[0].number_id, pipe_id=pipe_id)
+        print("Attached", free[0].number)
+
+asyncio.run(attach_first_free("pipe_..."))
+```
+
+### Rotate numbers across Speech Pipes
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def rotate(numbers: list[str], pipes: list[str]) -> None:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        for num_id, pipe_id in zip(numbers, pipes):
+            await client.numbers.attach(number_id=num_id, pipe_id=pipe_id)
+            print(f"{num_id} -> {pipe_id}")
+
+asyncio.run(rotate(["num_a", "num_b"], ["pipe_x", "pipe_y"]))
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Voice Profiles" icon="audio-lines" href="/speech-stack/voice-profiles">
+    Choose the voice profile for your Speech Pipe.
+  </Card>
+  <Card title="Speech Pipe" icon="bot" href="/speech-stack/pipes">
+    Create and configure your Speech Pipe via the SDK.
+  </Card>
+</CardGroup>

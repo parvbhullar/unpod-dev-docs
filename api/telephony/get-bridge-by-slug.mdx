@@ -1,5 +1,6 @@
 ---
 title: 'Get Bridge by Slug'
+icon: 'search'
 description: 'Retrieve details of a specific telephony bridge using its slug'
 openapi: 'GET /api/v2/platform/telephony/bridges/{slug}/'
 ---
@@ -65,7 +66,7 @@ You can get the bridge `slug` by hitting the [Get All Bridges](/api/telephony/ge
 | Org-Handle    | string | Yes      | Organization domain handle      |
 
 <Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
 </Note>
 
 

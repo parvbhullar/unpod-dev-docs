@@ -1,7 +1,8 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Unpod Dev",
+  "theme": "maple",
+  "name": "Unpod AI",
+  "customCss": "/custom.css",
   "icons": {
     "library": "lucide"
   },
@@ -10,113 +11,362 @@
     "light": "#9a90ff",
     "dark": "#5a4fff"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.png",
   "logo": {
     "light": "/logo/dark.svg",
-    "dark": "/logo/light.svg",
-    "href": "https://unpod.dev"
+    "dark": "/logo/white.svg",
+    "href": "https://unpod.ai"
+  },
+  "feedback": {
+    "thumbsRating": false,
+    "suggestEdit": false,
+    "raiseIssue": false
   },
   "navigation": {
     "tabs": [
       {
-        "tab": "Open Source",
+        "tab": "Get Started",
         "groups": [
           {
-            "group": "Getting Started",
-            "icon": "book-open",
+            "group": "Start Here",
+            "icon": "flag",
             "pages": [
-              "home",
-              "introduction"
+              "get-started/why-unpod",
+              "get-started/getting-started",
+              "get-started/core-concepts"
             ]
           },
           {
-            "group": "Open Source",
-            "icon": "",
+            "group": "Use it like a model",
+            "icon": "sparkles",
             "pages": [
-              "quickstart",
-              "configuration",
-              "architecture"
+              "get-started/chat",
+              "get-started/realtime",
+              "get-started/phone",
+              "get-started/quickstart",
+              "get-started/first-phone-call",
+              "get-started/vs-competition"
             ]
           }
         ]
       },
       {
-        "tab": "Voice AI Platform",
+        "tab": "Build Agents",
+        "groups": [
+          {
+            "group": "Agent Studio",
+            "icon": "bot",
+            "pages": [
+              {
+                "group": "Build & Test",
+                "icon": "palette",
+                "expanded": false,
+                "pages": [
+                  "playbook/playground",
+                  "playbook/what-is-a-playbook",
+                  "playbook/build-an-agent",
+                  "playbook/test-by-voice",
+                  "playbook/optimize"
+                ]
+              },
+              {
+                "group": "Ship",
+                "icon": "ship",
+                "expanded": false,
+                "pages": [
+                  "playbook/publish-and-share",
+                  "playbook/library",
+                  "playbook/developer-setup",
+                  "playbook/api"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "SuperDialog Framework",
+            "icon": "zap",
+            "pages": [
+              {
+                "group": "Start",
+                "icon": "rocket",
+                "expanded": false,
+                "pages": [
+                  "superdialog/introduction",
+                  "superdialog/quickstart",
+                  "superdialog/thinking-in-playbooks"
+                ]
+              },
+              {
+                "group": "Core Building Blocks",
+                "icon": "boxes",
+                "expanded": false,
+                "pages": [
+                  "superdialog/playbooks",
+                  "superdialog/tools",
+                  "superdialog/sessions",
+                  "superdialog/flows"
+                ]
+              },
+              {
+                "group": "Test & Ship",
+                "icon": "flask-conical",
+                "expanded": false,
+                "pages": [
+                  "superdialog/embedding-guides/testing",
+                  "superdialog/evals"
+                ]
+              },
+              {
+                "group": "Reference",
+                "icon": "library",
+                "expanded": false,
+                "pages": [
+                  "superdialog/architecture",
+                  "superdialog/cli",
+                  "superdialog/api-reference"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Embed in your stack",
+            "icon": "puzzle",
+            "pages": [
+              "superdialog/embedding-guides/overview",
+              "superdialog/embedding-guides/livekit",
+              "superdialog/embedding-guides/pipecat",
+              "superdialog/embedding-guides/fastapi",
+              "superdialog/embedding-guides/unpod-voice"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Run Agents",
+        "groups": [
+          {
+            "group": "Overview",
+            "icon": "book-open",
+            "pages": [
+              "speech-stack/introduction",
+              "speech-stack/setup-checklist"
+            ]
+          },
+          {
+            "group": "Speech Infrastructure",
+            "icon": "audio-lines",
+            "pages": [
+              "speech-stack/pipes",
+              "speech-stack/numbers",
+              "speech-stack/voice-profiles"
+            ]
+          },
+          {
+            "group": "Connect Your Agent",
+            "icon": "blocks",
+            "pages": [
+              "speech-stack/websocket",
+              "speech-stack/bring-your-agent",
+              "speech-stack/adapters",
+              "speech-stack/level-up-superdialog"
+            ]
+          },
+          {
+            "group": "Call Runtime",
+            "icon": "activity",
+            "pages": [
+              "speech-stack/agent-runner",
+              "speech-stack/call-lifecycle",
+              "speech-stack/hooks-events",
+              "speech-stack/outbound-calls"
+            ]
+          },
+          {
+            "group": "Operate",
+            "icon": "server",
+            "pages": [
+              "speech-stack/recordings-transcripts",
+              "speech-stack/observability",
+              "speech-stack/deploy"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Telephony",
         "groups": [
           {
             "group": "Getting Started",
             "icon": "book-open",
             "pages": [
-              "platform",
-              "Voice AI/Voice AI Agents Use Case",
-              "Voice AI/Register",
-              "Voice AI/introduction"
+              "telephony/introduction",
+              "telephony/quickstart"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "icon": "blocks",
+            "pages": [
+              "telephony/integrations/overview",
+              {
+                "group": "Vapi",
+                "pages": [
+                  "telephony/integrations/vapi/dashboard",
+                  "telephony/integrations/vapi/api"
+                ]
+              },
+              {
+                "group": "LiveKit",
+                "pages": [
+                  "telephony/integrations/livekit/dashboard",
+                  "telephony/integrations/livekit/api"
+                ]
+              },
+              {
+                "group": "ElevenLabs",
+                "pages": [
+                  "telephony/integrations/elevenlabs/dashboard",
+                  "telephony/integrations/elevenlabs/api"
+                ]
+              },
+              {
+                "group": "Daily",
+                "pages": [
+                  "telephony/integrations/daily/dashboard",
+                  "telephony/integrations/daily/api"
+                ]
+              },
+              {
+                "group": "Ultravox",
+                "pages": [
+                  "telephony/integrations/ultravox/dashboard",
+                  "telephony/integrations/ultravox/api"
+                ]
+              },
+              "telephony/integrations/websockets"
+            ]
+          },
+          {
+            "group": "Numbers",
+            "icon": "hash",
+            "pages": [
+              "telephony/numbers/list-numbers"
+            ]
+          },
+          {
+            "group": "Trunks",
+            "icon": "git-branch",
+            "pages": [
+              "telephony/trunks/list-trunks",
+              "telephony/trunks/create-trunk",
+              "telephony/trunks/get-trunk",
+              "telephony/trunks/attach-numbers",
+              "telephony/trunks/detach-numbers",
+              "telephony/trunks/delete-trunk"
+            ]
+          },
+          {
+            "group": "Calls",
+            "icon": "phone",
+            "pages": [
+              "telephony/calls/overview",
+              "telephony/calls/call-logs"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Platform",
+        "groups": [
+          {
+            "group": "Overview",
+            "icon": "book-open",
+            "pages": [
+              "platform/introduction",
+              "platform/onboarding",
+              "platform/register",
+              "platform/use-cases",
+              "platform/build-an-agent"
             ]
           },
           {
             "group": "Space View",
             "icon": "grid-2x2",
             "pages": [
-              "Voice AI/Space View/introduction",
-              "Voice AI/Space View/conversation",
-              "Voice AI/Space View/calls",
-              "Voice AI/Space View/people",
-              "Voice AI/Space View/analytics"
+              "platform/space-view/introduction",
+              "platform/space-view/conversation",
+              "platform/space-view/calls",
+              "platform/space-view/people",
+              "platform/space-view/analytics"
             ]
           },
           {
             "group": "Studio View",
             "icon": "layout-panel-left",
             "pages": [
-              "Voice AI/Studio View/dashboard",
+              "platform/studio-view/dashboard",
               {
                 "group": "Agents",
                 "pages": [
-                  "Voice AI/Studio View/identity",
-                  "Voice AI/Studio View/persona",
-                  "Voice AI/Studio View/voice profile",
-                  "Voice AI/Studio View/telephony",
-                  "Voice AI/Studio View/advance",
-                  "Voice AI/Studio View/analysis",
-                  "Voice AI/Studio View/integration"
+                  "platform/studio-view/identity",
+                  "platform/studio-view/persona",
+                  "platform/studio-view/voice-profile",
+                  "platform/studio-view/telephony",
+                  "platform/studio-view/advance",
+                  "platform/studio-view/analysis",
+                  "platform/studio-view/integration"
                 ]
               },
-              "Voice AI/Studio View/knowledge base",
-              "Voice AI/Studio View/call logs",
-              "Voice AI/Studio View/api key"
+              "platform/studio-view/knowledge-base",
+              "platform/studio-view/call-logs",
+              "platform/studio-view/api-key"
             ]
           },
           {
             "group": "Dev Platform",
             "icon": "sliders-horizontal",
             "pages": [
-              "Dev Platform/introduction",
-              "Dev Platform/register",
-              "Dev Platform/login",
-              "Dev Platform/telephony",
-              "Dev Platform/numbers",
-              "Dev Platform/provider",
-              "Dev Platform/agents",
-              "Dev Platform/Analytics-and-Reporting",
-              "Dev Platform/Load-Testing",
-              "Dev Platform/Security-&-Compliance"
+              "platform/dev-platform/introduction",
+              "platform/dev-platform/register",
+              "platform/dev-platform/login",
+              "platform/dev-platform/telephony",
+              "platform/dev-platform/numbers",
+              "platform/dev-platform/attach-number-to-agent",
+              "platform/dev-platform/provider",
+              "platform/dev-platform/agents",
+              "platform/dev-platform/analytics-and-reporting",
+              "platform/dev-platform/load-testing",
+              "platform/dev-platform/security-and-compliance"
+            ]
+          },
+          {
+            "group": "Self-Hosting",
+            "icon": "server",
+            "pages": [
+              "platform/self-hosting/quickstart",
+              "platform/self-hosting/configuration",
+              "platform/self-hosting/architecture"
             ]
           }
         ]
       },
       {
-        "tab": "API Documentation",
+        "tab": "API Reference",
         "groups": [
           {
             "group": "Getting Started",
             "icon": "book-open",
             "pages": [
+              "api/overview",
               "api/get-started/quickstart",
-              "api/get-started/authentication"
+              "api/get-started/authentication",
+              "api/changelog",
+              "api/post-call-data"
             ]
           },
           {
             "group": "API Lists",
+            "icon": "list",
             "pages": [
               {
                 "group": "Organisation",
@@ -236,43 +486,34 @@
             "group": "Guides",
             "icon": "newspaper",
             "pages": [
-              "blog/index",
-              "blog/getting-started-with-unpod-api",
-              "blog/building-voice-ai-agent",
-              "blog/self-hosting-unpod",
-              "blog/understanding-telephony",
-              "blog/webhook-integration"
+              "guides/index",
+              "guides/getting-started-with-unpod-api",
+              "platform/build-an-agent",
+              "guides/self-hosting-unpod",
+              "guides/understanding-telephony",
+              "api/post-call-data"
             ]
           }
         ]
+      },
+      {
+        "tab": "GitHub",
+        "icon": "github",
+        "href": "https://github.com/unpod-ai/unpod"
+      },
+      {
+        "tab": "Playground",
+        "icon": "play",
+        "href": "https://superdialog.unpod.ai/playground?tab=preview"
       }
     ],
     "global": {
       "anchors": []
     }
   },
-  "navbar": {
-    "links": [
-      {
-        "label": "GitHub",
-        "icon": "github",
-        "href": "https://github.com/parvbhullar/unpod"
-      },
-      {
-        "label": "Documentation",
-        "icon": "book-open",
-        "href": "https://docs.unpod.dev/"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://unpod.dev"
-    }
-  },
   "footer": {
     "socials": {
-      "github": "https://github.com/parvbhullar/unpod",
+      "github": "https://github.com/unpod-ai/unpod",
       "twitter": "https://x.com/unpod_ai",
       "youtube": "https://www.youtube.com/@unpod-ai",
       "discord": "https://discord.gg/7kQ4ewNSHZ"
@@ -281,7 +522,47 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/introduction"
+      "destination": "/get-started/why-unpod"
+    },
+    {
+      "source": "/blog/getting-started-with-unpod-api",
+      "destination": "/guides/getting-started-with-unpod-api"
+    },
+    {
+      "source": "/get-started/choose-your-path",
+      "destination": "/get-started/getting-started"
+    },
+    {
+      "source": "/get-started/start-here",
+      "destination": "/get-started/getting-started"
+    },
+    {
+      "source": "/get-started/slm-inference",
+      "destination": "/get-started/chat"
+    },
+    {
+      "source": "/get-started/sts-inference",
+      "destination": "/get-started/realtime"
+    },
+    {
+      "source": "/get-started/voice-agent",
+      "destination": "/get-started/phone"
+    },
+    {
+      "source": "/playbook/why-playbooks",
+      "destination": "/playbook/what-is-a-playbook"
+    },
+    {
+      "source": "/superdialog/embedding-guides/cli",
+      "destination": "/superdialog/cli"
+    },
+    {
+      "source": "/speech-stack/trunks",
+      "destination": "/speech-stack/numbers#trunks"
+    },
+    {
+      "source": "/superdialog/playground",
+      "destination": "/playbook/playground"
     }
   ]
 }

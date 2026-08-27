@@ -1,11 +1,12 @@
 ---
 title: 'Overview'
+icon: 'activity'
 description: 'Introduction to the Runs & Executions API'
 ---
 
 # Runs & Executions API
 
-The Runs API allows you to manage and monitor execution runs in your Unpod platform. A **run** represents a batch execution — a group of tasks triggered together within a space.
+The Runs API allows you to manage and monitor execution runs in your Unpod platform. A **run** represents a batch execution - a group of tasks triggered together within a space.
 
 <Note>
 **Prerequisites:** Make sure you have your API Token. See [Authentication](/api/get-started/authentication) for details.
@@ -20,9 +21,9 @@ The Runs API allows you to manage and monitor execution runs in your Unpod platf
 
 ## Run Lifecycle
 
-```
-Create Task (POST) → Run Created (pending) → Executing → completed / failed
-```
+<Frame>
+  <img src="/images/diagrams/platform-execution-lifecycle.svg" alt="Animated platform execution lifecycle diagram showing task creation, pending state, execution, and completed or failed outcomes." />
+</Frame>
 
 ## Base URL
 

@@ -1,0 +1,53 @@
+---
+title: 'WebSockets'
+icon: 'cable'
+description: 'WebSockets integration for Unpod - raw audio streaming. Coming soon.'
+---
+
+<Note>
+**Coming soon.** WebSockets isn't a one-click provider in Unpod yet. Here's the planned
+model and what you can use today.
+</Note>
+
+**WebSockets** - Raw audio streaming.
+
+## How it will work
+
+A documented **custom WebSocket** integration is on the roadmap for full control over raw audio framing.
+
+<div className="uf-flow">
+  <div className="uf-node">
+    <span className="uf-ic">📞</span>
+    <span className="uf-t">Call</span>
+    <span className="uf-s">Inbound / outbound</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">WS frames</span></div>
+  <div className="uf-node is-accent">
+    <span className="uf-ic">🔗</span>
+    <span className="uf-t">Unpod trunk</span>
+    <span className="uf-s">Routing + failover</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">route</span></div>
+  <div className="uf-node">
+    <span className="uf-ic">🔌</span>
+    <span className="uf-t">WebSockets agent</span>
+    <span className="uf-s">Raw audio</span>
+  </div>
+</div>
+
+## Available today
+
+<Tip>
+The [WebSocket connectivity guide](/speech-stack/websocket) already covers streaming raw audio frames into the bridge today.
+</Tip>
+
+## Want it sooner?
+
+<CardGroup cols={2}>
+  <Card title="Request early access" icon="bell" href="https://discord.gg/7kQ4ewNSHZ">
+    Ping us on Discord and we'll prioritise WebSockets.
+  </Card>
+  <Card title="Use a live provider" icon="blocks" href="/telephony/integrations/overview">
+    Vapi, LiveKit, Twilio and Daily are ready today.
+  </Card>
+</CardGroup>

@@ -1,0 +1,264 @@
+---
+title: "Tools"
+icon: 'wrench'
+description: "Give your agent the ability to call HTTP endpoints, Python functions, and MCP servers - declared in the playbook process layer and run by the Director off the speech path."
+---
+
+## Overview
+
+Tools let your agent take actions during a conversation - look up a record, hold
+a slot, charge a deposit, query a database. On the **Playbook engine** (the
+default), tools live in the playbook's **process layer** and are run by the
+**Director**, off the speech path, so a slow API call never stalls what the
+caller hears.
+
+Three tool shapes, one model:
+
+| Type | Execution | Best for |
+|---|---|---|
+| `http` | HTTP request (templated) | External REST APIs, microservices |
+| `python` | In-process callable | Local functions, direct DB calls, any Python |
+| MCP | MCP protocol | Model Context Protocol servers |
+
+---
+
+## Declaring tools in a playbook
+
+A tool is a `ToolSpec` in the playbook's `tools:` list. HTTP tools template
+their `url`/`headers`/`body` with sandboxed Jinja over `{slots, env, results}`;
+the response is stored under `store_response_as` and is then readable as
+`results.<key>` in guidance, advance rules, and other tools.
+
+```yaml
+tools:
+  - id: hold_slot
+    type: http
+    method: POST
+    url: "{{ env.API_BASE_URL }}/slots/hold"
+    headers: {Authorization: "Bearer {{ env.ACCESS_TOKEN }}"}
+    body: {city: "{{ slots.city }}", date: "{{ slots.date }}"}
+    store_response_as: hold      # readable as results.hold.* afterwards
+    env_updates: {hold_id: hold_id}   # env key <- dotted path into the response
+    run_once: false              # true: at most one call per session
+    when: "slots.city"           # expr over state; skip the call when falsy
+    timeout: 10
+```
+
+A checkpoint runs tools via its `pipeline` (on entry) or `on_enter` list. Tool
+failures are **data, not exceptions** - a failed HTTP status or template error is
+recorded as a failed result and routed declaratively, never a crash mid-call.
+
+## Pipelines
+
+Chain tools with typed result branches. Each step routes on `ok`, `failed`, or
+an exact `http_<code>`; failures can retry (capped) and route on exhaustion.
+
+```yaml
+pipelines:
+  - id: confirm_and_hold
+    steps:
+      - tool: hold_slot
+        on:
+          ok: continue                      # next step, or pipeline success
+          http_409: booking.offer_other     # typed status branch
+          failed: {retry: 2, on_exhaust: booking.collect}
+```
+
+A pipeline-owned checkpoint routes on `pipeline.ok` / `pipeline.failed`:
+
+```yaml
+- id: confirm
+  gate: hard
+  pipeline: confirm_and_hold
+  advance_when:
+    - {when: "pipeline.ok", judge: expr, to: booking.close}
+    - {when: "pipeline.failed", judge: expr, to: booking.collect}
+```
+
+For auth that expires mid-call, one `middleware` entry refreshes a token and
+replays the step:
+
+```yaml
+middleware: {on_status: 401, refresh_with: refresh_auth, then: replay}
+```
+
+## Python tools
+
+Declare a `python` tool in the playbook by id, then bind the implementation. A
+Python tool is an async callable that receives the call args and the current
+state:
+
+```yaml
+tools:
+  - id: lookup_customer
+    type: python
+    args: {phone_number: {type: str, required: true}}
+    store_response_as: customer
+```
+
+```python
+from superdialog.playbook import Playbook, PlaybookAgent, httpx_http
+
+async def lookup_customer(args, state) -> dict:
+    """Look up a customer by phone number."""
+    return await crm.get_by_phone(args["phone_number"])
+
+agent = PlaybookAgent(
+    playbook=Playbook.load("booking.yaml"),
+    talker_llm=talker,
+    director_llm=director,
+    http=httpx_http,
+    python_tools={"lookup_customer": lookup_customer},   # bind by id
+)
+```
+
+Through the unified `DialogMachine` entry point, pass any `Tool` and it is
+bridged automatically:
+
+```python
+from superdialog import DialogMachine, PythonTool
+
+agent = DialogMachine(
+    "booking.yaml",
+    llm="anthropic/claude-haiku-4-5",
+    tools=[PythonTool.of(lookup_customer)],   # bridged through the engine
+)
+```
+
+---
+
+## MCP tools
+
+For servers that implement the [Model Context Protocol](https://modelcontextprotocol.io).
+Requires `pip install superdialog[mcp]`.
+
+```python
+from superdialog import MCPTool
+
+tool = MCPTool(
+    id="search",
+    name="search",
+    description="Search the internal knowledge base",
+    server="https://mcp.company.io",
+)
+```
+
+<Note>
+`MCPTool` connects lazily on first use and forwards `execute(args)` to the
+configured server. Auto-discovery of all tools an MCP server publishes is
+planned for a follow-up release.
+</Note>
+
+---
+
+## Security model
+
+The playbook artifact is data and the transcript is untrusted user speech.
+Tools are defended accordingly:
+
+- **Sandboxed Jinja** for all `url`/`headers`/`body` rendering - attribute-walking
+  injection payloads are blocked, not executed.
+- **Secret redaction** in the event log - token/api-key/password/bearer-shaped
+  keys and URL userinfo are masked before the `ToolCallEvent` lands; the real
+  request still goes to the wire untouched.
+- **The `env` lane is never rendered to the Talker** - `ACCESS_TOKEN`-class
+  values cannot leak into speech or the packed prompt.
+
+---
+
+## Legacy: tools on the graph engine
+
+On the legacy DialogMachine graph engine (`engine="flow"`), tools are registered
+as a list and the LLM calls them via tool-calling. This still works for graph
+flows.
+
+### `@tool` decorator and plain functions
+
+```python
+from superdialog.tools import tool
+
+@tool
+async def lookup_customer(customer_id: str) -> dict:
+    """Look up customer record by ID."""
+    return await crm.get(customer_id)
+
+dm = DialogMachine(flow, llm="...", engine="flow", tools=[lookup_customer])
+```
+
+Plain functions work too - SuperDialog wraps them using the function name as the
+id and the docstring as the description.
+
+### `PythonTool` / `HttpTool`
+
+```python
+from superdialog import PythonTool, HttpTool
+import os
+
+tool = PythonTool.of(lookup_customer)        # infer id/name/schema
+
+http = HttpTool(
+    id="lookup", name="lookup",
+    description="Look up a customer by partial Aadhaar",
+    url="https://api.company.io/customer/lookup",
+    auth={"type": "bearer", "token": os.environ["COMPANY_KEY"]},
+)
+```
+
+### Function references on the flow model
+
+Attach functions to `ConversationFlow.tools` (flow-level) or `FlowNode.tools`
+(node-scoped) when building graphs in Python:
+
+```python
+from superdialog.flow.models import ConversationFlow, FlowNode, Edge
+from superdialog.machine.machine import DialogStateMachine
+from superdialog.tools import tool
+
+@tool
+async def search_kb(query: str) -> dict:
+    """Search the knowledge base."""
+    return {"results": await kb.search(query)}
+
+async def check_availability(date: str) -> dict:
+    """Check available appointment slots for a date."""
+    return {"slots": await calendar.get_slots(date)}
+
+flow = ConversationFlow(
+    system_prompt="You are an appointment booking assistant.",
+    initial_node="collect_info",
+    tools=[search_kb],                        # available on every node
+    nodes=[
+        FlowNode(
+            id="collect_info",
+            name="Collect Info",
+            instruction="Collect patient name and preferred date.",
+            tools=[check_availability],       # node-scoped
+            edges=[Edge(id="e_confirm", condition="All info collected", target_node_id="confirm")],
+        ),
+    ],
+)
+
+machine = await DialogStateMachine.from_flow(flow, adapter)
+```
+
+### Tool results and flow transitions
+
+On the graph engine, a tool can trigger a transition by returning a `ToolResult`
+with `transition_edge_id`:
+
+```python
+from superdialog.machine.models import ToolResult
+
+async def book_appointment(slot_id: str) -> ToolResult:
+    """Book the appointment for the given slot."""
+    if await calendar.book(slot_id):
+        return ToolResult(data={"booked": True}, transition_edge_id="booking_confirmed")
+    return ToolResult(data={"booked": False})
+```
+
+<Note>
+On the Playbook engine, outcome routing is done by **advance rules** and
+**pipeline branches** instead - a tool result is stored under
+`store_response_as` and read by `judge: expr` rules. There is no
+`transition_edge_id`.
+</Note>

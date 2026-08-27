@@ -1,0 +1,49 @@
+---
+title: 'Delete Trunk'
+icon: 'trash-2'
+description: 'Delete a SIP trunk and its number bindings'
+openapi: 'DELETE /api/v2/platform/telephony/trunks/{id}/'
+---
+
+Delete a SIP trunk. This delegates to the credential teardown, which removes the trunk's
+number bindings. Returns `204 No Content` on success.
+
+<Warning>
+Deleting a trunk removes its bindings. [Detach any mapped numbers](/telephony/trunks/detach-numbers)
+first if you want them cleanly returned to `NOT_ASSIGNED` with deprovisioning.
+</Warning>
+
+<Note>
+**Prerequisites:** API Token + Org-Handle. See [Authentication](/api/get-started/authentication).
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                |
+|---------------|--------|----------|----------------------------|
+| Authorization | string | Yes      | `Token <your-api-key>`     |
+| Org-Handle    | string | Yes      | Organization domain handle |
+
+### Path parameters
+
+| Name | Type    | Required | Description |
+|------|---------|----------|-------------|
+| id   | integer | Yes      | Trunk id    |
+
+<ResponseExample>
+
+```text 204
+(No content)
+```
+
+```json 404
+{ "status_code": 404, "message": "Trunk not found." }
+```
+
+</ResponseExample>
+
+```bash cURL
+curl -s -X DELETE "https://unpod.ai/api/v2/platform/telephony/trunks/21/" \
+  -H "Authorization: Token <your-api-key>" \
+  -H "Org-Handle: <your-org-handle>"
+```

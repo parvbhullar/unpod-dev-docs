@@ -1,0 +1,89 @@
+---
+title: 'Introduction'
+icon: 'book-open'
+description: 'Connect phone numbers, SIP trunks, and calls to your Unpod Voice AI agents'
+---
+
+The **Connectivity** APIs are the telephony control plane for Unpod. They let you bring
+your own carrier (BYO-SIP), map phone numbers to that carrier, route numbers to your
+Voice AI agents, and observe the per-number call lifecycle - all over a single REST surface.
+
+<Note>
+**Base URL:** `https://unpod.ai/api/v2/platform/`
+Every request needs an `Authorization: Token <your-api-key>` header and an `Org-Handle`
+header. See [Authentication](/api/get-started/authentication).
+</Note>
+
+## The three building blocks
+
+<CardGroup cols={3}>
+  <Card title="Numbers" icon="hash" href="/telephony/numbers/list-numbers">
+    Your phone numbers (DIDs). List the pool available to your org and attach a number
+    to an agent so inbound calls reach it.
+  </Card>
+  <Card title="Trunks" icon="git-branch" href="/telephony/trunks/list-trunks">
+    A trunk is your SIP carrier credential. Create one, map numbers to it, and get back
+    the carrier ingress (the *origin endpoint*).
+  </Card>
+  <Card title="Calls" icon="phone" href="/telephony/calls/overview">
+    Observe the lifecycle: which numbers are linked, to which agent or carrier, and the
+    projection sync state - plus full call logs.
+  </Card>
+</CardGroup>
+
+## How it fits together
+
+```mermaid
+flowchart LR
+  A["📞<br/><b>Inbound Call</b>"] e1@==>|① SIP INVITE| B["📡<br/><b>SIP Carrier</b>"]
+  B e2@==>|② Route| C["🔗<br/><b>Trunk</b><br/>Origin Endpoint"]
+  C e3@==>|③ Match| D["📱<br/><b>DID / Number</b><br/>E.164"]
+  D e4@==>|④ Bridge| E["🤖<br/><b>Voice AI Agent</b>"]
+
+  e1@{ animate: true }
+  e2@{ animate: true }
+  e3@{ animate: true }
+  e4@{ animate: true }
+
+  classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
+  classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
+  class A,E ep;
+  class B,C,D pp;
+  linkStyle default stroke:#9a90ff,stroke-width:2.5px;
+```
+
+<Steps>
+  <Step title="Inbound Call">
+    Caller dials your DID number → SIP INVITE hits your carrier
+  </Step>
+  <Step title="SIP Carrier">
+    Carrier receives call → routes to your configured trunk endpoint
+  </Step>
+  <Step title="Trunk">
+    Trunk matches incoming DID → bridges to the assigned agent
+  </Step>
+  <Step title="DID/Number">
+    Phone number (E.164 format) → maps to your Voice AI Agent
+  </Step>
+  <Step title="Voice AI Agent">
+    Agent answers → conversation begins
+  </Step>
+</Steps>
+
+There is one primary termination path:
+
+| Path | What it does | Endpoint |
+|------|--------------|----------|
+| **Leg A - BYO carrier** | Map a number to your SIP trunk; the carrier sends inbound calls to your origin endpoint. | [Attach Numbers to Trunk](/telephony/trunks/attach-numbers) |
+
+## Key concepts
+
+- **DID/Number** - a phone number in E.164 format (e.g. `+15551234567`).
+- **Trunk** - a SIP carrier credential (`sip_url`, `transport`, `port`, auth, source-IP allow-list). Secrets are always masked in responses.
+- **Origin endpoint** - the shared SBC ingress (`sip:<host>`) the carrier sends inbound calls to, plus the accepted source IPs and mapped DIDs.
+- **Bridge** - the routing entity numbers attach onto. It is **auto-resolved and hidden** on the Connectivity surface - you never manage it directly here.
+- **Partial success** - attach/detach operate on a list; each number reports `ok`/`error` independently.
+
+<Card title="Get started in 5 minutes" icon="rocket" href="/telephony/quickstart">
+  Create a trunk, map a number, and confirm the lifecycle - step by step.
+</Card>

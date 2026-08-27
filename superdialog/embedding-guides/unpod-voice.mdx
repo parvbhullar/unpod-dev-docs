@@ -1,0 +1,214 @@
+---
+title: "Unpod (hosted voice)"
+icon: 'phone-call'
+description: "Connect a SuperDialog dialog machine to Unpod voice calls via the unpod SDK."
+---
+
+## How it works
+
+The `unpod` SDK connects your `AgentRunner` to Unpod's voice platform over WebSocket. Unpod handles STT, TTS, telephony, numbers, and recording - your code handles dialog logic using a SuperDialog `DialogMachine` or `LLMAgent`.
+
+<Frame>
+  <img src="/images/diagrams/superdialog-session-integration.svg" alt="Animated SuperDialog and Unpod voice integration diagram showing caller speech through STT, user-turn hooks, DialogMachine.turn, agent-turn hooks, TTS, and caller playback." />
+</Frame>
+
+Your dialog machine runs inside your process, in the same call as the rest of your agent logic. No separate WebSocket server needed.
+
+---
+
+## Step 1 - Build your dialog machine
+
+```python
+from superdialog import DialogMachine, PythonTool
+
+def lookup_customer(phone: str) -> dict:
+    """Look up customer by phone number."""
+    return crm.get_by_phone(phone)
+
+dialog_machine = DialogMachine(
+    "kyc.yaml",                              # any format; Playbook engine by default
+    llm="anthropic/claude-haiku-4-5",
+    tools=[PythonTool.of(lookup_customer)],
+)
+```
+
+See [SuperDialog Quickstart](/superdialog/quickstart) to generate and save a playbook.
+
+---
+
+## Step 2 - Plug the machine into your session
+
+Assign `dialog_machine` to `ctx.session.dialog_machine` inside your `AgentRunner` entrypoint. The SDK auto-wraps it - no adapter import needed.
+
+```python
+from unpod import AgentRunner, CallContext
+from superdialog import DialogMachine, Flow, PythonTool
+
+def lookup_customer(phone: str) -> dict:
+    """Look up customer by phone number."""
+    return crm.get_by_phone(phone)
+
+async def handle_call(ctx: CallContext) -> None:
+    # Build (or re-use) the agent per call
+    machine = DialogMachine(
+        "kyc.yaml",
+        llm="anthropic/claude-haiku-4-5",
+        tools=[PythonTool.of(lookup_customer)],
+    )
+    ctx.session.dialog_machine = machine   # auto-wrapped by SuperDialogAdapter
+    await ctx.session.run()                # blocks until the call ends
+
+AgentRunner(
+    entrypoint=handle_call,
+    agent_id="kyc-bot",
+).start()
+```
+
+---
+
+## Step 3 - Register a Speech Pipe (once)
+
+A Speech Pipe is the voice front-end calls arrive on. Create one, attach a
+number, and give it the **same `agent_id`** your `AgentRunner` uses - a mismatch
+is the most common first-run failure.
+
+```python
+pipe = await client.pipes.create(
+    name="KYC Bot",
+    voice_profile=profiles[0].profile_id,
+    agent_id="kyc-bot",        # must match AgentRunner(agent_id=...)
+    recording=True,
+)
+await client.numbers.attach(number_id=numbers[0].number_id, pipe_id=pipe.pipe_id)
+```
+
+Full script, env vars, and voice-profile lookup:
+[Provisioning checklist](/speech-stack/setup-checklist).
+
+---
+
+## Complete example
+
+The long-lived runner process. Pipe and number are provisioned once beforehand
+- see [Provisioning checklist](/speech-stack/setup-checklist).
+
+```python
+from superdialog import DialogMachine, PythonTool
+from unpod import AgentRunner, CallContext
+
+# --- Tools (playbook built with `superdialog generate`) ---
+
+def lookup_aadhaar(partial: str) -> dict:
+    """Look up customer by partial Aadhaar."""
+    return crm.lookup_by_partial_aadhaar(partial)
+
+# --- Runner (long-lived process) ---
+
+async def handle_call(ctx: CallContext) -> None:
+    machine = DialogMachine(
+        "kyc.yaml",
+        llm="anthropic/claude-haiku-4-5",
+        tools=[PythonTool.of(lookup_aadhaar)],
+    )
+    ctx.session.dialog_machine = machine
+    await ctx.session.run()
+
+AgentRunner(
+    entrypoint=handle_call,
+    agent_id="kyc-bot",
+).start()
+```
+
+---
+
+## Using pre-call data in the flow
+
+Data passed when triggering an outbound call (or injected by the platform) is available on `ctx.data`:
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    machine = DialogMachine("onboarding.yaml", llm="anthropic/claude-haiku-4-5")
+    # Inject caller context before the first turn
+    if customer_name := ctx.data.get("customer_name"):
+        machine.assist(f"The customer's name is {customer_name}. Address them by name.")
+
+    ctx.session.dialog_machine = machine
+    await ctx.session.run()
+```
+
+---
+
+## Mid-call context injection
+
+Inject system instructions at any point during an active call from your own business logic:
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    machine = DialogMachine("support.yaml", llm="openai/gpt-4.1-mini")
+
+    @ctx.session.on("user_turn")
+    async def _(text: str) -> None:
+        sentiment = await analyze_sentiment(text)
+        if sentiment == "frustrated":
+            machine.assist("The customer seems frustrated. Be empathetic and offer escalation.")
+
+    ctx.session.dialog_machine = machine
+    await ctx.session.run()
+```
+
+---
+
+## Switching flows mid-call (graph engine)
+
+`switch_flow` is a **graph-engine** feature - construct the machine with a
+`FlowSet` and `engine="flow"`:
+
+```python
+from superdialog import DialogMachine, Flow, FlowSet
+
+async def handle_call(ctx: CallContext) -> None:
+    flows = FlowSet({"triage": Flow.load("triage.json"), "billing": Flow.load("billing.json")})
+    machine = DialogMachine(flows, llm="openai/gpt-4.1-mini", engine="flow")
+
+    @ctx.session.on("user_turn")
+    async def _(text: str) -> None:
+        if "billing" in text.lower():
+            machine.switch_flow("billing", preserve_memory=True)
+
+    ctx.session.dialog_machine = machine
+    await ctx.session.run()
+```
+
+<Note>
+On the **Playbook engine** (the default), model the same behaviour with multiple
+`journeys` and `interrupts` inside a single playbook instead of swapping flows.
+See [Playbooks](/superdialog/playbooks).
+</Note>
+
+---
+
+## vs. LiveKit / PipeCat adapters
+
+| | Unpod Voice (SDK) | LiveKit adapter | PipeCat adapter |
+|---|---|---|---|
+| **Who handles STT/TTS** | Unpod | You (via LiveKit plugins) | You (via PipeCat services) |
+| **Who handles telephony** | Unpod | You / LiveKit SIP | You / Twilio / etc. |
+| **Dialog runs in** | Your AgentRunner process | Your LiveKit agent | Your PipeCat pipeline |
+| **Best for** | Fastest path to production voice | Full media layer control | Existing PipeCat pipelines |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="AgentRunner & Sessions" icon="code" href="/speech-stack/agent-runner">
+    Constructor, credentials, lifecycle, and live-call controls -
+    say(), transfer(), recording.
+  </Card>
+  <Card title="Playbooks" icon="book" href="/superdialog/playbooks">
+    Author the simple and full playbook formats.
+  </Card>
+  <Card title="SuperDialog Tools" icon="wrench" href="/superdialog/tools">
+    Add HTTP, Python, and MCP tools to your agent.
+  </Card>
+</CardGroup>

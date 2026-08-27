@@ -6,6 +6,8 @@ info:
 
 servers:
   - url: https://unpod.ai/
+    description: QA
+  - url: https://unpod.ai/
     description: Production
 
 tags:
@@ -18,6 +20,9 @@ tags:
   - name: Analytics
   - name: Providers
   - name: Bridges
+  - name: Numbers
+  - name: Trunks
+  - name: Telephony
   - name: Billing
 
 paths:
@@ -560,11 +565,11 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  # ─── Call Logs ────────────────────────────────────────────────
-  /api/v2/platform/call-logs/:
+  # ─── Call Detail Records (CDR) ────────────────────────────────
+  /api/v2/platform/cdr/:
     get:
-      operationId: getCallLogs
-      summary: Get Call Logs
+      operationId: getCDRs
+      summary: Get Call Detail Records
       tags: [Call Logs]
       security:
         - TokenAuth: []
@@ -580,16 +585,6 @@ paths:
           schema:
             type: integer
             example: 20
-        - name: start_date
-          in: query
-          schema:
-            type: string
-            example: "2026-02-01"
-        - name: end_date
-          in: query
-          schema:
-            type: string
-            example: "2026-02-07"
         - name: call_type
           in: query
           schema:
@@ -600,27 +595,33 @@ paths:
           in: query
           schema:
             type: string
-            enum: [completed, missed, failed]
+            enum: [completed, notConnected, failed]
             example: completed
       responses:
         '200':
-          description: List of call logs
+          description: List of telephony CDRs
           content:
             application/json:
               example:
-                count: 150
+                count: 643
                 status_code: 200
                 message: "Call logs fetched successfully"
                 data:
-                  - source_number: "+911234567890"
-                    destination_number: "+919876543210"
-                    call_type: "outbound"
+                  - id: 33364
                     call_status: "completed"
-                    creation_time: "2026-02-07T05:57:00Z"
-                    start_time: "2026-02-07T05:57:45Z"
-                    end_time: "2026-02-07T06:01:12Z"
-                    call_duration: 207
-                    end_reason: "caller_hangup"
+                    end_reason: "call.in-progress.sip-completed-call"
+                    call_type: "outbound"
+                    bridge:
+                      id: 12
+                      name: "Acme Primary Bridge"
+                    creation_time: "2025-11-08T05:32:29Z"
+                    start_time: "2025-11-08T05:29:43Z"
+                    end_time: "2025-11-08T05:32:28.686639Z"
+                    call_duration: 165.686639
+                    source_number: "+15551234567"
+                    destination_number: "+15559876543"
+                    failure_source: null
+                    sip_cause: null
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -874,10 +875,18 @@ paths:
       operationId: getTelephonyNumbers
       summary: Get Telephony Numbers
       tags: [Bridges]
+      description: >
+        List telephony numbers. With Org-Handle: org's own numbers (any state) + pool
+        (NOT_ASSIGNED). Without Org-Handle: pool numbers only.
       security:
         - TokenAuth: []
       parameters:
-        - $ref: '#/components/parameters/OrgHandle'
+        - name: Org-Handle
+          in: header
+          required: false
+          schema:
+            type: string
+          description: "Organization domain handle. Omit to list pool numbers only."
       responses:
         '200':
           description: List of telephony numbers
@@ -885,18 +894,16 @@ paths:
             application/json:
               example:
                 status_code: 200
-                message: "Numbers fetched successfully."
+                message: "Telephony numbers fetched successfully."
                 data:
                   - id: 501
-                    number: "+1234567890"
-                    provider: "twilio"
-                    bridge_slug: "sales-bridge-001"
-                    status: "active"
+                    number: "+15551234567"
+                    state: "ASSIGNED"
+                    active: true
                   - id: 502
-                    number: "+0987654321"
-                    provider: "twilio"
-                    bridge_slug: null
-                    status: "inactive"
+                    number: "+15559876543"
+                    state: "NOT_ASSIGNED"
+                    active: true
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -1175,6 +1182,371 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  # ─── Telephony ────────────────────────────────────────────────
+  /api/v2/platform/telephony/overview/:
+    get:
+      operationId: getTelephonyOverview
+      summary: Telephony Overview
+      tags: [Telephony]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: Per-number lifecycle overview for the organization
+          content:
+            application/json:
+              example:
+                status_code: 200
+                message: "Telephony overview fetched successfully."
+                data:
+                  - number_id: 501
+                    number: "+15551234567"
+                    bridge_slug: "support-bridge"
+                    connection_state: "LINKED"
+                    termination_kind: "sip"
+                    agent_id: null
+                    sync_state: "synced"
+                    sync_detail: null
+        '206':
+          description: Business logic error (missing header / org not found)
+          content:
+            application/json:
+              example:
+                message: "Please provide Org-Handle in headers"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─── Trunks ───────────────────────────────────────────────────
+  /api/v2/platform/telephony/trunks/:
+    get:
+      operationId: listTrunks
+      summary: List Trunks
+      tags: [Trunks]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: List of the organization's SIP trunks (secrets masked)
+          content:
+            application/json:
+              example:
+                status_code: 200
+                message: "Trunks fetched successfully."
+                data:
+                  - id: 12
+                    name: "Acme Primary Trunk"
+                    sip_url: "sip:sip.acme-voice.com"
+                    transport: "tcp"
+                    port: "5060"
+                    auth_username: null
+                    auth_password: null
+                    allowed_ips: ""
+                    active: true
+                    org_handle: "acme.co"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      operationId: createTrunk
+      summary: Create Trunk
+      tags: [Trunks]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - sip_url
+              properties:
+                name:
+                  type: string
+                  example: "My Carrier Trunk"
+                sip_url:
+                  type: string
+                  description: "Carrier SIP URL / host."
+                  example: "sip:carrier.net"
+                auth_username:
+                  type: string
+                  example: "user"
+                auth_password:
+                  type: string
+                  example: "pass"
+                transport:
+                  type: string
+                  enum: [tcp, udp, tls]
+                  default: tcp
+                  example: "tcp"
+                port:
+                  type: string
+                  default: "5060"
+                  example: "5060"
+                source_ips:
+                  type: array
+                  description: "Carrier source IP allow-list (CIDR allowed)."
+                  items:
+                    type: string
+                  example: ["1.2.3.4", "5.6.7.0/24"]
+            example:
+              name: "My Carrier Trunk"
+              sip_url: "sip:carrier.net"
+              auth_username: "user"
+              auth_password: "pass"
+              transport: "tcp"
+              port: "5060"
+              source_ips: ["1.2.3.4", "5.6.7.0/24"]
+      responses:
+        '201':
+          description: Trunk created (auth_password masked in response)
+          content:
+            application/json:
+              example:
+                status_code: 201
+                message: "Trunk created successfully."
+                data:
+                  id: 21
+                  name: "My Carrier Trunk"
+                  sip_url: "sip:carrier.net"
+                  transport: "tcp"
+                  port: "5060"
+                  auth_username: "user"
+                  auth_password: "pass"
+                  allowed_ips: "1.2.3.4,5.6.7.0/24"
+                  active: true
+                  org_handle: "acme.co"
+        '400':
+          description: Invalid trunk payload
+          content:
+            application/json:
+              example:
+                status_code: 400
+                message: "Invalid trunk payload"
+                error:
+                  sip_url: ["This field is required."]
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v2/platform/telephony/trunks/{id}/:
+    get:
+      operationId: getTrunk
+      summary: Get Trunk
+      tags: [Trunks]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 12
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '200':
+          description: Trunk detail (secrets masked)
+          content:
+            application/json:
+              example:
+                status_code: 200
+                message: "Trunk fetched successfully."
+                data:
+                  id: 12
+                  name: "Acme Primary Trunk"
+                  sip_url: "sip:sip.acme-voice.com"
+                  transport: "tcp"
+                  port: "5060"
+                  auth_username: null
+                  auth_password: null
+                  allowed_ips: ""
+                  active: true
+                  org_handle: "acme.co"
+        '404':
+          description: Trunk not found
+          content:
+            application/json:
+              example:
+                status_code: 404
+                message: "Trunk not found."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    delete:
+      operationId: deleteTrunk
+      summary: Delete Trunk
+      tags: [Trunks]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 21
+        - $ref: '#/components/parameters/OrgHandle'
+      responses:
+        '204':
+          description: Trunk deleted successfully
+        '404':
+          description: Trunk not found
+          content:
+            application/json:
+              example:
+                status_code: 404
+                message: "Trunk not found."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v2/platform/telephony/trunks/{id}/attach-numbers/:
+    post:
+      operationId: attachNumbersToTrunk
+      summary: Attach Numbers to Trunk
+      tags: [Trunks]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 21
+        - $ref: '#/components/parameters/OrgHandle'
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - number_ids
+              properties:
+                number_ids:
+                  type: array
+                  items:
+                    type: integer
+                  example: [501]
+                bridge_slug:
+                  type: string
+                  description: "Optional explicit bridge; auto-resolved when omitted."
+                region:
+                  type: string
+                  example: "IN"
+            example:
+              number_ids: [501]
+      responses:
+        '201':
+          description: Numbers mapped to trunk; origin endpoint returned
+          content:
+            application/json:
+              example:
+                status_code: 201
+                message: "Numbers mapped to trunk."
+                data:
+                  trunk_id: 21
+                  origin_endpoint:
+                    ingress: "sip:sip.unpod.tel"
+                    dids: ["+15551234567"]
+                    accepted_source_ips: ["1.2.3.4", "5.6.7.0/24"]
+                    region: "us-east"
+                  numbers:
+                    - number_id: 501
+                      number: "+15551234567"
+                      connection_state: "NOT_LINKED"
+                      ok: true
+        '400':
+          description: No numbers could be mapped
+          content:
+            application/json:
+              example:
+                status_code: 400
+                message: "No numbers could be mapped."
+                data:
+                  trunk_id: 21
+                  origin_endpoint:
+                    ingress: "sip:sip.unpod.tel"
+                    dids: []
+                    accepted_source_ips: ["1.2.3.4", "5.6.7.0/24"]
+                    region: null
+                  numbers:
+                    - number_id: 501
+                      ok: false
+                      error: "Number not found or not available to this organization."
+        '404':
+          description: Trunk not found
+          content:
+            application/json:
+              example:
+                status_code: 404
+                message: "Trunk not found."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v2/platform/telephony/trunks/{id}/detach-numbers/:
+    post:
+      operationId: detachNumbersFromTrunk
+      summary: Detach Numbers from Trunk
+      tags: [Trunks]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 21
+        - $ref: '#/components/parameters/OrgHandle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - number_ids
+              properties:
+                number_ids:
+                  type: array
+                  items:
+                    type: integer
+                  example: [501]
+            example:
+              number_ids: [501]
+      responses:
+        '200':
+          description: Numbers unmapped from trunk (partial-success per number)
+          content:
+            application/json:
+              example:
+                status_code: 200
+                message: "Numbers unmapped from trunk."
+                data:
+                  trunk_id: 21
+                  numbers:
+                    - number_id: 501
+                      ok: true
+        '404':
+          description: Trunk not found
+          content:
+            application/json:
+              example:
+                status_code: 404
+                message: "Trunk not found."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   # ─── Billing ──────────────────────────────────────────────────
   /api/v2/platform/organisation/billing/:
     get:
@@ -1230,6 +1602,14 @@ components:
         type: string
         example: "unpod.tv"
       description: "Organization domain handle"
+    ProductId:
+      name: Product-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        example: "unpod.dev"
+      description: "Product scope for the auto-resolved bridge (default unpod.dev)"
 
   responses:
     Unauthorized:

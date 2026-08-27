@@ -1,0 +1,121 @@
+---
+title: "What is SuperDialog?"
+icon: 'sparkles'
+description: "A conversation framework with two engines behind one Agent protocol - the Playbook engine (default) for fluid conversations, and the legacy DialogMachine graph runtime. Pure text in, pure text out."
+---
+
+## Overview
+
+**`pip install superdialog` - no account, no API key.** SuperDialog is an
+open-source Python framework that runs in your own process. Unpod's hosted
+voice is one place to run it, alongside LiveKit, Pipecat, and FastAPI.
+
+It is the **brain** layer for conversational systems: it takes a prompt or an
+authored artifact and turns it into a running conversation runtime - managing
+turn-by-turn logic, tool calls, outcome tracking, and conversation memory.
+
+<Frame>
+  <img src="/images/diagrams/superdialog-text-loop.svg" alt="Animated SuperDialog text loop diagram showing user text entering the Agent protocol, agent.turn using tools and state, and reply text coming back." />
+</Frame>
+
+It ships **two engines behind one `Agent` protocol**, and the **Playbook
+engine is the default everywhere**:
+
+- **Playbook engine (default)** - checkpoints gate *outcomes*, not utterances.
+  A fast Talker streams every spoken turn while an async Director extracts
+  data, judges progress, and runs tools over an event-sourced log. This is
+  where new investment goes.
+- **DialogMachine (supported legacy)** - the graph-railed state machine: nodes,
+  edges, and criteria, where every transition is authored. Still fully
+  supported, opt-in via `engine="flow"`. Existing flow graphs run **compiled
+  on the Playbook engine by default**, so nothing breaks.
+
+Turn ordering, the event-sourced log, gates, and degradation are covered in
+[Architecture](/superdialog/architecture).
+
+It is intentionally narrow in scope. Audio, STT, TTS, telephony, and media
+servers are all out of scope - those belong to voice infrastructure like
+LiveKit, PipeCat, or the Unpod Voice Platform. SuperDialog ends at text in,
+text out - on both engines.
+
+<CardGroup cols={2}>
+  <Card title="New to the checkpoint model?" icon="lightbulb" href="/superdialog/thinking-in-playbooks">
+    Read the mental-model guide before diving into the quickstart.
+  </Card>
+  <Card title="SuperDialog on GitHub" icon="github" href="https://github.com/unpod-ai/superdialog">
+    Browse the source, issues, and releases at `unpod-ai/superdialog`.
+  </Card>
+</CardGroup>
+
+<Note>
+**Coming from the Speech Stack?** Assign your SuperDialog agent to
+`ctx.session.dialog_machine` and the SDK wraps it for you - see
+[Run a SuperDialog agent](/speech-stack/level-up-superdialog).
+</Note>
+
+## Why SuperDialog exists
+
+### The brain has natural reuse beyond voice
+
+A conversation brain that runs a customer-onboarding journey works the same
+whether the user is on a phone, a WhatsApp thread, an Intercom widget, or a CLI
+test harness. Coupling it to telephony forecloses every non-voice use case.
+
+### The dependency direction matters
+
+Voice infrastructure should depend on SuperDialog (as one brain option), not the
+other way around. A modular architecture keeps the framework portable and the
+platform composable.
+
+## Who it's for
+
+| Audience | Why they care |
+|---|---|
+| **Voice developer using LiveKit / PipeCat** | Drop SuperDialog in as the brain; `PlaybookAgent` gives real token streaming through the same adapters |
+| **Chatbot developer (text-only)** | `superdialog generate` a playbook, chat against it from the CLI, embed it with FastAPI through the `Agent` protocol |
+| **Developer with compliance / scripted flows** | Author the flow graph as the spec - every path enumerable and lintable - and run it compiled on the Playbook engine, or on DialogMachine via `--mode flow` |
+| **Enterprise dev with a custom LLM** | Plug any LLM URI and get the full framework for free |
+| **Unpod Voice Platform customer** | SuperDialog is the default brain Unpod offers - same code runs locally and in Unpod cloud |
+
+## How it compares
+
+SuperDialog is to **conversation flow** what n8n is to **integration workflow** -
+a simple, composable, eval-able runtime for orchestrating turn-by-turn logic.
+Where LangChain and LangGraph expose general agent primitives, SuperDialog
+focuses narrowly on the conversational core: who speaks next, what to say while
+tools run, which checkpoint or flow the conversation is in, when to call a tool,
+when to escalate, and which outcome the session ended with.
+
+The pitch: *"if your problem is conversation state, this is the right size."*
+
+## Two engines, one entry point
+
+`DialogMachine` is the recommended way in. It runs the Playbook engine by
+default; pass `engine="flow"` for the legacy graph runtime. Both engines sit
+behind the same `Agent` protocol, so sessions and host adapters run either one
+unchanged.
+
+```python
+from superdialog import DialogMachine
+
+agent = DialogMachine("booking.yaml", llm="openai/gpt-4.1-mini")
+result = await agent.turn("hello")
+```
+
+Playbook is the default because users don't follow graphs: the graph-railed
+model gated every utterance and still cost two serial LLM calls per turn.
+Checkpoints gate outcomes instead - the model owns the phrasing, the framework
+owns "done". **Existing flows are migrated, not replaced**: `Playbook.load`
+detects flow JSON and compiles it (`compile_flow`), with `coverage_report`
+proving every node, edge, and action mapped.
+
+Side-by-side comparison, and when a graph still fits:
+[Thinking in Playbooks](/superdialog/thinking-in-playbooks).
+
+## What it explicitly is not
+
+- **Not a UI flow designer** - that belongs to a downstream tool
+- **Not a voice framework** - audio, STT, TTS are out of scope (the Talker
+  streams text tokens; the host turns them into speech)
+- **Not multi-modal** - text only at the interface (vision/audio via tools if needed)
+- **Not a hosted service** - SuperDialog is a library; the Unpod Voice Platform provides hosting for those who want it

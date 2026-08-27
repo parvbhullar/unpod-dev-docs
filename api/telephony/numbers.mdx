@@ -1,29 +1,43 @@
 ---
 title: 'Get Telephony Numbers'
+icon: 'hash'
 description: 'Retrieve list of all telephony numbers'
 openapi: 'GET /api/v2/platform/telephony/numbers/'
 ---
 
 <ResponseExample>
 
-```json Success Response (200)
+```json Success Response (200) — With Org-Handle
 {
   "status_code": 200,
-  "message": "Numbers fetched successfully.",
+  "message": "Telephony numbers fetched successfully.",
   "data": [
     {
       "id": 501,
-      "number": "+1234567890",
-      "provider": "twilio",
-      "bridge_slug": "sales-bridge-001",
-      "status": "active"
+      "number": "+15551234567",
+      "state": "ASSIGNED",
+      "active": true
     },
     {
       "id": 502,
-      "number": "+0987654321",
-      "provider": "twilio",
-      "bridge_slug": null,
-      "status": "inactive"
+      "number": "+15559876543",
+      "state": "NOT_ASSIGNED",
+      "active": true
+    }
+  ]
+}
+```
+
+```json Success Response (200) — Without Org-Handle
+{
+  "status_code": 200,
+  "message": "Telephony numbers fetched successfully.",
+  "data": [
+    {
+      "id": 502,
+      "number": "+15559876543",
+      "state": "NOT_ASSIGNED",
+      "active": true
     }
   ]
 }
@@ -40,10 +54,14 @@ openapi: 'GET /api/v2/platform/telephony/numbers/'
 
 # Get Telephony Numbers
 
-Retrieve a list of all telephony numbers associated with your organization. This includes all numbers from connected providers, along with their assignment status, bridge associations, and current activity state.
+Retrieve a list of telephony numbers. Behavior depends on the `Org-Handle` header:
+
+- **With Org-Handle** — returns your organization's own numbers (any state) plus the shared
+  unassigned pool (`NOT_ASSIGNED`).
+- **Without Org-Handle** — returns only the shared unassigned pool.
 
 <Note>
-**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+**Prerequisites:** Make sure you have your API Token ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
 
 
@@ -52,10 +70,10 @@ Retrieve a list of all telephony numbers associated with your organization. This
 | Name          | Type   | Required | Description                     |
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | API Key format: `Token <token>` |
-| Org-Handle    | string | Yes      | Organization domain handle      |
+| Org-Handle    | string | No       | Organization domain handle      |
 
 <Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
 </Note>
 
 
@@ -70,13 +88,12 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 
 ### Number Object Fields
 
-| Field       | Type    | Description                                          |
-|-------------|---------|------------------------------------------------------|
-| id          | integer | Unique number identifier                             |
-| number      | string  | Phone number in E.164 format                         |
-| provider    | string  | Provider slug this number belongs to                 |
-| bridge_slug | string  | Slug of the bridge this number is assigned to (null if unassigned) |
-| status      | string  | Number status: `active`, `inactive`                  |
+| Field   | Type    | Description                                  |
+|---------|---------|----------------------------------------------|
+| id      | integer | Unique number id (use this in attach calls)  |
+| number  | string  | Phone number in E.164 format                 |
+| state   | string  | `NOT_ASSIGNED` or `ASSIGNED`                 |
+| active  | boolean | Whether the number is usable                 |
 
 
 ## Common Error Codes
@@ -85,8 +102,6 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 |-------------|--------------------------------------------------|
 | 200         | Success - Numbers fetched successfully           |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Invalid organization handle          |
-| 404         | Not Found - Organization not found               |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples
@@ -98,10 +113,10 @@ const axios = require('axios');
 
 const headers = {
   'Authorization': 'Token your-api-token',
-  'Org-Handle': 'your-org-handle'
+  'Org-Handle': 'your-org-handle'  // optional — omit for pool numbers only
 };
 
-// Get all telephony numbers
+// Get org numbers + pool numbers
 const getTelephonyNumbers = async () => {
   const response = await axios.get(
     'https://unpod.ai/api/v2/platform/telephony/numbers/',
@@ -110,16 +125,18 @@ const getTelephonyNumbers = async () => {
   const numbers = response.data.data;
   console.log(`Total numbers: ${numbers.length}`);
   numbers.forEach(num => {
-    const bridgeInfo = num.bridge_slug ? `assigned to ${num.bridge_slug}` : 'unassigned';
-    console.log(`${num.number} (${num.provider}) - ${num.status} - ${bridgeInfo}`);
+    console.log(`${num.number} - ${num.state}`);
   });
   return numbers;
 };
 
-// Get only unassigned numbers
-const getUnassignedNumbers = async () => {
-  const numbers = await getTelephonyNumbers();
-  return numbers.filter(num => num.bridge_slug === null);
+// Get only unassigned pool numbers (no Org-Handle)
+const getPoolNumbers = async () => {
+  const response = await axios.get(
+    'https://unpod.ai/api/v2/platform/telephony/numbers/',
+    { headers: { 'Authorization': headers.Authorization } }
+  );
+  return response.data.data;
 };
 
 // Example usage
@@ -131,44 +148,48 @@ import requests
 
 headers = {
     'Authorization': 'Token your-api-token',
-    'Org-Handle': 'your-org-handle'
+    'Org-Handle': 'your-org-handle'  # optional — omit for pool numbers only
 }
 
 def get_telephony_numbers():
-    """Get all telephony numbers"""
+    """Get org numbers + pool numbers"""
     url = 'https://unpod.ai/api/v2/platform/telephony/numbers/'
     response = requests.get(url, headers=headers)
     data = response.json()
     numbers = data['data']
     print(f"Total numbers: {len(numbers)}")
     for num in numbers:
-        bridge_info = f"assigned to {num['bridge_slug']}" if num['bridge_slug'] else 'unassigned'
-        print(f"{num['number']} ({num['provider']}) - {num['status']} - {bridge_info}")
+        print(f"{num['number']} - {num['state']}")
     return numbers
 
-def get_unassigned_numbers():
-    """Get only unassigned numbers"""
-    numbers = get_telephony_numbers()
-    return [num for num in numbers if num['bridge_slug'] is None]
+def get_pool_numbers():
+    """Get only unassigned pool numbers (no Org-Handle)"""
+    pool_headers = {k: v for k, v in headers.items() if k != 'Org-Handle'}
+    url = 'https://unpod.ai/api/v2/platform/telephony/numbers/'
+    response = requests.get(url, headers=pool_headers)
+    return response.json()['data']
 
 # Example usage
 get_telephony_numbers()
 ```
 
 ```bash cURL
-# Get all telephony numbers
+# With Org-Handle — org numbers + pool numbers
 curl -X GET "https://unpod.ai/api/v2/platform/telephony/numbers/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
+
+# Without Org-Handle — pool numbers only
+curl -X GET "https://unpod.ai/api/v2/platform/telephony/numbers/" \
+  -H "Authorization: Token your-api-token"
 ```
 
 </CodeGroup>
 
 ## Best Practices
 
-1. **Bridge Assignment**: Check `bridge_slug` to identify unassigned numbers available for new bridge connections
-2. **Status Check**: Only numbers with `status: active` can handle calls — filter inactive numbers in your application
-3. **Provider Tracking**: Use the `provider` field to understand which provider account each number belongs to
-4. **Number Inventory**: Regularly audit your number list to identify unused or misconfigured numbers
-5. **E.164 Format**: All numbers are returned in E.164 format — use this format consistently in all API calls
-6. **Security**: Keep API tokens secure and rotate them regularly
+1. **Org Scoping**: Pass `Org-Handle` to see your org's numbers; omit it to see only pool numbers
+2. **Number Assignment**: Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numbers)
+3. **State Awareness**: Check `state` to know if a number is `NOT_ASSIGNED` (available) or `ASSIGNED` (in use)
+4. **E.164 Format**: All numbers are returned in E.164 format — use this format consistently in all API calls
+5. **Security**: Keep API tokens secure and rotate them regularly

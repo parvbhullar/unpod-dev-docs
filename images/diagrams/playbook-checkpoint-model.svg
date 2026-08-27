@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="PLAYBOOK CHECKPOINT MODEL">
+  <defs>
+    <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
+    </pattern>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8d75ff"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d8e8"/>
+    </marker>
+    <style>
+      svg { background: #020303; }
+      .title { font: 700 44px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 9px; }
+      .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
+      .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
+      .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
+      .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
+      .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
+      .purple { stroke: #8d75ff; }
+      .cyan { stroke: #00d8e8; }
+      .purpleText { fill: #8d75ff; }
+      .cyanText { fill: #00d8e8; }
+      .flow { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 22; animation: dash 1.8s linear infinite; }
+      .flow.fast { animation-duration: 1.35s; }
+      .flow.slow { animation-duration: 2.4s; }
+      .dim { opacity: 0.72; }
+      .pulse { filter: url(#glow); animation: pulse 1.7s ease-in-out infinite; transform-origin: center; }
+      @keyframes dash { to { stroke-dashoffset: -36; } }
+      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .flow, .pulse { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="1672" height="941" fill="#020303"/>
+  <text x="836" y="70" text-anchor="middle" class="title">PLAYBOOK CHECKPOINT MODEL</text>
+  
+  <rect x="320" y="134" width="620" height="560" rx="18" class="panel purple"/>
+  <text x="630" y="178" text-anchor="middle" class="label purpleText">
+    <tspan x="630" dy="0">CHECKPOINT: COLLECT_DETAILS</tspan>
+  </text>
+  <rect x="372" y="224" width="516" height="68" rx="12" class="box purple"/>
+  <text x="630" y="249" text-anchor="middle" class="small">
+    <tspan x="630" dy="0">GOAL</tspan>
+    <tspan x="630" dy="30">CITY + DATE + PARTY SIZE</tspan>
+  </text>
+  <rect x="372" y="326" width="516" height="68" rx="12" class="box purple"/>
+  <text x="630" y="351" text-anchor="middle" class="small">
+    <tspan x="630" dy="0">SLOTS</tspan>
+    <tspan x="630" dy="30">CITY / DATE / PLAYERS</tspan>
+  </text>
+  <rect x="372" y="428" width="516" height="68" rx="12" class="box purple"/>
+  <text x="630" y="453" text-anchor="middle" class="small">
+    <tspan x="630" dy="0">GUIDANCE</tspan>
+    <tspan x="630" dy="30">COLLECT NATURALLY</tspan>
+  </text>
+  <rect x="372" y="530" width="516" height="82" rx="12" class="box purple"/>
+  <text x="630" y="562" text-anchor="middle" class="small">
+    <tspan x="630" dy="0">ADVANCE RULES</tspan>
+    <tspan x="630" dy="30">DETAILS COMPLETE OR COURSE INFO</tspan>
+  </text>
+  <rect x="1030" y="210" width="330" height="236" rx="18" class="panel cyan"/>
+  <text x="1195" y="254" text-anchor="middle" class="label cyanText">
+    <tspan x="1195" dy="0">FREE CONVERSATION</tspan>
+  </text>
+  <rect x="1066" y="304" width="258" height="78" rx="16" class="box cyan "/>
+  <text x="1195" y="351" text-anchor="middle" class="label">
+    <tspan x="1195" dy="0">MODEL TALKS</tspan>
+  </text>
+  <rect x="1058" y="574" width="276" height="96" rx="16" class="box cyan "/>
+  <text x="1196" y="615" text-anchor="middle" class="label">
+    <tspan x="1196" dy="0">NEXT</tspan>
+    <tspan x="1196" dy="30">CHECKPOINT</tspan>
+  </text>
+  <path d="M940 340 H1020" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M1195 446 V564" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M632 612 C632 760 1188 760 1190 680" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <text x="1182" y="510" text-anchor="middle" class="tiny cyanText">
+    <tspan x="1182" dy="0">OUTCOME MET</tspan>
+  </text>
+  <text x="772" y="754" text-anchor="middle" class="tiny purpleText">
+    <tspan x="772" dy="0">FRAMEWORK OWNS PROGRESS</tspan>
+  </text>
+
+</svg>

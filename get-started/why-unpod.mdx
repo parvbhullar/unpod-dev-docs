@@ -1,0 +1,110 @@
+---
+title: 'Why Unpod'
+icon: 'sparkles'
+description: 'The intelligence layer for realtime AI.'
+---
+
+Train an agent on your use case. Use it like a model - over chat, realtime
+voice, or a phone number.
+
+## Why realtime agents fail
+
+Speech is solved. Telephony is solved. The layer that runs the conversation
+is where projects stall.
+
+<CardGroup cols={1}>
+  <Card title="Prompts lose the plot" icon="triangle-alert" horizontal>
+    Every top model drops ~39% from single-turn to multi-turn - mostly
+    unreliability, not capability. Take a wrong turn and the conversation
+    never recovers. Prompt-tuning plateaus around 85%: nothing in a
+    100-page prompt is addressable, so nothing is testable.
+  </Card>
+  <Card title="Big models miss the beat" icon="timer" horizontal>
+    Humans swap turns in ~200ms; past ~700ms a caller hears a machine. The
+    LLM is ~70% of that budget, and frontier models spend 1.1-1.4s before
+    their first token - the whole budget, on one hop.
+  </Card>
+</CardGroup>
+
+## What Unpod runs
+
+<CardGroup cols={1}>
+  <Card title="Playbooks" icon="git-branch" horizontal>
+    Conversations as checkpoints and outcomes, not prose. Every step is
+    addressable - so it can be simulated, fixed, and regression-tested.
+  </Card>
+  <Card title="Context layer" icon="layers" horizontal>
+    Each turn gets only the context it needs - so the agent stays fast on a
+    third-party model, or faster on a fine-tuned ~1B SLM trained on your
+    workflows. Swap either way without touching the conversation.
+  </Card>
+  <Card title="Sessions" icon="repeat" horizontal>
+    Pass a session id and the agent keeps its state - across turns, and
+    across calls.
+  </Card>
+</CardGroup>
+
+## Use it like a model
+
+| Surface | I/O | Live in |
+|---|---|---|
+| [Chat](/get-started/chat) | text in, text out | 1 URL swap |
+| [Realtime](/get-started/realtime) | audio in, audio out | 1 WebSocket |
+| [Phone](/get-started/phone) | a phone number | 1 click |
+
+Same trained agent, three ways in. Your orchestration, speech, and transport
+stay where they are.
+
+<div className="ul-stack" role="img" aria-label="Layer diagram: agent platforms use Unpod, which builds on raw telephony providers.">
+  <div className="ul-stack__title">Where Unpod sits</div>
+
+  <div className="ul-layer">
+    <span className="ul-layer__tag">Layer 3</span>
+    <div className="ul-layer__card">
+      <span className="ul-layer__name">Agent platforms</span>
+      <span className="ul-layer__vendors">Vapi / Retell / Bland</span>
+    </div>
+  </div>
+
+  <div className="ul-link"><span className="ul-link__lbl">used by</span></div>
+
+  <div className="ul-layer is-brand">
+    <span className="ul-layer__tag">Layer 2</span>
+    <div className="ul-layer__card">
+      <span className="ul-layer__name">Unpod</span>
+      <span className="ul-layer__vendors">Communication infra</span>
+    </div>
+  </div>
+
+  <div className="ul-link is-down"><span className="ul-link__lbl">builds on</span></div>
+
+  <div className="ul-layer">
+    <span className="ul-layer__tag">Layer 1</span>
+    <div className="ul-layer__card">
+      <span className="ul-layer__name">Raw telephony</span>
+      <span className="ul-layer__vendors">Twilio / Plivo / Bandwidth</span>
+    </div>
+  </div>
+</div>
+
+## Start building
+
+<CardGroup cols={3}>
+  <Card title="Getting Started" icon="play" href="/get-started/getting-started">
+    Your first request, in about 2 minutes.
+  </Card>
+  <a className="pg-card" href="https://superdialog.unpod.ai/playground?tab=preview" target="_blank" rel="noreferrer">
+    <span className="pg-card__badge">Try it</span>
+    <span className="pg-card__icon">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2l1.9 5.3L19 9.2l-5.1 1.9L12 16.4l-1.9-5.3L5 9.2l5.1-1.9L12 2z" />
+        <path d="M18.4 14.1l.85 2.3 2.3.85-2.3.85-.85 2.3-.85-2.3-2.3-.85 2.3-.85.85-2.3z" />
+      </svg>
+    </span>
+    <span className="pg-card__title">Playground</span>
+    <span className="pg-card__desc">Build and hear an agent in the browser. No account needed.</span>
+  </a>
+  <Card title="GitHub" icon="github" href="https://github.com/unpod-ai/unpod">
+    Open source, MIT. Self-host the full stack.
+  </Card>
+</CardGroup>

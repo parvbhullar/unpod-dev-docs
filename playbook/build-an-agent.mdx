@@ -1,0 +1,138 @@
+---
+title: "Build an agent playbook"
+icon: 'circle-plus'
+description: "Describe the agent you want in plain English - or drop in a PDF or a URL - and the builder agent writes the playbook for you. Watch it land in the Editor, tweak it, save it."
+---
+
+## The idea
+
+You do not start from a blank YAML file. You **talk to a builder agent** in the
+left-hand chat and it authors the playbook live into the **Editor** tab on the
+right - refine it in chat or edit it by hand. Full tour of the screen:
+[The Playground](/playbook/playground).
+
+<a className="pg-cta" href="https://superdialog.unpod.ai/playground" target="_blank" rel="noreferrer">
+  <span className="pg-cta__icon">▶</span>
+  <span className="pg-cta__body">
+    <span className="pg-cta__title">Open the Playground</span>
+    <span className="pg-cta__desc">Everything below happens at <code>superdialog.unpod.ai/playground</code>. A guest trial lets you build a playbook before creating an account.</span>
+  </span>
+  <span className="pg-cta__arrow">→</span>
+</a>
+
+## Step 1 - Describe what you want
+
+<Frame caption="The first screen - describe the conversation you want to build">
+  <img src="/images/playbook/landing-hero.png" alt="SuperDialog landing composer: 'Turn a prompt into a conversation agent', a text box reading 'Describe the conversation you want to build - e.g. Confirm the appointment, offer Friday 4pm...', a model selector, and suggestion chips." />
+</Frame>
+
+The first message is your onboarding. Type a one-line description of the agent's
+job. Be concrete about the **outcome** and any **fallbacks**:
+
+> *"Confirm an appointment - offer Friday 4pm, fall back to 5pm."*
+>
+> *"Handle a refund request with a polite escalation path."*
+
+The builder agent turns that into a first playbook: a persona, an opening line,
+and the checkpoints needed to reach the outcome.
+
+<Tip>
+Describe the **goal and the guardrails**, not the exact words. "Collect the
+order number before offering a refund" is a checkpoint the engine can enforce;
+scripting every sentence fights the model instead of steering it. Why that
+works: [Thinking in playbooks](/superdialog/thinking-in-playbooks).
+</Tip>
+
+### Start from a document or a URL
+
+The composer has a `+` **Attach** button and accepts a pasted link:
+
+<CardGroup cols={2}>
+  <Card title="Attach a document" icon="paperclip">
+    Upload a PDF, TXT, MD, or DOCX (a returns policy, a product sheet, a script).
+    The text is extracted and **stored in the session**, so the agent can re-read
+    it on any later turn - not injected once and forgotten.
+  </Card>
+  <Card title="Paste a URL" icon="link">
+    Drop an `https://` link in the composer. The page is fetched, extracted, and
+    stored the same way. Great for "build an agent from our FAQ page."
+  </Card>
+</CardGroup>
+
+<Note>
+Sources persist for the whole session. The builder agent has `list_sources` and
+`read_source` tools, so you can say "check the returns doc again" three turns
+later and it will.
+</Note>
+
+## Step 2 - Pick the build model (optional)
+
+The composer has a **model selector**. It defaults to a strong model that authors
+good playbooks out of the box, and each option is tagged for its strength -
+*best for editing*, *most capable*, *top reasoning*, *fast*:
+
+<Frame caption="The builder model picker - each model is labelled for the job it is best at">
+  <img src="/images/playbook/build-model-picker.png" alt="Builder model dropdown listing Claude Sonnet 5 (best for editing), Claude Opus 4.8 (most capable), Claude Sonnet 4.6 (best for editing, selected), GPT-5.5 (top reasoning), Claude Haiku 4.5 (fast), and Gemini 3.5 Flash (beta)." />
+</Frame>
+
+Override it only if you have a preference - it controls the *builder*, not the
+model your finished agent will run on (that is set in
+[Test by voice](/playbook/test-by-voice)).
+
+## Step 3 - Watch it land in the Editor
+
+Switch to the **Editor** tab to see the playbook the agent wrote. This is real,
+editable YAML:
+
+<Frame caption="The Editor shows the YAML the builder agent authored - real, editable code you can tweak or let the agent refine">
+  <img src="/images/playbook/optimized-by-agent.png" alt="Split view: left panel shows YAML editor with persona, env, journeys, and booking checkpoints including slots for name, service, and date; right panel shows Optimized by Agent with a refined version adding synonyms and advance conditions." />
+</Frame>
+
+Two ways to refine from here:
+
+<Steps>
+  <Step title="Keep chatting">
+    "Add a checkpoint that captures a callback number." The agent edits the YAML
+    and the Editor updates. This is the fastest loop.
+  </Step>
+  <Step title="Edit by hand">
+    Type directly in the Editor. Validation runs as you type and flags a malformed
+    checkpoint before you test it.
+  </Step>
+</Steps>
+
+## Step 4 - Save, import & export
+
+The top bar holds the three file actions. The bar also shows a **dirty/draft
+indicator**, so you always know whether the current buffer is saved.
+
+| Action | What it does |
+|---|---|
+| **Save** | Persists the current playbook as a **draft**, private to you. Preview auto-saves a dirty buffer before a test call, but save explicitly when you pause. |
+| **Import** | Load a playbook YAML from a file into the editor - move an agent between accounts, or start from a version you keep in git. |
+| **Export** | Download the current playbook YAML - back it up, review it, or hand it to a teammate. |
+
+<Note>
+Saving keeps the playbook **private to you**. Making it visible to others,
+generating a shareable link, or deploying it happens later, in
+[Publish & share](/playbook/publish-and-share) - which offers **Deploy as Voice
+Agent** (a phone number) and **Deploy as Endpoint** (an API).
+</Note>
+
+## What "good" looks like before you test
+
+- A clear **persona** and an **opening line** a caller would find natural.
+- Checkpoints written as **outcomes** (`done_when: the caller confirmed a time`),
+  not scripts.
+- The **fallbacks** you mentioned are present (offer 5pm; escalate politely).
+- Any **slots** you need to capture (order number, callback) have a checkpoint.
+
+Outcome-shaped checkpoints and slots in depth:
+[Thinking in playbooks](/superdialog/thinking-in-playbooks).
+
+## Next step
+
+<Card title="Test it by voice" icon="mic" href="/playbook/test-by-voice">
+  Switch to the Preview tab, press to talk, and confirm the agent behaves like a
+  real call before you harden or ship it.
+</Card>

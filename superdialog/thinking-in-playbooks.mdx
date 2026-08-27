@@ -1,0 +1,171 @@
+---
+title: "Thinking in Playbooks"
+icon: 'brain'
+description: "The mental model shift from writing prompts to authoring checkpoints that gate outcomes - and why it makes complex conversations both fluid and reliable."
+---
+
+# Thinking in Playbooks
+
+If you have built LLM chatbots before, SuperDialog's default engine asks for one
+shift in thinking:
+
+| Traditional bot | A rigid graph | SuperDialog playbook |
+|----------------|---------------|----------------------|
+| Write one long prompt | Wire every transition by hand | Author **checkpoints** that gate outcomes |
+| LLM decides everything | LLM can only traverse defined edges | LLM owns the phrasing; the framework owns the outcomes |
+| No structure | Users don't follow your graph | Conversation is free *inside* a checkpoint; progress is gated |
+
+The key move: **checkpoints gate outcomes, not utterances.** You don't script
+what the agent says next - you declare what "done" means for each step, and the
+model speaks freely to get there.
+
+## The core model
+
+A **playbook** is one or more **journeys**, each a list of **checkpoints**. A
+checkpoint is a call-center-script unit with four parts:
+
+- **`goal`** - what "done" means for this step ("Have the city, date, and party size")
+- **`slots`** - typed data to extract while here (`city: str`, `date: date`, `players: int`)
+- **`guidance`** - prose the agent speaks from (it owns the wording)
+- **`advance_when`** - an ordered list of rules that move the conversation forward
+
+Those are the **full format** names. The **simple format** spells the same four
+`purpose` / `collect` / `say` / `done_when`; both compile to one checkpoint - see
+[Playbooks](/superdialog/playbooks).
+
+<Frame>
+  <img src="/images/diagrams/playbook-checkpoint-model.svg" alt="Animated Playbook checkpoint model diagram showing goal, slots, guidance, and advance rules inside a checkpoint, free conversation within it, and movement to the next checkpoint when an outcome is met." />
+</Frame>
+
+Inside a checkpoint the conversation is free - the caller can answer in any
+order, give everything in one breath, or change their mind. The framework's job
+is only to decide **when the goal is actually met** and where to go next.
+
+## Start with the topology, then write the steps
+
+Before writing any prose, map your conversation:
+
+1. What are the distinct **steps** (checkpoints) in this conversation?
+2. What **data** (slots) must each step capture?
+3. What **outcomes** move the conversation forward (advance rules)?
+4. What can **go wrong** at each step? (caller refuses, asks a side question)
+
+Then write it in the **simple format** - prose steps and a persona, the same
+thing `superdialog generate` produces:
+
+```yaml
+goal: "Book a haircut and confirm it."
+persona:
+  name: Mira
+  voice_style: "Warm and brief. One question at a time."
+  identity: "You are Mira, a booking assistant for Glow Studio."
+playbook:
+  - id: greet
+    purpose: "Open the call."
+    say: "Greet the caller and ask how you can help."
+    done_when: "Caller is ready to book."
+  - id: collect
+    purpose: "Get the booking details."
+    say: "Ask for their name and preferred service."
+    collect: [name, service]
+    done_when: "Name and service are captured."
+  - id: confirm
+    purpose: "Confirm and close."
+    say: "Read back the booking and confirm."
+    done_when: "Caller has confirmed."
+```
+
+See [Playbooks](/superdialog/playbooks) for the full section reference and when
+to graduate to the full format (typed slots, gates, pipelines, multiple
+journeys).
+
+## Test it - no infrastructure needed
+
+```bash
+superdialog generate "Book a haircut and confirm it." --output salon.yaml
+superdialog chat salon.yaml
+```
+
+Full interactive REPL against your playbook. No Unpod account, no phone number,
+no voice setup required.
+
+```
+> I'd like to book a haircut
+Hi! I'd be happy to help. May I have your name?
+> Mira, and I'd like a colour
+[checkpoint=collect ended=False]
+```
+
+The status line names the live checkpoint, so you can watch the conversation
+advance as outcomes are met. Iterate on `salon.yaml`, re-run `chat` - the loop
+takes seconds.
+
+## Soft gates vs hard gates
+
+Every checkpoint has a `gate`. This is where fluidity meets reliability:
+
+- **Soft gate (default)** - provisional values are enough; the agent never
+  blocks. The model keeps the conversation moving and the extracted data settles
+  in the background. Use it for everything that isn't irreversible.
+- **Hard gate** - for payments, identity, anything you can't undo. Required
+  slots must be **confirmed** (not just provisionally extracted), and the agent
+  briefly waits for that confirmation before it speaks the gated line. A single
+  model guess can never push past a hard gate on its own.
+
+```yaml
+playbook:
+  - id: take_payment
+    purpose: "Charge the deposit."
+    say: "Confirm the amount, then take the card."
+    collect: [card_token, amount]
+    require: [card_token, amount]   # must be confirmed, not just extracted
+    gate: hard                      # waits for that before the gated line
+    done_when: "Deposit charged."
+```
+
+## Why one streaming call, not two
+
+A rigid graph has to make two LLM calls per turn: one to decide which edge
+fires, then one to speak. For voice, that adds latency before the caller hears
+anything.
+
+A playbook splits the turn instead: a fast **Talker** streams the spoken reply
+in one LLM call, while an async **Director** extracts slots and judges advance
+rules **off the speech path**.
+
+The caller hears the agent immediately; correctness converges a beat behind.
+Full runtime - ordering, the event log, barge-in safety - in
+[Architecture](/superdialog/architecture).
+
+## When a graph still fits
+
+The checkpoint model is the default and the right choice for most
+conversations. A hand-authored **flow graph** still earns its place when:
+
+- **Compliance / auditability** - you need every reachable path enumerable and
+  lintable as a spec.
+- **Strict determinism** - the conversation truly is a fixed decision tree with
+  no room for the model to improvise.
+
+You don't lose anything by authoring a graph: by default it runs **compiled onto
+the Playbook engine** (`Playbook.load` detects flow JSON and converts it), and
+you can still run the original graph runtime with `engine="flow"` /
+`superdialog chat --mode flow`. See [Flows](/superdialog/flows) for graph
+authoring and the migration path.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Playbooks" icon="book" href="/superdialog/playbooks">
+    The simple and full authoring formats
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/superdialog/quickstart">
+    Generate and run your first playbook
+  </Card>
+  <Card title="Architecture" icon="workflow" href="/superdialog/architecture">
+    The Talker/Director runtime and event log
+  </Card>
+  <Card title="Flows (legacy)" icon="git-branch" href="/superdialog/flows">
+    Graph authoring and the migration path
+  </Card>
+</CardGroup>

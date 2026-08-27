@@ -1,0 +1,153 @@
+---
+title: "Provisioning checklist"
+icon: 'list-checks'
+description: "One-time resource provisioning before your first call."
+---
+
+Before your first call routes to your Speech Pipe, complete these four steps once.
+
+## 1. Pick a Voice Profile
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def list_profiles():
+    client = AsyncClient()
+    profiles = await client.voice_profiles.list()
+    for p in profiles:
+        print(p.profile_id, p.name)
+
+asyncio.run(list_profiles())
+```
+
+Copy a `profile_id` (`vp_...`) for step 2. See
+[Voice Profiles](/speech-stack/voice-profiles) for filtering and fields.
+
+## 2. Create a Speech Pipe
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def create_pipe():
+    client = AsyncClient()
+    pipe = await client.pipes.create(
+        name="My Agent",
+        voice_profile="vp_en_female_hd",   # a profile_id from step 1
+        agent_id="my-agent",               # MUST match AgentRunner(agent_id=...)
+    )
+    print(pipe.pipe_id)  # pipe_... - used for REST API calls
+    return pipe
+
+asyncio.run(create_pipe())
+```
+
+<Warning>
+**`agent_id` vs `pipe.pipe_id`**
+
+- `pipe.pipe_id` - ID assigned by Unpod, used in REST API calls
+- `agent_id` - string name you choose; must exactly match `AgentRunner(agent_id=...)`
+
+These are different. Mismatching them is the most common first-run failure.
+</Warning>
+
+Other pipe options (`recording`, `max_call_duration_s`, `agent_endpoint`) are in
+[Speech Pipe](/speech-stack/pipes).
+
+## 3. Attach a Phone Number
+
+`attach()` takes the number's `number_id` (`num_...`) and the `pipe_id`.
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def assign_number(pipe_id: str) -> None:
+    client = AsyncClient()
+    numbers = await client.numbers.list(status="active")
+    free = [n for n in numbers if n.pipe_id is None]
+    if not free:
+        print("No free numbers. Provision one in the Unpod dashboard first.")
+        return
+    await client.numbers.attach(number_id=free[0].number_id, pipe_id=pipe_id)
+    print(f"Attached {free[0].number}")
+
+asyncio.run(assign_number("pipe_..."))
+```
+
+No numbers yet, or bringing your own carrier? See
+[Phone Numbers](/speech-stack/numbers) and [Trunks](/speech-stack/numbers#trunks).
+
+## 4. Start Your Runner
+
+```python
+from unpod import AgentRunner
+
+AgentRunner(
+    entrypoint=entrypoint,
+    agent_id="my-agent",   # must match the pipe's agent_id above
+).start()
+```
+
+## Full Setup Script
+
+```python
+import asyncio
+from unpod import AsyncClient, AgentRunner, CallContext
+from unpod.adapters.langchain import LangChainAdapter
+
+async def setup():
+    client = AsyncClient()
+
+    # 1. Pick a voice profile
+    profiles = await client.voice_profiles.list()
+    profile = profiles[0]
+
+    # 2. Create the Speech Pipe
+    pipe = await client.pipes.create(
+        name="My Agent",
+        voice_profile=profile.profile_id,
+        agent_id="my-agent",
+    )
+
+    # 3. Attach the first free number
+    free = [n for n in await client.numbers.list() if n.pipe_id is None]
+    if free:
+        await client.numbers.attach(number_id=free[0].number_id, pipe_id=pipe.pipe_id)
+
+    print(f"Speech Pipe created: {pipe.pipe_id}")
+    print(f"Number: {free[0].number if free else 'none assigned'}")
+
+asyncio.run(setup())
+```
+
+Then start your runner in a separate process:
+
+```python
+async def entrypoint(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = LangChainAdapter(your_chain)
+    await ctx.session.run()
+
+AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
+```
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `UNPOD_API_KEY` | Yes | Direct-mode Bearer key. **Required by the `AgentRunner`** (orchestrator connection); also the management-client fallback when `UNPOD_PLATFORM_TOKEN` is unset |
+| `UNPOD_PLATFORM_TOKEN` | No | Backend-core DRF token - enables management **proxy mode** (preferred for the `AsyncClient`/`Client`). Falls back to `UNPOD_API_KEY` if unset |
+| `UNPOD_ORG_HANDLE` | No | Org handle sent as the `Org-Handle` header alongside `UNPOD_PLATFORM_TOKEN` (required for org-scoped / telephony endpoints) |
+| `UNPOD_BASE_URL` | No | Single shared endpoint. REST derives `https://<host>/platform` and the runner derives `wss://<host>` |
+| `UNPOD_SERVICE_BASE_URL` | No | Management REST override only. Takes precedence over `UNPOD_BASE_URL` when set |
+| `UNPOD_ORCHESTRATOR_URL` | No | Runner WebSocket override only. Takes precedence over `UNPOD_BASE_URL` when set |
+
+### Which URL setting to use
+
+- `UNPOD_BASE_URL` - management API and runner share one host.
+- `UNPOD_SERVICE_BASE_URL` - management REST override only.
+- `UNPOD_ORCHESTRATOR_URL` - runner WebSocket override only.
+- `base_url=` / `orchestrator_base_url=` in code - one script or test overrides `.env`.
+
+Production values and the `serve`-transport extras: [Deploy](/speech-stack/deploy).

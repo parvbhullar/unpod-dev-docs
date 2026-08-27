@@ -1,0 +1,160 @@
+---
+title: 'Voice Profiles'
+icon: 'mic'
+description: 'Browse and select the speech stack for your Speech Pipes.'
+---
+
+## What Is a Voice Profile?
+
+A [Voice Profile](/get-started/core-concepts#voice-profile) bundles three
+things into a single reusable configuration:
+
+- **Speech-to-Text (STT)** - transcribes the caller's audio into text
+- **Text-to-Speech (TTS)** - converts agent text into natural-sounding audio
+- **Voice** - the specific voice identity (gender, accent, character) used for TTS output
+
+When you attach a voice profile to a Speech Pipe, every call that Speech Pipe handles uses that configuration automatically - including failover if a provider goes down.
+
+<Frame>
+  <img src="/images/diagrams/voice-profile-pipeline.svg" alt="Voice profile pipeline diagram showing caller speech passing through STT, dialog machine text handling, TTS plus voice, and caller playback." />
+</Frame>
+
+Voice profiles are managed by Unpod. You browse and select from the available list - you do not configure STT/TTS providers directly.
+
+---
+
+## Listing Voice Profiles via SDK
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        # All profiles
+        profiles = await client.voice_profiles.list()
+
+        # Filter by language
+        en_profiles = await client.voice_profiles.list(language="en")
+        es_profiles = await client.voice_profiles.list(language="es")
+
+        for p in profiles:
+            print(
+                p.profile_id,
+                p.name,
+                f"gender={p.gender}",
+                f"quality={p.quality}",
+            )
+
+asyncio.run(main())
+```
+
+### VoiceProfile fields
+
+| Field | Type | Description |
+|---|---|---|
+| `profile_id` | `str` | Profile ID to pass when creating a Speech Pipe |
+| `name` | `str` | Human-readable name, e.g. `"Emma (HD)"` |
+| `gender` | `str` | `male`, `female`, or `neutral` |
+| `quality` | `str` | `standard` or `high` |
+| `languages` | `list[str]` | Supported language codes, e.g. `["en", "hi"]` |
+| `description` | `str \| None` | Short description of the voice character |
+| `latency_ms` | `int \| None` | Expected end-to-end latency in milliseconds |
+| `greeting_message` | `str \| None` | Default greeting for this profile |
+
+---
+
+## Getting a Single Profile
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        profile = await client.voice_profiles.get("vp_en_female_hd")
+        print(profile.name, profile.quality, profile.languages)
+
+asyncio.run(main())
+```
+
+---
+
+## Choosing the Right Profile
+
+### By use case
+
+| Use case | Recommended qualities |
+|---|---|
+| Customer support | High quality, natural voice, low latency |
+| Sales outreach | Expressive, high quality, brand-matched |
+| Appointment booking | Standard quality - lower latency |
+| Multilingual | Match language codes to caller's region |
+
+### By latency
+
+Total call latency has three components: STT transcription + LLM thinking + TTS synthesis.
+
+- Choose `quality == "high"` when voice naturalness matters more than speed
+- Choose `quality == "standard"` for latency-sensitive or high-volume deployments
+- Check `latency_ms` on the profile object for the estimated end-to-end figure
+
+---
+
+## Using a Profile When Creating a Speech Pipe
+
+Pass `profile_id` directly when creating or updating a Speech Pipe:
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        # List to find the right profile
+        profiles = await client.voice_profiles.list(language="en")
+        hd_female = next(
+            p for p in profiles if p.quality == "high" and p.gender == "female"
+        )
+
+        # Create Speech Pipe with that profile
+        pipe = await client.pipes.create(
+            name="Support Bot",
+            voice_profile=hd_female.profile_id,
+        )
+        print("Created Speech Pipe with profile:", hd_female.name)
+
+asyncio.run(main())
+```
+
+---
+
+## Switching a Profile on an Existing Speech Pipe
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        pipe = await client.pipes.update(
+            "pipe_...",
+            voice_profile="vp_es_male_std",   # switch to Spanish male
+        )
+        print("Updated voice profile:", pipe.voice_profile_id)
+
+asyncio.run(main())
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Speech Pipe" icon="bot" href="/speech-stack/pipes">
+    Attach a voice profile when creating or updating a Speech Pipe.
+  </Card>
+  <Card title="AgentRunner & Sessions" icon="code" href="/speech-stack/agent-runner">
+    Install the SDK and configure your runner process.
+  </Card>
+</CardGroup>

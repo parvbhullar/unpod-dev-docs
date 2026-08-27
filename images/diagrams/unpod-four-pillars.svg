@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="UNPOD FOUR PILLARS">
+  <defs>
+    <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
+    </pattern>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8d75ff"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d8e8"/>
+    </marker>
+    <style>
+      svg { background: #020303; }
+      .title { font: 700 44px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 9px; }
+      .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
+      .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
+      .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
+      .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
+      .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
+      .purple { stroke: #8d75ff; }
+      .cyan { stroke: #00d8e8; }
+      .purpleText { fill: #8d75ff; }
+      .cyanText { fill: #00d8e8; }
+      .flow { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 22; animation: dash 1.8s linear infinite; }
+      .flow.fast { animation-duration: 1.35s; }
+      .flow.slow { animation-duration: 2.4s; }
+      .dim { opacity: 0.72; }
+      .pulse { filter: url(#glow); animation: pulse 1.7s ease-in-out infinite; transform-origin: center; }
+      @keyframes dash { to { stroke-dashoffset: -36; } }
+      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .flow, .pulse { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="1672" height="941" fill="#020303"/>
+  <text x="836" y="70" text-anchor="middle" class="title">UNPOD FOUR PILLARS</text>
+  
+  <rect x="46" y="142" width="376" height="650" rx="18" class="panel purple"/>
+  <text x="234" y="186" text-anchor="middle" class="label purpleText">
+    <tspan x="234" dy="0">COMMUNICATION INFRA</tspan>
+  </text>
+  <rect x="486" y="142" width="376" height="650" rx="18" class="panel purple"/>
+  <text x="674" y="186" text-anchor="middle" class="label purpleText">
+    <tspan x="674" dy="0">VOICE STACK</tspan>
+  </text>
+  <rect x="922" y="142" width="376" height="650" rx="18" class="panel cyan"/>
+  <text x="1110" y="186" text-anchor="middle" class="label cyanText">
+    <tspan x="1110" dy="0">CONVERSATION FRAMEWORK</tspan>
+  </text>
+  <rect x="1360" y="142" width="266" height="650" rx="18" class="panel cyan"/>
+  <text x="1493" y="186" text-anchor="middle" class="label cyanText">
+    <tspan x="1493" dy="0">CPAAS PLATFORM</tspan>
+  </text>
+  <rect x="78" y="318" width="312" height="220" rx="16" class="box purple "/>
+  <text x="234" y="436" text-anchor="middle" class="label">
+    <tspan x="234" dy="0">unpod</tspan>
+  </text>
+  <rect x="518" y="318" width="312" height="220" rx="16" class="box purple "/>
+  <text x="674" y="436" text-anchor="middle" class="label">
+    <tspan x="674" dy="0">unpod</tspan>
+  </text>
+  <rect x="954" y="318" width="312" height="220" rx="16" class="box cyan "/>
+  <text x="1110" y="436" text-anchor="middle" class="label">
+    <tspan x="1110" dy="0">SUPERDIALOG</tspan>
+  </text>
+  <rect x="1388" y="318" width="210" height="220" rx="16" class="box cyan "/>
+  <text x="1493" y="436" text-anchor="middle" class="label">
+    <tspan x="1493" dy="0">OPEN SOURCE</tspan>
+  </text>
+  <text x="234" y="675" text-anchor="middle" class="small purpleText">
+    <tspan x="234" dy="0">PHONE NUMBERS + SIP</tspan>
+  </text>
+  <text x="674" y="675" text-anchor="middle" class="small purpleText">
+    <tspan x="674" dy="0">STT + TTS + VAD</tspan>
+  </text>
+  <text x="1110" y="675" text-anchor="middle" class="small cyanText">
+    <tspan x="1110" dy="0">FLOW GRAPHS + TOOLS</tspan>
+  </text>
+  <text x="1493" y="675" text-anchor="middle" class="small cyanText">
+    <tspan x="1493" dy="0">STUDIO + ANALYTICS</tspan>
+  </text>
+  <path d="M422 448 H476" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <path d="M862 448 H914" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <path d="M1298 448 H1350" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+
+</svg>

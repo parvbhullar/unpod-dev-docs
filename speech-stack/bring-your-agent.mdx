@@ -1,0 +1,265 @@
+---
+title: "Bring Your Agent"
+icon: 'bot'
+description: "Connect your existing LangChain, OpenAI, Anthropic, HTTP, or custom Python agent to Unpod voice infrastructure."
+---
+
+Already have a working agent? This is your page. You wrap your brain in a
+`DialogAdapter`, assign it to `ctx.session.dialog_machine`, and Unpod handles
+the rest of the call - telephony, speech-to-text, text-to-speech, audio
+transport. Your [Agent](/get-started/core-concepts#agent-brain) stays
+text-in/text-out.
+
+If you don't have an agent yet, start with the
+[Quickstart](/get-started/quickstart) instead - it builds the minimal brain
+first.
+
+## Install
+
+```bash
+uv add unpod
+```
+
+## Write your entrypoint
+
+The entrypoint is an async function called once per call. Set your agent on
+`ctx.session.dialog_machine` and call `await ctx.session.run()`.
+
+```python
+from unpod import AgentRunner, CallContext
+from unpod.adapters.langchain import LangChainAdapter
+
+# Your existing LangChain chain
+from your_app import chain
+
+async def entrypoint(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = LangChainAdapter(chain)
+    await ctx.session.run()
+```
+
+<Note>
+`AgentRunner` requires `UNPOD_API_KEY` in your environment, and the
+`agent_id` you pass must match your Speech Pipe's `agent_id` - see
+[IDs You'll Meet](/get-started/core-concepts#ids-youll-meet). The
+[Provisioning checklist](/speech-stack/setup-checklist#environment-variables) lists
+every variable.
+</Note>
+
+```python
+AgentRunner(
+    entrypoint=entrypoint,
+    agent_id="my-agent",  # must match agent_id in your Speech Pipe config
+).start()
+```
+
+Incoming calls to your Unpod number are now routed to your agent.
+
+## Streaming is the hot path
+
+This is the single most important thing on this page.
+
+During a live call, `session.run()` calls your adapter's **`stream()`** on
+every user turn and pipes tokens straight to the voice bridge for synthesis.
+**`turn()` is never called by the framework during live calls.**
+
+<Warning>
+If your adapter implements `turn()` properly but fakes `stream()` with a
+single-chunk fallback (await the full response, yield it once), the caller
+hears **silence until the entire response is generated, then a long
+monologue** - choppy, high-latency audio with no error message anywhere.
+Implement real token streaming in `stream()`.
+</Warning>
+
+The bundled adapters differ here - check the table below before choosing:
+`OpenAIAdapter`, `AnthropicAdapter`, and `LangChainAdapter` stream real tokens
+from their providers; `HTTPAdapter` cannot stream (one HTTP round-trip, one
+chunk), so expect a latency penalty proportional to your response length.
+
+## The DialogAdapter protocol
+
+Any object with these three methods is a valid brain - no base class required
+(the protocol is runtime-checkable):
+
+```python Signature
+async def turn(self, text: str, context: dict | None = None) -> str
+    # Return a complete response. Not called during live calls.
+
+async def stream(self, text: str, context: dict | None = None, language: str | None = None) -> AsyncIterator[str]
+    # Yield response tokens. THE hot path - session.run() calls this.
+    # `language` is the per-turn language code (from UserTextEvent.extra).
+    # Custom adapters MUST accept the kwarg even if they ignore it, else
+    # session.run() raises TypeError on the first turn.
+
+def assist(self, text: str) -> None
+    # Inject a system instruction before the next turn.
+```
+
+**Auto-wrapping:** assigning a superdialog `DialogMachine` or `LLMAgent`
+directly to `ctx.session.dialog_machine` wraps it in a `SuperDialogAdapter`
+for you. Anything else must satisfy the protocol above, or the setter raises
+`TypeError`.
+
+## Supported adapters
+
+| Adapter | Import | Real streaming | Use when |
+|---------|--------|----------------|----------|
+| `OpenAIAdapter` | `unpod.adapters.openai` | Yes | OpenAI `AsyncOpenAI` client - `gpt-4o`, `gpt-4o-mini`, etc. |
+| `AnthropicAdapter` | `unpod.adapters.anthropic` | Yes | Anthropic `AsyncAnthropic` client - Claude models |
+| `LangChainAdapter` | `unpod.adapters.langchain` | Yes | LangChain chain with `.ainvoke()` / `.astream()` |
+| `SuperDialogAdapter` | `unpod.adapters.superdialog` | Yes | superdialog `DialogMachine` / `LLMAgent` - or assign directly, auto-wrapped |
+| `HTTPAdapter` | `unpod.adapters.http` | No - single chunk | Remote agent API (any language); accepts the latency trade-off |
+| `MCPAdapter` | `unpod.adapters.mcp` | Preview | Interface defined; full MCP orchestration is not implemented yet (`unpod[mcp]`) |
+| Custom | Implement the protocol | Up to you | Any Python object with `turn`, `stream`, `assist` |
+
+## OpenAI
+
+```python
+from openai import AsyncOpenAI
+from unpod import AgentRunner, CallContext
+from unpod.adapters.openai import OpenAIAdapter
+
+client = AsyncOpenAI()
+
+async def entrypoint(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = OpenAIAdapter(
+        client=client,
+        model="gpt-4o-mini",
+        system_prompt="You are a helpful support agent. Be concise.",
+    )
+    await ctx.session.run()
+
+AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
+```
+
+## Anthropic (Claude)
+
+```python
+import anthropic
+from unpod import AgentRunner, CallContext
+from unpod.adapters.anthropic import AnthropicAdapter
+
+client = anthropic.AsyncAnthropic()
+
+async def entrypoint(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = AnthropicAdapter(
+        client=client,
+        model="claude-haiku-4-5-20251001",
+        system_prompt="You are a helpful support agent. Be concise.",
+    )
+    await ctx.session.run()
+
+AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
+```
+
+<Note>
+Model name formats differ by layer: direct adapters take the provider's raw
+model name (`claude-haiku-4-5-20251001`, `gpt-4o-mini`); superdialog brains
+take a `provider/model` URI (`anthropic/claude-haiku-4-5`). Both are correct
+in their context.
+</Note>
+
+## LangChain
+
+`LangChainAdapter` expects your chain to accept `{"messages": [...]}` as input
+by default. This works with `ChatPromptTemplate | ChatModel` chains. The
+adapter keeps conversation history across turns and streams via `.astream()`.
+
+If your chain uses a different input key, pass `input_key`:
+
+```python
+# Chain expects {"input": "..."}
+LangChainAdapter(chain, input_key="input")
+```
+
+## HTTP endpoint
+
+`HTTPAdapter` lets you keep your agent in any language behind an HTTP API.
+Each user turn becomes one `POST`:
+
+```python
+from unpod.adapters.http import HTTPAdapter
+
+adapter = HTTPAdapter(
+    url="https://agent.example.com/respond",
+    headers={"Authorization": "Bearer ..."},  # optional
+    timeout_s=10.0,
+)
+```
+
+Request body your endpoint receives, and the response it must return:
+
+```json
+// request - session_id and system_instructions are included when present
+{"text": "what the caller said", "context": {}, "session_id": "...", "system_instructions": ["..."]}
+// response
+{"text": "your agent's reply"}
+```
+
+<Warning>
+`HTTPAdapter` does not stream - the whole reply arrives as one chunk, so the
+caller waits for your full HTTP round-trip before hearing anything. Fine for
+short replies; for long-form answers prefer an in-process adapter.
+</Warning>
+
+## Using session controls
+
+Inside your entrypoint you can react to call events and control the call:
+
+```python
+async def entrypoint(ctx: CallContext) -> None:
+    @ctx.session.on("user_turn")
+    async def _(text: str) -> None:
+        print(f"User said: {text}")
+
+    @ctx.session.on("call_end")
+    async def _(reason: str) -> None:
+        print(f"Call ended: {reason}")
+
+    ctx.session.dialog_machine = LangChainAdapter(chain)
+    await ctx.session.run()
+```
+
+Common hooks: `call_start`, `user_turn`, `agent_turn`, `user_partial`,
+`interruption`, `call_end`, `error` (the registry also accepts `tool_call`,
+`tool_result`, `silence`, `state`, `metric`, `llm_call`, and `turn_complete`). See
+[Session](/get-started/core-concepts#session) for the full control surface.
+
+## Writing a custom adapter
+
+Implement the three protocol methods - no base class required:
+
+```python
+class MyAdapter:
+    async def turn(self, text: str, context: dict | None = None) -> str:
+        """Return complete response. Called for non-streaming use."""
+        return my_agent.respond(text)
+
+    async def stream(
+        self, text: str, context: dict | None = None, language: str | None = None
+    ):
+        """Yield response tokens. THIS is the hot path used by session.run().
+        Accept `language` even if unused - session.run() always passes it."""
+        async for token in my_agent.stream(text):
+            yield token
+
+    def assist(self, text: str) -> None:
+        """Inject a system instruction before the next turn."""
+        my_agent.set_instruction(text)
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Provisioning checklist" icon="list-check" href="/speech-stack/setup-checklist">
+    One-time resource provisioning: agent, number, voice profile
+  </Card>
+  <Card title="AgentRunner & Sessions" icon="sliders-horizontal" href="/speech-stack/agent-runner">
+    say(), transfer(), recording controls during live calls
+  </Card>
+  <Card title="SuperDialog" icon="workflow" href="/superdialog/introduction">
+    Conversation runtime: playbooks (default) and flow graphs
+  </Card>
+  <Card title="SuperDialog + Voice" icon="plug" href="/superdialog/embedding-guides/unpod-voice">
+    Plug a SuperDialog agent directly into your AgentRunner session
+  </Card>
+</CardGroup>

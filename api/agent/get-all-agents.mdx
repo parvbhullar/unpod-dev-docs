@@ -1,5 +1,6 @@
 ---
 title: 'Get All Agents'
+icon: 'list'
 description: 'Retrieve all AI agents configured in your organization'
 openapi: 'GET /api/v2/platform/agents/'
 ---
@@ -50,7 +51,7 @@ Retrieve detailed information for all registered AI agents in your organization,
 | Org-Handle    | string | Yes      | Organization domain handle      |
 
 <Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
 </Note>
 
 
@@ -148,7 +149,7 @@ curl -X GET "https://unpod.ai/api/v2/platform/agents/" \
 
 ## Best Practices
 
-1. **Agent Handle**: Note the `handle` field — it is used as the `agent_handle` path parameter in other agent endpoints
+1. **Agent Handle**: Note the `handle` field - it is used as the `agent_handle` path parameter in other agent endpoints
 2. **State Filtering**: Filter by `state` in your application to show only `published` agents
 3. **Org-Handle**: Always include the correct organization handle in requests
 4. **Error Handling**: Always handle potential errors and edge cases

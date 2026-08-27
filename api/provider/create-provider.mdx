@@ -1,5 +1,6 @@
 ---
 title: 'Create Provider'
+icon: 'circle-plus'
 description: 'Create a new telephony provider configuration'
 openapi: 'POST /api/v2/platform/telephony/providers-configurations/'
 ---
@@ -46,7 +47,7 @@ Create a new telephony provider configuration by linking your provider credentia
 | Content-Type  | string | Yes      | `application/json`              |
 
 <Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
 </Note>
 
 ### Request Body
@@ -163,7 +164,7 @@ curl -X POST "https://unpod.ai/api/v2/platform/telephony/providers-configuration
 ## Best Practices
 
 1. **Provider Slug**: Use the `slug` from the [Get Telephony Providers](/api/provider/get-telephony-providers) endpoint to identify the provider
-2. **Credential Security**: Never log or expose `auth_token` values — treat them as secrets
+2. **Credential Security**: Never log or expose `auth_token` values - treat them as secrets
 3. **Credential Rotation**: Use the [Update Provider](/api/provider/update-provider) endpoint to rotate credentials without deleting the configuration
 4. **Configuration ID**: Store the returned `id` to reference this configuration when connecting to bridges
 5. **Error Handling**: Handle 400 errors that indicate invalid credentials before they cause production issues

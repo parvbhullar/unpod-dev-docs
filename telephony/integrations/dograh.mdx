@@ -1,0 +1,47 @@
+---
+title: 'Dograh'
+icon: 'server'
+description: 'Dograh integration for Unpod - self-hosted voice agents. Coming soon.'
+---
+
+<Note>
+**Coming soon.** Dograh isn't a one-click provider in Unpod yet. Here's the planned
+model and what you can use today.
+</Note>
+
+**Dograh** - Self-hosted voice agents.
+
+## How it will work
+
+Dograh will connect over **SIP or WebSocket** so your self-hosted agent can answer Unpod numbers directly.
+
+<div className="uf-flow">
+  <div className="uf-node">
+    <span className="uf-ic">📞</span>
+    <span className="uf-t">Call</span>
+    <span className="uf-s">Inbound / outbound</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">SIP / WS</span></div>
+  <div className="uf-node is-accent">
+    <span className="uf-ic">🔗</span>
+    <span className="uf-t">Unpod trunk</span>
+    <span className="uf-s">Routing + failover</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">route</span></div>
+  <div className="uf-node">
+    <span className="uf-ic">🖥️</span>
+    <span className="uf-t">Dograh agent</span>
+    <span className="uf-s">Self-hosted</span>
+  </div>
+</div>
+
+## Want it sooner?
+
+<CardGroup cols={2}>
+  <Card title="Request early access" icon="bell" href="https://discord.gg/7kQ4ewNSHZ">
+    Ping us on Discord and we'll prioritise Dograh.
+  </Card>
+  <Card title="Use a live provider" icon="blocks" href="/telephony/integrations/overview">
+    Vapi, LiveKit, Twilio and Daily are ready today.
+  </Card>
+</CardGroup>

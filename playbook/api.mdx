@@ -1,0 +1,179 @@
+---
+title: "Chat API"
+icon: 'code'
+sidebarTitle: "Chat API"
+description: "Call your published playbook over an OpenAI-compatible chat/completions endpoint."
+---
+
+Publishing a playbook as an endpoint gives you an OpenAI-compatible API. Any
+OpenAI SDK works - swap the base URL, the API key, and the `model`.
+
+| | |
+|---|---|
+| **Base URL** | `https://inference.unpod.ai` |
+| **Route** | `POST /v1/chat/completions` |
+| **Auth** | `Authorization: Bearer <your-api-key>` |
+
+<Note>
+**Prerequisites:** a published playbook and an endpoint key. Publish, then open
+**Deploy as Endpoint → Manage API Keys** - see
+[Publish & share](/playbook/publish-and-share#deploy-as-endpoint).
+</Note>
+
+<Warning>
+Three surfaces, three auth stories - do not mix them:
+
+| Surface | Host | Auth |
+|---|---|---|
+| **Chat API** (this page) | `inference.unpod.ai` | `Authorization: Bearer <endpoint key>` |
+| Python SDK | `api.unpod.ai` | `UNPOD_API_KEY` (`sk_...`), handled by the SDK |
+| [Platform REST API](/api/get-started/authentication) | `unpod.ai` | `Authorization: Token` + `Org-Handle` |
+</Warning>
+
+## Request
+
+### Headers
+
+| Name | Required | Value |
+|---|---|---|
+| `Authorization` | Yes | `Bearer <your-api-key>` |
+| `Content-Type` | Yes | `application/json` |
+
+### Body
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `model` | string | Yes | Your playbook id, `public:` prefixed - e.g. `public:PB_7ZRMzCA1ojQ9LlcK` |
+| `messages` | array | Yes | `{role, content}` objects, as in the OpenAI API |
+| `user` | string | No | A stable session id. Pass the same value across requests and the agent keeps its state. |
+
+## Keep a conversation going
+
+Without `user`, each request is independent. With it, the agent remembers the
+thread - the checkpoint it reached, the slots it filled - across requests.
+
+```bash
+-d '{"model":"public:PB_...","messages":[{"role":"user","content":"hi"}],"user":"sess_abc"}'
+```
+
+Use one id per caller or per conversation, not one per process.
+
+## Examples
+
+<Tabs>
+  <Tab title="cURL">
+    ```bash
+    curl -X POST "https://inference.unpod.ai/v1/chat/completions" \
+      -H "Authorization: Bearer $UNPOD_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "model": "public:PB_7ZRMzCA1ojQ9LlcK",
+        "messages": [{"role": "user", "content": "hi"}],
+        "user": "sess_abc"
+      }'
+    ```
+  </Tab>
+  <Tab title="Python">
+    ```python
+    import os
+    from openai import OpenAI
+
+    client = OpenAI(
+        base_url="https://inference.unpod.ai/v1",
+        api_key=os.environ["UNPOD_API_KEY"],
+    )
+
+    reply = client.chat.completions.create(
+        model="public:PB_7ZRMzCA1ojQ9LlcK",
+        messages=[{"role": "user", "content": "hi"}],
+        user="sess_abc",
+    )
+    print(reply.choices[0].message.content)
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```javascript
+    import OpenAI from "openai";
+
+    const client = new OpenAI({
+      baseURL: "https://inference.unpod.ai/v1",
+      apiKey: process.env.UNPOD_API_KEY,
+    });
+
+    const reply = await client.chat.completions.create({
+      model: "public:PB_7ZRMzCA1ojQ9LlcK",
+      messages: [{ role: "user", content: "hi" }],
+      user: "sess_abc",
+    });
+    console.log(reply.choices[0].message.content);
+    ```
+  </Tab>
+  <Tab title="Go">
+    ```go
+    cfg := openai.DefaultConfig(os.Getenv("UNPOD_API_KEY"))
+    cfg.BaseURL = "https://inference.unpod.ai/v1"
+    client := openai.NewClientWithConfig(cfg)
+
+    reply, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+        Model:    "public:PB_7ZRMzCA1ojQ9LlcK",
+        Messages: []openai.ChatCompletionMessage{{Role: "user", Content: "hi"}},
+        User:     "sess_abc",
+    })
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+Keys carry your account's access. Keep them server-side in a secret manager or
+environment variable - never in client-side code or a committed file. Rotate
+immediately if one leaks.
+</Warning>
+
+<ResponseExample>
+
+```json 200
+{
+  "id": "chatcmpl-abc123",
+  "object": "chat.completion",
+  "created": 1677858242,
+  "model": "public:PB_7ZRMzCA1ojQ9LlcK",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Hi! Welcome to Lumina Spa - I'm Mira, your booking assistant. How can I help you today?"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 10,
+    "completion_tokens": 20,
+    "total_tokens": 30
+  }
+}
+```
+
+```json 401
+{
+  "error": {
+    "message": "Invalid API key",
+    "type": "authentication_error",
+    "code": "invalid_api_key"
+  }
+}
+```
+
+</ResponseExample>
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Publish & share" icon="share" href="/playbook/publish-and-share">
+    Deploy the playbook and mint a key.
+  </Card>
+  <Card title="Chat surface" icon="terminal" href="/get-started/chat">
+    Drop this endpoint into LiveKit, Pipecat, or any chat workflow.
+  </Card>
+</CardGroup>

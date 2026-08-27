@@ -1,0 +1,202 @@
+---
+title: 'LiveKit (API)'
+sidebarTitle: 'API'
+icon: 'terminal'
+description: 'Set up the Unpod side of a LiveKit integration over the REST API - create a SIP trunk to LiveKit and attach your number.'
+---
+
+The **programmatic** path for the **Unpod side**: create a SIP trunk pointed at your
+LiveKit SIP URI and attach your number. The trunk's **origin endpoint** is what you then
+use to create the matching trunks in the LiveKit console - see the
+[Dashboard guide](/telephony/integrations/livekit/dashboard) for the LiveKit-side screens.
+
+<Note>
+**Base URL:** `https://unpod.ai/api/v2/platform/`
+Every request needs `Authorization: Token <your-api-key>` and an `Org-Handle` header.
+See [Authentication](/api/get-started/authentication).
+</Note>
+
+## Prerequisites
+
+- An Unpod **API Token** and **Org-Handle**.
+- A number in your org (we'll fetch its `id` below).
+- Your **LiveKit SIP URI** from the LiveKit Cloud dashboard (**Settings → Project**),
+  e.g. `sip:<project-id>.sip.livekit.cloud`.
+
+## 1. Find your number
+
+```bash cURL
+curl https://unpod.ai/api/v2/platform/telephony/numbers/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE"
+```
+
+```json Response (200)
+{
+  "status_code": 200,
+  "message": "Telephony numbers fetched successfully.",
+  "data": [
+    { "id": 501, "number": "+15551234567", "state": "NOT_ASSIGNED", "active": true }
+  ]
+}
+```
+
+<Card title="List Numbers reference" icon="hash" href="/telephony/numbers/list-numbers">
+  Full request/response schema.
+</Card>
+
+## 2. Create the SIP trunk to LiveKit
+
+Point the trunk's `sip_url` at your LiveKit SIP URI. One trunk carries both inbound and outbound.
+
+```bash cURL
+curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "LiveKit trunk",
+    "sip_url": "sip:<project-id>.sip.livekit.cloud",
+    "transport": "tcp",
+    "port": "5060"
+  }'
+```
+
+```json Response (201)
+{
+  "status_code": 201,
+  "message": "Trunk created successfully.",
+  "data": { "id": 21, "name": "LiveKit trunk", "sip_url": "sip:<project-id>.sip.livekit.cloud", "transport": "tcp", "port": "5060", "active": true }
+}
+```
+
+<Card title="Create Trunk reference" icon="circle-plus" href="/telephony/trunks/create-trunk">
+  All request fields (`sip_url`, `auth_username`, `auth_password`, `transport`, `port`, `source_ips`).
+</Card>
+
+## 3. Attach your number to the trunk
+
+Map the number from step 1 (its `id`) to the trunk from step 2 (its `id`). The response
+returns the **origin endpoint** - the address + creds you use in LiveKit.
+
+```bash cURL
+curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/21/attach-numbers/ \
+  -H "Authorization: Token $UNPOD_TOKEN" \
+  -H "Org-Handle: $ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{ "number_ids": [501] }'
+```
+
+```json Response (201)
+{
+  "status_code": 201,
+  "message": "Numbers mapped to trunk.",
+  "data": {
+    "trunk_id": 21,
+    "origin_endpoint": {
+      "ingress": "sip:sip-lb1.unpod.tel",
+      "dids": ["+15551234567"],
+      "accepted_source_ips": [],
+      "region": "ap-south"
+    }
+  }
+}
+```
+
+The `origin_endpoint.ingress` (plus the trunk's `auth_username` / `auth_password`) is what
+you enter when creating the LiveKit outbound trunk.
+
+<Card title="Attach Numbers reference" icon="link" href="/telephony/trunks/attach-numbers">
+  Path params, request body, and the full origin-endpoint response.
+</Card>
+
+## Configure the LiveKit side
+
+The Unpod side is done. LiveKit's SIP API is served over **Twirp HTTP** at
+`{LIVEKIT_URL}/twirp/livekit.SIP/<Method>`. Authenticate with a **LiveKit access token**
+(JWT with a SIP admin grant) - mint one with `lk token create --sip-admin` or a server SDK.
+
+```bash Env
+export LIVEKIT_URL="https://<project-id>.livekit.cloud"
+export LIVEKIT_TOKEN="<access-token-with-sip-admin>"
+```
+
+### 4. Create the inbound trunk
+
+```bash cURL
+curl -X POST "$LIVEKIT_URL/twirp/livekit.SIP/CreateSIPInboundTrunk" \
+  -H "Authorization: Bearer $LIVEKIT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "trunk": {
+      "name": "Unpod inbound",
+      "numbers": ["+15551234567"]
+    }
+  }'
+```
+
+```json Response
+{ "sip_trunk_id": "ST_inbound123", "name": "Unpod inbound", "numbers": ["+15551234567"] }
+```
+
+### 5. Create the outbound trunk
+
+```bash cURL
+curl -X POST "$LIVEKIT_URL/twirp/livekit.SIP/CreateSIPOutboundTrunk" \
+  -H "Authorization: Bearer $LIVEKIT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "trunk": {
+      "name": "Unpod outbound",
+      "address": "sip-lb1.unpod.tel",
+      "destination_country": "US",
+      "transport": "SIP_TRANSPORT_TCP",
+      "numbers": ["+15551234567"],
+      "auth_username": "<unpod trunk username>",
+      "auth_password": "<unpod trunk password>"
+    }
+  }'
+```
+
+```json Response
+{ "sip_trunk_id": "ST_outbound456", "name": "Unpod outbound", "address": "sip-lb1.unpod.tel" }
+```
+
+`trunk.address` = your `origin_endpoint.ingress` host (no `sip:` prefix).
+
+### 6. Create the dispatch rule
+
+```bash cURL
+curl -X POST "$LIVEKIT_URL/twirp/livekit.SIP/CreateSIPDispatchRule" \
+  -H "Authorization: Bearer $LIVEKIT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "dispatch_rule": {
+      "rule": { "dispatchRuleIndividual": { "roomPrefix": "call-" } }
+    },
+    "trunk_ids": ["ST_inbound123"]
+  }'
+```
+
+```json Response
+{ "sip_dispatch_rule_id": "SDR_abc789", "trunk_ids": ["ST_inbound123"] }
+```
+
+<Note>
+The same calls are available via the **`lk` CLI** (`lk sip inbound create <file>`) and the
+server SDKs (Go `SIPClient`, JS `SipClient`, Python `sip_service`). Field shapes follow
+LiveKit's SIP proto - confirm in their API reference.
+</Note>
+
+<Card title="LiveKit SIP API reference" icon="external-link" href="https://docs.livekit.io/sip/api/">
+  Full trunk + dispatch-rule API and SDK usage (this is LiveKit's API).
+</Card>
+
+## Troubleshooting
+
+| Status | Meaning | Fix |
+|---|---|---|
+| `400` on `/trunks/` | Missing `sip_url` | Send your `sip:<project-id>.sip.livekit.cloud` |
+| `400` on attach | Number not in org | Use a valid `id` from **GET /numbers/** |
+| `401` | Bad Unpod token | Verify `Authorization: Token …` |
+| `403` | Wrong org | Verify the `Org-Handle` header |

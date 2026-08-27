@@ -1,0 +1,172 @@
+---
+title: "Testing"
+icon: 'flask-conical'
+description: "Test your conversations as pure functions - no audio, no infrastructure. Scripted LLMs for offline tests, replay and persona evals for regression."
+---
+
+## Why SuperDialog is easy to test
+
+SuperDialog is text in, text out. There is no audio to mock, no WebRTC room to
+spin up, no telephony to stub. Every dialog is a Python function that takes a
+string and returns a string. This is the killer feature vs. voice-coupled
+frameworks where tests need audio fixtures.
+
+## Setup
+
+```bash
+pip install pytest pytest-asyncio
+```
+
+```toml
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+```
+
+Or use `anyio` as specified in the project guidelines.
+
+## Offline tests with scripted LLMs
+
+The Playbook engine separates the **Talker** (`StreamsLLM`) and **Director**
+(`CompletesLLM`) seams, so you can run a conversation with **no network** by
+constructing `PlaybookAgent` with stub LLMs and asserting on
+`agent.runtime.state` - slots, checkpoint, ended/outcome.
+
+```python
+import pytest
+from superdialog.playbook import Playbook, PlaybookAgent, httpx_http
+
+@pytest.mark.asyncio
+async def test_kyc_collects_aadhaar():
+    agent = PlaybookAgent(
+        playbook=Playbook.load("kyc.yaml"),
+        talker_llm=stub_talker,       # scripted StreamsLLM
+        director_llm=stub_director,   # scripted CompletesLLM
+        http=httpx_http,
+    )
+    reply = await agent.turn("My Aadhaar starts with 1234.")
+    assert reply.text
+    assert agent.runtime.state.slot_value("aadhaar_last_4") == "1234"
+```
+
+`agent.runtime.state` is the folded `ConversationState`: `slot_value(key)`,
+`confirmed(keys)`, `checkpoint_id`, `ended`, `outcome`.
+
+## Live smoke test through the entry point
+
+For an end-to-end check against a real model, use the public entry point with a
+cheap, fast model:
+
+```python
+import pytest
+from superdialog import DialogMachine
+
+@pytest.mark.asyncio
+async def test_greets_customer():
+    agent = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")
+    reply = await agent.turn("Hello")
+    assert reply.text  # non-empty response
+
+@pytest.mark.asyncio
+async def test_kyc_collects_aadhaar_live():
+    agent = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")
+    await agent.turn("I need to verify my KYC.")
+    reply = await agent.turn("My Aadhaar ends in 1234.")
+    state = agent.state   # {"checkpoint": ..., "slots": ..., "ended": ...}
+    assert "1234" in reply.text or state["slots"].get("aadhaar_last_4") == "1234"
+```
+
+## Replay - regression without re-running models
+
+Because the event log is the source of truth, you can re-run the Director over a
+recorded session under a (possibly edited) playbook and diff its decisions -
+LLM-free regression evidence for prompt or model changes:
+
+```python
+from superdialog.playbook import EventLog, Playbook, replay
+
+log = EventLog.from_jsonl(open("session.jsonl").read())
+report = await replay(log, Playbook.load("kyc.yaml"), director_llm)
+assert report.stable           # every replayed decision matched the recording
+```
+
+## Persona evals
+
+Drive scripted personas through a fresh agent per run and score completion, slot
+accuracy, and turns-per-checkpoint:
+
+```python
+from superdialog.playbook import PersonaSpec, run_eval
+
+personas = [PersonaSpec(
+    name="impatient", traits="gives all details at once",
+    goal="verify KYC", max_turns=10, opening="Hi",
+    ground_truth_slots={"aadhaar_last_4": "1234"},
+)]
+
+report = await run_eval(
+    playbook_factory=lambda: make_agent(),
+    personas=personas, user_llm=user_llm, n=1,
+)
+assert report.completion_rate == 1.0
+assert report.mean_slot_accuracy > 0.9
+```
+
+The CLI wraps the same loop: `superdialog optimize --playbook kyc.yaml` runs
+paired evals and proposes prose-only improvements.
+
+## Testing tools
+
+```python
+from superdialog.playbook import Playbook, PlaybookAgent, httpx_http
+
+@pytest.mark.asyncio
+async def test_tool_is_called():
+    calls = []
+
+    async def lookup_customer(args, state) -> dict:
+        """Look up customer by ID."""
+        calls.append(args["customer_id"])
+        return {"name": "Ravi Kumar", "verified": True}
+
+    agent = PlaybookAgent(
+        playbook=Playbook.load("kyc.yaml"),
+        talker_llm=stub_talker, director_llm=stub_director, http=httpx_http,
+        python_tools={"lookup_customer": lookup_customer},
+    )
+    await agent.turn("My customer ID is CUST-999.")
+    assert "CUST-999" in calls
+```
+
+## Legacy graph engine
+
+Same pattern with `engine="flow"`, asserting on the machine's `state` property
+(which returns `{"node_id": ..., "slots": ...}` on the graph engine):
+
+```python
+import pytest
+from superdialog import DialogMachine, Flow, FlowSet
+
+@pytest.mark.asyncio
+async def test_kyc_collects_aadhaar_flow():
+    dm = DialogMachine(Flow.load("kyc.json"), llm="anthropic/claude-haiku-4-5", engine="flow")
+    await dm.turn("My Aadhaar ends in 1234.")
+    assert dm.state["slots"].get("aadhaar_last_4") == "1234"
+
+@pytest.mark.asyncio
+async def test_switch_to_escalation():
+    flowset = FlowSet({"main": main_flow, "escalation": escalation_flow})
+    dm = DialogMachine(flowset, llm="anthropic/claude-haiku-4-5", engine="flow")
+    dm.switch_flow("escalation")
+    reply = await dm.turn("I want to speak to a manager.")
+    assert "escalat" in reply.text.lower() or "manager" in reply.text.lower()
+```
+
+Set `traversal_dir` on a graph-engine machine to capture each completed session
+as JSON for an eval corpus.
+
+## Tips
+
+- Use a cheap model (`claude-haiku-4-5`) in live tests to keep costs and latency low
+- Use scripted Talker/Director LLMs for deterministic, offline assertions
+- Keep playbook YAML / flow JSON in version control so tests are reproducible
+- Build a corpus from recorded event logs, then use `replay` / `run_eval` / `superdialog eval` for regression

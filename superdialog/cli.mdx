@@ -1,0 +1,282 @@
+---
+title: "CLI Reference"
+icon: 'terminal'
+description: "All superdialog command-line commands - the playbook-default workflow first, the legacy flow-graph commands second."
+---
+
+## Install
+
+The CLI is included when you install SuperDialog:
+
+```bash
+pip install superdialog
+superdialog --help
+```
+
+The default commands operate on **playbooks** and run on the Playbook engine.
+The `flow` sub-tree (and `--mode flow`) is the legacy graph path.
+
+---
+
+## `superdialog generate`
+
+The default creation path. Bootstrap a validated simple-format **playbook** from
+a plain-language prompt.
+
+```bash
+superdialog generate "Confirm KYC. Ask for Aadhaar last 4. Confirm DOB." \
+  --output kyc.yaml
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--output` | `playbook.yaml` | Output file path |
+| `--llm` | `openai/gpt-4.1-mini` | Model URI used to generate |
+| `--from` | - | Read the prompt from a file instead of inline |
+
+The output is parsed and compiled before it's written, so anything `generate`
+produces is loadable. **When to use:** start every new agent here, then refine
+the YAML by hand.
+
+---
+
+## `superdialog chat`
+
+Interactive terminal chat. No infrastructure, no Unpod account, no phone number.
+Runs on the **Playbook engine**; defaults to `./playbook.yaml`, then
+`./flow.json` - any format is auto-detected.
+
+```bash
+superdialog chat kyc.yaml
+```
+
+```
+> Hello, I need to verify my KYC.
+Agent: Sure! Could you please provide the last 4 digits of your Aadhaar?
+> 1234
+Agent: Thank you. Could you also confirm your date of birth?
+[checkpoint=collect_dob ended=False]
+```
+
+The per-turn status line names the live checkpoint, so you can watch outcomes
+advance.
+
+| Flag | Default | Description |
+|---|---|---|
+| `--flow` | `playbook.yaml` → `flow.json` | Path to the artifact (any format) |
+| `--llm` | `openai/gpt-4.1-mini` | Model URI for the runtime |
+| `--mode` | `playbook` | `playbook` (default) or `flow` (legacy graph engine) |
+| `--adapter` | `toolcall` | Applies **only in `--mode flow`**: `toolcall` (1 call/turn) or `llm` (2 calls/turn) |
+| `--traversal-dir` | - | Save session JSON on completion (graph engine) |
+
+**When to use:** during playbook (or legacy flow) design, prompt tuning, and
+eval-dataset collection - before any voice infrastructure is involved.
+
+The CLI reads `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` from your environment.
+
+### The build loop
+
+<Steps>
+  <Step title="Generate">
+    `superdialog generate` a playbook from a plain-language prompt.
+  </Step>
+  <Step title="Chat">
+    Full end-to-end dialog in the terminal - same logic, same LLM calls, same
+    tool execution, nothing but Python.
+  </Step>
+  <Step title="Iterate">
+    Refine the prose, slots, and advance rules. Repeat.
+  </Step>
+  <Step title="Embed">
+    Only once it behaves correctly, wire it into
+    [LiveKit](/superdialog/embedding-guides/livekit),
+    [PipeCat](/superdialog/embedding-guides/pipecat), a
+    [FastAPI endpoint](/superdialog/embedding-guides/fastapi), or
+    [Unpod Voice Infra](/superdialog/embedding-guides/unpod-voice).
+  </Step>
+</Steps>
+
+### Which engine am I on?
+
+The status line tells you:
+
+| Status line | Engine |
+|---|---|
+| `[checkpoint=<id> ended=<bool>]` | Playbook engine (the default) |
+| `[<ms>ms]` | Legacy DialogMachine (`--mode flow`) |
+
+A bare `--flow x.json` shows the checkpoint form - flow JSON is compiled onto
+the Playbook engine.
+
+### REPL loop in Python
+
+For more control - custom tools, a split Talker/Director, or to inspect the
+event log:
+
+```python
+import asyncio
+from superdialog import DialogMachine
+
+agent = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")  # any format
+
+async def main():
+    while True:
+        user = input("> ")
+        if user.strip() in ("quit", "exit"):
+            break
+        reply = await agent.turn(user)
+        print(reply.text)
+
+asyncio.run(main())
+```
+
+<Note>
+**Inspect the event log.** Drop to `PlaybookAgent` and
+`agent.event_log.to_jsonl()` is the audit artifact - every utterance, slot
+write, advance, and tool call, replayable offline:
+
+```python
+from superdialog.playbook import Playbook, PlaybookAgent, httpx_http
+
+agent = PlaybookAgent(
+    playbook=Playbook.load("kyc.yaml"),
+    talker_llm=talker, director_llm=director, http=httpx_http,
+)
+```
+</Note>
+
+<Note>
+**Legacy graph engine in code.** Construct
+`DialogMachine(Flow.load("kyc.json"), llm=..., engine="flow",
+traversal_dir="./traversal_history")` and drive the same loop - see
+[Traversal history](#traversal-history-graph-engine).
+</Note>
+
+---
+
+## `superdialog optimize`
+
+Reflective prose optimizer: paired persona evals score targeted, prose-only
+edits and emit improved YAML **in your source format**.
+
+```bash
+superdialog optimize --playbook kyc.yaml
+```
+
+It generates persona suites, runs paired evals (before/after), makes prose-only
+edits to `guidance` / `say`, and writes back improved YAML. **When to use:** to
+close the run → eval → improve loop without hand-tuning prompts.
+
+---
+
+## `superdialog playbook`
+
+Migration and direct playbook operations.
+
+```bash
+superdialog playbook compile kyc.json          # compile legacy flow JSON → playbook YAML
+superdialog playbook chat --playbook kyc.yaml  # REPL against an existing playbook
+superdialog playbook run kyc.json              # compile a flow and immediately chat
+```
+
+**When to use:** migrating an existing flow graph to a playbook, or running a
+playbook explicitly.
+
+---
+
+## `superdialog eval`
+
+A subcommand group: the **playbook-vs-vanilla A/B harness** plus the legacy
+single-session audit. Full guide: [A/B Evals](/superdialog/evals).
+
+```bash
+superdialog eval gen-dataset --playbook spa.yaml --n-probes 8     # build the dataset
+superdialog eval run --playbook spa.yaml --dataset spa.evalcases.yaml --out ./eval-out
+superdialog eval bench --playbook spa.yaml --models openai/gpt-4o-mini --max-turns 20  # one shot
+superdialog eval serve --playbook spa.yaml --port 8000           # OpenAI-compatible endpoint
+superdialog eval suite --config suites.yaml --tier smoke         # CI-able behavioral gate
+superdialog eval flow --flow kyc.json --traversal session.json   # legacy session audit
+```
+
+| Subcommand | Purpose |
+|---|---|
+| `gen-dataset` | Build `<playbook>.evalcases.yaml` (personas + probes) offline |
+| `run` | A/B both modes over a dataset, write `report.json` + `report.md` |
+| `bench` | One shot: gen dataset (if missing) + A/B every `--models` entry, one report dir each |
+| `serve` | Serve the playbook as an OpenAI-compatible endpoint for any benchmark |
+| `suite` | Run a suite registry as a CI gate; assert behavioral expectations (`--tier smoke\|full`, `--only`, `--force`) |
+| `flow` | Legacy: audit a recorded session (`--traversal`) or run a synthetic eval |
+
+`eval run` takes `--modes`, `--agent-model`, `--director-model`,
+`--talker-model`, `--judge-model`, `--user-model`, `--metrics`, and `--repeats` - see the [A/B Evals](/superdialog/evals) guide. (For playbook persona evals
+from Python, see `run_eval` in the
+[API Reference](/superdialog/api-reference#replay-and-the-eval-bridge).)
+
+---
+
+## `superdialog benchmark`
+
+A separate RAGAS + deterministic harness: replays a dataset's user turns at one
+or more models and scores **raw LLM vs with-SuperDialog** against ground truth
+in one big table.
+
+```bash
+superdialog benchmark --data universal --flow kyc.yaml --prompt raw_system.txt
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--data` | `universal` | Dataset short name or path to a `.jsonl` |
+| `--flow` | dataset's `playbook` | Playbook YAML to run |
+| `--prompt` | - | Raw-LLM system-prompt `.txt` (needed for the raw baseline) |
+| `--models` | `gpt-4o-mini,gpt-4.1-mini,claude-haiku` | Models to score |
+| `--sd-only` / `--raw-only` | - | Restrict to one side |
+| `--no-ragas` | - | Deterministic metrics only (no judge; fast/free) |
+| `--out` | - | Write the report table to this path |
+
+<Note>
+`benchmark` uses the RAGAS 0.2.x line (the `benchmark` extra), while the A/B
+`eval` harness uses RAGAS 0.4.3 (the `ragas` extra). They cannot co-install - see [A/B Evals → RAGAS](/superdialog/evals#ragas-is-optional-and-version-pinned).
+</Note>
+
+---
+
+## Legacy: flow graphs
+
+The `flow` sub-tree authors and inspects **flow graphs**. These still work;
+`superdialog generate` writes a playbook instead.
+
+```bash
+# Validate graph structure (unreachable nodes, missing edges, undefined slots)
+superdialog flow lint kyc.json
+
+# Render a Mermaid diagram of the graph
+superdialog flow draw kyc.json
+
+# Bootstrap a flow.json from a prompt (legacy; equivalent to create_dialog_flow)
+superdialog flow generate "Confirm KYC. Ask for Aadhaar last 4." \
+  --llm openai/gpt-5.1 --output kyc.json
+
+# Run the original graph runtime in the REPL
+superdialog chat kyc.json --mode flow
+```
+
+By default a flow JSON runs **compiled onto the Playbook engine** -
+`--mode flow` opts into the original graph runtime. See
+[Flows (legacy)](/superdialog/flows).
+
+---
+
+## Traversal history (graph engine)
+
+Any command running the legacy graph engine supports `--traversal-dir`. When
+set, a timestamped JSON file is written per completed session capturing every
+node visited, every turn, and all collected slot values:
+
+```bash
+superdialog chat kyc.json --mode flow --traversal-dir ./traversal_history
+```
+
+Use these files to build eval corpora, debug flow paths, and audit
+conversations. On the Playbook engine, the equivalent artifact is the
+event log (`agent.event_log.to_jsonl()`).

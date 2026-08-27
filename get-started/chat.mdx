@@ -1,0 +1,111 @@
+---
+title: 'Chat'
+icon: 'message-square'
+sidebarTitle: 'Chat'
+description: 'Your trained agent, over an OpenAI-compatible chat API. One URL swap.'
+---
+
+Like chat completions - except the model is your trained agent. A playbook +
+a small model trained on your use case, or any third-party model, served as
+one OpenAI-compatible endpoint. Text in, text out.
+
+## How it connects
+
+| Your stack | You swap | Unpod runs |
+|---|---|---|
+| LiveKit · Pipecat · Vapi · chat app | the LLM base URL (or the `llm=` slot) | agent, sessions, memory |
+
+## Go live in 3 steps
+
+### 1. Get an endpoint
+
+Build and publish a playbook in the [Playground](https://superdialog.unpod.ai/playground),
+then open **Deploy as Endpoint → Manage API Keys**. You get the endpoint, a
+model id (`public:PB_...`), and prefilled snippets. See
+[Publish & Share](/playbook/publish-and-share).
+
+### 2. Point your stack at it
+
+<Tabs>
+  <Tab title="Any OpenAI client">
+    ```bash
+    curl -X POST "https://inference.unpod.ai/v1/chat/completions" \
+      -H "Authorization: Bearer $UNPOD_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"model":"public:PB_7ZRMzCA1ojQ9LlcK","messages":[{"role":"user","content":"hi"}],"user":"sess_abc"}'
+    ```
+    Any OpenAI-compatible SDK works - swap base URL, key, and model. `user` is
+    your session id, so the conversation stays stateful across calls.
+  </Tab>
+  <Tab title="LiveKit">
+    ```python
+    import os
+
+    from livekit.agents import AgentSession
+    from livekit.plugins import openai
+
+    # The playbook holds the conversation state server-side, so pin a stable id
+    # per call -- without `user` every turn restarts the playbook at step 0.
+    session = AgentSession(
+        llm=openai.LLM(
+            model="playbook-5",
+            base_url="https://inference.unpod.ai/v1",
+            api_key=os.environ["UNPOD_API_KEY"],
+            user=ctx.room.name,
+        ),
+        stt=...,  # your STT
+        tts=...,  # your TTS
+    )
+    # No user message on the first turn -> the playbook speaks its own opener.
+    await session.generate_reply()
+    # HTTP 410 session_ended = the playbook hung up. Close the room; do not retry.
+    ```
+    The playbook is a hosted endpoint in the `llm=` slot - no agent code
+    in-process. Full guide:
+    [LiveKit embedding](/superdialog/embedding-guides/livekit).
+  </Tab>
+  <Tab title="Pipecat">
+    ```python
+    import os
+
+    from pipecat.pipeline.pipeline import Pipeline
+    from pipecat.services.openai.llm import OpenAILLMService
+
+    # The playbook holds the conversation state server-side. Pipecat has no `user`
+    # passthrough, so pin the stable id as a header -- without it every turn
+    # restarts the playbook at step 0.
+    llm = OpenAILLMService(
+        model="playbook-5",
+        base_url="https://inference.unpod.ai/v1",
+        api_key=os.environ["UNPOD_API_KEY"],
+        default_headers={"X-Session-Id": session_id},
+    )
+    pipeline = Pipeline([transport.input(), stt, llm, tts, transport.output()])
+    # HTTP 410 session_ended = the playbook hung up. End the pipeline; do not retry.
+    ```
+    Full guide: [Pipecat embedding](/superdialog/embedding-guides/pipecat).
+  </Tab>
+</Tabs>
+
+### 3. Test it
+
+`curl` the endpoint, or talk to the same agent in the
+[Playground Preview](https://superdialog.unpod.ai/playground?tab=preview).
+Same brain, same behaviour.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Chat API reference" icon="terminal" href="/playbook/api">
+    Full request/response reference.
+  </Card>
+  <Card title="Build a playbook" icon="wand-sparkles" href="/playbook/build-an-agent">
+    Describe the job; the playbook writes itself.
+  </Card>
+  <Card title="Embedding guides" icon="plug" href="/superdialog/embedding-guides/overview">
+    LiveKit, Pipecat, FastAPI, CLI.
+  </Card>
+  <Card title="What is a playbook?" icon="book-open" href="/playbook/what-is-a-playbook">
+    Persona, checkpoints, slots - the format.
+  </Card>
+</CardGroup>

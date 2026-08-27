@@ -1,0 +1,199 @@
+---
+title: 'Make Your First Phone Call'
+icon: 'phone-outgoing'
+description: 'Take the agent you built in the browser quickstart to a real inbound or outbound phone call.'
+---
+
+You built and talked to your agent in the browser in the
+[Quickstart](/get-started/quickstart). Now give it a phone number.
+
+Nothing about the agent changes - same `entrypoint`, same brain, same
+[`AgentRunner`](/get-started/core-concepts#agentrunner). The only new work is
+provisioning: telling Unpod which number routes to your agent.
+
+## Prerequisites
+
+- The agent from the [Quickstart](/get-started/quickstart), running
+- **A number in your account.** Provision one from the dashboard under
+  **Dev Platform → Numbers**. No carrier account, no SIP trunk - see
+  [Numbers](/speech-stack/numbers).
+
+<Note>
+Already own a number elsewhere? You can bring it over a
+[trunk](/speech-stack/numbers#trunks) instead. That is the only path that needs
+carrier credentials.
+</Note>
+
+## Step 1 - Provision the number
+
+Provisioning uses the **Management API** - the REST half of the [SDK](https://github.com/unpod-ai/unpod-python-sdk), reached
+through `AsyncClient`. It reads `UNPOD_API_KEY` and derives its REST endpoint
+from `UNPOD_BASE_URL` (`https://<host>/platform`) - both set in the
+[Quickstart](/get-started/quickstart#step-2-set-two-keys).
+
+If you need one-off overrides in code, pass `base_url=` to `AsyncClient` or
+`AgentRunner`; those arguments win over `.env` for that process only.
+
+Run this once to pick a voice profile, create the pipe, and attach a free
+number from your account:
+
+```python
+# setup.py - run once to provision your phone number
+import asyncio
+from unpod import AsyncClient
+
+async def setup() -> None:
+    async with AsyncClient() as client:
+        # 1. Pick a voice profile from the read-only catalog.
+        profiles = await client.voice_profiles.list(language="en")
+        if not profiles:
+            print("No voice profiles found.")
+            return
+        vp = profiles[0]
+        print(f"Using voice profile: {vp.name} ({vp.profile_id})")
+
+        # 2. Create the Speech Pipe. agent_id MUST match your AgentRunner.
+        pipe = await client.pipes.create(
+            name="browser-agent",
+            voice_profile=vp.name,        # name (case-insensitive) or profile_id
+            agent_id="browser-playground",  # must match AgentRunner's agent_id
+            recording=True,
+            max_call_duration_s=600,
+        )
+        print(f"Created Speech Pipe: {pipe.pipe_id}")
+
+        # 3. Find a number in your account that is not attached yet.
+        numbers = await client.numbers.list(status="active")
+        free = [n for n in numbers if n.pipe_id is None]
+        if not free:
+            print("No free numbers - provision one under Dev Platform -> Numbers.")
+            return
+
+        # 4. Attach it to the pipe.
+        number = await client.numbers.attach(number_id=free[0].number_id, pipe_id=pipe.pipe_id)
+        print(f"Attached {number.number} -> Speech Pipe {pipe.pipe_id}")
+
+asyncio.run(setup())
+```
+
+What it does:
+
+1. **`voice_profiles.list()`** - pick a voice from the read-only catalog.
+2. **`pipes.create()`** - bind that voice to your `agent_id`.
+3. **`numbers.list()`** - find a number in your account with no pipe attached.
+4. **`numbers.attach()`** - route that number to the pipe.
+
+If step 3 finds nothing, provision a number from the dashboard first.
+
+<Accordion title="Bringing your own number instead">
+BYON numbers arrive over a trunk you register once, then sync into your account:
+
+```python
+summary = await client.numbers.sync()   # {"synced": int, "new": int}
+```
+
+Full setup: [Trunks](/speech-stack/numbers#trunks).
+</Accordion>
+
+<Note>
+The `agent_id` on the pipe (`"browser-playground"`) is the same string your
+`AgentRunner` registers under in the Quickstart. They must match exactly, or
+inbound calls never reach your runner. See
+[IDs You'll Meet](/get-started/core-concepts#ids-youll-meet).
+</Note>
+
+## Step 2 - Answer an inbound call
+
+Same shape as the Quickstart agent - one `entrypoint`, one `AgentRunner`. The
+brain here is SuperDialog's `LLMAgent` instead of the Anthropic adapter; either
+works, and nothing about the call path changes:
+
+```python
+# agent.py - standalone runner, no playground server needed
+import os
+from unpod import AgentRunner, CallContext
+from superdialog import LLMAgent
+
+async def entrypoint(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = LLMAgent(
+        llm="anthropic/claude-haiku-4-5-20251001",
+        system_prompt="You are a helpful voice assistant. Keep answers under 3 sentences.",
+    )
+    await ctx.session.run()
+
+def build_runner() -> AgentRunner:
+    return AgentRunner(
+        entrypoint=entrypoint,
+        agent_id=os.getenv("AGENT_ID", "browser-playground"),
+        # base_url and api_key derive from UNPOD_BASE_URL / UNPOD_API_KEY
+        # unless you pass explicit args here.
+    )
+
+if __name__ == "__main__":
+    build_runner().start()   # blocking
+```
+
+Start the runner:
+
+```bash
+python agent.py
+```
+
+The runner connects to the orchestrator and waits. Now call the number you
+attached. Unpod recognises the number, looks up its pipe, sees the pipe's
+`agent_id`, and dispatches the call to your waiting runner. Your agent answers
+and speaks - the same brain you heard in the browser, now on the phone.
+
+<Note>
+The runner does not need to restart when you provision the number. Run `setup.py`
+once, then leave the runner up; it serves every inbound call until you stop it.
+</Note>
+
+## Step 3 - Make an outbound call (optional)
+
+Inbound is one direction. To have your agent place a call, use `calls.create`
+with the pipe and the destination number:
+
+```python
+# call_out.py - dispatch an outbound call
+import asyncio
+from unpod import AsyncClient
+
+PIPE_ID = "pipe_..."   # from setup.py
+TO_NUMBER = "+19995550001"
+
+async def make_call() -> None:
+    async with AsyncClient() as client:
+        call = await client.calls.create(
+            pipe_id=PIPE_ID,
+            to_number=TO_NUMBER,
+        )
+        print(f"Outbound call {call.call_id} -> {TO_NUMBER} (status: {call.status})")
+
+asyncio.run(make_call())
+```
+
+`calls.create` enqueues the call and returns immediately with `status="pending"`.
+Unpod dials out, then dispatches the answered call to the same running
+`AgentRunner` - your `entrypoint` handles outbound exactly as it handles inbound.
+
+<Note>
+You can dispatch by agent instead of by pipe: pass `agent_id=` to
+`calls.create` and omit `pipe_id`. Unpod resolves a pipe bound to that
+`agent_id` server-side (`agent_id` wins if you pass both). `to_number` is always
+required.
+</Note>
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Production setup" icon="list-checks" href="/speech-stack/setup-checklist">
+    The full path: trunks, numbers, recording, and deployment.
+  </Card>
+  <Card title="Outbound calls" icon="phone-outgoing" href="/speech-stack/outbound-calls">
+    Campaigns, dynamic instructions, and per-call data.
+  </Card>
+  <Card title="Use your own agent" icon="bot" href="/speech-stack/bring-your-agent">
+    Plug in LangChain, an HTTP endpoint, or any brain you already have.
+  </Card>
+</CardGroup>

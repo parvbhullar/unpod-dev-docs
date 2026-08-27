@@ -1,0 +1,109 @@
+---
+title: "LiveKit"
+icon: 'video'
+description: "Plug SuperDialog into a LiveKit agent as the LLM brain."
+---
+
+## How it works
+
+SuperDialog ships a `DialogMachineLLM` plugin (named for the legacy engine, but
+it accepts **any** superdialog `Agent`) that wires an agent into a LiveKit
+`Agent` via the `llm=` parameter - the same pattern LiveKit's own
+`livekit-plugins-langchain` uses.
+
+LiveKit's `AgentSession` drives the conversation (STT → LLM → TTS).
+`DialogMachineLLM` sits in the LLM slot and translates between LiveKit's
+`ChatContext` and SuperDialog's `turn()` API. On the Playbook engine (the
+default), **streaming is real**: the Talker's tokens reach TTS as they are
+generated, and a barge-in (the host aborting the stream mid-utterance) interrupts
+speech, never the state machine - the Director's decision still lands.
+
+## Install
+
+```bash
+pip install superdialog livekit-agents
+```
+
+## Minimal example
+
+```python
+from livekit.agents import Agent, AgentSession, JobContext, WorkerOptions, cli
+from superdialog import DialogMachine
+from superdialog.adapters.livekit import DialogMachineLLM
+
+dm = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")  # any format
+
+async def entrypoint(ctx: JobContext):
+    agent = Agent(llm=DialogMachineLLM(dm))
+    await AgentSession().start(agent=agent, room=ctx.room)
+
+if __name__ == "__main__":
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
+```
+
+## With STT and TTS
+
+```python
+from livekit.agents import Agent, AgentSession, JobContext, WorkerOptions, cli
+from livekit.plugins import deepgram, cartesia
+from superdialog import DialogMachine
+from superdialog.adapters.livekit import DialogMachineLLM
+
+dm = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")
+
+async def entrypoint(ctx: JobContext):
+    await ctx.connect()
+    agent = Agent(
+        llm=DialogMachineLLM(dm),
+        stt=deepgram.STT(),
+        tts=cartesia.TTS(),
+    )
+    await AgentSession().start(agent=agent, room=ctx.room)
+
+if __name__ == "__main__":
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
+```
+
+## Per-call dialog machine
+
+For production, create a fresh agent per call so conversation state is isolated:
+
+```python
+from superdialog import DialogMachine, PythonTool
+
+async def entrypoint(ctx: JobContext):
+    await ctx.connect()
+
+    # Fresh agent per call
+    dm = DialogMachine(
+        "kyc.yaml",
+        llm="anthropic/claude-haiku-4-5",
+        tools=[PythonTool.of(lookup_customer)],
+    )
+
+    agent = Agent(llm=DialogMachineLLM(dm))
+    await AgentSession().start(agent=agent, room=ctx.room)
+```
+
+<Note>
+**Advanced / legacy.** Pass a `PlaybookAgent` for explicit Talker/Director LLMs,
+or `DialogMachine(Flow.load("kyc.json"), llm="anthropic/claude-opus-4-7",
+engine="flow")` for the legacy graph engine - same adapter, same wiring.
+Voice-event plumbing (feeding silence timeouts into `agent.runtime.on_external`)
+is roadmap; today the adapter covers the text path.
+</Note>
+
+## Mid-call context injection
+
+Push system instructions during a call with `assist`:
+
+```python
+# After detecting customer sentiment, inject context
+dm.assist("The customer sounds frustrated. Prioritise empathy and resolution speed.")
+```
+
+## When to use this adapter
+
+- You're already using LiveKit for media routing (rooms, WebRTC, recording)
+- You want SuperDialog to manage turn-by-turn dialog logic
+- You need a clean separation between media transport (LiveKit) and conversation logic (SuperDialog)

@@ -1,0 +1,284 @@
+---
+title: 'Outbound Calls'
+icon: 'phone-outgoing'
+description: 'Initiate calls programmatically from your backend - campaigns, callbacks, and reminders.'
+---
+
+## Overview
+
+Outbound calls are calls your system initiates - rather than waiting for a caller to ring in. Common use cases:
+- Appointment reminders
+- Sales outreach campaigns
+- Callback queues
+- Alert notifications
+
+Outbound calls use the same Speech Pipe, voice profile, and `AgentRunner` infrastructure as inbound calls. The difference is you trigger them via the management API.
+
+---
+
+## Prerequisites
+
+- A configured Speech Pipe with a voice profile - see [Speech Pipe](/speech-stack/pipes)
+- A phone number attached to that Speech Pipe - see [Numbers](/speech-stack/numbers)
+- A running `AgentRunner` process for the Speech Pipe
+
+---
+
+## Initiating an Outbound Call
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        call = await client.calls.create(
+            pipe_id="pipe_...",
+            to_number="+14155550100",    # E.164 format
+            from_number="+18005551234",  # optional if a number is attached to the Speech Pipe
+            instructions="This is a reminder call for a dental appointment.",
+            data={
+                "patient_name": "Jane Smith",
+                "appointment_date": "2026-06-10",
+                "appointment_time": "09:30 AM",
+                "doctor": "Dr. Patel",
+            },
+        )
+        print("Call initiated:", call.call_id, call.status)
+        # status is "pending" - calls.create() enqueues the call and returns
+        # immediately. The call is dispatched asynchronously once the account
+        # has free concurrency. Poll GET /calls/{id} (or use hooks) to watch
+        # it advance to ringing -> active -> completed. See Call Lifecycle.
+
+asyncio.run(main())
+```
+
+<Note>
+`calls.create()` is asynchronous: it enqueues the call and returns a record
+with `status="pending"`. The call is dispatched on a worker as soon as your
+account has free concurrency. See [Call Lifecycle](/speech-stack/call-lifecycle) for
+the full status progression and how to poll for completion.
+</Note>
+
+### `calls.create()` parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `to_number` | `str` | Yes | Destination number (E.164) |
+| `agent_id` | `str \| None` | Conditional | Agent to route the call to. Takes priority over `pipe_id`; when set, the platform resolves the pipe bound to that agent server-side |
+| `pipe_id` | `str \| None` | Conditional | Speech Pipe to use. Provide `agent_id` **or** `pipe_id` (`agent_id` wins if both are given) |
+| `from_number` | `str` | No | Caller ID. If omitted, Unpod uses a number attached to the Speech Pipe |
+| `instructions` | `str \| None` | No | Runtime instruction override for this call |
+| `data` | `dict \| None` | No | Arbitrary metadata passed to your entrypoint via `ctx.data` |
+
+---
+
+## Accessing Outbound Data in Your Entrypoint
+
+The `data` and `instructions` you pass to `calls.create()` are available on the `CallContext`:
+
+```python
+from superdialog import DialogMachine
+from unpod import AgentRunner, CallContext
+
+async def handle_call(ctx: CallContext) -> None:
+    # Available for both inbound and outbound calls
+    print(ctx.direction)        # "outbound"
+    print(ctx.instructions)     # "This is a reminder call..."
+    print(ctx.data)             # {"patient_name": "Jane Smith", ...}
+
+    # Inject context into the dialog machine
+    patient_name = ctx.data.get("patient_name", "there")
+    appt_date = ctx.data.get("appointment_date", "soon")
+    appt_time = ctx.data.get("appointment_time", "")
+
+    ctx.session.dialog_machine = DialogMachine(
+        "reminder.yaml",
+        llm="anthropic/claude-haiku-4-5",
+    )
+    # Inject the personalization as an assist directive
+    ctx.session.dialog_machine.assist(
+        f"You are calling {patient_name}. "
+        f"Their appointment is on {appt_date} at {appt_time}. "
+        f"Confirm they will attend, or reschedule if needed."
+    )
+
+    await ctx.session.run()
+
+runner = AgentRunner(
+    entrypoint=handle_call,
+    agent_id="my-agent",
+)
+runner.start()
+```
+
+---
+
+## Checking Call Status
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        call = await client.calls.get("cal_...")
+        print(call.call_id, call.status, call.direction)
+        # status: "pending", "ringing", "active", "completed", "failed", "cancelled"
+
+asyncio.run(main())
+```
+
+### Call fields
+
+| Field | Type | Description |
+|---|---|---|
+| `call_id` | `str` | Unique call ID (`cal_...`) |
+| `status` | `str` | `pending`, `ringing`, `active`, `completed`, `failed`, `cancelled` |
+| `direction` | `str` | `inbound` or `outbound` |
+| `to_number` | `str` | Destination number (E.164) |
+| `from_number` | `str \| None` | Caller ID used for the call |
+| `pipe_id` | `str` | Speech Pipe that handled the call |
+| `duration_s` | `float \| None` | Call duration in seconds (set once completed) |
+| `end_reason` | `str \| None` | Why the call ended - see [Call Lifecycle](/speech-stack/call-lifecycle#end-reasons) |
+
+---
+
+## Listing Calls
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        # All outbound calls for a Speech Pipe
+        calls = await client.calls.list(
+            pipe_id="pipe_...",
+            status="completed",
+        )
+        for c in calls:
+            print(c.call_id, c.to_number, c.status, c.duration_s)
+
+asyncio.run(main())
+```
+
+### `calls.list()` filters
+
+| Parameter | Values | Description |
+|---|---|---|
+| `status` | `pending`, `ringing`, `active`, `completed`, `failed`, `cancelled` | Filter by status |
+| `pipe_id` | `pipe_...` | Filter by Speech Pipe |
+
+---
+
+## Hanging Up an Active Call
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        await client.calls.hangup("cal_...")
+        print("Call terminated")
+
+asyncio.run(main())
+```
+
+---
+
+## Campaign Pattern: Batch Outbound
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+PIPE_ID = "pipe_..."
+FROM_NUMBER = "+18005551234"
+
+contacts = [
+    {"name": "Alice", "phone": "+14155550101", "appt": "June 10 9:30 AM"},
+    {"name": "Bob",   "phone": "+14155550102", "appt": "June 10 2:00 PM"},
+    {"name": "Carol", "phone": "+14155550103", "appt": "June 11 10:00 AM"},
+]
+
+async def dial_all(contacts: list[dict]) -> None:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        for contact in contacts:
+            call = await client.calls.create(
+                pipe_id=PIPE_ID,
+                to_number=contact["phone"],
+                from_number=FROM_NUMBER,
+                instructions=(
+                    f"Call {contact['name']} to confirm their appointment "
+                    f"on {contact['appt']}."
+                ),
+                data=contact,
+            )
+            print(f"Dialing {contact['name']}: {call.call_id}")
+            await asyncio.sleep(2)  # pace the campaign
+
+asyncio.run(dial_all(contacts))
+```
+
+<Warning>
+Batch dialing at high rates may trigger carrier spam filters. Use a sensible interval between calls and comply with local regulations (TCPA in the US, etc.).
+</Warning>
+
+---
+
+## Callback Queue Pattern
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def process_callback_queue(queue: list[dict]) -> None:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        for request in queue:
+            # Check if the Speech Pipe is not at capacity before dialing
+            # (AgentRunner handles capacity internally - orchestrator rejects if full)
+            call = await client.calls.create(
+                pipe_id="pipe_...",
+                to_number=request["phone"],
+                from_number="+18005551234",
+                instructions="This is a callback. The customer requested to be called back.",
+                data={"ticket_id": request["ticket_id"], "reason": request["reason"]},
+            )
+            await db.update_callback_request(
+                request["id"],
+                call_id=call.call_id,
+                status="dialing",
+            )
+```
+
+---
+
+## Retrieving Transcripts After a Call
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def get_transcript(session_id: str) -> None:
+    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+        session = await client.transcripts.get(session_id)
+        for entry in session.transcript:
+            print(f"[{entry.role}] {entry.content}")
+
+asyncio.run(get_transcript("sess_..."))
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Hooks & Events" icon="bell" href="/speech-stack/hooks-events">
+    Log outbound call data and react to call events in real time.
+  </Card>
+  <Card title="Speech Pipe" icon="bot" href="/speech-stack/pipes">
+    Configure Speech Pipes and voice profiles for outbound campaigns.
+  </Card>
+</CardGroup>

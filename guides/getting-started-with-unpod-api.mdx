@@ -1,0 +1,267 @@
+---
+title: 'Getting Started with the Unpod API'
+sidebarTitle: 'API Integration'
+description: 'Authenticate, create tasks, and trigger AI voice calls via the Unpod REST API - with real curl examples'
+icon: 'code'
+---
+
+<Info>
+**Last updated:** July 22, 2026 · **API version:** v2 · **Tested against:** `openapi.yaml` 2.0.0 · 8 min read
+</Info>
+
+<Warning>
+The legacy `https://api.unpod.ai/api/v1/` host and `Authorization: Bearer` scheme are **deprecated**. All current endpoints use the production host `https://unpod.ai/`, the `/api/v2/platform/` path prefix, and `Authorization: Token` authentication. See the [Authentication guide](/api/get-started/authentication).
+</Warning>
+
+---
+
+Unpod exposes a full REST API so you can build, automate, and integrate AI voice agents into any system - CRMs, helpdesks, internal tools, or custom workflows. This guide walks you through everything from getting your API key to making your first outbound call.
+
+## Prerequisites
+
+- An Unpod account at [unpod.ai](https://unpod.ai)
+- At least one configured AI agent
+- A telephony bridge with a phone number assigned
+- Your API key (from **AI Studio → API Keys**)
+
+---
+
+## Step 1: Authenticate
+
+All Unpod API requests use **Token** authentication. Add your API key to every request header. Many endpoints also require the `Org-Handle` header (your organization domain handle).
+
+```bash
+curl "https://unpod.ai/api/v2/platform/organizations/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle"
+```
+
+Response:
+
+```json
+{
+  "count": 3,
+  "status_code": 200,
+  "message": "Organizations fetched successfully",
+  "data": [
+    {
+      "id": 1,
+      "name": "Unpod TV",
+      "domain_handle": "unpod.tv",
+      "created_at": "2024-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+Keep your key secret - it has full access to your workspace.
+
+---
+
+## Step 2: Get Your Space Token
+
+Spaces are the core organizational unit in Unpod. Most API calls are scoped to a space.
+
+```bash
+curl "https://unpod.ai/api/v2/platform/spaces/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle"
+```
+
+Response:
+
+```json
+{
+  "count": 207,
+  "status_code": 200,
+  "message": "Spaces fetched successfully",
+  "data": [
+    {
+      "id": "sp_001",
+      "name": "Sales Outreach Q1",
+      "token": "8KZAMRAHSXXXXXXMAYNASMJC",
+      "agent_handle": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+      "created_at": "2026-01-10T08:00:00Z"
+    }
+  ]
+}
+```
+
+Save the `token` value - you'll use it to scope task and run lookups.
+
+---
+
+## Step 3: List Your Agents
+
+Fetch all agents configured in your organization:
+
+```bash
+curl "https://unpod.ai/api/v2/platform/agents/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle"
+```
+
+Response:
+
+```json
+{
+  "count": 94,
+  "status_code": 200,
+  "message": "Agents fetched successfully",
+  "data": [
+    {
+      "handle": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+      "name": "General Agentic",
+      "type": "Voice",
+      "state": "published",
+      "purpose": "Handle outbound sales calls"
+    }
+  ]
+}
+```
+
+Note the `handle` field of the agent (pilot) you want to use for calls.
+
+---
+
+## Step 4: Create a Task (Outbound Call)
+
+A **Task** triggers an outbound voice call from your AI agent to one or more contacts. Tasks are created inside a space; the request body takes the agent `pilot` handle and a `documents` array of contacts.
+
+```bash
+curl -X POST "https://unpod.ai/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/create/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pilot": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+    "context": "Call the lead and discuss the project requirements.",
+    "schedule": { "type": "now" },
+    "documents": [
+      {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "contact_number": "1234567890",
+        "context": "Follow up on proposal sent last week",
+        "labels": ["warm-lead", "webinar"]
+      }
+    ]
+  }'
+```
+
+Response:
+
+```json
+{
+  "status_code": 200,
+  "message": "Task Created Successfully",
+  "data": {
+    "run_id": "R74802366fe9011f0878d43cd8a99e069",
+    "task_ids": ["T74802367fe9011f0878d43cd8a99e069"],
+    "status": "pending"
+  }
+}
+```
+
+The API returns a `run_id` and `task_ids`. The agent will call the number within seconds.
+
+---
+
+## Step 5: Track the Run
+
+Once a task is created, Unpod creates a **Run** - the actual call execution. Poll runs in the space to track status:
+
+```bash
+curl "https://unpod.ai/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/runs/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle"
+```
+
+Response:
+
+```json
+{
+  "count": 9,
+  "status_code": 200,
+  "message": "Runs Fetched Successfully",
+  "data": [
+    {
+      "run_id": "Recac64fe03e911f1878d43cd8a99e069",
+      "run_mode": "prefect",
+      "status": "completed",
+      "created": "2026-02-07T05:57:45Z",
+      "modified": "2026-02-07T05:57:45Z"
+    }
+  ]
+}
+```
+
+For per-task detail (transcript, recording, outcome) within a run:
+
+```bash
+curl "https://unpod.ai/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/runs/Recac64fe03e911f1878d43cd8a99e069/tasks/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle"
+```
+
+---
+
+## Step 6: Fetch Call Logs
+
+After a call completes, retrieve call detail records (CDR) - including transcript, recording, and post-call analysis:
+
+```bash
+curl "https://unpod.ai/api/v2/platform/cdr/?call_type=outbound&page=1&page_size=20" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle"
+```
+
+Call logs include: duration, transcript, sentiment, outcome, and any extracted data from your agent's analysis config.
+
+---
+
+## Passing Context to Your Agent
+
+Use the per-contact `context` field (inside each `documents` item) or the task-level `context` to pass call-specific information. Your agent's system prompt can reference this data via template variables - useful for personalizing conversations:
+
+```json
+{
+  "context": "Q1 renewal outreach",
+  "documents": [
+    {
+      "name": "Jane",
+      "contact_number": "1234567890",
+      "context": "Premium tier customer, last order 2026-05-20"
+    }
+  ]
+}
+```
+
+---
+
+## Rate Limits
+
+| Plan | Calls per minute | Tasks per day |
+|------|-----------------|---------------|
+| Free | 5 | 50 |
+| Pro | 60 | 5,000 |
+| Enterprise | Custom | Unlimited |
+
+---
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book" href="/api/get-started/quickstart">
+    Full endpoint reference with request/response schemas.
+  </Card>
+  <Card title="Authentication Guide" icon="key" href="/api/get-started/authentication">
+    API key management and security best practices.
+  </Card>
+  <Card title="Agents API" icon="bot" href="/api/agent/overview">
+    List, inspect, and manage agents programmatically.
+  </Card>
+  <Card title="Runs & Executions" icon="activity" href="/api/execution/runs-overview">
+    Track call execution status and outcomes.
+  </Card>
+</CardGroup>

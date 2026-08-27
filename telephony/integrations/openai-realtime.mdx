@@ -1,0 +1,53 @@
+---
+title: 'OpenAI Realtime'
+icon: 'sparkles'
+description: 'OpenAI Realtime integration for Unpod - gPT-4o voice over SIP. Coming soon.'
+---
+
+<Note>
+**Coming soon.** OpenAI Realtime isn't a one-click provider in Unpod yet. Here's the planned
+model and what you can use today.
+</Note>
+
+**OpenAI Realtime** - GPT-4o voice over SIP.
+
+## How it will work
+
+OpenAI Realtime will bridge **SIP audio into the Realtime API** - speech in, GPT-4o voice out, over a standard Unpod trunk.
+
+<div className="uf-flow">
+  <div className="uf-node">
+    <span className="uf-ic">📞</span>
+    <span className="uf-t">Call</span>
+    <span className="uf-s">Inbound / outbound</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">SIP</span></div>
+  <div className="uf-node is-accent">
+    <span className="uf-ic">🔗</span>
+    <span className="uf-t">Unpod trunk</span>
+    <span className="uf-s">Routing + failover</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">route</span></div>
+  <div className="uf-node">
+    <span className="uf-ic">✨</span>
+    <span className="uf-t">GPT-4o voice</span>
+    <span className="uf-s">Realtime API</span>
+  </div>
+</div>
+
+## Available today
+
+<Tip>
+You can drive calls with OpenAI **today** via the [OpenAI adapter](/speech-stack/adapters#bundled-adapters) - wrap an `AsyncOpenAI` client as the brain.
+</Tip>
+
+## Want it sooner?
+
+<CardGroup cols={2}>
+  <Card title="Request early access" icon="bell" href="https://discord.gg/7kQ4ewNSHZ">
+    Ping us on Discord and we'll prioritise OpenAI Realtime.
+  </Card>
+  <Card title="Use a live provider" icon="blocks" href="/telephony/integrations/overview">
+    Vapi, LiveKit, Twilio and Daily are ready today.
+  </Card>
+</CardGroup>

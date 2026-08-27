@@ -1,0 +1,224 @@
+---
+title: 'Quickstart'
+icon: 'zap'
+description: 'Talk to your own voice agent in the browser in about 5 minutes. No phone number needed.'
+---
+
+Talk to your own agent in the browser. **No phone number, no carrier account.**
+You write the brain; Unpod runs microphone capture, speech-to-text,
+text-to-speech, and the audio bridge.
+
+Want a real phone call instead? Go to
+[Make your first phone call](/get-started/first-phone-call).
+
+## Prerequisites
+
+- Python 3.12+
+- An **SDK key** (`sk_...`) from [unpod.ai/api-keys](https://unpod.ai/api-keys/).
+  This is not the endpoint key the [Chat API](/playbook/api) uses - see
+  [Getting started](/get-started/getting-started#authentication).
+- An LLM provider key (any provider; this page uses Anthropic)
+
+## Step 1 - Install
+
+<Tabs>
+  <Tab title="pip">
+    ```bash
+    pip install "unpod[dialog]"
+    ```
+  </Tab>
+  <Tab title="uv">
+    ```bash
+    uv add "unpod[dialog]"
+    ```
+  </Tab>
+</Tabs>
+
+## Step 2 - Set two keys
+
+```bash .env
+UNPOD_API_KEY="sk_..."
+ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+That is everything the default setup needs. `UNPOD_API_KEY` authenticates you;
+the provider key is read by whichever LLM you plug in.
+
+<Warning>
+The SDK does not read `.env` by itself. Load it with `load_dotenv()` (as the
+snippets below do) or export the variables in your shell - either way, before
+you construct `AsyncClient()` or `AgentRunner()`, which is when the SDK reads
+them.
+</Warning>
+
+<Accordion title="Pointing at a local or self-hosted stack">
+Set these two instead of the defaults. `UNPOD_BASE_URL` does not work for local
+services.
+
+```bash
+UNPOD_SERVICE_BASE_URL=http://localhost:8000/platform
+UNPOD_ORCHESTRATOR_URL=ws://localhost:8000
+```
+
+The hosted default is `UNPOD_BASE_URL="api.unpod.ai"`. The SDK derives REST
+(`https://<host>/platform`) and the orchestrator (`wss://<host>`) from that one
+host, so you set it once.
+</Accordion>
+
+## Step 3 - Create a speech pipe
+
+A **pipe** ties a voice to your agent. Run this once:
+
+```python setup.py
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:
+        profiles = await client.voice_profiles.list(language="en")
+        pipe = await client.pipes.create(
+            name="Support Bot",
+            voice_profile=profiles[0].profile_id,
+            agent_id="my-support-agent",
+        )
+        print("Pipe ID:", pipe.pipe_id)
+
+asyncio.run(main())
+```
+
+What it does:
+
+1. **`voice_profiles.list()`** - the catalog of STT + TTS bundles. Pick any;
+   swap later without touching your agent. See
+   [Voice profiles](/speech-stack/voice-profiles).
+2. **`pipes.create()`** - binds that voice to an `agent_id`.
+
+<Note>
+**`agent_id` is a string you choose**, and it must be identical here and in your
+`AgentRunner` below. A mismatch is the most common reason a call never reaches
+your code.
+</Note>
+
+Save the printed `pipe_id` - Step 5 needs it.
+
+## Step 4 - Write the agent
+
+```python agent.py
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
+from anthropic import AsyncAnthropic
+from unpod import AgentRunner, CallContext
+from unpod.adapters import AnthropicAdapter
+
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = AnthropicAdapter(
+        client=AsyncAnthropic(),
+        model="claude-haiku-4-5-20251001",
+        system_prompt="You are Alex, a friendly support agent.",
+    )
+    await ctx.session.run()
+
+AgentRunner(entrypoint=handle_call, agent_id="my-support-agent").start()
+```
+
+What each part does:
+
+1. **`handle_call`** - runs once per conversation. `ctx` carries the call; the
+   `session` is how you act on it.
+2. **`ctx.session.dialog_machine`** - your brain. Any adapter works here:
+   Anthropic, OpenAI, LangChain, a plain HTTP endpoint, or a SuperDialog
+   playbook. See [Bring your agent](/speech-stack/bring-your-agent).
+3. **`session.run()`** - hands each transcribed turn to the brain and speaks
+   the reply back.
+4. **`AgentRunner(...).start()`** - registers with Unpod and waits for calls.
+   It reads `UNPOD_API_KEY` from the environment.
+
+<Accordion title="Use a SuperDialog playbook instead of a raw prompt">
+```python
+from superdialog import DialogMachine
+
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = DialogMachine(
+        "support.yaml", llm="anthropic/claude-haiku-4-5-20251001"
+    )
+    await ctx.session.run()
+```
+
+Checkpoints, slots, and tools instead of one long prompt - see
+[Thinking in playbooks](/superdialog/thinking-in-playbooks).
+</Accordion>
+
+## Step 5 - Talk to it
+
+Start the runner and leave it running:
+
+```bash
+python agent.py
+```
+
+You should see it register and wait for calls:
+
+```
+AgentRunner registered  agent_id=my-support-agent  transport=dial_out
+Waiting for calls...
+```
+
+Now open the Playground in your browser and press to talk:
+
+<Card title="Open the Playground" href="https://superdialog.unpod.ai/playground?tab=preview">
+  Microphone capture, the session token exchange, and the audio bridge - no
+  local UI to run.
+</Card>
+
+<Note>
+Prefer to keep it in the terminal? `superdialog playbook chat --playbook x.yaml`
+talks to a playbook with no infrastructure at all - see
+[CLI](/superdialog/cli).
+</Note>
+
+<Accordion title="Embedding the browser session in your own app">
+Your backend mints a short-lived token per user and the frontend connects with it:
+
+```python
+from unpod import AsyncClient
+
+async def get_session_token(pipe_id: str, user_id: str) -> str:
+    async with AsyncClient() as client:
+        token = await client.sessions.create_token(
+            pipe_id=pipe_id,
+            metadata={"user_id": user_id},
+        )
+        return token.token   # single-use; check token.expires_at
+```
+
+`@unpod/web-sdk` is **not yet published on npm**, so browser embedding is not
+available today. To run the local playground harness from source, see
+[Run it locally](/playbook/developer-setup).
+</Accordion>
+
+## What Unpod owns vs what you own
+
+| Unpod owns | You own |
+|---|---|
+| STT, TTS, voice profiles | The prompt or playbook |
+| Audio transport and the bridge | Tools and business logic |
+| Routing, threading, retries | Customer data and memory |
+| Numbers and telephony | Model choice |
+
+## Next
+
+<CardGroup cols={3}>
+  <Card title="Make a phone call" icon="phone" href="/get-started/first-phone-call">
+    Put this same agent on a real number.
+  </Card>
+  <Card title="Bring your own agent" icon="bot" href="/speech-stack/bring-your-agent">
+    LangChain, an HTTP webhook, or any brain you already have.
+  </Card>
+  <Card title="Ship it" icon="rocket" href="/speech-stack/deploy">
+    Capacity, scaling, and graceful shutdown.
+  </Card>
+</CardGroup>

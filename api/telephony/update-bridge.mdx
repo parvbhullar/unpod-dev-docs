@@ -1,5 +1,6 @@
 ---
 title: 'Update Bridge'
+icon: 'pencil'
 description: 'Update an existing telephony bridge configuration'
 openapi: 'PATCH /api/v2/platform/telephony/bridges/{slug}/'
 ---
@@ -12,7 +13,7 @@ openapi: 'PATCH /api/v2/platform/telephony/bridges/{slug}/'
   "message": "Bridge updated successfully.",
   "data": {
     "id": 314,
-    "name": "Sales Bridge — Updated",
+    "name": "Sales Bridge - Updated",
     "slug": "sales-bridge-001",
     "numbers": [
       {
@@ -62,7 +63,7 @@ You can get the bridge `slug` by hitting the [Get All Bridges](/api/telephony/ge
 
 ### Request Body
 
-All fields are optional — include only the fields you wish to update.
+All fields are optional - include only the fields you wish to update.
 
 | Field | Type   | Required | Description                     |
 |-------|--------|----------|---------------------------------|
@@ -123,7 +124,7 @@ const updateBridge = async (slug, updates) => {
 };
 
 // Example usage
-updateBridge('sales-bridge-001', { name: 'Sales Bridge — Updated' });
+updateBridge('sales-bridge-001', { name: 'Sales Bridge - Updated' });
 ```
 
 ```python Python
@@ -144,7 +145,7 @@ def update_bridge(slug: str, updates: dict):
     return data['data']
 
 # Example usage
-update_bridge('sales-bridge-001', {'name': 'Sales Bridge — Updated'})
+update_bridge('sales-bridge-001', {'name': 'Sales Bridge - Updated'})
 ```
 
 ```bash cURL
@@ -154,7 +155,7 @@ curl -X PATCH "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-0
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Sales Bridge — Updated"
+    "name": "Sales Bridge - Updated"
   }'
 ```
 
@@ -162,8 +163,8 @@ curl -X PATCH "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-0
 
 ## Best Practices
 
-1. **Partial Updates**: Only include fields you want to change — PATCH supports partial updates
-2. **Slug Immutable**: The `slug` cannot be changed after creation — use descriptive slugs from the start
+1. **Partial Updates**: Only include fields you want to change - PATCH supports partial updates
+2. **Slug Immutable**: The `slug` cannot be changed after creation - use descriptive slugs from the start
 3. **Verify Before Update**: Use [Get Bridge by Slug](/api/telephony/get-bridge-by-slug) to confirm the bridge exists before patching
 4. **Error Handling**: Handle 404 errors when the bridge slug is invalid or the bridge has been deleted
 5. **Security**: Keep API tokens secure and rotate them regularly

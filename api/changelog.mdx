@@ -1,0 +1,67 @@
+---
+title: 'API Changelog'
+sidebarTitle: 'Changelog'
+description: 'Version history, breaking changes, and migration notes for the Unpod REST API'
+icon: 'history'
+---
+
+<Info>
+**Last updated:** July 22, 2026 · **Current API version:** v2 · **Source of truth:** `openapi.yaml` 2.0.0
+</Info>
+
+This page tracks changes to the Unpod REST API. The current production API is **v2**, served from `https://unpod.ai/` under the `/api/v2/platform/` path prefix with `Token` authentication.
+
+## Conventions
+
+| Item | Value |
+|------|-------|
+| Production host | `https://unpod.ai/` |
+| Path prefix | `/api/v2/platform/` |
+| Authentication | `Authorization: Token <your-api-token>` |
+| Common headers | `Org-Handle` (many endpoints), `Product-ID`, `Content-Type: application/json` |
+
+---
+
+## v2 — Current
+
+**Status:** Active · Production
+
+- Production host standardized to `https://unpod.ai/`.
+- All endpoints served under `/api/v2/platform/`.
+- Authentication uses the `Token` scheme: `Authorization: Token <token>`.
+- Task creation is space-scoped: `POST /api/v2/platform/spaces/{space_token}/tasks/create/`, taking a `pilot` handle and a `documents` array of contacts.
+- Call detail records exposed at `/api/v2/platform/cdr/`.
+- Telephony numbers are read-only via the API (`GET /api/v2/platform/telephony/numbers/`); provisioning happens through the connected SIP provider / Dashboard.
+
+See the [Quickstart](/api/get-started/quickstart) and [Authentication](/api/get-started/authentication) for full details.
+
+---
+
+## v1 — Deprecated
+
+**Status:** Deprecated · Do not use for new integrations
+
+<Warning>
+The legacy `https://api.unpod.ai/api/v1/` host and `Authorization: Bearer` scheme are deprecated. Migrate to v2 (see below).
+</Warning>
+
+### v1 → v2 migration
+
+| Concern | v1 (deprecated) | v2 (current) |
+|---------|-----------------|--------------|
+| Host | `https://api.unpod.ai/` | `https://unpod.ai/` |
+| Path prefix | `/api/v1/` | `/api/v2/platform/` |
+| Auth header | `Authorization: Bearer <key>` | `Authorization: Token <key>` |
+| Org scoping | implicit | `Org-Handle` header |
+| List organizations | `GET /api/v1/organizations/` | `GET /api/v2/platform/organizations/` |
+| List spaces | `GET /api/v1/spaces/` | `GET /api/v2/platform/spaces/` |
+| List agents | `GET /api/v1/agents/` | `GET /api/v2/platform/agents/` |
+| Create task | `POST /api/v1/tasks/` (flat `agent_handle`/`phone_number` body) | `POST /api/v2/platform/spaces/{space_token}/tasks/create/` (`pilot` + `documents[]` body) |
+| List runs | `GET /api/v1/runs/` | `GET /api/v2/platform/spaces/{space_token}/runs/` |
+| Call logs | `GET /api/v1/call-logs/` | `GET /api/v2/platform/cdr/` |
+| Create bridge | `POST /api/v1/bridges/` | `POST /api/v2/platform/telephony/bridges/` (`name` + `slug`) |
+| Update bridge | `PATCH /api/v1/bridges/{slug}/` | `PATCH /api/v2/platform/telephony/bridges/{slug}/` |
+
+<Note>
+The self-hosted open-source stack exposes its own internal services under `/api/v1/` on `localhost:8000`. That is a separate surface from the hosted cloud platform API documented here — see [Self-Hosting](/platform/self-hosting/architecture).
+</Note>

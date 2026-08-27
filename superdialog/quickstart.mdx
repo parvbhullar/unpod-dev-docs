@@ -1,0 +1,169 @@
+---
+title: "Quickstart"
+icon: 'zap'
+description: "Install SuperDialog, generate a playbook from a prompt, and run your first conversation in under 5 minutes."
+---
+
+## Install
+
+```bash
+pip install superdialog
+```
+
+<Note>
+Source on GitHub: [unpod-ai/superdialog](https://github.com/unpod-ai/superdialog).
+</Note>
+
+Install only the extras you need:
+
+```bash
+pip install superdialog[livekit]    # LiveKit adapter
+pip install superdialog[pipecat]    # PipeCat adapter
+pip install superdialog[fastapi]    # FastAPI adapter + uvicorn
+pip install superdialog[ws]         # WebSocket runner
+pip install superdialog[mcp]        # MCP tool support
+pip install superdialog[langchain]  # LangChainAgent
+```
+
+## Step 1 - Generate a playbook from a prompt
+
+`superdialog generate` is the default creation path. It writes a validated
+**simple-format playbook** - prose steps plus a persona - that runs on the
+Playbook engine.
+
+```bash
+superdialog generate "Confirm a customer appointment. Ask if Friday 4pm works; \
+  offer 5pm as an alternative if not. Confirm before saving." \
+  --output appointment.yaml
+```
+
+The result is a human-readable, git-diffable YAML file you can edit by hand:
+
+```yaml
+goal: "Confirm the appointment and lock in a time."
+persona:
+  name: Ava
+  voice_style: "Warm and brief. One question at a time."
+  identity: "You are Ava, a scheduling assistant."
+playbook:
+  - id: greet
+    purpose: "Open the call."
+    say: "Greet the customer and confirm you're calling about their appointment."
+    done_when: "Customer is ready to confirm a time."
+  - id: confirm_time
+    purpose: "Lock in the slot."
+    say: "Ask if Friday 4pm works; offer 5pm if not."
+    collect: [chosen_time]
+    done_when: "Customer has agreed to a time."
+```
+
+<Note>
+Prefer Python? `from superdialog.playbook import generate_simple_playbook`
+returns the same validated YAML from an async call.
+</Note>
+
+## Step 2 - Build the runtime agent
+
+`DialogMachine` is the one entry point. Point it at your artifact and pick a
+model URI - it runs the Playbook engine by default.
+
+```python
+from superdialog import DialogMachine
+
+agent = DialogMachine(
+    "appointment.yaml",                 # any format: playbook, simple, or legacy flow JSON
+    llm="anthropic/claude-haiku-4-5",   # fast model for the speaking turn
+)
+```
+
+## Step 3 - Run a conversation
+
+```python
+import asyncio
+
+async def chat():
+    reply = await agent.turn("Hello, I'm calling about my appointment.")
+    print(reply.text)
+
+    reply = await agent.turn("Friday 4pm works for me.")
+    print(reply.text)
+
+asyncio.run(chat())
+```
+
+Or use the bundled CLI - no Python code needed:
+
+```bash
+superdialog chat appointment.yaml
+```
+
+The REPL runs on the Playbook engine and prints a per-turn status line
+(`[checkpoint=<id> ended=<bool>]`) so you can watch outcomes advance.
+
+## Step 4 - Add a tool
+
+On the Playbook engine, tools live in the playbook's **process layer** - HTTP
+or registered Python callables the Director runs off the speech path. For a
+quick local function, register it by id:
+
+```python
+from superdialog import DialogMachine
+
+async def lookup_customer(args, state) -> dict:
+    """Look up customer record by phone number."""
+    return await crm.get_by_phone(args["phone_number"])
+
+agent = DialogMachine(
+    "appointment.yaml",
+    llm="anthropic/claude-haiku-4-5",
+    tools=[...],   # see the Tools guide for HTTP / Python / MCP shapes
+)
+```
+
+See [Tools](/superdialog/tools) for declaring tools in the playbook, pipelines,
+and the legacy `DialogMachine(tools=[...])` bridge.
+
+## Step 5 - Deploy anywhere
+
+The same `agent` object drops into every host - the `Agent` protocol is the only
+contract:
+
+<CardGroup cols={2}>
+  <Card title="LiveKit" icon="phone" href="/superdialog/embedding-guides/livekit">
+    Plug in as an `Agent(llm=...)` plugin - real token streaming
+  </Card>
+  <Card title="PipeCat" icon="mic" href="/superdialog/embedding-guides/pipecat">
+    Drop in as a `FrameProcessor` in your pipeline
+  </Card>
+  <Card title="FastAPI" icon="server" href="/superdialog/embedding-guides/fastapi">
+    Mount a `/turn` endpoint for text chatbots
+  </Card>
+  <Card title="Unpod Voice" icon="cloud" href="/superdialog/embedding-guides/unpod-voice">
+    Connect via `WebSocketRunner` to Unpod infrastructure
+  </Card>
+</CardGroup>
+
+<Note>
+**Prefer a graph?** The legacy path still works:
+`superdialog flow generate "..." --output appointment.json` writes a flow graph,
+and `DialogMachine(Flow.load("appointment.json"), llm=..., engine="flow")` runs
+the original graph engine. See [Flows](/superdialog/flows). By default a flow
+JSON runs compiled on the Playbook engine - no `engine="flow"` needed.
+</Note>
+
+## What's next
+
+<CardGroup cols={2}>
+  <Card title="Thinking in Playbooks" icon="brain" href="/superdialog/thinking-in-playbooks">
+    The checkpoint mental model
+  </Card>
+  <Card title="Playbooks" icon="book" href="/superdialog/playbooks">
+    Author the simple and full formats
+  </Card>
+  <Card title="Architecture" icon="workflow" href="/superdialog/architecture">
+    Two engines, the Talker/Director runtime, and data flow
+  </Card>
+  <Card title="CLI Reference" icon="terminal" href="/superdialog/cli">
+    All `superdialog` commands
+  </Card>
+</CardGroup>

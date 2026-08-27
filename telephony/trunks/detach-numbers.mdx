@@ -1,0 +1,67 @@
+---
+title: 'Detach Numbers from Trunk'
+icon: 'unlink'
+description: 'Unmap one or more numbers from a SIP trunk'
+openapi: 'POST /api/v2/platform/telephony/trunks/{id}/detach-numbers/'
+---
+
+Unmap one or more numbers from this trunk. Detaching deletes the number's bridge mapping,
+fires deprovision, sets the number back to `NOT_ASSIGNED`, and releases channels.
+
+<Note>
+**Prerequisites:** API Token + Org-Handle. See [Authentication](/api/get-started/authentication).
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                |
+|---------------|--------|----------|----------------------------|
+| Authorization | string | Yes      | `Token <your-api-key>`     |
+| Org-Handle    | string | Yes      | Organization domain handle |
+| Content-Type  | string | Yes      | `application/json`         |
+
+### Path parameters
+
+| Name | Type    | Required | Description |
+|------|---------|----------|-------------|
+| id   | integer | Yes      | Trunk id    |
+
+### Request body
+
+| Field      | Type      | Required | Description           |
+|------------|-----------|----------|-----------------------|
+| number_ids | integer[] | Yes      | Numbers to unmap      |
+
+### Partial success
+
+Each `data.numbers` entry reports `ok`/`error`. A number that isn't mapped to this trunk
+returns `ok: false` with `"Number is not mapped to this trunk."`
+
+<ResponseExample>
+
+```json 200
+{
+  "status_code": 200,
+  "message": "Numbers unmapped from trunk.",
+  "data": {
+    "trunk_id": 21,
+    "numbers": [
+      { "number_id": 501, "ok": true }
+    ]
+  }
+}
+```
+
+```json 404
+{ "status_code": 404, "message": "Trunk not found." }
+```
+
+</ResponseExample>
+
+```bash cURL
+curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/trunks/21/detach-numbers/" \
+  -H "Authorization: Token <your-api-key>" \
+  -H "Org-Handle: <your-org-handle>" \
+  -H "Content-Type: application/json" \
+  -d '{"number_ids": [501]}'
+```

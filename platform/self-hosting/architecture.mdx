@@ -1,0 +1,170 @@
+---
+title: 'Platform Architecture'
+description: 'How the Unpod Open-Source CPAAS Platform is structured and how its components connect.'
+icon: 'layers'
+---
+
+## What This Is
+
+The Unpod Open-Source CPAAS Platform is the fourth pillar of the Unpod stack. It is a full-stack platform for running, managing, and monitoring AI voice agents at scale.
+
+Under the hood it uses `unpod` and `superdialog` to run agents. Those agents connect to the Unpod speech platform, which transcribes caller audio and passes plain text directly into SuperDialog. SuperDialog executes the conversation logic and returns a text reply. Unpod synthesises that into speech and streams it back to the caller.
+
+The platform can be self-hosted on any machine or deployed directly on Unpod cloud.
+
+---
+
+## The Four Pillars
+
+<Frame>
+  <img src="/images/diagrams/unpod-four-pillars.svg" alt="Unpod four pillars diagram showing communication infrastructure, voice stack, SuperDialog conversation framework, and the open-source CPAAS platform." />
+</Frame>
+
+| Pillar | What it is |
+|---|---|
+| Communication Infra | Phone numbers, SIP, PSTN - calling primitives |
+| Speech Stack | STT, TTS, VAD, barge-in, endpointing |
+| SuperDialog | Conversation framework - flow graphs, tools, state |
+| CPAAS Platform | Open-source dashboard, agent studio, analytics, telephony management |
+
+---
+
+## How the Pieces Connect
+
+<Frame>
+  <img src="/images/diagrams/unpod-voice-stack.svg" alt="Unpod voice stack diagram showing user entrypoints, the Unpod managed layer, and your agent connected by audio and text turns." />
+</Frame>
+
+The platform manages the full lifecycle around this loop: provisioning agents, attaching numbers and voice profiles, storing transcripts, surfacing analytics, and dispatching runners via `unpod`.
+
+---
+
+## Monorepo Structure
+
+```
+unpod/
+├── apps/
+│   ├── web/              # Next.js frontend - dashboard, studio, analytics
+│   ├── backend-core/     # Django REST API - auth, orgs, RBAC, agents
+│   ├── api-services/     # FastAPI microservices - search, messaging, tasks
+│   ├── super/            # Voice engine - orchestrator, dispatch, pipeline
+│   └── unpod-tauri/      # Desktop app (Tauri 2)
+├── libs/
+│   └── nextjs/           # Shared React libraries (@unpod/*)
+├── infrastructure/
+│   └── docker/           # Dockerfiles + service configs
+└── scripts/              # Setup, migration, utility scripts
+```
+
+---
+
+## Core Services
+
+### Web Frontend (`apps/web/`)
+
+Next.js frontend with App Router. Provides the agent studio, space management, knowledge bases, call logs, and analytics dashboard.
+
+```bash
+npx nx dev web          # Dev server at port 3000
+npx nx build web        # Production build
+```
+
+### Backend Core (`apps/backend-core/`)
+
+Django 5 REST API. Handles JWT auth, multi-tenant organisations, RBAC, agent configuration, and telephony management.
+
+- **Storage:** PostgreSQL (relational), MongoDB (documents), Redis (cache)
+- **Endpoints:** All under `/api/v1/`
+
+```bash
+cd apps/backend-core
+python manage.py runserver    # API at port 8000
+```
+
+### API Services (`apps/api-services/`)
+
+FastAPI microservices for document store, AI search, messaging, and task management.
+
+```bash
+cd apps/api-services
+uvicorn main:app --host 0.0.0.0 --port 9116 --reload
+```
+
+| Route | Service | Description |
+|---|---|---|
+| `/api/v1/store` | store_service | Document store + indexing |
+| `/api/v1/search` | search_service | AI-powered search |
+| `/api/v1/conversation` | messaging_service | Chat conversations |
+| `/api/v1/agent` | messaging_service | Agent management |
+| `/api/v1/task` | task_service | Task management |
+
+### Voice Engine (`apps/super/`)
+
+Orchestrator and worker dispatch layer. Uses `unpod` to register runners and `superdialog` to execute conversation flows. Connects to the Unpod speech platform for STT/TTS.
+
+```bash
+cd apps/super
+uv run super_services/orchestration/executors/voice_executor_v3.py start
+```
+
+#### Media plane (the `RoomEngine` seam)
+
+Every voice session has an infra-level **media session** owned by a
+backend-agnostic **`RoomEngine`** - the orchestrator never speaks a specific
+media vendor's vocabulary, so the backend is a swap, not a rewrite.
+
+- **Today:** self-hosted **LiveKit OSS** (`LiveKitRoomEngine`) provides the SFU,
+  SIP/PSTN, egress/recording, simulcast, and transfer. An in-process engine
+  backs dev and tests.
+- **Backend selection:** at dispatch the orchestrator calls
+  `pick_engine(required={sip})`, which skips any engine that lacks the required
+  capabilities (`sip`, `egress`, `simulcast`, `transfer`) or reports unhealthy.
+- **Self-healing:** `create_room` is idempotent per session, `destroy_room` is a
+  no-op on an already-gone room, and a reaper sweeps orphaned rooms left behind
+  by a dead worker.
+- **Failure mode:** if no healthy, SIP-capable backend exists, dispatch returns
+  **`503`** and the session is finalized `status=failed`,
+  `end_reason=media_unavailable`.
+- **Scale path:** a future `mediasoup` engine registers behind the same seam
+  (advertising no `sip`), so `pick_engine` keeps PSTN on LiveKit and routes
+  WebRTC-only traffic to mediasoup - no orchestrator change.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js / React / Ant Design |
+| Backend | Django 5 + DRF / FastAPI |
+| Voice Engine | unpod + SuperDialog + Pipecat |
+| Databases | PostgreSQL 16, MongoDB 7, Redis 7 |
+| Messaging | Kafka, Centrifugo |
+| Desktop | Tauri 2 |
+
+---
+
+## Deployment Options
+
+**Self-hosted** - Run the full stack on your own infrastructure using Docker Compose. See [Self-Hosting Guide](/platform/self-hosting/quickstart).
+
+**Unpod Cloud** - Deploy runners and agents directly on Unpod's managed infrastructure. The speech platform, orchestration, and storage are all handled for you.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/platform/self-hosting/quickstart">
+    Get the platform running on your machine.
+  </Card>
+  <Card title="Speech Stack" icon="layers" href="/speech-stack/introduction">
+    Numbers, voice profiles, agents, and the SDK.
+  </Card>
+  <Card title="SuperDialog" icon="git-branch" href="/superdialog/introduction">
+    The conversation framework that runs inside every agent.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/get-started/quickstart">
+    Full REST API documentation.
+  </Card>
+</CardGroup>

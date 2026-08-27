@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="WHERE UNPOD SITS">
+  <defs>
+    <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
+    </pattern>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8d75ff"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d8e8"/>
+    </marker>
+    <style>
+      svg { background: #020303; }
+      .title { font: 700 44px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 9px; }
+      .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
+      .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
+      .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
+      .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
+      .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
+      .purple { stroke: #8d75ff; }
+      .cyan { stroke: #00d8e8; }
+      .purpleText { fill: #8d75ff; }
+      .cyanText { fill: #00d8e8; }
+      .flow { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 22; animation: dash 1.8s linear infinite; }
+      .flow.fast { animation-duration: 1.35s; }
+      .flow.slow { animation-duration: 2.4s; }
+      .dim { opacity: 0.72; }
+      .pulse { filter: url(#glow); animation: pulse 1.7s ease-in-out infinite; transform-origin: center; }
+      @keyframes dash { to { stroke-dashoffset: -36; } }
+      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .flow, .pulse { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="1672" height="941" fill="#020303"/>
+  <text x="836" y="70" text-anchor="middle" class="title">WHERE UNPOD SITS</text>
+  
+  <rect x="476" y="116" width="742" height="186" rx="18" class="panel purple"/>
+  <text x="847" y="160" text-anchor="middle" class="label purpleText">
+    <tspan x="847" dy="0">LAYER 3</tspan>
+  </text>
+  <rect x="534" y="152" width="626" height="96" rx="16" class="box purple "/>
+  <text x="847" y="208" text-anchor="middle" class="label">
+    <tspan x="847" dy="0">AGENT PLATFORMS</tspan>
+  </text>
+  <text x="846" y="262" text-anchor="middle" class="small purpleText">
+    <tspan x="846" dy="0">VAPI / RETELL / BLAND</tspan>
+  </text>
+  <rect x="476" y="380" width="742" height="202" rx="18" class="panel cyan"/>
+  <text x="847" y="424" text-anchor="middle" class="label cyanText">
+    <tspan x="847" dy="0">LAYER 2</tspan>
+  </text>
+  <rect x="534" y="418" width="626" height="100" rx="16" class="box cyan "/>
+  <text x="847" y="476" text-anchor="middle" class="label">
+    <tspan x="847" dy="0">UNPOD</tspan>
+  </text>
+  <text x="846" y="536" text-anchor="middle" class="small cyanText">
+    <tspan x="846" dy="0">COMMUNICATION INFRA</tspan>
+  </text>
+  <rect x="476" y="668" width="742" height="190" rx="18" class="panel purple"/>
+  <text x="847" y="712" text-anchor="middle" class="label purpleText">
+    <tspan x="847" dy="0">LAYER 1</tspan>
+  </text>
+  <rect x="534" y="704" width="626" height="96" rx="16" class="box purple "/>
+  <text x="847" y="760" text-anchor="middle" class="label">
+    <tspan x="847" dy="0">RAW TELEPHONY</tspan>
+  </text>
+  <text x="846" y="815" text-anchor="middle" class="small purpleText">
+    <tspan x="846" dy="0">TWILIO / PLIVO / BANDWIDTH</tspan>
+  </text>
+  <path d="M846 380 V312" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M846 582 V660" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <text x="936" y="350" text-anchor="middle" class="tiny cyanText">
+    <tspan x="936" dy="0">USED BY</tspan>
+  </text>
+  <text x="946" y="636" text-anchor="middle" class="tiny cyanText">
+    <tspan x="946" dy="0">BUILDS ON</tspan>
+  </text>
+
+</svg>

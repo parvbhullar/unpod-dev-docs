@@ -1,0 +1,90 @@
+---
+title: "The Playground"
+icon: 'circle-play'
+description: "The Playground is the no-code home for a playbook: describe an agent, get a working playbook, test it by voice, harden it, and ship it - all on one screen. What you hear here is what a caller hears."
+---
+
+## The no-code home for your playbook
+
+The **Playground** collapses a three-day authoring job into about thirty minutes.
+Describe an agent, get a working [playbook](/playbook/what-is-a-playbook), test it
+by voice, harden it, and take it live - **without leaving one screen.**
+
+It runs the same stack production does. The playbook is authored with
+**SuperDialog**; the browser voice call is served by the same `AgentRunner` that
+serves a real phone call. **What you hear in the Playground is what a caller
+hears.** How that seam is wired:
+[SuperDialog on Unpod voice](/superdialog/embedding-guides/unpod-voice).
+
+<a className="pg-cta" href="https://superdialog.unpod.ai/playground" target="_blank" rel="noreferrer">
+  <span className="pg-cta__icon">▶</span>
+  <span className="pg-cta__body">
+    <span className="pg-cta__title">Open the Playground</span>
+    <span className="pg-cta__desc">Launch it at <code>superdialog.unpod.ai/playground</code>, describe an agent, and start talking to it in your browser. A guest trial lets you build before you sign up.</span>
+  </span>
+  <span className="pg-cta__arrow">→</span>
+</a>
+
+## One screen, three surfaces
+
+<Steps>
+  <Step title="Agent chat (left, always present)">
+    You describe the agent in plain English ("confirm appointments, fall back to
+    5pm"). The builder agent authors and edits the playbook for you. Attach a
+    PDF or paste a URL and it reads from those too.
+  </Step>
+  <Step title="Editor tab (right)">
+    The live playbook YAML. Every change the chat makes lands here; you can also
+    edit it by hand. Validation runs as you type.
+  </Step>
+  <Step title="Preview tab (right)">
+    The voice test. Press to talk, speak like a caller, and watch the transcript,
+    the current checkpoint, and the metrics update live.
+  </Step>
+</Steps>
+
+<Frame caption="One screen - the builder chat on the right, Editor/Preview tabs up top, the voice profile and model pickers, and the Press-to-talk orb in the center">
+  <img src="/images/playbook/playground-pipeline.png" alt="Preview tab showing the voice pipeline: User speaks into STT, a USER_TURN arrow into DialogMachine.turn() under 'SuperDialog - your flow', an AGENT_TURN arrow into TTS, and 'Caller hears' - with a 'Connected - speak to run a turn through the pipeline' status." />
+</Frame>
+
+## The end-to-end journey
+
+<CardGroup cols={2}>
+  <Card title="1. Build an agent playbook" icon="wand-sparkles" href="/playbook/build-an-agent">
+    Describe it in chat or start from a document; the agent writes the playbook.
+  </Card>
+  <Card title="2. Test by voice" icon="mic" href="/playbook/test-by-voice">
+    Press to talk in the browser and confirm it behaves like a real call.
+  </Card>
+  <Card title="3. Optimize" icon="gauge" href="/playbook/optimize">
+    Run simulated personas, score goal completion, and harden the weak spots.
+  </Card>
+  <Card title="4. Publish & share" icon="share" href="/playbook/publish-and-share">
+    Set visibility, share by link, clone, then deploy - as a voice agent on a
+    number, or as an API endpoint.
+  </Card>
+</CardGroup>
+
+## Reuse an existing agent
+
+You do not have to start from a blank page.
+
+<Card title="Browse the playbook gallery" icon="library-big" href="/playbook/library">
+  The **Public** tab lets you open and clone any agent others published; the
+  **My Playbook** tab holds your own drafts.
+</Card>
+
+## Who this section is for
+
+| You are... | Start here |
+|---|---|
+| **A builder** (non-technical) who wants a working voice agent fast | [Build an agent playbook](/playbook/build-an-agent) - operate the Playground UI |
+| **A developer** who wants to call the agent from code | [Chat API](/playbook/api) - the OpenAI-compatible endpoint |
+| **Curious how the brain works** underneath | [SuperDialog](/superdialog/introduction) - the engine behind every playbook |
+
+<Note>
+The Playground is where you *build and prove* an agent. To put it in front of
+real callers, deploy the published agent as a **Voice Agent** on a
+[number](/speech-stack/numbers) (it wires a [Speech Pipe](/speech-stack/pipes)
+for you) - covered in [Publish & share](/playbook/publish-and-share).
+</Note>

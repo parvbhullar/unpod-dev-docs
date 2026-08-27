@@ -1,0 +1,124 @@
+---
+title: 'Quickstart'
+description: 'Get Unpod running on your machine in minutes'
+icon: 'rocket'
+---
+
+## Developer Quickstart
+
+Get the Unpod platform running locally and deploy your first voice agent. Choose the setup method that works best for you.
+
+### Prerequisites
+
+Before you begin, ensure you have:
+
+- **Node.js** v20+ / **npm** v10+
+- **Python** 3.11+ (3.10+ for `apps/super`)
+- **Docker** and **Docker Compose**
+- **Git**
+- **uv** (only for `apps/super`)
+
+---
+
+### Option 1: One-Command Setup (Recommended)
+
+The fastest way to get everything running:
+
+```bash
+git clone https://github.com/unpod-ai/unpod.git
+cd unpod
+make quick-start    # Install deps, start Docker, run migrations
+make dev            # Start frontend (port 3000) + backend (port 8000)
+```
+
+---
+
+### Option 2: Manual Setup
+
+If you prefer full control over each step:
+
+```bash
+# Install Node.js dependencies
+git clone https://github.com/unpod-ai/unpod.git
+cd unpod
+npm install
+```
+
+Create Python venv for backend:
+
+```bash
+python3 -m venv apps/backend-core/.venv
+source apps/backend-core/.venv/bin/activate
+pip install -r apps/backend-core/requirements/local.txt
+```
+
+Start infrastructure (PostgreSQL, MongoDB, Redis, Centrifugo):
+
+```bash
+docker compose -f docker-compose.simple.yml up -d postgres mongodb redis centrifugo
+```
+
+Run migrations and start dev servers:
+
+```bash
+cd apps/backend-core && python manage.py migrate --no-input && cd ../..
+npm run dev
+```
+
+For detailed environment variable configuration, see the [Configuration](/platform/self-hosting/configuration) page.
+
+---
+
+### Option 3: Docker Only (No Local Dependencies)
+
+Starts everything in containers with working defaults:
+
+```bash
+git clone https://github.com/unpod-ai/unpod.git
+cd unpod
+docker compose -f docker-compose.simple.yml up -d --build
+```
+
+Default admin: `admin@unpod.ai` / `admin123`
+
+---
+
+### Access Points
+
+Once running, the following services are available:
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend API | http://localhost:8000/api/v1/ |
+| Admin Panel | http://localhost:8000/unpod-admin/ |
+| API Services | http://localhost:9116/docs |
+| Centrifugo | http://localhost:8100 |
+
+---
+
+### Verify It Works
+
+1. Open http://localhost:3000 in your browser
+2. Log in with the default credentials or create a new account
+3. Create a voice agent from the AI Studio
+4. Assign a phone number and make a test call
+
+---
+
+### Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="wrench" href="/platform/self-hosting/configuration">
+    Environment variables, development commands, and Docker setup.
+  </Card>
+  <Card title="Architecture" icon="layers" href="/platform/self-hosting/architecture">
+    Understand the monorepo structure, tech stack, and how services connect.
+  </Card>
+  <Card title="Dev Platform Guide" icon="sliders-horizontal" href="/platform/dev-platform/introduction">
+    Configure telephony, agents, and providers via the developer dashboard.
+  </Card>
+  <Card title="API Documentation" icon="code" href="/api/get-started/quickstart">
+    Programmatic access to agents, calls, numbers, and more.
+  </Card>
+</CardGroup>

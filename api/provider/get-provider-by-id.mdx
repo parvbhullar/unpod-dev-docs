@@ -1,5 +1,6 @@
 ---
 title: 'Get Provider by ID'
+icon: 'search'
 description: 'Retrieve a specific telephony provider configuration by its ID'
 openapi: 'GET /api/v2/platform/telephony/providers-configurations/{id}/'
 ---
@@ -55,7 +56,7 @@ You can get the provider configuration `id` by hitting the [Get All Providers](/
 | Org-Handle    | string | Yes      | Organization domain handle      |
 
 <Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations#get-all-organizations) API. The `domain_handle` field in the response is your Org-Handle.
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
 </Note>
 
 
@@ -150,6 +151,6 @@ curl -X GET "https://unpod.ai/api/v2/platform/telephony/providers-configurations
 
 1. **ID Lookup**: Use [Get All Providers](/api/provider/get-all-providers) to find IDs before fetching individual records
 2. **Error Handling**: Handle 404 responses when a configuration ID is no longer valid
-3. **Security**: `auth_token` is never returned — only `account_sid` is visible for security
+3. **Security**: `auth_token` is never returned - only `account_sid` is visible for security
 4. **Org-Handle**: Ensure the correct organization handle is used to access configurations within your org
 5. **Validation**: Use this endpoint to verify a provider configuration exists before connecting it to a bridge

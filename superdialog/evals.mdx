@@ -1,0 +1,202 @@
+---
+title: "A/B Evals"
+icon: 'scale'
+description: "A/B-evaluate a playbook on the SuperDialog engine against a vanilla LLM handed the same playbook - scored from the transcript alone, so both are judged by an identical rubric."
+---
+
+## What it answers
+
+`superdialog eval` answers one question: **does running your playbook on the
+SuperDialog engine beat handing the same playbook to a raw LLM as a flat system
+prompt?**
+
+It drives two modes over one dataset and scores both from the conversation
+**transcript only** - never from engine internals - so the playbook and the
+vanilla baseline face an identical rubric. Use it to justify adopting the
+engine, to catch regressions, or to expose your playbook to any external
+benchmark.
+
+<Note>
+This is different from `superdialog optimize` and the persona-eval loop in the
+[API Reference](/superdialog/api-reference#replay-and-the-eval-bridge). That
+loop asks "is this playbook good enough, and how do I improve its prose?" - the
+A/B harness here asks "is the playbook **machinery** earning its keep over a
+plain prompt?"
+</Note>
+
+## The two modes
+
+| Mode | What runs |
+|---|---|
+| `playbook` | The full Director + Talker checkpoint runtime loading your playbook |
+| `vanilla` | One raw LLM handed the playbook file as a single flat system prompt |
+
+The runner only sees `str` in / `str` out, so a mode is just a factory that
+returns a conversation endpoint. Endpoints ship for in-process playbook /
+vanilla, a remote HTTP SuperDialog server, and any OpenAI-compatible model.
+
+## Headline metrics
+
+| Metric | Kind | Reads |
+|---|---|---|
+| `task_success` | LLM judge (0–1) | full transcript vs the case goal |
+| `slot_accuracy` | LLM judge (0–1) | transcript vs `ground_truth_slots` |
+| `guardrail` | LLM judge (hard gate) | each guardrail-probe reply |
+| `efficiency` | pure code | user turns + assistant latency p50/p95 |
+| `token_cost` | pure code | input tokens per assistant turn, with a director/talker split in playbook mode |
+
+<Warning>
+`guardrail` is a **hard gate**. If either mode complies with a probe attack,
+that case's composite score is zeroed and it counts toward the
+`guardrail_violation_rate` - no matter how well it did on the other metrics.
+</Warning>
+
+<Note>
+`efficiency` and `token_cost` are pure code - no judge tokens, no added
+latency - so every run includes them regardless of `--metrics`. The report
+gains a **Latency & tokens** table (p50/p95, input tok/turn, director/talker
+split, LLM calls/turn) and a **framework** score: zero unless quality is
+perfect (`task_success=1`, `slot_accuracy=1`, guardrail clean), then higher
+for lower latency and fewer tokens - the framework's goal as one number.
+</Note>
+
+## Run it
+
+Two phases: build the dataset once (offline, commit it), then A/B-run it.
+
+```bash
+# 1. Build <playbook>.evalcases.yaml - personas auto-generated, probes injected
+superdialog eval gen-dataset --playbook spa.yaml --n-probes 8
+
+# 2. A/B both modes → report.json (full) + report.md (headline table + drilldown)
+superdialog eval run \
+  --playbook spa.yaml --dataset spa.evalcases.yaml \
+  --modes vanilla,playbook \
+  --agent-model openai/gpt-4.1-mini \
+  --judge-model openai/gpt-4.1-mini \
+  --metrics task_success,slot_accuracy,guardrail,efficiency \
+  --out ./eval-out
+```
+
+Useful `eval run` flags:
+
+| Flag | Default | Description |
+|---|---|---|
+| `--modes` | `vanilla,playbook` | Which modes to compare |
+| `--agent-model` | `openai/gpt-4.1-mini` | Model both modes answer with |
+| `--director-model` / `--talker-model` | agent model | Per-role LLMs for playbook mode |
+| `--judge-model` | `openai/gpt-4.1-mini` | LLM that scores the transcripts |
+| `--user-model` | agent model | LLM that simulates the persona / caller |
+| `--metrics` | all four | Comma-separated headline metrics |
+| `--repeats` | `1` | Runs per case (average out variance) |
+
+The dataset format mirrors the RAGAS single-/multi-turn shape: each case carries
+a persona, `ground_truth_slots`, and a list of probes. A persona may also define
+`afterlife_probes` - utterances sent *after* the session ends, asserted on by the
+suite runner's `silent_afterlife` check (above).
+
+Or run both phases in one shot with `eval bench` - it builds the dataset if
+missing (`--regen` rebuilds, `--personas` seeds), A/Bs every `--models` entry
+into its own report directory, and adds `--max-turns` to override each
+persona's turn budget:
+
+```bash
+superdialog eval bench --playbook spa.yaml \
+  --models openai/gpt-4o-mini --max-turns 20 --out ./eval-out
+```
+
+## Gate a suite in CI
+
+`eval run` and `eval bench` produce scores you eyeball. `superdialog eval suite`
+turns a set of benches into a one-command, CI-able **behavioral regression
+gate**: each suite pins a playbook, dataset, and models to the *expectations*
+that made the run worth doing (this case must fire the goodbye interrupt, that
+control must **not**; this case must not answer after it ended).
+
+```bash
+superdialog eval suite --config suites.yaml --tier smoke   # cheap pre-merge signal
+superdialog eval suite --config suites.yaml --tier full    # run everything
+superdialog eval suite --config suites.yaml --only realestate-disconnect --force
+```
+
+The registry is YAML - one entry per suite:
+
+```yaml
+suites:
+  - name: realestate-disconnect
+    playbook: examples/playbooks/realestate_site_visit.simple.yaml
+    dataset: examples/datasets/realestate_disconnect.evalcases.yaml
+    models: [livekit/google/gemma-4-31b-it]
+    judge: openai/gpt-4.1-mini
+    user_model: openai/gpt-4.1-mini
+    fallback_judge: livekit/openai/gpt-4o-mini   # retried on provider quota (429)
+    fallback_user: livekit/openai/gpt-4o-mini
+    max_turns: 14
+    smoke_cases: [explicit-disconnect-mid, objecting-but-staying-pooja]
+    min_composite: 0.6
+    expect:
+      explicit-disconnect-mid:   {goodbye: fired,  min_task_success: 0.7}
+      objecting-but-staying-pooja: {goodbye: absent, min_turns: 4}
+```
+
+Each `expect` entry asserts one case's behavior from the run's report and log:
+
+| Expectation | Asserts |
+|---|---|
+| `goodbye` | `fired` / `absent` - did the goodbye interrupt fire (matched via `goodbye_signal`, default `interrupt:global_goodbye`) |
+| `min_turns` | Conversation length floor - encodes "not ended prematurely" for a control persona who legitimately closes once finished |
+| `no_reentry` | Route integrity - no checkpoint is re-entered after the flow moved past it (a restart/regression). Skip on playbooks with `resume: true` interrupts |
+| `silent_afterlife` | Post-end **afterlife probes** (utterances sent *after* the session ended) draw **no** reply - an ended session that answers is a zombie. Requires the persona to define `afterlife_probes` |
+| `no_repeat_replies` | No assistant reply exactly repeats the previous one (closing/parrot loops) |
+| `min_task_success` | Per-case `task_success` floor |
+| `min_composite` | Suite-level composite-mean floor |
+
+<Note>
+**Tiers, skip-if-unchanged, and quota fallback.** `--tier smoke` runs only each
+suite's `smoke_cases`; `--tier full` runs everything. A content hash of
+playbook + dataset + params is stamped in the out dir, so unchanged suites are
+skipped unless `--force`. A run that dies on provider quota
+(`insufficient_quota` / `429`) is retried once with the suite's
+`fallback_judge` / `fallback_user`; **behavioral** checks (goodbye, route,
+afterlife, repeats) always gate, but score floors (`task_success`,
+`composite`) downgrade to **advisory** under the fallback judge since they were
+calibrated against the primary one. The command exits non-zero if any suite
+fails or errors.
+</Note>
+
+## Serve it to an external benchmark
+
+Expose the playbook as an OpenAI-compatible endpoint and grade it like any other
+model:
+
+```bash
+superdialog eval serve --playbook spa.yaml --port 8000
+# POST /v1/chat/completions  →  the playbook answers as the "model"
+```
+
+## RAGAS is optional (and version-pinned)
+
+The custom LLM judges produce every headline metric with **no RAGAS installed**.
+RAGAS metrics are opt-in via the `ragas` extra:
+
+```bash
+pip install superdialog[ragas]
+```
+
+<Warning>
+SuperDialog ships **two** RAGAS-based harnesses on incompatible RAGAS lines:
+the A/B `ragas` extra (RAGAS 0.4.3) and the separate `benchmark` extra
+(RAGAS 0.2.x, used by `superdialog benchmark`). They **cannot co-install** - pick one extra per environment. With `uv`, they are declared conflicting so the
+project still resolves; with `pip`, install only one.
+</Warning>
+
+## Legacy session audit
+
+The older single-session audit lives under the same command group:
+
+```bash
+superdialog eval flow --flow kyc.json --traversal session.json
+```
+
+See the [CLI Reference](/superdialog/cli#superdialog-eval) for every `eval`
+subcommand.

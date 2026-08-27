@@ -1,0 +1,112 @@
+---
+title: "Optimize"
+icon: 'trending-up'
+description: "Testing by hand covers the paths you think of. Optimize runs the agent against many simulated callers, scores goal completion, and hardens the weak checkpoints - the results stream into the chat as a live card."
+---
+
+## Why optimize
+
+When you press to talk you test the paths *you* think of. Real callers do things
+you did not script - they hesitate, change their mind, answer the wrong question.
+**Optimize** generates a spread of simulated callers, runs the conversation
+against each, scores how often the agent reached its goal, and rewrites the weak
+checkpoints to fix what failed.
+
+<Note>
+Optimize is powered by the builder engine's `generate_personas`,
+`simulate_and_score`, and `optimize_playbook` tools. They are **consent-gated** -
+the agent proposes a run and you accept it; it never silently rewrites your work.
+</Note>
+
+## How to run it
+
+<Steps>
+  <Step title="Trigger it">
+    Use the **Optimize** action in the composer toolbar. The builder agent may
+    also propose a run itself once your playbook looks functionally complete.
+  </Step>
+  <Step title="Watch the in-chat card">
+    An **Optimize run** card renders right in the chat thread with a live round
+    indicator (`round 2/3 ●●○`) and a goal score that animates up as rounds
+    complete - e.g. `62% → 81%`.
+  </Step>
+  <Step title="Review and apply">
+    On finish, the hardened YAML lands in the **Editor** tab ("Applied to editor").
+    Re-open Preview and re-test.
+  </Step>
+</Steps>
+
+<Frame caption="The Optimize run - a consent-gated 'Run optimize_playbook?' prompt, the live Test-run scorecard (completion, data capture, smoothness, repairs, empathy), and the Voice LLM picker for the call">
+  <img src="/images/playbook/optimize-run-panel.png" alt="Editor on the left with the booking playbook YAML; on the right the Agent panel shows a 'Run optimize_playbook?' card with Approve and Skip, a Test-run scorecard reading 100% Completion, 0% Data capture, 33% Smoothness, 0% Repairs, 100% Empathy, and a Voice LLM list (claude-haiku-4-5, gpt-4o-mini, gemma-4-31b-it, gpt-4.1-mini) with latency estimates." />
+</Frame>
+
+## Reading the card
+
+The card has a `Details | Preview` toggle:
+
+<CardGroup cols={2}>
+  <Card title="Details" icon="list-checks">
+    The round-by-round trace and the **top failures in plain language** - "the
+    agent skipped the callback-number checkpoint when the caller was in a hurry."
+  </Card>
+  <Card title="Preview" icon="chart-column">
+    The metric readout for the run (below), so you can see the score behind the
+    animation.
+  </Card>
+</CardGroup>
+
+## What gets measured
+
+The scorecard shows the engine's four deterministic metrics - computed from the
+transcript without any LLM call - plus one LLM-judged score:
+
+| Metric | Meaning |
+|---|---|
+| **Completion** | How often the agent reached the playbook's outcome and closed cleanly. |
+| **Data capture** | Fraction of the required slots (order number, callback, ...) actually captured in the transcript. |
+| **Smoothness** | Penalises loops: drops as the agent burns extra turns per checkpoint. |
+| **Repairs** | Fraction of agent turns that are re-asks or corrections - lower is better. |
+| **Empathy** | LLM-judged response quality. |
+
+Latency is not scored by the optimizer - the per-model estimates in the Voice
+LLM picker come from real test calls.
+
+<Note>
+Coverage and knowledge-base-hit metrics on this card are later milestones.
+Guardrail scoring exists today in the
+[SuperDialog eval harness](/superdialog/evals), where it is a hard gate. The
+numbers you see here are real engine output, not estimates.
+</Note>
+
+## Two ways it hardens the playbook
+
+<CardGroup cols={2}>
+  <Card title="Auto (multi-round)" icon="repeat">
+    `optimize_playbook` runs several rounds, each time regenerating personas,
+    re-scoring, and rewriting the checkpoints that failed. The score climbs
+    across rounds until it plateaus.
+  </Card>
+  <Card title="Manual (propose / accept)" icon="pen">
+    The agent proposes prose edits in normal chat - "I'd tighten the refund
+    checkpoint like this" - and you accept or reject each one.
+  </Card>
+</CardGroup>
+
+<Tip>
+Give the optimizer a **goal string** to bias the run - e.g. "prioritize
+completing the sale in 8-10 turns." Presets like this let you optimize for the
+outcome you actually care about, not just raw completion.
+</Tip>
+
+## When to stop
+
+Stop when the goal-completion score plateaus and the top-failures list is empty
+or down to edge cases you are comfortable with. Do a final **Press to talk** pass
+in [Preview](/playbook/test-by-voice) to hear the hardened version, then ship it.
+
+## Next step
+
+<Card title="Publish & share" icon="share" href="/playbook/publish-and-share">
+  Set visibility, share the agent by link, clone it, and generate an API key to
+  take it live on a number.
+</Card>

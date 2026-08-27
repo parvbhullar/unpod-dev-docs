@@ -1,0 +1,100 @@
+---
+title: "Run a SuperDialog agent"
+icon: 'workflow'
+description: 'When a plain LLM brain stops being enough: plug a structured SuperDialog agent into your voice agent.'
+---
+
+A plain LLM brain answers questions. It does not reliably follow a multi-step
+process, collect required fields in order, branch on conditions, or call your
+tools at the right moment. When your voice agent needs that - appointment
+booking, triage, verification - level up to
+[SuperDialog](/superdialog/introduction): a runtime that executes a **playbook**
+(journeys of checkpoints that gate outcomes) turn by turn.
+
+Wiring is one assignment - the SDK auto-wraps it in a `SuperDialogAdapter`
+(see [Adapters](/speech-stack/adapters#auto-wrapping)):
+
+```python
+from superdialog import DialogMachine
+from unpod import AgentRunner, CallContext
+
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = DialogMachine(
+        "clinic.yaml",                       # any format; Playbook engine by default
+        llm="anthropic/claude-haiku-4-5",
+    )
+    await ctx.session.run()  # hands every turn to the agent
+
+AgentRunner(entrypoint=handle_call, agent_id="my-agent").start()
+```
+
+The runnable end-to-end version - Speech Pipe registration, pre-call data,
+mid-call `assist()`, flow switching - lives in
+[Embedding guide: Unpod voice](/superdialog/embedding-guides/unpod-voice).
+
+## Voice-specific patterns
+
+Two things you only hit inside a live call.
+
+### Give tools call context
+
+Define tools as closures inside your entrypoint so they capture per-call data:
+
+```python
+from superdialog.tools import tool
+
+async def handle_call(ctx: CallContext) -> None:
+    caller_number = ctx.user_number
+
+    @tool
+    def lookup_caller() -> dict:
+        """Look up the caller's account by phone number."""
+        return crm.lookup_phone(caller_number)   # closure over call data
+
+    ctx.session.dialog_machine = DialogMachine(
+        "clinic.yaml", llm="anthropic/claude-haiku-4-5", tools=[lookup_caller]
+    )
+    await ctx.session.run()
+```
+
+### Detect completion
+
+Both engines have terminal states. After `run()` returns, check whether the
+dialog finished or the caller hung up mid-conversation:
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    machine = DialogMachine("clinic.yaml", llm="anthropic/claude-haiku-4-5")
+    ctx.session.dialog_machine = machine
+    await ctx.session.run()
+
+    if machine.is_complete:
+        print("Dialog reached a terminal checkpoint")
+    else:
+        print("Call ended mid-conversation (hang up / timeout)")
+```
+
+## Authoring the playbook
+
+Generate one with `superdialog generate`, version-control the YAML, and iterate
+with `superdialog chat` - no voice setup needed
+([Quickstart](/superdialog/quickstart)). The YAML vocabulary and field tables
+are in [Playbooks](/superdialog/playbooks); HTTP, Python, and MCP tools are in
+[SuperDialog Tools](/superdialog/tools).
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Embedding Guide: Unpod Voice" icon="plug" href="/superdialog/embedding-guides/unpod-voice">
+    The full worked example: a SuperDialog agent inside an AgentRunner session.
+  </Card>
+  <Card title="Thinking in Playbooks" icon="brain" href="/superdialog/thinking-in-playbooks">
+    The mental model: checkpoints that gate outcomes, and when not to use one.
+  </Card>
+  <Card title="SuperDialog" icon="workflow" href="/superdialog/introduction">
+    The framework itself: playbooks, tools, sessions, CLI.
+  </Card>
+  <Card title="Bring Your Agent" icon="bot" href="/speech-stack/bring-your-agent">
+    Prefer your own brain? Adapters for LangChain, OpenAI, Anthropic, HTTP.
+  </Card>
+</CardGroup>

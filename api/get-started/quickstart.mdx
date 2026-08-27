@@ -24,6 +24,10 @@ Unpod has 4 core building blocks:
 | **Bridges** | Routing hubs that connect Numbers, Providers & Agents |
 | **Agents** | AI voice agents that handle conversations |
 
+<Frame>
+  <img src="/images/diagrams/core-component-data-flow.svg" alt="Animated core component data flow diagram showing a number routed through a bridge to AI agents, then through a carrier provider to an endpoint." />
+</Frame>
+
 ## API Setup
 
 ### Base URL
@@ -75,10 +79,10 @@ curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/" \
   }'
 ```
 
-### Get Call Logs
+### Get Call Detail Records (CDR)
 
 ```bash
-curl -X GET "https://unpod.ai/api/v2/platform/call-logs/" \
+curl -X GET "https://unpod.ai/api/v2/platform/cdr/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 ```
@@ -94,10 +98,10 @@ curl -X GET "https://unpod.ai/api/v2/platform/telephony/providers/" \
 
 ## Next Steps
 
-- [Authentication](/api/get-started/authentication) — Learn about authentication methods
-- [Bridges API](/api/telephony/bridges) — Full bridges documentation
-- [Numbers API](/api/telephony/numbers) — Manage phone numbers
-- [Provider Configurations](/api/provider/configurations) — Configure providers
+- [Authentication](/api/get-started/authentication) - Learn about authentication methods
+- [Bridges API](/api/telephony/bridges-overview) - Full bridges documentation
+- [Numbers API](/api/telephony/numbers) - Manage phone numbers
+- [Provider Configurations](/api/provider/overview) - Configure providers
 
 ---
 
@@ -105,4 +109,4 @@ curl -X GET "https://unpod.ai/api/v2/platform/telephony/providers/" \
 
 - [Discord Community](https://discord.gg/7kQ4ewNSHZ)
 - [YouTube Channel](https://www.youtube.com/@unpod-ai)
-- [GitHub](https://github.com/parvbhullar/unpod)
+- [GitHub](https://github.com/unpod-ai/unpod)

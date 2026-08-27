@@ -1,0 +1,307 @@
+---
+title: "Playbooks"
+icon: 'file-text'
+description: "Author playbooks - the simple format to start, the full format when you need typed slots, gates, pipelines, and multiple journeys."
+---
+
+## What is a playbook?
+
+A **playbook** is the authored, git-diffable artifact the Playbook engine runs.
+It has two layers:
+
+- **Conversation layer** - `journeys` of **checkpoints** (a goal, typed slots,
+  guidance prose, and ordered advance rules) plus a `persona`.
+- **Process layer** - everything that isn't conversation: `tools`, `pipelines`,
+  `handlers`, `interrupts`, and `policies`.
+
+There are **two authoring formats and one engine**. Start in the simple format;
+graduate to the full format when you need precision. Both compile to the same
+validated artifact and run identically.
+
+<Frame>
+  <img src="/images/diagrams/playbook-loading-pipeline.svg" alt="Animated Playbook loading pipeline diagram showing simple YAML, full YAML, and legacy flow JSON converging into a validated Playbook artifact and one runtime." />
+</Frame>
+
+`Playbook.load(path)` auto-detects all three, so callers never branch on format.
+
+## The simple format
+
+Prose steps, a structured persona, and reference data as real YAML. This is what
+`superdialog generate` writes.
+
+```yaml
+goal: "Book a haircut and confirm it."
+persona:
+  name: Mira
+  language: ["en", "hi"]
+  voice_style: "Warm and brief. One question at a time."
+  identity: "You are Mira, a booking assistant for Glow Studio."
+opening: "Greet the caller warmly."
+closing: "Thank them and say goodbye."
+playbook:
+  - id: greet
+    purpose: "Open the call."
+    say: "Greet the caller and ask how you can help."
+    done_when: "Caller is ready to book."
+  - id: collect
+    purpose: "Get the booking details."
+    say: "Ask for their name and preferred service."
+    collect: [name, service]
+    done_when: "Name and service are captured."
+  - id: confirm
+    purpose: "Confirm and close."
+    say: "Read back the booking and confirm."
+    done_when: "Caller has confirmed."
+facts:
+  canonical_pricing: {haircut: "₹400"}
+boundaries: ["NEVER invent prices."]
+interrupts:
+  - {when: "Caller says goodbye or asks to end the call.", to: main.confirm}
+```
+
+### Section reference
+
+| Key | Meaning |
+|---|---|
+| `goal` | The call's mission statement - what makes this call a win. |
+| `persona` | `identity` (who the agent is), `name`, `language` (first is default), `voice_style` (tone, pacing). Compiles into the persona the Talker sees every turn. |
+| `opening` / `closing` | Optional greeting / sign-off prose. `opening` seeds the first step's guidance when it has no `say`. |
+| `playbook` | Ordered steps. Each becomes a checkpoint in a single journey `main`, **chained linearly by default**: step N's `done_when` advances to step N+1. Override with `then:` (explicit target) or `branches:` (conditional routing); reordering the list re-wires the default chain. |
+| `facts` | Grounding data (pricing, policies) the agent may recite - never invent beyond it. |
+| `objections` | `{trigger, handle}` steering, handled *within* a step. |
+| `boundaries` | Compliance "NEVER…" rules (prose-enforced). |
+| `interrupts` | Global jumps judged from any step (`{when, to}`). |
+| `fallback_actions` | Ordered fallback steering when the caller stalls or goes off-script. |
+
+Also valid at the top level: `name`, `channel`, `tone`, `call_type`, `timezone`,
+`memory_enabled`, `followup_enabled`, and the multi-entity toggles `multi_entity` /
+`supervisor`. **Any key not in this set raises at load** (see [Strict validation](#strict-validation)).
+
+Per step:
+
+| Field | Meaning |
+|---|---|
+| `id` | Checkpoint id; addressable as `main.<id>` in logs, metrics, replay. |
+| `purpose` | The goal (Director-facing). |
+| `say` | Guidance the Talker speaks from. |
+| `collect` | Slot keys to capture. |
+| `done_when` | Observable condition that advances (one `judge: llm` rule). |
+| `require` | Explicit subset of `collect` that gates the advance. |
+| `turn_budget` | User turns before a "wrap this step up" nudge (default 4). |
+| `kb` | Whether this step's prompt carries the knowledge base; set `false` on steps that only mention it. |
+| `then` | Step id to advance to when `done_when` holds, instead of the next list element. Unknown targets and self-targets are rejected at load. |
+| `terminal` + `outcome` | Mark the step as a call ending (default `outcome: closed`), recorded on `SessionEnd`. Any step can be terminal now - not only the last. `outcome` on a non-terminal step is rejected. |
+| `branches` | Multi-way routing, judged in author order **ahead of** `done_when`. Each entry is `{when, to, requires?}` - note the target key is `to`, not `then`. A branch may not target the default next step or itself; terminal steps cannot have branches. |
+| `then_say` | A line delivered *while advancing out of* this step (post-capture pitch), rendered Jinja over slots. Guidance written after the capture in `say` is unreachable, so use `then_say`. Never spoken on interrupt/policy advances; rejected on terminal steps. |
+| `entity` / `gate` | Advanced: turn owner (`caller`/`agent`) and per-step `soft`/`hard` gate. |
+
+**Routing example** - a branch off the default chain, and two terminal outcomes:
+
+```yaml
+playbook:
+  - id: pitch_visit
+    say: "Offer the site visit; handle the objection on hesitation."
+    done_when: "Customer accepts or is open to the visit."
+    then_say: "Great - let me lock that in."     # spoken while advancing out
+    branches:
+      - when: "Customer firmly declines after the objection was handled."
+        to: advisor_callback     # `to`, not `then`; never the default next step
+  - id: book_visit               # pitch_visit's default next step
+    say: "Confirm the slot, read it back, and say goodbye."
+    terminal: true               # a terminal step need not be the last one
+    outcome: visit_booked
+  - id: advisor_callback
+    say: "Capture a callback time."
+    collect: [callback_time]
+    done_when: "Callback time captured."
+  - id: close                    # advisor_callback's default next step
+    say: "Thank them and say goodbye."
+    terminal: true
+    outcome: callback_scheduled
+```
+
+<Warning>
+**Which `collect` keys gate advancement depends on the step's shape.** A
+focused capture step (≤2 slots) requires all of them filled before the
+Director may advance; a branchy step collecting more than 2 per-path
+alternatives requires **none** - demanding every slot of a 14-slot category
+qualifier would deadlock the step. Use `require:` to override the heuristic
+(e.g. one mandatory key on an otherwise-branchy step).
+</Warning>
+
+<Tip>
+**Always add a goodbye interrupt.** In testing, linear playbooks with no early
+exit never completed a single call (a satisfied caller loops until the turn
+cap); the same playbook with goodbye/busy interrupts completed every call.
+</Tip>
+
+### Strict validation
+
+Keys the format does not recognize - a typo'd `done_wehn`, an invented top-level
+`language_lock:` - **raise at load** with the dotted path of every offender,
+instead of being silently dropped (config theater: you think it's set, the
+runtime never sees it). For live loaders that must not kill a call over a stale
+authored file, downgrade to a warning:
+
+```python
+from superdialog.playbook.simple import simple_to_playbook, load_simple
+
+pb = simple_to_playbook(doc, strict=False)   # warn instead of raise
+pb = load_simple(path, strict=False)
+```
+
+### What the simple format cannot express
+
+Multiple terminals/outcomes, per-step `gate` and `then`/`branches` routing are
+now all expressible in the simple format (above). When you need any of these,
+move to the full format:
+
+- Pipelines and tools (transactional steps - holds, payments)
+- `judge: expr` rules (machine-evaluated transitions - zero LLM cost)
+- Typed/required slots, `never_say`, `say_verbatim`, silence policy, multiple journeys
+
+The escape hatch is one-way: compile your simple file and continue authoring the
+result. There is no decompiler back.
+
+## The full format
+
+Everything the engine can do, stated explicitly. The conversation layer is
+`journeys` of checkpoints; the process layer is `tools`, `pipelines`,
+`handlers`, `interrupts`, `policies`.
+
+```yaml
+persona: "You are Asha, a friendly golf-course booking assistant."
+
+llm:                          # the model loads from here (top-level persona `llm` is deprecated)
+  provider: anthropic
+  model: claude-haiku-4-5
+  director: anthropic/claude-haiku-4-5    # optional: separate Director model
+
+views:                        # computed, LLM-free exprs; shown as reference data
+  hold_valid_until: "results.hold.data.valid_until"
+
+journeys:
+  booking:
+    checkpoints:
+      - id: collect           # addressed as booking.collect
+        goal: "Have city and date"
+        slots:                # typed, flow-scoped declarations
+          city:
+            type: str         # str|int|float|bool|date|enum|array|object
+            required: true
+            invalidates: [hold]      # a city change clears the stale hold result
+          date: {type: date, required: true}
+          players: {type: int}
+        guidance: |           # Jinja over {slots, views, results}
+          Collect naturally; the caller may give everything in one breath.
+        never_say: ["our systems are slow"]
+        turn_budget: 6        # steer to wrap up after 6 user turns here
+        on_failure: booking.handoff
+        advance_when:         # ordered; first matching rule wins
+          - when: "caller gave the booking details"
+            judge: llm        # the Director judges intent
+            to: booking.confirm
+            requires: [city, date]   # rule fires only when these are met
+      - id: confirm
+        gate: hard            # outcomes barrier on the Director here
+        pipeline: confirm_and_hold   # process layer runs on entry
+        advance_when:
+          - {when: "pipeline.ok", judge: expr, to: booking.close}
+          - {when: "pipeline.failed", judge: expr, to: booking.collect}
+      - id: close
+        terminal: true        # session ends on entry
+        outcome: confirmed    # label for metrics and host hangup
+      - id: handoff
+        terminal: true        # the `on_failure` target declared above
+        outcome: escalated
+
+tools:
+  - id: hold_slot
+    type: http
+    method: POST
+    url: "{{ env.API_BASE_URL }}/slots/hold"
+    headers: {Authorization: "Bearer {{ env.ACCESS_TOKEN }}"}
+    body: {city: "{{ slots.city }}", date: "{{ slots.date }}"}
+    store_response_as: hold   # readable as results.hold.* afterwards
+
+pipelines:
+  - id: confirm_and_hold
+    steps:
+      - tool: hold_slot
+        on:
+          ok: continue
+          http_409: booking.collect          # typed HTTP-status branch
+          failed: {retry: 1, on_exhaust: booking.collect}
+
+interrupts:
+  - {id: goodbye, when: "caller says goodbye", judge: llm, to: booking.close}
+
+policies:
+  silence:
+    max_prompts: 2
+    prompts: ["Can you hear me?", "Are you there?"]
+    then: booking.close
+  hold_timeout: 4.0           # max wait before the hold line is spoken (default 4.0s)
+  filler: "Ek second…"        # author barrier line while the Director settles
+  hold_line: "Still working on it, bear with me."   # spoken after hold_timeout
+```
+
+### The building blocks
+
+| Block | Key fields |
+|---|---|
+| **Checkpoint** | `goal`, `slots`, `guidance`, `advance_when`, `gate` (`soft`/`hard`), `say_verbatim`, `never_say`, `exit_say` (post-capture pitch; `then_say` in the simple format), `auto`, `pipeline`, `on_failure`, `terminal` + `outcome`, `turn_budget` |
+| **SlotSpec** | `type`, `required`, `values` (enum), `authoritative` (tool-written only), `invalidates`, `description` |
+| **AdvanceRule** | `when` (prose or expr), `judge` (`llm`/`expr`), `to` (checkpoint ref), `requires` (slots that must be filled/confirmed), `set` (slot writes on advance) |
+| **ToolSpec** | `type` (`http`/`python`), `method`/`url`/`headers`/`body` (sandboxed Jinja), `store_response_as`, `env_updates`, `run_once`, `when`, `timeout` |
+| **PipelineSpec** | ordered `steps`, each with typed `on: {ok, failed, http_<code>}` branches and capped `retry` |
+| **LLMConfig** (`llm:`) | `provider`, `model`, optional `director` - the model-loading path (persona-level `llm` is deprecated and warns) |
+| **Policies** (`policies:`) | `silence`, `hold_timeout` (default 4.0), `filler` + `hold_line` (author-facing barrier lines spoken while the Director settles) |
+
+Validation runs on load and raises on unknown checkpoint/pipeline/tool refs,
+duplicate ids, undeclared `requires` keys, and the reserved `pipeline` result
+key - typos fail fast, not mid-call.
+
+<Note>
+**`judge: expr` rules are evaluated LLM-free** at every quiescence hop - this is
+what makes compiled router chains instant. The expr language is a sandboxed,
+AST-whitelisted subset of Python over `slots`, `results`, `env`, and `pipeline`.
+See the [API Reference](/superdialog/api-reference#the-expr-language).
+</Note>
+
+## Generate, then refine
+
+```bash
+# Generate a simple-format playbook from a prompt
+superdialog generate "Book a tee time. Collect city, date, party size. \
+  Confirm before holding the slot." --output booking.yaml
+
+# Chat against it - watch checkpoints advance
+superdialog chat booking.yaml
+
+# Close the loop: paired persona evals score prose-only edits, output stays
+# in your source format
+superdialog optimize --playbook booking.yaml
+```
+
+## How it runs
+
+This page is about what you *write*. For what *happens* - the Talker/Director
+compound runtime, gating semantics, and the event log - see
+[Architecture](/superdialog/architecture). The mental model is in
+[Thinking in Playbooks](/superdialog/thinking-in-playbooks).
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="workflow" href="/superdialog/architecture">
+    The runtime that executes a playbook
+  </Card>
+  <Card title="Tools" icon="wrench" href="/superdialog/tools">
+    The process layer in depth
+  </Card>
+  <Card title="API Reference" icon="code" href="/superdialog/api-reference">
+    Every field and the expr language
+  </Card>
+  <Card title="Flows (legacy)" icon="git-branch" href="/superdialog/flows">
+    Graph authoring and migration
+  </Card>
+</CardGroup>

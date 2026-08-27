@@ -1,0 +1,72 @@
+---
+title: 'Twilio (Dashboard)'
+sidebarTitle: 'Dashboard'
+icon: 'layout-dashboard'
+description: 'Connect Twilio to Unpod with no code - configure Twilio as a SIP provider in the Unpod Studio and route a number.'
+---
+
+The **no-code** path. Configure Twilio as a SIP provider in the Unpod Studio, attach
+it to a number, and route global programmable voice through your agent. Prefer code?
+See the [API guide](/telephony/integrations/twilio/api).
+
+<Note>
+**You need:** an Unpod number on a Bridge, and a Twilio account with an **Account SID**
+and **Auth Token** (Twilio Console → Account → API keys & tokens).
+</Note>
+
+## Configure the number with Twilio
+
+<Steps>
+  <Step title="Open Configure on your number">
+    The number is already on your Bridge. Click **Configure** to activate SIP trunking.
+  </Step>
+  <Step title="Choose a SIP provider">
+    You are redirected to the provider picker. Click **Configure** in front of **Twilio**.
+  </Step>
+  <Step title="Enter your Twilio credentials">
+    Fill the mandatory fields:
+    - **Name** - any label for this configuration.
+    - **Account SID** - your Twilio account identifier (starts with `AC…`).
+    - **Auth Token** - the secret paired with the SID.
+  </Step>
+  <Step title="Copy credentials from Twilio">
+    In the **Twilio Console** dashboard, copy the **Account SID** and **Auth Token**
+    from **Account Info**, and paste them into the portal.
+  </Step>
+  <Step title="Verify and Configure">
+    Click **Verify and Configure**. The configuration appears under **Active Providers**.
+  </Step>
+  <Step title="Attach the provider to your number">
+    Click **Select** next to your Twilio configuration under **Active Providers**.
+  </Step>
+  <Step title="Set channels and agent">
+    Open **Settings** and submit:
+    - **Concurrency Channels** - simultaneous calls allowed.
+    - **Enter Agent** - the agent that answers the call.
+  </Step>
+  <Step title="Publish">
+    Click **Publish** at the top of the dashboard. The number is ready for inbound and outbound calls.
+  </Step>
+</Steps>
+
+<Tip>
+Twilio also supports **Elastic SIP Trunking** - point a Twilio trunk at your Unpod
+origin endpoint for a pure-SIP setup. See [Create a trunk](/telephony/trunks/create-trunk).
+</Tip>
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Verify fails | Wrong SID/token | Re-copy from the Twilio Console Account Info |
+| Calls rejected | Geo-permissions off | Enable the destination region in Twilio Voice settings |
+| Agent silent | No agent bound | Set **Enter Agent** in trunk Settings |
+
+<CardGroup cols={2}>
+  <Card title="Do it with code" icon="terminal" href="/telephony/integrations/twilio/api">
+    Same flow over the REST API.
+  </Card>
+  <Card title="All platforms" icon="blocks" href="/telephony/integrations/overview">
+    Back to the integrations overview.
+  </Card>
+</CardGroup>

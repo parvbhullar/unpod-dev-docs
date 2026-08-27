@@ -1,0 +1,121 @@
+---
+title: 'Metrics, Cost & Observability'
+icon: 'chart-bar'
+description: 'Per-turn timing & token hooks, the usage/billing ledger, Langfuse tracing, runner pool stats, and post-call timing.'
+---
+
+Layers of visibility, from inside a call out to your dashboards and billing.
+
+## 1. Per-turn timing & token hooks
+
+The real per-turn timing and token numbers arrive on two hooks the core fires
+every turn. Register them on the session:
+
+```python
+@ctx.session.on("llm_call")
+async def _(turn_id, node_id, model, call_type, latency_ms,
+            tokens_in, tokens_out, prompt_messages, response_json, edge_id) -> None:
+    # fired once per LLM call within a turn
+    push_to_grafana({"model": model, "latency_ms": latency_ms,
+                     "tokens_in": tokens_in, "tokens_out": tokens_out})
+
+@ctx.session.on("turn_complete")
+async def _(turn_id, ttfa_ms, asr_ms, llm_ttft_ms, tts_ttfb_ms, stt_ms, tts_ms,
+            from_node, to_node, llm_call_count, llm_total_ms,
+            user_text, agent_text) -> None:
+    # fired once per completed user->agent turn, with full stage latencies
+    print(turn_id, ttfa_ms, llm_total_ms)
+```
+
+<Note>
+`llm_call` and `turn_complete` carry the actual per-turn latency and token data.
+The `CallMetrics` snapshot below (`metrics.live()`) only populates if you feed it
+from these hooks - see the caveat in Layer 2.
+</Note>
+
+## 2. Live per-call snapshot (opt-in)
+
+Inside (or after) `session.run()`, take a `CallMetrics` snapshot:
+
+```python
+m = ctx.session.metrics.live()
+
+m.turns           # int: dialog turns
+m.duration_s      # float
+m.stt_p95_ms      # int: P95 speech-to-text latency
+m.llm_p95_ms      # int: P95 brain latency
+m.tts_p95_ms      # int: P95 synthesis latency
+m.cost.total      # float
+m.tokens.input    # int
+m.tokens.output   # int
+m.active_llm      # str: model used on the last turn
+```
+
+<Warning>
+The latency/cost/token fields populate **only if you call
+`metrics.record_turn(...)` yourself** - typically from the `turn_complete` hook
+above. The SDK does not auto-fill them, so out of the box only `duration_s` is
+meaningful. For real numbers, use the per-turn hooks (Layer 1) or the post-call
+transcript timing (Layer 5).
+</Warning>
+
+## 3. Usage & billing ledger
+
+The SDK buffers per-session LLM usage and flushes it to the cloud billing ledger
+on `call_end`. It is **best-effort**: a no-op when `UNPOD_USAGE_INGEST_URL` is
+unset, and never blocks or fails the call.
+
+```bash
+UNPOD_USAGE_INGEST_URL="https://.../ingest"   # enables the ledger
+UNPOD_USAGE_INGEST_TOKEN="..."                # optional auth
+```
+
+Counters posted per session:
+
+| Counter | Meaning |
+|---|---|
+| `llm_prompt_tokens` | Prompt tokens |
+| `llm_completion_tokens` | Completion tokens |
+| `llm_cached_tokens` | Prompt-cache **read** tokens |
+| `llm_cache_write_tokens` | Prompt-cache **write** tokens |
+| `llm_provider` / `llm_model` | Provider + model attribution |
+
+Prompt-cache read/write tokens are forwarded so cached turns are billed at the
+correct (lower) rate.
+
+## 4. Langfuse tracing
+
+When `LANGFUSE_SECRET_KEY` is set, the SDK emits per-turn spans plus a generation
+span per LLM call (with token usage). No wiring needed - set the key and traces
+appear in Langfuse. When unset, tracing is a no-op.
+
+```bash
+LANGFUSE_SECRET_KEY="sk-lf-..."
+```
+
+## 5. Runner pool stats
+
+```python
+s = runner.stats()        # RunnerStats snapshot
+
+s.in_flight               # current active calls
+s.queued                  # dispatches waiting for capacity
+s.capacity                # your max_sessions setting
+s.completed_last_hour
+s.failed_last_hour
+s.mean_call_duration_s
+```
+
+Poll this on a timer for liveness dashboards - see
+[AgentRunner & Sessions](/speech-stack/agent-runner#running-in-production).
+
+## 6. Post-call timing
+
+After the call, the transcript carries a per-turn, per-stage latency breakdown
+(`audio_ingress_ms`, `stt_ms`, `bridge_to_dev_ms`, `dev_brain_ms`, `tts_ms`) - see [Recordings & Transcripts](/speech-stack/recordings-transcripts).
+
+<Tip>
+High `dev_brain_ms` with healthy `stt_ms`/`tts_ms` means the latency is in
+YOUR brain - usually a `stream()` that is not actually streaming. See
+[Streaming is the hot path](/speech-stack/bring-your-agent#streaming-is-the-hot-path).
+</Tip>

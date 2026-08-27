@@ -1,0 +1,88 @@
+---
+title: "Embedding Overview"
+icon: 'blocks'
+description: "How to plug SuperDialog into any host environment - CLI, LiveKit, PipeCat, FastAPI, Unpod Voice, and more."
+---
+
+## The same pattern everywhere
+
+In every host, three things stay the same:
+
+1. **Construct an entry point** - `DialogMachine(source, llm=...)`. It runs the
+   Playbook engine by default; `source` accepts full playbooks, simple-format
+   playbooks, *and* legacy flow JSON (auto-compiled), so you don't pick a format,
+   you just point it at your artifact.
+2. **Route inbound text** to `agent.turn(text)`.
+3. **Send the reply text** back to the host's output channel.
+
+Both engines implement the same `superdialog.agent.Agent` protocol
+(`turn` / `assist` / `chat_ctx` / `load_chat_ctx`), so every adapter accepts
+either one. The host varies; the SuperDialog code is identical.
+
+```python
+# This object works in every host below
+from superdialog import DialogMachine
+
+agent = DialogMachine("booking.yaml", llm="anthropic/claude-haiku-4-5")  # any format
+```
+
+<Note>
+**Advanced:** drop to `PlaybookAgent` when you need to supply the two LLM seams
+directly - a `StreamsLLM` Talker and a `CompletesLLM` Director - or a custom HTTP
+executor. Any `superdialog.llm.LLMProvider` (the litellm-backed one behind model
+URIs) adapts in a few lines:
+
+```python
+from superdialog.llm import resolve_llm
+
+class TextLLM:
+    def __init__(self, provider): self._p = provider
+    async def complete(self, messages, **kw):
+        return (await self._p.complete(messages, **kw)).text
+    async def stream(self, messages, **kw):
+        async for chunk in self._p.stream(messages, **kw):
+            if chunk.text:
+                yield chunk.text
+
+talker = TextLLM(resolve_llm("anthropic/claude-haiku-4-5"))   # fast: speaks
+director = TextLLM(resolve_llm("anthropic/claude-opus-4-7"))  # strong: judges
+```
+
+Why two models, and how the Director steers the Talker without stalling it:
+[Architecture](/superdialog/architecture).
+</Note>
+
+## Choose your host
+
+<CardGroup cols={2}>
+  <Card title="CLI chatbot" icon="terminal" href="/superdialog/cli">
+    Zero infrastructure. Best for testing and prompt tuning.
+  </Card>
+  <Card title="LiveKit" icon="phone" href="/superdialog/embedding-guides/livekit">
+    Voice agent via `Agent(llm=DialogMachineLLM(...))` plugin.
+  </Card>
+  <Card title="PipeCat" icon="mic" href="/superdialog/embedding-guides/pipecat">
+    Drop-in `FrameProcessor` for PipeCat pipelines.
+  </Card>
+  <Card title="FastAPI" icon="server" href="/superdialog/embedding-guides/fastapi">
+    REST endpoint for text chatbots and web widgets.
+  </Card>
+  <Card title="Unpod Voice" icon="cloud" href="/superdialog/embedding-guides/unpod-voice">
+    Plug your `DialogMachine` into an Unpod `AgentRunner` session - no extra server needed.
+  </Card>
+  <Card title="Unit testing" icon="flask-conical" href="/superdialog/embedding-guides/testing">
+    Because SuperDialog is text-only, every dialog is unit-testable.
+  </Card>
+</CardGroup>
+
+## Lines of code comparison
+
+| Host | Adapter | Extra LoC |
+|---|---|---|
+| CLI | None - direct `input()`/`print()` or `superdialog chat` | ~5 |
+| LiveKit | `DialogMachineLLM` | ~8 |
+| PipeCat | `make_processor` | ~12 |
+| FastAPI | `FastAPIRouter` or direct route | ~6 |
+| Unpod Voice (SDK) | `unpod.AgentRunner` + `session.dialog_machine` | ~6 |
+| Unit test | None - direct calls | ~3 |
+| Custom (Slack, Discord, etc.) | None - direct callback | ~3 |

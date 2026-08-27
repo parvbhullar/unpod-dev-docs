@@ -1,0 +1,129 @@
+---
+title: 'WebSocket Connectivity'
+icon: 'plug-zap'
+description: 'Unpod exposes your agent as a WebSocket endpoint. Any browser, app, or client connects to it. Speech is processed entirely by Unpod.'
+---
+
+## How It Works
+
+When you create a Speech Pipe on Unpod, it is automatically available as a WebSocket endpoint. Any client - browser, mobile app, desktop, IoT device - can connect to that endpoint and have a real-time voice conversation.
+
+Your agent code does not change. Speech processing (STT, VAD, barge-in, endpointing, TTS) all happens on Unpod's side. Your AgentRunner just receives text and returns text, exactly as it does for phone calls.
+
+<Frame>
+  <img src="/images/diagrams/websocket-connectivity.svg" alt="Animated WebSocket connectivity diagram showing browser, app, or client audio connecting through a pipe WSS endpoint into the Unpod speech pipeline, then text routing to your AgentRunner." />
+</Frame>
+
+---
+
+## Connecting a Client
+
+Unpod exposes a standard WebSocket URL per Speech Pipe. Your client connects with a short-lived token:
+
+<Warning>
+`@unpod/web-sdk` is **not yet published on npm**. The snippet below is the
+intended shape, not something you can `npm install` today. To hear an agent in a
+browser now, use the
+[Playground](https://superdialog.unpod.ai/playground?tab=preview).
+</Warning>
+
+```typescript
+import { UnpodSession } from "@unpod/web-sdk";
+
+const session = new UnpodSession({
+  token: "<session-token-from-your-backend>",
+});
+
+await session.connect();   // starts mic + speaker, full duplex audio
+
+session.on("agent_reply", (text) => console.log("Agent:", text));
+session.on("user_turn",   (text) => console.log("User:", text));
+
+await session.disconnect();
+```
+
+Clients can be anything that speaks WebSocket - browser SDK, mobile SDK, a raw WebSocket client, or a third-party integration.
+
+---
+
+## Generating a Session Token
+
+Your backend generates a short-lived token for each user session. Pass it to the client - never expose your API key on the frontend.
+
+```python
+from unpod import AsyncClient
+
+async def get_session_token(pipe_id: str, user_id: str) -> str:
+    # reads UNPOD_API_KEY from the env; see the credential table in
+    # /speech-stack/setup-checklist for UNPOD_PLATFORM_TOKEN + UNPOD_ORG_HANDLE
+    async with AsyncClient() as client:
+        token = await client.sessions.create_token(
+            pipe_id=pipe_id,
+            metadata={"user_id": user_id},
+        )
+        return token.token   # single-use, expires in 60s
+```
+
+Return the token to your frontend via your own API. The client passes it to `UnpodSession`.
+
+---
+
+## Same Agent, Multiple Entry Points
+
+Your AgentRunner accepts sessions from all sources on the same `agent_id`. You do not need separate agents for phone calls and web/app clients.
+
+<Frame>
+  <img src="/images/diagrams/unpod-voice-stack.svg" alt="Animated Unpod voice stack diagram showing phone, browser, and mobile entrypoints reaching the same managed speech layer and AgentRunner." />
+</Frame>
+
+The `CallContext` tells you how the session arrived:
+
+```python
+from unpod import CallContext
+from superdialog import DialogMachine
+
+async def handle_call(ctx: CallContext) -> None:
+    if ctx.direction == "inbound":
+        print("caller dialled a number, or a client connected")
+    elif ctx.direction == "outbound":
+        print("your backend initiated the call")
+
+    ctx.session.dialog_machine = DialogMachine("agent.yaml", llm="anthropic/claude-haiku-4-5")
+    await ctx.session.run()
+```
+
+---
+
+## What Unpod Handles
+
+Everything audio-related is managed by Unpod on both phone and WebSocket sessions:
+
+| Capability | Phone | WebSocket |
+|---|---|---|
+| STT (transcription) | Yes | Yes |
+| VAD (turn detection) | Yes | Yes |
+| Barge-in detection | Yes | Yes |
+| TTS (synthesis) | Yes | Yes |
+| Recording | Yes | Yes |
+| Transcript storage | Yes | Yes |
+
+Your code only ever sees text.
+
+<Note>
+Media binding is handled entirely on Unpod's side. A media worker joins the
+LiveKit room for the session and bridges the caller's audio; your dialog brain
+connects over a separate text-only channel and never touches the audio stream
+or any SDP negotiation. This is why the same agent code runs unchanged across
+phone and WebSocket sessions.
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="AgentRunner & Sessions" icon="code" href="/speech-stack/agent-runner">
+    Capacity, env vars, graceful shutdown, and the session controls -
+    say(), transfer, end - that work for all session types.
+  </Card>
+</CardGroup>

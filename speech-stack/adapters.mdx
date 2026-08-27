@@ -1,0 +1,119 @@
+---
+title: 'Adapters Reference'
+icon: 'blocks'
+description: 'The DialogAdapter protocol, every bundled adapter signature, auto-wrapping rules, and error surfaces.'
+---
+
+Reference for the brain slot. For worked examples and guidance, see
+[Bring Your Agent](/speech-stack/bring-your-agent); this page is the contract.
+
+## The DialogAdapter protocol
+
+Defined in `unpod.adapters.base`. Runtime-checkable - any object with these
+three methods passes `isinstance(obj, DialogAdapter)`; no base class required.
+
+```python
+class DialogAdapter(Protocol):
+    async def turn(self, text: str, context: dict | None = None) -> str:
+        """Return a complete response string. NOT called during live calls."""
+
+    async def stream(
+        self, text: str, context: dict | None = None, language: str | None = None
+    ) -> AsyncIterator[str]:
+        """Yield response tokens. HOT PATH - session.run() calls this on
+        every user turn and streams tokens directly to the voice bridge.
+        `language` is the per-turn language code (from `UserTextEvent.extra`),
+        forwarded by `session.run()`. Custom adapters MUST accept the kwarg
+        even if they ignore it."""
+
+    def assist(self, text: str) -> None:
+        """Inject a system instruction before the next turn."""
+```
+
+<Warning>
+`stream()` now receives a `language` keyword argument on every turn. Any custom
+adapter whose `stream()` does not accept `language=...` raises `TypeError` on the
+first user turn. Add `language: str | None = None` to the signature.
+</Warning>
+
+<Warning>
+`session.run()` calls only `stream()`. A single-chunk `stream()` fallback
+(await the full reply, yield once) produces choppy, high-latency audio with no
+error anywhere. See
+[Streaming is the hot path](/speech-stack/bring-your-agent#streaming-is-the-hot-path).
+</Warning>
+
+## Auto-wrapping
+
+The `ctx.session.dialog_machine` setter accepts, in order:
+
+1. A superdialog `DialogMachine` or `LLMAgent` - wrapped in a
+   `SuperDialogAdapter` automatically.
+2. Any object satisfying the `DialogAdapter` protocol - used as-is.
+3. Anything else - raises `TypeError`.
+
+## Bundled adapters
+
+All importable from `unpod.adapters`:
+`AnthropicAdapter`, `DialogAdapter`, `HTTPAdapter`, `LangChainAdapter`,
+`MCPAdapter`, `OpenAIAdapter`, `SuperDialogAdapter`.
+
+### Constructor signatures
+
+| Adapter | Constructor | Wraps |
+|---|---|---|
+| `OpenAIAdapter` | `(client, model="gpt-4o-mini", system_prompt=None)` | `openai.AsyncOpenAI` client |
+| `AnthropicAdapter` | `(client, model="claude-haiku-4-5-20251001", system_prompt=None, max_tokens=1024)` | `anthropic.AsyncAnthropic` client |
+| `LangChainAdapter` | `(chain, input_key="messages")` | LangChain Runnable with `ainvoke`/`astream` |
+| `HTTPAdapter` | `(url, headers=None, timeout_s=10.0)` | A remote HTTP endpoint, any language |
+| `MCPAdapter` | `(server_url, tools=None, llm="anthropic/claude-haiku-4-5", headers=None)` | An MCP server (preview - see below) |
+| `SuperDialogAdapter` | `(dm)` | superdialog `DialogMachine` or `LLMAgent` |
+
+### Streaming behavior
+
+| Adapter | `stream()` behavior |
+|---|---|
+| `OpenAIAdapter` | Real token streaming via `chat.completions.create(stream=True)` |
+| `AnthropicAdapter` | Real token streaming via `messages.stream()` |
+| `LangChainAdapter` | Real streaming via the chain's `.astream()` |
+| `SuperDialogAdapter` | Delegates to `dm.turn(text, stream=True[, language=…])` - `language` is passed through only when the wrapped machine's `turn()` accepts it |
+| `HTTPAdapter` | **Single chunk** - one POST round-trip, full reply yielded once |
+| `MCPAdapter` | Falls back to `turn()`, which is not implemented yet |
+
+### `assist()` semantics
+
+| Adapter | What `assist(text)` does |
+|---|---|
+| `OpenAIAdapter` / `LangChainAdapter` | Injects the instruction into the conversation history |
+| `AnthropicAdapter` | Injects as a user/assistant message pair - the Anthropic API does not accept mid-conversation system messages |
+| `HTTPAdapter` | Queues the instruction; sent as `system_instructions` in the next request body |
+| `MCPAdapter` | Queues the instruction (pending full implementation) |
+| `SuperDialogAdapter` | Delegates to the DialogMachine's `assist()` |
+
+### SuperDialogAdapter extras
+
+Beyond the protocol, `SuperDialogAdapter` exposes the wrapped agent's controls:
+
+```python
+adapter.set_llm("anthropic/claude-haiku-4-5")        # swap the runtime model
+adapter.switch_flow("billing", preserve_memory=False) # graph engine only (FlowSet)
+adapter.is_complete                                   # reached a terminal state?
+adapter.state                                         # current state (dict)
+```
+
+`is_complete` and `state` work on both engines; on the Playbook engine `state`
+returns `{"checkpoint": ..., "slots": ..., "ended": ...}`. `switch_flow` applies
+only to the legacy graph engine (a `DialogMachine` built from a `FlowSet`).
+See [SuperDialog](/superdialog/introduction) for the agent itself.
+
+## Error surfaces
+
+| Failure | What you see |
+|---|---|
+| Assigning a non-adapter to `dialog_machine` | `TypeError` from the setter, immediately |
+| `HTTPAdapter` endpoint returns non-2xx | `httpx.HTTPStatusError` (the adapter calls `raise_for_status()`) |
+| `HTTPAdapter` endpoint slower than `timeout_s` | `httpx.TimeoutException` |
+| `MCPAdapter` without the `mcp` package | `ImportError` - install with `unpod[mcp]` |
+| `MCPAdapter` with the package | `NotImplementedError` - full MCP orchestration is not implemented yet |
+| `LangChainAdapter` with a chain expecting a different input shape | No error - the chain receives `{input_key: history}` and may silently misbehave; set `input_key` to match your chain |
+| Lazy `stream()` in a custom adapter | No error - choppy, delayed audio on calls |

@@ -1,0 +1,140 @@
+---
+title: "Run it locally"
+icon: 'terminal'
+description: "Run the Playground on your own machine, point it at hosted or local speech, and understand its transport. The playground ships inside supervoice; one command builds the UI and serves the agent."
+---
+
+## What you are running
+
+The Playground is a Vite + React SPA (`playground/web/`) served by a small Python
+**harness** that runs the agent in-process. It ships inside the **supervoice**
+repo, which pins `unpod` and `superdialog` as editable sibling deps, plus bundled
+example flows and playbooks - so it runs self-contained.
+
+<Note>
+Agent flows are authored with **superdialog**; the call runtime is the **unpod**
+SDK `AgentRunner`. The harness re-implements the WS audio protocol from scratch -
+there is no `pipecat` / `rtvi` client dependency.
+</Note>
+
+## Prerequisites
+
+<CardGroup cols={2}>
+  <Card title="An LLM key" icon="key">
+    `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`. Copy `playground/.env.example` to
+    `.env` at the repo root and set it.
+  </Card>
+  <Card title="A speech backend" icon="audio-lines">
+    Something the harness can reach for audio. Resolved in the order below - a
+    fresh clone needs no local supervoice if you use a hosted URL.
+  </Card>
+</CardGroup>
+
+### How the speech backend is resolved
+
+The harness (`harness/api.py`) picks a backend in this order:
+
+1. **`UNPOD_BASE_URL`** → the hosted `wss://<host>` speech service. For hosted
+   voice with zero local backend: `UNPOD_BASE_URL=api.unpod.ai` plus
+   `UNPOD_API_KEY=<key>`.
+2. Otherwise **`ws://127.0.0.1:9000`** → a local `supervoice-dev`.
+
+<Note>
+Legacy `SUPERVOICE_URL` still overrides both if set (with a deprecation warning) -
+prefer `UNPOD_BASE_URL`. The harness boots and serves the UI even with no speech
+backend reachable; only clicking **Connect** (which opens an audio call) needs one.
+</Note>
+
+## Run it
+
+From the `supervoice/` repo root (`cp playground/.env.example .env`, set an LLM key):
+
+```bash
+task pg        # builds web/dist, then serves UI + in-process agent on :9100
+```
+
+Or manually:
+
+```bash
+cd playground/web && npm install && npm run build && cd ../..
+uv run --extra playground python -m playground.run
+```
+
+Open [http://localhost:9100](http://localhost:9100), click **Connect**, allow the mic, and talk.
+
+<CardGroup cols={2}>
+  <Card title="One-click Docker" icon="container">
+    `task pg-docker` - playground on `:9100` + local dev-speech on `:9000`, in
+    containers. Set `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` in `supervoice/.env` first.
+  </Card>
+  <Card title="Local speech" icon="server">
+    `task pg-stack` - boots a local dev-speech on `:9000` unless a hosted speech
+    URL is set.
+  </Card>
+</CardGroup>
+
+### Frontend hot-reload loop
+
+Run the harness on `:9100` and Vite separately on `:5173` (it proxies
+`/playground/*` to the harness):
+
+```bash
+uv run python -m playground.run          # terminal 1 - harness :9100
+cd playground/web && npm run dev          # terminal 2 - Vite :5173
+```
+
+## Architecture (M1)
+
+Two planes, deliberately separate:
+
+```
+Browser (web/) ──audio (WS /ws/audio, protobuf)──► remote supervoice (UNPOD_BASE_URL)
+   │                                                         ▲
+   │  POST /playground/sessions  ┌── harness (api.py) ───────┘ AgentRunner registers
+   │  WS  /playground/events  ◄──┤   side-channel: session hooks → browser
+   └─────────────────────────────┘
+```
+
+- **Audio** rides the supervoice WS bridge directly (16 kHz mic up, 24 kHz
+  playback down). The wire codec is a small proto3 `Frame` encoder/decoder in
+  `web/src/transport/protobuf.ts`; capture/playback in `web/src/transport/audio.ts`.
+- **Transcript / current checkpoint** ride the harness's **own** side channel
+  (`/playground/events`), fed by SDK `Session` hooks - *not* the audio bridge.
+  This keeps the transcript accurate even when audio is under load.
+
+## Configuration
+
+One host + one credential drive every unpod plane. The harness derives the auth,
+platform, playbook-API, and hosted-speech bases from `UNPOD_BASE_URL` via the
+unpod SDK resolver.
+
+| Setting | Purpose |
+|---|---|
+| `UNPOD_BASE_URL` | The one host every plane is derived from (e.g. `api.unpod.ai`). |
+| `UNPOD_API_KEY` | Credential for hosted speech + platform APIs. |
+| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | The LLM the agent and builder run on. |
+| `FLOWS_DIR` / `PLAYBOOKS_DIR` | Point at `../superdialog/examples/*` to drive live superdialog copies instead of the bundled ones. |
+
+<Note>
+Default builds bake no client-side auth base - the SPA reaches auth through the
+harness's same-origin proxy at `/playground/auth`. The deprecated `VITE_API_URL`
+still overrides this (pointing the SPA straight at a hosted backend) if set
+explicitly mid-migration.
+</Note>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="SuperDialog engine" icon="brain" href="/superdialog/introduction">
+    The brain behind every playbook - engines, the Agent protocol, and embedding.
+  </Card>
+  <Card title="Embedding guides" icon="plug" href="/superdialog/embedding-guides/overview">
+    Drop SuperDialog into LiveKit, PipeCat, FastAPI, or the CLI directly.
+  </Card>
+  <Card title="Speech Stack" icon="audio-waveform" href="/speech-stack/introduction">
+    The voice infrastructure that serves live calls in production.
+  </Card>
+  <Card title="Build an agent playbook" icon="wand-sparkles" href="/playbook/build-an-agent">
+    The builder-facing walkthrough of the same Playground.
+  </Card>
+</CardGroup>

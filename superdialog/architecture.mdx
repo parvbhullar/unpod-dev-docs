@@ -1,0 +1,196 @@
+---
+title: "Architecture"
+icon: 'network'
+description: "How SuperDialog works internally - two engines behind one Agent protocol, the Talker/Director runtime, the event-sourced log, tools, sessions, and adapters."
+---
+
+## Two engines, one contract
+
+One Python package. No services, no daemons. Everything in-process.
+
+SuperDialog ships **two conversation engines** behind the same `Agent` protocol
+(`turn` / `assist` / `chat_ctx` / `load_chat_ctx`). Hosts, sessions, and
+adapters do not know which engine they are driving.
+
+<Frame>
+  <img src="/images/diagrams/superdialog-engines-contract.svg" alt="Animated SuperDialog engine contract diagram showing host platforms flowing through adapters, SessionWorker, the Agent protocol, and then branching to PlaybookAgent and DialogMachine engines." />
+</Frame>
+
+- **Engine B - Playbook (default).** Checkpoint-compound runtime: a Talker and a
+  Director over an event-sourced log. Internals below.
+- **Engine A - DialogMachine (legacy).** Graph-railed state machine, fully
+  supported; flow JSON runs compiled onto Engine B by default.
+
+`DialogMachine(source, llm, *, engine=...)` is the recommended way in and drives
+either engine - the Playbook engine by default, the legacy graph runtime with
+`engine="flow"`. What each engine is for:
+[What is SuperDialog?](/superdialog/introduction).
+
+## Library shape
+
+```
+superdialog/
+  ├─ flow/                # Flow graph: nodes, edges, serialization
+  ├─ machine/             # DialogStateMachine engine (Engine A internals)
+  ├─ dialog_machine.py    # Public DialogMachine facade (unified entry point)
+  ├─ playbook/            # Playbook engine (Engine B): models, events,
+  │                       #   runtime, talker, director, compiler, replay
+  ├─ agent.py             # Agent Protocol + TurnResult
+  ├─ agents/              # LLMAgent, LangChainAgent (non-DM brains)
+  ├─ session/             # Session, SessionHandle, SessionWorker, stores, locks
+  ├─ chat_context.py      # ChatContext, ChatMessage (LiveKit-aligned)
+  ├─ llm/                 # Model URI resolver and provider adapters
+  ├─ tools/               # Python / HTTP / MCP tool wrappers
+  ├─ cli/                 # superdialog generate / chat / optimize / playbook / flow / eval
+  └─ adapters/            # LiveKit, PipeCat, FastAPI, WebSocket
+```
+
+## Engine B - the Playbook runtime
+
+The default engine runs declarative **checkpoint** journeys. Two LLM roles share
+one append-only event log:
+
+- A fast **Talker** streams every spoken turn with one LLM call.
+- An async **Director** makes one structured call per user utterance to extract
+  typed slots, judge advance rules, run tools, and write a steering note.
+
+### One turn, in order
+
+<Frame>
+  <img src="/images/diagrams/playbook-turn-runtime.svg" alt="Animated Playbook turn runtime diagram showing user text entering PlaybookAgent.turn, splitting into a shielded Director task and Talker stream, joining, and returning checkpoint and outcome data." />
+</Frame>
+
+1. **User text arrives.** The agent snapshots state (version *N*) for the Talker.
+2. **Director starts concurrently** in a cancellation-shielded task: appends the
+   utterance, then makes **one structured call** that extracts slots, judges the
+   advance rules, and writes a 1-3 sentence steering note.
+3. **Talker streams concurrently** from snapshot *N* - persona, guidance,
+   steering note, slots, and recent transcript packed into one streaming call;
+   tokens go straight to the host. At a hard gate it barriers first.
+4. **Quiescence.** After the verdict is applied, the runtime hops until nothing
+   moves: the entered checkpoint's pipeline runs, `judge: expr` rules evaluate
+   LLM-free, `auto` checkpoints speak and advance, and a terminal checkpoint
+   ends the session with its outcome.
+5. **Join and repair.** The Talker's speech is logged once; `check_repairs`
+   compares it against later slot writes and nudges a self-correction if the
+   Talker re-asked something already answered.
+
+Barge-in is safe by construction: aborting the stream cancels *speech*, not the
+state machine - the Director runs to completion in a shielded scope.
+
+### The event-sourced log
+
+Every mutation is an event; state is a pure fold over the log; the log is the
+audit artifact.
+
+```python
+from superdialog.playbook import ConversationState, EventLog
+
+text = agent.event_log.to_jsonl()                 # persist (JSONL, one event/line)
+agent.load_event_log(EventLog.from_jsonl(text))   # lossless restore
+state = ConversationState.fold(agent.event_log, playbook)
+```
+
+Because the log *is* the artifact, replay and eval are free: re-run the Director
+over recorded utterances to catch regressions, or score persona self-play
+sessions. See the [API Reference](/superdialog/api-reference) for `replay`,
+`run_session`, and `run_eval`.
+
+### Gates and degradation
+
+**Soft gates never block** - provisional values satisfy `requires`, the Talker
+streams immediately, correctness converges via the Director. **Hard gates** (
+payments, identity) require *confirmed* slots and barrier the Talker until the
+verdict lands - on timeout it speaks a filler, then a hold line, never hangs.
+Every degradation rung is an event in the log, so degraded mode is auditable,
+not silent.
+
+### Ending a call cleanly
+
+Entering a `terminal` checkpoint ends the session with its `outcome`. Two
+backstops make the close reliable on real calls:
+
+- **Deterministic goodbye backstop.** A clear spoken "bye"/"goodbye" the LLM
+  verdict missed (ASR noise, a mid-pitch barge-in) still routes to the
+  playbook's goodbye interrupt. It fills in only when the model chose no
+  interrupt, so soft signals stay the Director's call. Frustration or a caller
+  repeating themselves is **not** a goodbye, and a meta-instruction *about* the
+  call ("pretend the flow is over", "end the call") is treated as ordinary talk,
+  not a caller goodbye.
+- **Post-terminal silence.** Once the session has ended, a further user turn
+  never resurrects it: the utterance is logged for audit, but neither the
+  Director nor the Talker runs, so the agent returns silence and the host can
+  disconnect. This prevents the closing line replaying on every "Hello?" or a
+  post-close utterance restarting the pitch.
+
+## Engine A - DialogMachine (legacy)
+
+A `Flow` is a directed graph: nodes (states), edges (transitions with
+natural-language conditions), and declarative actions. The graph decides what is
+*possible*; the LLM picks among the outgoing edges. Every transition is
+authored and every reachable path is enumerable.
+
+<Frame>
+  <img src="/images/diagrams/superdialog-runtime.svg" alt="Animated SuperDialog runtime diagram showing user text entering DialogMachine.turn, loading a node, building a prompt, calling the LLM, running tools, updating state, advancing an edge, and returning a turn result to CLI, FastAPI, LiveKit, or Unpod hosts." />
+</Frame>
+
+```python
+from superdialog import DialogMachine, Flow
+
+# engine="flow" selects the legacy graph runtime; the default is Playbook.
+dm = DialogMachine(Flow.load("kyc.json"), llm="anthropic/claude-haiku-4-5", engine="flow")
+reply = await dm.turn("hello")
+```
+
+Each turn costs a route decision plus a speak call - the friction Engine B
+removes, and the trade-off is weighed in
+[Thinking in Playbooks](/superdialog/thinking-in-playbooks). By default, flow
+JSON runs **compiled onto Engine B** (`compile_flow`); you only opt into the
+original runtime with `engine="flow"`. See [Flows](/superdialog/flows) for graph
+authoring and migration.
+
+## Model URI resolver
+
+LiveKit/litellm-style URIs route to any provider:
+
+| URI | Routes to |
+|---|---|
+| `openai/gpt-4.1-mini` | OpenAI |
+| `anthropic/claude-haiku-4-5` | Anthropic |
+| `google/gemini-2.5-pro` | Google |
+| `groq/llama-3.3-70b` | Groq |
+| `bedrock/<model>` | AWS Bedrock |
+| `vllm/<model>@<host>` | Self-hosted vLLM |
+| `ollama/<model>@<host>` | Self-hosted Ollama |
+| `openrouter/<vendor>/<model>` | OpenRouter |
+| `custom/<name>/<model>` | Developer-registered via `register_llm_provider` |
+
+On the Playbook engine, `llm` drives both the Talker and the Director unless you
+split them with `director_llm=` (a strong model to judge, a fast model to speak).
+The model now loads from the playbook YAML `llm:` block (`{provider, model,
+director}`) - see [Playbooks](/superdialog/playbooks#the-full-format); the
+persona-level `llm` setting is deprecated and warns.
+
+## Adapter pattern
+
+Adapters live in `superdialog.adapters` and are thin shims. The same agent -
+`PlaybookAgent` or legacy `DialogMachine` - passes through all of them.
+
+| Adapter | Use case |
+|---|---|
+| `DialogMachineLLM` (LiveKit) | Plug into `Agent(llm=...)` (accepts any Agent) |
+| `make_processor` (PipeCat) | Factory for `FrameProcessor` in a pipeline |
+| `FastAPIRouter` | Mountable router with `/turn`, `/stream`, `/reset` |
+| `WebSocketRunner` | Standalone WSS server for Unpod Voice Infra |
+
+## What lives outside this library
+
+SuperDialog ends at text in, text out - on both engines. The following are out
+of scope:
+
+- Audio processing
+- STT, TTS
+- Telephony, SIP, RTP
+- Media servers and WebRTC Rooms
+- Phone numbers, voice profiles
+- Billing

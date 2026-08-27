@@ -1,0 +1,207 @@
+---
+title: 'Telephony Deep Dive: Bridges, Numbers & Providers'
+sidebarTitle: 'Telephony Deep Dive'
+description: 'How Unpod routes calls through bridges, SIP providers, and phone numbers - and how to configure it for your use case'
+icon: 'phone'
+---
+
+<Info>
+**Last updated:** July 22, 2026 · **API version:** v2 · **Tested against:** `openapi.yaml` 2.0.0 · 7 min read
+</Info>
+
+<Warning>
+API examples use the production host `https://unpod.ai/`, the `/api/v2/platform/` path prefix, and `Authorization: Token`. The legacy `api.unpod.ai/api/v1/` + `Bearer` scheme is deprecated.
+</Warning>
+
+---
+
+Telephony is the layer that connects your AI agent to the real phone network. Unpod abstracts away the complexity of SIP, PSTN, and WebRTC - but understanding how the pieces fit together helps you configure it correctly and debug issues faster.
+
+## The Three Components
+
+Unpod telephony has three core concepts:
+
+<Frame>
+  <img src="/images/diagrams/telephony-routing-flow.svg" alt="Animated telephony routing flow diagram showing a phone number routed through a bridge and provider to an agent." />
+</Frame>
+
+| Component | What It Is | Example |
+|-----------|-----------|---------|
+| **Phone Number** | A real PSTN/VoIP number | +1 415 555 0100 |
+| **Bridge** | Routing config linking number + provider + agent | `support-bridge` |
+| **Provider** | Voice infrastructure that handles media | LiveKit, Vapi |
+
+---
+
+## Providers: The Voice Infrastructure
+
+Providers handle the actual audio - WebRTC media servers, transcription, and TTS streaming.
+
+### LiveKit
+
+LiveKit is an open-source, WebRTC-based media server. Unpod's real-time voice pipeline runs on LiveKit.
+
+- Sub-300ms end-to-end latency
+- Can be self-hosted (cost control at scale)
+- Supports SIP trunking for PSTN connectivity
+- Best for: developers who want full control, self-hosted deployments
+
+### Vapi
+
+Vapi is a hosted voice AI infrastructure platform.
+
+- Fully managed - no infrastructure to run
+- Built-in SIP trunking and number management
+- Simplified setup for faster time to production
+- Best for: teams that want managed infra without ops overhead
+
+---
+
+## Bridges: The Routing Layer
+
+A Bridge is a named configuration that connects:
+- **One provider** (LiveKit or Vapi)
+- **One or more agents**
+- **One or more phone numbers**
+
+Think of it as a switchboard. When a call arrives at a number, the bridge decides which agent handles it.
+
+### Creating a Bridge via Dashboard
+
+Go to **Dev Platform → Telephony → Bridges → Create Bridge**:
+
+```json
+{
+  "name": "support-bridge",
+  "provider": "livekit",
+  "agent_handle": "aria-support",
+  "inbound_enabled": true,
+  "outbound_enabled": true
+}
+```
+
+### Creating a Bridge via API
+
+```bash
+curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Support Bridge",
+    "slug": "support-bridge"
+  }'
+```
+
+A bridge is created with just a `name` and `slug`. Attach a provider afterward with the [connect-provider](/api/telephony/connect-provider-to-bridge) endpoint (`POST /api/v2/platform/telephony/bridges/{slug}/connect-provider/`).
+
+---
+
+## Phone Numbers
+
+Unpod provisions real phone numbers through your connected SIP provider. Numbers are then assigned to bridges.
+
+### Number Types
+
+| Type | Description | Use Case |
+|------|-------------|----------|
+| Local DID | Local area code number | Customer support, sales |
+| Toll-Free | 800/888/877 numbers | Enterprise support lines |
+| International | Non-US numbers | Global operations |
+
+### Listing Your Numbers
+
+Numbers are provisioned through your connected SIP provider (via the Dashboard or your provider's portal), then attached to trunks/bridges. The API exposes numbers as read-only - list them with:
+
+```bash
+curl "https://unpod.ai/api/v2/platform/telephony/numbers/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle"
+```
+
+To attach numbers to a trunk, use the [attach-numbers](/telephony/trunks/attach-numbers) endpoint (`POST /api/v2/platform/telephony/trunks/{id}/attach-numbers/`). Once assigned to a bridge, a number is active and routed.
+
+---
+
+## Call Flow: What Happens on an Inbound Call
+
+1. Caller dials your number
+2. SIP provider receives the call, looks up the number's bridge assignment
+3. Bridge routes call to the configured provider (LiveKit/Vapi)
+4. Provider streams audio to the Unpod voice pipeline
+5. Voice pipeline runs: STT → LLM (with your agent config) → TTS
+6. Audio streams back to caller in real time
+7. Call ends, transcript and metadata written to Call Logs
+
+Total setup latency target: **under 300ms** from first word to agent response start.
+
+---
+
+## Outbound Calls
+
+For outbound (agent-initiated) calls, create a Task via API:
+
+```bash
+curl -X POST "https://unpod.ai/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/create/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pilot": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+    "context": "Support follow-up call",
+    "schedule": { "type": "now" },
+    "documents": [
+      { "name": "John Doe", "contact_number": "14155550100" }
+    ]
+  }'
+```
+
+Tasks are scoped to a space (`space_token` in the path) and take the agent `pilot` handle plus a `documents` array of contacts. Unpod dials each number through the space's bridge, and the agent begins the conversation. See the full [create-task reference](/api/execution/create-task).
+
+---
+
+## Multi-Agent Routing
+
+One bridge can route to different agents based on custom logic. Use the API to update bridge routing dynamically:
+
+```bash
+curl -X PATCH "https://unpod.ai/api/v2/platform/telephony/bridges/support-bridge/" \
+  -H "Authorization: Token YOUR_API_KEY" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Support Bridge — Billing Hours"
+  }'
+```
+
+The bridge `PATCH` endpoint updates bridge fields such as `name`. To change which provider/agent a bridge routes to, use the [connect-provider](/api/telephony/connect-provider-to-bridge) / [disconnect-provider](/api/telephony/disconnect-provider-from-bridge) endpoints. Combine this with your own IVR or pre-call webhook to build intelligent call routing before the AI agent picks up.
+
+---
+
+## Debugging Common Issues
+
+| Symptom | Likely Cause | Fix |
+|---------|-------------|-----|
+| Call connects but agent doesn't respond | Provider not reachable or misconfigured | Check LiveKit URL and API key in env |
+| Number provisioning fails | No SIP provider connected to bridge | Connect a provider first |
+| High latency on first word | TTS model cold start | Use a faster TTS model (OpenAI TTS > ElevenLabs for latency) |
+| Call drops after 30s | WebRTC ICE timeout | Check firewall rules for UDP 10000-60000 |
+
+---
+
+## What's Next
+
+<CardGroup cols={2}>
+  <Card title="Telephony API Reference" icon="git-branch" href="/api/telephony/bridges-overview">
+    Full API reference for bridges, numbers, and providers.
+  </Card>
+  <Card title="Dev Platform: Telephony" icon="phone" href="/platform/dev-platform/telephony">
+    Dashboard walkthrough for telephony setup.
+  </Card>
+  <Card title="Providers Overview" icon="server" href="/api/provider/overview">
+    Configure and manage voice infrastructure providers.
+  </Card>
+  <Card title="Create a Task (Outbound Call)" icon="phone-call" href="/api/execution/create-task">
+    Trigger outbound AI calls via API.
+  </Card>
+</CardGroup>

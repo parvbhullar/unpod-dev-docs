@@ -1,60 +1,87 @@
-# API Overview
+---
+title: 'API Overview'
+icon: 'book-open'
+description: 'Base URL, authentication, rate limiting, and error handling for the Unpod REST API - stated once.'
+---
 
-Welcome to the Unpod API documentation. Our API provides programmatic access to Unpod's telephony and messaging services.
+The Unpod REST API manages platform resources: spaces, agents, tasks, runs,
+call logs, telephony (bridges, numbers, providers), and billing. This page
+states the conventions once; the endpoint pages in the sidebar assume them.
+
+<Note>
+Building a voice agent in Python? You likely want the
+[Speech Stack](/get-started/quickstart) instead - the `unpod` SDK wraps
+provisioning and live-call handling. The REST API is for direct integrations
+and non-Python stacks.
+</Note>
 
 ## Base URL
 
-All API endpoints are relative to the base URL:
+```
+https://unpod.ai/api/v2/platform
+```
 
-```
-https://api.unpod.ai/v1
-```
+All endpoint paths in this reference are relative to it.
 
 ## Authentication
 
-All API requests must be authenticated using an API key. Include your API key in the `Authorization` header:
+Every request carries an API token in the `Authorization` header using the
+`Token` scheme:
 
 ```http
-Authorization: Bearer YOUR_API_KEY
+Authorization: Token a1b2c3d4e5f6g7h8i9j0...
 ```
 
-## Rate Limiting
+Generate tokens from the [Unpod Dashboard](https://unpod.ai/api-keys/) - see
+[Authentication](/api/get-started/authentication) for the step-by-step,
+space-token scoping, and error responses.
 
-API requests are subject to rate limiting:
-- 100 requests per minute per API key
-- 10,000 requests per day per API key
+```bash
+curl -X GET "https://unpod.ai/api/v2/platform/telephony/bridges/" \
+  -H "Authorization: Token $UNPOD_TOKEN"
+```
 
-## Response Format
+## Rate limiting
 
-All API responses are in JSON format and include standard HTTP status codes.
+Responses include rate-limit headers; exceeding your limit returns
+`429 Too Many Requests`:
 
-## Error Handling
+| Header | Meaning |
+|---|---|
+| `X-RateLimit-Limit` | Max requests in the current window |
+| `X-RateLimit-Remaining` | Requests left in the window |
+| `X-RateLimit-Reset` | Unix timestamp when the window resets |
+| `Retry-After` | Seconds to wait (only on 429) |
 
-Errors return a JSON object with an `error` field containing details:
+Handle 429s with exponential backoff, honoring `Retry-After`. Cache reads and
+batch writes where you can. Current limits depend on your plan - check the
+dashboard.
+
+## Errors
+
+The API uses standard HTTP status codes. Error bodies are JSON with a
+machine-readable code and a human-readable message:
 
 ```json
 {
   "error": {
-    "code": "invalid_request",
-    "message": "The request was invalid.",
-    "details": {
-      "field": "phone_number",
-      "reason": "invalid_format"
-    }
+    "code": "rate_limit_exceeded",
+    "message": "Rate limit exceeded. Please try again in 60 seconds."
   }
 }
 ```
 
-## SDKs
+Common cases: `401` - token missing, expired, or access denied (see
+[Authentication](/api/get-started/authentication)); `404` - resource not
+found or outside your space; `429` - rate limited.
 
-For easier integration, we provide official SDKs in multiple programming languages:
+## Start here
 
-- [JavaScript SDK](/sdk/javascript)
-- [Python SDK](/sdk/python)
-- [Java SDK](/sdk/java)
-
-## Getting Started
-
-1. [Get your API key](https://app.unpod.ai/settings/api-keys)
-2. Try our [Quickstart Guide](/quickstart)
-3. Explore the API endpoints in the sidebar
+<CardGroup cols={2}>
+  <Card title="API Quickstart" icon="play" href="/api/get-started/quickstart">
+    First authenticated requests against bridges, call logs, and providers.
+  </Card>
+  <Card title="Authentication" icon="key" href="/api/get-started/authentication">
+    Tokens, space scoping, and auth errors in detail.
+  </Card>
+</CardGroup>

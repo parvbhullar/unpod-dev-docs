@@ -1,0 +1,54 @@
+---
+title: 'List Numbers'
+icon: 'hash'
+description: 'List the telephony numbers available to your organization'
+openapi: 'GET /api/v2/platform/telephony/numbers/'
+---
+
+Returns the numbers available to you. Behavior depends on the `Org-Handle` header:
+
+- **With Org-Handle** — returns your organization's own numbers (any state) plus the shared
+  unassigned pool (`NOT_ASSIGNED`).
+- **Without Org-Handle** — returns only the shared unassigned pool.
+
+Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numbers).
+
+<Note>
+**Prerequisites:** API Token. See [Authentication](/api/get-started/authentication).
+</Note>
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Authorization | string | Yes      | `Token <your-api-key>`          |
+| Org-Handle    | string | No       | Organization domain handle      |
+
+### Number object fields
+
+| Field   | Type    | Description                                  |
+|---------|---------|----------------------------------------------|
+| id      | integer | Unique number id (use this in attach calls)  |
+| number  | string  | Phone number in E.164 format                 |
+| state   | string  | `NOT_ASSIGNED` or `ASSIGNED`                 |
+| active  | boolean | Whether the number is usable                 |
+
+<ResponseExample>
+
+```json 200
+{
+  "status_code": 200,
+  "message": "Telephony numbers fetched successfully.",
+  "data": [
+    { "id": 501, "number": "+15551234567", "state": "NOT_ASSIGNED", "active": true }
+  ]
+}
+```
+
+</ResponseExample>
+
+```bash cURL
+curl -s "https://unpod.ai/api/v2/platform/telephony/numbers/" \
+  -H "Authorization: Token <your-api-key>" \
+  -H "Org-Handle: <your-org-handle>"
+```
