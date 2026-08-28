@@ -1,7 +1,7 @@
 ---
 title: 'Voice Profiles'
 icon: 'mic'
-description: 'Browse and select the speech stack for your Speech Pipes.'
+description: 'Browse and select the speech stack for your agents.'
 ---
 
 ## What Is a Voice Profile?
@@ -13,7 +13,7 @@ things into a single reusable configuration:
 - **Text-to-Speech (TTS)** - converts agent text into natural-sounding audio
 - **Voice** - the specific voice identity (gender, accent, character) used for TTS output
 
-When you attach a voice profile to a Speech Pipe, every call that Speech Pipe handles uses that configuration automatically - including failover if a provider goes down.
+When you attach a voice profile to an agent, every call that voice handles uses that configuration automatically - including failover if a provider goes down.
 
 <Frame>
   <img src="/images/diagrams/voice-profile-pipeline.svg" alt="Voice profile pipeline diagram showing caller speech passing through STT, dialog machine text handling, TTS plus voice, and caller playback." />
@@ -53,7 +53,7 @@ asyncio.run(main())
 
 | Field | Type | Description |
 |---|---|---|
-| `profile_id` | `str` | Profile ID to pass when creating a Speech Pipe |
+| `profile_id` | `str` | Profile ID to pass as `voice_profile` when creating an agent |
 | `name` | `str` | Human-readable name, e.g. `"Emma (HD)"` |
 | `gender` | `str` | `male`, `female`, or `neutral` |
 | `quality` | `str` | `standard` or `high` |
@@ -101,13 +101,13 @@ Total call latency has three components: STT transcription + LLM thinking + TTS 
 
 ---
 
-## Using a Profile When Creating a Speech Pipe
+## Using a Profile When Creating an Agent
 
-Pass `profile_id` directly when creating or updating a Speech Pipe:
+Pass `profile_id` as `voice_profile` when you create the agent:
 
 ```python
 import asyncio
-from unpod import AsyncClient
+from unpod import AsyncClient, Prompt
 
 async def main():
     async with AsyncClient() as client:  # reads UNPOD_API_KEY
@@ -117,19 +117,23 @@ async def main():
             p for p in profiles if p.quality == "high" and p.gender == "female"
         )
 
-        # Create Speech Pipe with that profile
-        pipe = await client.pipes.create(
+        voice = await client.agents.voice.create(
+            "support-bot",
+            brain=Prompt("You are a concise support assistant."),
             name="Support Bot",
             voice_profile=hd_female.profile_id,
         )
-        print("Created Speech Pipe with profile:", hd_female.name)
+        print("Created agent with profile:", voice.voice_profile_name)
 
 asyncio.run(main())
 ```
 
 ---
 
-## Switching a Profile on an Existing Speech Pipe
+## Giving an Agent a Second Voice
+
+One agent, one brain, many voices - a second language is a second voice, not a
+second agent. The new voice inherits the brain unchanged.
 
 ```python
 import asyncio
@@ -137,11 +141,18 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient() as client:  # reads UNPOD_API_KEY
-        pipe = await client.pipes.update(
-            "pipe_...",
-            voice_profile="vp_es_male_std",   # switch to Spanish male
+        await client.agents.voice.add(
+            "support-bot",
+            voice_profile="vp_es_male_std",     # Spanish male
+            greeting="Hola, gracias por llamar.",
         )
-        print("Updated voice profile:", pipe.voice_profile_id)
+
+        agent = await client.agents.get("support-bot")
+        for v in agent.voices:
+            print(v.voice_profile_id, v.voice_profile_name, v.is_default)
+
+        # Drop one voice; the agent keeps the rest
+        await client.agents.voice.remove("support-bot", "vp_es_male_std")
 
 asyncio.run(main())
 ```
@@ -151,8 +162,8 @@ asyncio.run(main())
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Speech Pipe" icon="bot" href="/speech-stack/pipes">
-    Attach a voice profile when creating or updating a Speech Pipe.
+  <Card title="Agents" icon="robot" href="/speech-stack/agents">
+    Attach a voice profile when creating an agent, and add more voices later.
   </Card>
   <Card title="AgentRunner & Sessions" icon="code" href="/speech-stack/agent-runner">
     Install the SDK and configure your runner process.

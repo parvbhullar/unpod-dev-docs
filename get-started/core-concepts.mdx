@@ -54,7 +54,7 @@ link (for example `/get-started/core-concepts#pipe`).
 ### Number
 
 A phone number callers dial. Inbound calls arrive on a number and route to the
-**Speech Pipe** it is attached to. Numbers come from Unpod directly or you bring
+**agent** it is attached to. Numbers come from Unpod directly or you bring
 your own (BYON). You never configure a carrier. See
 [Numbers](/speech-stack/numbers).
 
@@ -71,16 +71,37 @@ once with its SIP credentials and then work with numbers, not SIP. See
 A bundle of STT + TTS provider configuration: which providers recognise and
 synthesise speech, which language and voice, latency, and failover order.
 Profiles are a read-only catalog you pick from - you reference one by name or
-`profile_id` when creating a Speech Pipe. See
+`profile_id` when creating an agent voice. See
 [Voice Profiles](/speech-stack/voice-profiles).
 
-### Pipe
+### Agent
 
-A **Speech Pipe** is the configuration entity that binds a call together: a
+An **agent** is one `agent_id`, one **brain**, and one or more **voices**. The
+brain answers turns; each voice is a voice profile the agent speaks with. The
+brain belongs to the agent, so editing it reaches every voice. Numbers attach to
+an agent; outbound calls dispatch to an agent. See
+[Agents](/speech-stack/agents).
+
+### Brain
+
+What answers a turn, named explicitly when you create the agent - exactly one of
+four sources:
+
+| Source | Who answers | You deploy |
+|---|---|---|
+| `Playbook(id)` | Unpod's playbook pool | nothing; publish the playbook |
+| `Prompt(text)` | Unpod, as a one-node playbook | nothing |
+| `Runner()` | your own worker over WebSocket | an AgentRunner process |
+| `Endpoint(url, ...)` | your own HTTP service, called per turn | an OpenAI-compatible URL |
+
+### Pipe (deprecated)
+
+A **Speech Pipe** was the configuration entity that bound a call together: a
 name, a voice profile, recording and duration settings, and the `agent_id` that
-points at your runner. Numbers attach to a pipe; outbound calls run through a
-pipe. The pipe is the anchor that connects a number, a voice profile, and your
-agent. See [Pipes](/speech-stack/pipes).
+pointed at your runner. It is the predecessor of a single agent-voice row -
+`client.pipes` still writes the same rows but warns on every call. One place it
+survives: `client.sessions.create_token(pipe_id=...)` for browser sessions. See
+[Speech Pipe](/speech-stack/pipes) for the migration table.
 
 ### Bridge
 
@@ -144,18 +165,18 @@ using.
 | Entry point | `Client` / `AsyncClient` | `AgentRunner` / `Session` |
 | Purpose | Provision resources | Handle live calls |
 | You call it | Before calls | During calls |
-| Examples | `client.numbers`, `client.voice_profiles`, `client.pipes`, `client.trunks`, `client.calls` | `AgentRunner(...).start()`, `ctx.session.say(...)` |
+| Examples | `client.agents`, `client.numbers`, `client.voice_profiles`, `client.calls`, `client.analytics`, `client.trunks` | `AgentRunner(...).start()`, `ctx.session.say(...)` |
 
 **Management API** is for setup and orchestration: register a trunk, sync
-numbers, create a Speech Pipe, trigger an outbound call, fetch transcripts. You
-construct a `Client` (sync) or `AsyncClient` (async); it reads `UNPOD_API_KEY`
-from the environment.
+numbers, create an agent, trigger an outbound call, fetch transcripts and
+analytics. You construct a `Client` (sync) or `AsyncClient` (async); it reads
+`UNPOD_API_KEY` from the environment.
 
 ```python
-from unpod import AsyncClient
+from unpod import AsyncClient, Runner
 
 client = AsyncClient()                       # REST, reads UNPOD_API_KEY
-pipe = await client.pipes.create(name="support", agent_id="support-bot")
+await client.agents.voice.create("support-bot", brain=Runner(), name="Support")
 ```
 
 **Connectivity API** is for the call itself: your `AgentRunner` holds a
@@ -177,29 +198,31 @@ AgentRunner(entrypoint=entrypoint, agent_id="support-bot").start()
 Four identifiers cause most first-run failures. They are not interchangeable.
 
 <Warning>
-**`agent_id` and `pipe_id` are different things.** Mismatching them is the most
-common reason a call never reaches your runner. The `agent_id` you pass to
-`AgentRunner(...)` must exactly match the `agent_id` on the Speech Pipe.
+**`agent_id` is the one that must match.** The `agent_id` you pass to
+`AgentRunner(...)` must exactly match the `agent_id` you created the agent with,
+or a call rings and no runner claims it.
 </Warning>
 
 | ID | What it identifies | Where it comes from |
 |---|---|---|
-| **`agent_id`** | Your runner pool - which AgentRunner should handle a call | A string **you choose**. Passed to both `AgentRunner(agent_id=...)` and `client.pipes.create(agent_id=...)`. They must match exactly. |
-| **`pipe_id`** | One Speech Pipe in the Speech Stack | A UUID **Unpod assigns** when you create the pipe. Used in REST calls (`numbers.attach`, `calls.create`). |
+| **`agent_id`** | The agent - its brain, its voices, and which AgentRunner handles its calls | A string **you choose**. Passed to both `AgentRunner(agent_id=...)` and `client.agents.voice.create(agent_id, ...)`. They must match exactly. Numbers and outbound calls key on it too. |
+| **`pipe_id`** | One agent-voice row, in the deprecated spelling | A UUID **Unpod assigns**. Still needed by `client.sessions.create_token(pipe_id=...)` for browser sessions; everything else takes `agent_id`. |
 | **Space token** | A Platform workspace | A token from the Platform's Spaces API. Used only in the hosted Platform and its REST API, not in the voice SDK. |
 | **Runner agent ID** | Same as `agent_id` | Just another name for `agent_id` as seen from the runner side. Internally the runner derives a `worker_id` (`<agent_id>#<random>`) per process, but you never set that. |
 
 Wiring it correctly:
 
 ```python
-# 1. Pipe says: route my calls to the "support-bot" agent.
-pipe = await client.pipes.create(name="Support", agent_id="support-bot")
-print(pipe.pipe_id)   # UUID from Unpod -> use in REST calls
+from unpod import Runner
 
-# 2. Runner says: I am the "support-bot" agent.
+# 1. The agent says: my brain is a runner registered as "support-bot".
+await client.agents.voice.create(
+    "support-bot", brain=Runner(), name="Support", voice_profile="vp_en_female_hd")
+
+# 2. The runner says: I am "support-bot".
 AgentRunner(entrypoint=entrypoint, agent_id="support-bot").start()
 #                                            ^^^^^^^^^^^^
-#            must equal the pipe's agent_id, or calls never arrive
+#            must equal the agent_id above, or calls never arrive
 ```
 
 If a call rings but your runner never wakes up, check this match first.
@@ -212,7 +235,7 @@ terms precisely.
 | Term | What it means |
 |---|---|
 | **Unpod** | The company and the platform as a whole - everything below combined. |
-| **Speech Stack** | The voice infrastructure plus the `unpod` SDK: numbers, trunks, voice profiles, pipes, STT/TTS, and the AgentRunner runtime. This is what a Python dev builds against. |
+| **Speech Stack** | The voice infrastructure plus the `unpod` SDK: agents, numbers, trunks, voice profiles, STT/TTS, and the AgentRunner runtime. This is what a Python dev builds against. |
 | **SuperDialog** | The optional dialog framework (`superdialog` package): flow graphs, tools, and state for structured conversations. One choice of brain - not required. |
 | **Platform** | The hosted UI and self-hostable stack: dashboard, agent studio, spaces, analytics, and telephony management on top of the Speech Stack. |
 
@@ -220,10 +243,10 @@ terms precisely.
 
 <CardGroup cols={2}>
   <Card title="Make Your First Call" icon="phone" href="/get-started/first-phone-call">
-    Wire a number, a pipe, and a runner end to end.
+    Wire a number, an agent, and a runner end to end.
   </Card>
   <Card title="Speech Stack" icon="layers" href="/speech-stack/introduction">
-    Numbers, voice profiles, pipes, and the AgentRunner SDK.
+    Agents, numbers, voice profiles, and the AgentRunner SDK.
   </Card>
   <Card title="SuperDialog" icon="git-branch" href="/superdialog/introduction">
     The optional framework for structured conversation flows.

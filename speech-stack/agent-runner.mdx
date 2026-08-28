@@ -46,14 +46,14 @@ async def handle_call(ctx: CallContext) -> None:
 
 runner = AgentRunner(
     entrypoint=handle_call,
-    agent_id="my-agent",  # must match agent_id in your Speech Pipe
+    agent_id="my-agent",  # must match the agent_id you created the agent with
 )
 runner.start()  # blocking
 ```
 
 <Note>
 `agent_id` is the runner agent ID - a short string you choose, matching the
-`agent_id` in your Speech Pipe config. Not the pipe's UUID. See
+`agent_id` you passed to `client.agents.voice.create(...)`. Not a pipe UUID. See
 [IDs You'll Meet](/get-started/core-concepts#ids-youll-meet).
 </Note>
 
@@ -186,7 +186,7 @@ await ctx.session.recording.resume()
 ```
 
 <Warning>
-Pause/resume requires recording to be enabled on the Speech Pipe
+Pause/resume requires recording to be enabled on the agent
 (`recording=True`); otherwise these calls are ignored.
 </Warning>
 

@@ -1,0 +1,187 @@
+---
+title: 'Analytics'
+icon: 'chart-simple'
+description: 'Attach a prompt plus a field spec to an agent and get structured data from every call.'
+---
+
+## What Is an Analytics Block?
+
+An **analytics block** is a prompt plus a field spec. Attach it to an agent and
+it runs **automatically on every session that agent finishes** - there is no
+"run" call. Attach it, place calls, read results.
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:
+        block = await client.analytics.create(
+            name="Lead Qualification",
+            prompt="Assess whether the caller is a qualified lead and why.",
+            fields=[
+                {"name": "budget", "type": "int"},
+                {"name": "sentiment", "type": "enum",
+                 "choices": ["Positive", "Neutral", "Negative"]},
+            ],
+        )
+        await client.analytics.attach(block.block_id, agent_id="support-bot")
+
+        for r in await client.analytics.results(block.block_id):
+            print(r.session_id, r.success_evaluation, r.summary, r.data)
+
+asyncio.run(main())
+```
+
+<Note>
+`client.analytics` reads the org-scoped platform plane, like
+`client.voice_profiles` and `client.telephony`. It needs `UNPOD_PLATFORM_TOKEN`
+plus `UNPOD_ORG_HANDLE`; a bare Bearer `UNPOD_API_KEY` cannot reach it.
+</Note>
+
+---
+
+## The Field Spec
+
+Each entry of `fields` is `{name, type, description?, choices?}`:
+
+| Key | Type | Description |
+|---|---|---|
+| `name` | `str` | Field name, and the key it lands under in `result.data` |
+| `type` | `str` | One of `str`, `int`, `float`, `bool`, `list[str]`, `enum` |
+| `description` | `str` | Optional - steers extraction for that one field |
+| `choices` | `list[str]` | Required for `enum`; the allowed values |
+
+A summary is extracted for **every** block whether or not you declare one - pass
+`summary_description` to steer what it emphasises. `model` overrides the
+service's default LLM for that block alone.
+
+---
+
+## Authoring Blocks
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:
+        # Fork a starter block instead of writing one from scratch
+        for t in await client.analytics.templates():
+            print(t["name"])
+
+        block = await client.analytics.create(
+            name="Call Outcome",
+            prompt="Classify how this call ended and whether the goal was met.",
+            fields=[{"name": "outcome", "type": "enum",
+                     "choices": ["Booked", "Callback", "Not interested"]}],
+            summary_description="Two sentences: what the caller wanted, what happened.",
+            success_enabled=True,
+            success_description="True when an appointment was booked.",
+        )
+
+        # Version bumps on update; results already written keep the old version
+        block = await client.analytics.update(block.block_id, model="gpt-4o-mini")
+
+        for b in await client.analytics.list():
+            print(b.block_id, b.name, b.version, b.state, b.agent_ids)
+
+asyncio.run(main())
+```
+
+| Call | Description |
+|---|---|
+| `analytics.create(name, prompt, fields=None, *, summary_description=, model=, success_enabled=, success_description=, success_type=, success_choices=, condition=, from_template=)` | Create a block. `from_template=` forks a starter block |
+| `analytics.templates()` | Starter blocks you can fork: fetch one, edit it, save it as yours |
+| `analytics.list(include_archived=False)` | Blocks in this project |
+| `analytics.get(block_id)` | One block, including the agents it is attached to |
+| `analytics.update(block_id, ...)` | Same fields as `create`. **Bumps `version`; past results keep the old one** |
+| `analytics.delete(block_id)` | **Archives** the block: it stops running, its results stay readable |
+
+---
+
+## Attaching to Agents
+
+```python
+await client.analytics.attach(block.block_id, agent_id="support-bot")
+await client.analytics.attach(block.block_id, agent_id="sales-bot")     # one block, many agents
+
+await client.analytics.detach(block.block_id, agent_id="sales-bot")     # stop it for one agent
+```
+
+`attach()` is idempotent, and one block serves as many agents as you attach it
+to. Every session those agents finish runs the block.
+
+---
+
+## Reading Results
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:
+        # One block's whole report, newest first
+        for r in await client.analytics.results("blk_...", limit=50):
+            print(r.session_id, r.status, r.success_evaluation, r.data)
+
+        # Across blocks, filtered
+        recent = await client.analytics.list_results(agent_id="support-bot", status="ok")
+
+        # Ready for a table UI: {columns, rows}
+        table = await client.analytics.results_table("blk_...")
+        print(table["columns"])
+
+        # Everything extracted for one session or one call
+        await client.analytics.for_session("sess_...")
+        await client.analytics.for_call("SCL_...")
+
+asyncio.run(main())
+```
+
+| Call | Returns | Notes |
+|---|---|---|
+| `analytics.results(block_id, limit=100, skip=0)` | `list[AnalyticsResult]` | One block, newest first |
+| `analytics.list_results(agent_id=, block_id=, status=, limit=100, skip=0)` | `list[AnalyticsResult]` | Across blocks; empty filters are omitted |
+| `analytics.results_table(block_id, limit=100, skip=0)` | `dict` | `{columns, rows}`. Columns come from the field spec, so a field every row left null still gets a column and types are never inferred from values |
+| `analytics.for_session(session_id)` | `list[AnalyticsResult]` | Every block's result for one session |
+| `analytics.for_call(call_id)` | `list[AnalyticsResult]` | Every block's result for one call |
+
+### `AnalyticsResult` fields
+
+| Field | Type | Description |
+|---|---|---|
+| `result_id` | `str` | Result id |
+| `block_id` | `str` | The block that produced it |
+| `name` | `str \| None` | Block name at run time |
+| `session_id` | `str` | The session it ran on |
+| `call_id` | `str \| None` | The call, when the session came from one |
+| `agent_id` | `str \| None` | The agent that handled the session |
+| `status` | `str` | Default `"ok"` |
+| `summary` | `str` | The extracted summary |
+| `success_evaluation` | `bool \| str \| None` | Promoted out of `data` - the field worth aggregating across blocks |
+| `data` | `dict` | Your declared fields, keyed by `name` |
+| `error` | `str \| None` | Set when extraction failed |
+| `model` | `str \| None` | LLM used |
+| `latency_ms` | `int \| None` | Extraction latency |
+
+### `AnalyticsBlock` fields
+
+`block_id`, `name`, `prompt`, `fields` (`fields_spec` on the model),
+`summary_description`, `model`, `project_id`, `org_id`, `success_enabled`,
+`success_description`, `success_type`, `success_choices`, `condition`,
+`template_id`, `version`, `state`, `agent_ids`, `created`, `modified`.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agents" icon="robot" href="/speech-stack/agents">
+    The `agent_id` you attach blocks to.
+  </Card>
+  <Card title="Recordings & Transcripts" icon="file-audio" href="/speech-stack/recordings-transcripts">
+    The raw turns a block reads before it extracts.
+  </Card>
+</CardGroup>

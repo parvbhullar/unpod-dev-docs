@@ -4,8 +4,8 @@ icon: 'file-music'
 description: 'Retrieve call audio and per-turn transcripts - with per-stage latency timing - after calls end.'
 ---
 
-Every call can leave two artifacts: an audio **recording** (when the Speech
-Pipe has `recording=True`) and a turn-by-turn **transcript**. Both are
+Every call can leave two artifacts: an audio **recording** (when the agent was
+created with `recording=True`) and a turn-by-turn **transcript**. Both are
 retrieved through the Management API.
 
 ## Recordings
@@ -51,5 +51,35 @@ for entry in session.transcript:
     entry.timestamp                    # datetime | None
 ```
 
+## Transcripts From a Call
+
+`client.calls` carries the turns too, and its two read paths differ on purpose:
+
+```python
+for row in await client.calls.list():
+    row.transcript          # None - the list endpoint projects the turns out
+    row.transcript_turns    # int  - how many there are to fetch
+
+full = await client.calls.get(call_id)
+full.transcript             # list[dict] - {role, content, timestamp}
+full.recording_url          # str | None
+```
+
+<Warning>
+**`None` means not loaded; `[]` means the call genuinely had no turns.** A list
+row always reads `None` because the endpoint drops the turns to keep a page
+small - it is not a silent call. Check `transcript_turns` first, then call
+`calls.get(call_id)` only when there is something to fetch.
+</Warning>
+
+```python
+for row in await client.calls.list(status="completed"):
+    if row.transcript_turns:                       # cheap check, no second read
+        full = await client.calls.get(row.call_id)
+        for turn in full.transcript or []:
+            print(turn["role"], turn["content"])
+```
+
 This is the post-call complement to the live metrics in
-[Observability](/speech-stack/observability).
+[Observability](/speech-stack/observability), and the raw material
+[Analytics](/speech-stack/analytics) extracts structured fields from.

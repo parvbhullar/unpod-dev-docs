@@ -156,6 +156,7 @@
             "group": "Speech Infrastructure",
             "icon": "audio-lines",
             "pages": [
+              "speech-stack/agents",
               "speech-stack/pipes",
               "speech-stack/numbers",
               "speech-stack/voice-profiles"
@@ -186,6 +187,7 @@
             "icon": "server",
             "pages": [
               "speech-stack/recordings-transcripts",
+              "speech-stack/analytics",
               "speech-stack/observability",
               "speech-stack/deploy"
             ]

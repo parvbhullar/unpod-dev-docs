@@ -39,7 +39,7 @@ async def entrypoint(ctx: CallContext) -> None:
 
 <Note>
 `AgentRunner` requires `UNPOD_API_KEY` in your environment, and the
-`agent_id` you pass must match your Speech Pipe's `agent_id` - see
+`agent_id` you pass must match the agent's `agent_id` - see
 [IDs You'll Meet](/get-started/core-concepts#ids-youll-meet). The
 [Provisioning checklist](/speech-stack/setup-checklist#environment-variables) lists
 every variable.
@@ -48,7 +48,7 @@ every variable.
 ```python
 AgentRunner(
     entrypoint=entrypoint,
-    agent_id="my-agent",  # must match agent_id in your Speech Pipe config
+    agent_id="my-agent",  # must match the agent you created
 ).start()
 ```
 

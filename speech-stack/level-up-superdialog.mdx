@@ -28,7 +28,7 @@ async def handle_call(ctx: CallContext) -> None:
 AgentRunner(entrypoint=handle_call, agent_id="my-agent").start()
 ```
 
-The runnable end-to-end version - Speech Pipe registration, pre-call data,
+The runnable end-to-end version - agent registration, pre-call data,
 mid-call `assist()`, flow switching - lives in
 [Embedding guide: Unpod voice](/superdialog/embedding-guides/unpod-voice).
 

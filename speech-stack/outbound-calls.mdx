@@ -12,15 +12,15 @@ Outbound calls are calls your system initiates - rather than waiting for a calle
 - Callback queues
 - Alert notifications
 
-Outbound calls use the same Speech Pipe, voice profile, and `AgentRunner` infrastructure as inbound calls. The difference is you trigger them via the management API.
+Outbound calls use the same agent, voice profile, and `AgentRunner` infrastructure as inbound calls. The difference is you trigger them via the management API.
 
 ---
 
 ## Prerequisites
 
-- A configured Speech Pipe with a voice profile - see [Speech Pipe](/speech-stack/pipes)
-- A phone number attached to that Speech Pipe - see [Numbers](/speech-stack/numbers)
-- A running `AgentRunner` process for the Speech Pipe
+- A configured agent with a voice profile - see [Agents](/speech-stack/agents)
+- A phone number attached to that agent - see [Numbers](/speech-stack/numbers)
+- A running `AgentRunner` process, if the agent's brain is `Runner()`
 
 ---
 
@@ -33,9 +33,9 @@ from unpod import AsyncClient
 async def main():
     async with AsyncClient() as client:  # reads UNPOD_API_KEY
         call = await client.calls.create(
-            pipe_id="pipe_...",
+            agent_id="my-agent",         # or pipe_id= for older code
             to_number="+14155550100",    # E.164 format
-            from_number="+18005551234",  # optional if a number is attached to the Speech Pipe
+            from_number="+18005551234",  # optional if a number is attached to the agent
             instructions="This is a reminder call for a dental appointment.",
             data={
                 "patient_name": "Jane Smith",
@@ -65,9 +65,9 @@ the full status progression and how to poll for completion.
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `to_number` | `str` | Yes | Destination number (E.164) |
-| `agent_id` | `str \| None` | Conditional | Agent to route the call to. Takes priority over `pipe_id`; when set, the platform resolves the pipe bound to that agent server-side |
-| `pipe_id` | `str \| None` | Conditional | Speech Pipe to use. Provide `agent_id` **or** `pipe_id` (`agent_id` wins if both are given) |
-| `from_number` | `str` | No | Caller ID. If omitted, Unpod uses a number attached to the Speech Pipe |
+| `agent_id` | `str \| None` | Conditional | **Preferred.** Agent to route the call to. Takes priority over `pipe_id`; the platform resolves the agent's voice row server-side. `agent=` is an alias kept for older callers |
+| `pipe_id` | `str \| None` | Conditional | The deprecated spelling. Provide `agent_id` **or** `pipe_id` (`agent_id` wins if both are given) |
+| `from_number` | `str` | No | Caller ID. If omitted, Unpod uses a number attached to the agent |
 | `instructions` | `str \| None` | No | Runtime instruction override for this call |
 | `data` | `dict \| None` | No | Arbitrary metadata passed to your entrypoint via `ctx.data` |
 
@@ -138,7 +138,7 @@ asyncio.run(main())
 | `direction` | `str` | `inbound` or `outbound` |
 | `to_number` | `str` | Destination number (E.164) |
 | `from_number` | `str \| None` | Caller ID used for the call |
-| `pipe_id` | `str` | Speech Pipe that handled the call |
+| `pipe_id` | `str` | The agent-voice row that handled the call |
 | `duration_s` | `float \| None` | Call duration in seconds (set once completed) |
 | `end_reason` | `str \| None` | Why the call ended - see [Call Lifecycle](/speech-stack/call-lifecycle#end-reasons) |
 
@@ -152,7 +152,7 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient() as client:  # reads UNPOD_API_KEY
-        # All outbound calls for a Speech Pipe
+        # All outbound calls for one Speech Pipe row
         calls = await client.calls.list(
             pipe_id="pipe_...",
             status="completed",
@@ -168,7 +168,7 @@ asyncio.run(main())
 | Parameter | Values | Description |
 |---|---|---|
 | `status` | `pending`, `ringing`, `active`, `completed`, `failed`, `cancelled` | Filter by status |
-| `pipe_id` | `pipe_...` | Filter by Speech Pipe |
+| `pipe_id` | `pipe_...` | Filter by agent-voice row |
 
 ---
 
@@ -194,7 +194,7 @@ asyncio.run(main())
 import asyncio
 from unpod import AsyncClient
 
-PIPE_ID = "pipe_..."
+AGENT_ID = "my-agent"
 FROM_NUMBER = "+18005551234"
 
 contacts = [
@@ -207,7 +207,7 @@ async def dial_all(contacts: list[dict]) -> None:
     async with AsyncClient() as client:  # reads UNPOD_API_KEY
         for contact in contacts:
             call = await client.calls.create(
-                pipe_id=PIPE_ID,
+                agent_id=AGENT_ID,
                 to_number=contact["phone"],
                 from_number=FROM_NUMBER,
                 instructions=(
@@ -237,10 +237,10 @@ from unpod import AsyncClient
 async def process_callback_queue(queue: list[dict]) -> None:
     async with AsyncClient() as client:  # reads UNPOD_API_KEY
         for request in queue:
-            # Check if the Speech Pipe is not at capacity before dialing
-            # (AgentRunner handles capacity internally - orchestrator rejects if full)
+            # Capacity is handled for you: the orchestrator rejects a dispatch
+            # when the agent's runners are full
             call = await client.calls.create(
-                pipe_id="pipe_...",
+                agent_id="my-agent",
                 to_number=request["phone"],
                 from_number="+18005551234",
                 instructions="This is a callback. The customer requested to be called back.",
@@ -278,7 +278,7 @@ asyncio.run(get_transcript("sess_..."))
   <Card title="Hooks & Events" icon="bell" href="/speech-stack/hooks-events">
     Log outbound call data and react to call events in real time.
   </Card>
-  <Card title="Speech Pipe" icon="bot" href="/speech-stack/pipes">
-    Configure Speech Pipes and voice profiles for outbound campaigns.
+  <Card title="Agents" icon="robot" href="/speech-stack/agents">
+    Configure agents and voice profiles for outbound campaigns.
   </Card>
 </CardGroup>

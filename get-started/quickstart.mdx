@@ -65,26 +65,27 @@ The hosted default is `UNPOD_BASE_URL="api.unpod.ai"`. The SDK derives REST
 host, so you set it once.
 </Accordion>
 
-## Step 3 - Create a speech pipe
+## Step 3 - Create the agent
 
-A **pipe** ties a voice to your agent. Run this once:
+An **agent** is one `agent_id`, one brain, and one or more voices. Run this once:
 
 ```python setup.py
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
 import asyncio
-from unpod import AsyncClient
+from unpod import AsyncClient, Runner
 
 async def main():
     async with AsyncClient() as client:
         profiles = await client.voice_profiles.list(language="en")
-        pipe = await client.pipes.create(
+        voice = await client.agents.voice.create(
+            "my-support-agent",                     # agent_id
+            brain=Runner(),                         # your own worker, written in step 4
             name="Support Bot",
             voice_profile=profiles[0].profile_id,
-            agent_id="my-support-agent",
         )
-        print("Pipe ID:", pipe.pipe_id)
+        print("Agent:", voice.agent_id, voice.voice_profile_name)
 
 asyncio.run(main())
 ```
@@ -94,15 +95,17 @@ What it does:
 1. **`voice_profiles.list()`** - the catalog of STT + TTS bundles. Pick any;
    swap later without touching your agent. See
    [Voice profiles](/speech-stack/voice-profiles).
-2. **`pipes.create()`** - binds that voice to an `agent_id`.
+2. **`agents.voice.create()`** - creates the agent and its first voice, and says
+   the brain out loud. `brain=Runner()` means *your* process answers turns; step
+   4 writes it. Swap in `brain=Prompt("You are ...")` and you can skip step 4
+   entirely - Unpod runs the brain and nothing of yours needs to be up. See
+   [Agents](/speech-stack/agents).
 
 <Note>
 **`agent_id` is a string you choose**, and it must be identical here and in your
 `AgentRunner` below. A mismatch is the most common reason a call never reaches
 your code.
 </Note>
-
-Save the printed `pipe_id` - Step 5 needs it.
 
 ## Step 4 - Write the agent
 
@@ -194,6 +197,11 @@ async def get_session_token(pipe_id: str, user_id: str) -> str:
         )
         return token.token   # single-use; check token.expires_at
 ```
+
+`create_token` still keys on a **pipe id**, which is the row
+`agents.voice.create` wrote - read it back with `client.pipes.list()` (it warns)
+or from the dashboard. Browser sessions are the one surface that has not moved to
+`agent_id` yet.
 
 `@unpod/web-sdk` is **not yet published on npm**, so browser embedding is not
 available today. To run the local playground harness from source, see
