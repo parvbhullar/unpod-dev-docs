@@ -71,7 +71,7 @@ curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/ \
 }
 ```
 
-<Card title="Create Trunk reference" icon="plus-circle" href="/telephony/trunks/create-trunk">
+<Card title="Create Trunk reference" icon="circle-plus" href="/telephony/trunks/create-trunk">
   All request fields (`sip_url`, `auth_username`, `auth_password`, `transport`, `port`, `source_ips`).
 </Card>
 
@@ -142,7 +142,7 @@ curl -X POST https://api.ultravox.ai/api/agents/YOUR_AGENT_ID/calls \
 Ultravox returns a `callId` and sends the SIP INVITE through Unpod. The agent joins when
 the callee answers.
 
-<Card title="Ultravox Create Agent Call" icon="arrow-up-right-from-square" href="https://docs.ultravox.ai/api-reference/agents/agents-calls-post">
+<Card title="Ultravox Create Agent Call" icon="external-link" href="https://docs.ultravox.ai/api-reference/agents/agents-calls-post">
   Full request body + response (this is Ultravox's API).
 </Card>
 
@@ -155,7 +155,7 @@ curl https://api.ultravox.ai/api/calls/CALL_ID/sip/logs \
   -H "X-API-Key: YOUR_ULTRAVOX_API_KEY"
 ```
 
-<Card title="Ultravox SIP logs" icon="arrow-up-right-from-square" href="https://docs.ultravox.ai/api-reference/calls/calls-sip-logs-get">
+<Card title="Ultravox SIP logs" icon="external-link" href="https://docs.ultravox.ai/api-reference/calls/calls-sip-logs-get">
   SIP log fields for debugging rejected calls (this is Ultravox's API).
 </Card>
 

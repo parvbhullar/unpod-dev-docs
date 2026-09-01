@@ -1,9 +1,10 @@
 ---
 title: "Provisioning checklist"
+icon: 'list-checks'
 description: "One-time resource provisioning before your first call."
 ---
 
-Before your first call routes to your Speech Pipe, complete these four steps once.
+Before your first call routes to your agent, complete these four steps once.
 
 ## 1. Pick a Voice Profile
 
@@ -23,57 +24,63 @@ asyncio.run(list_profiles())
 Copy a `profile_id` (`vp_...`) for step 2. See
 [Voice Profiles](/speech-stack/voice-profiles) for filtering and fields.
 
-## 2. Create a Speech Pipe
+## 2. Create an Agent
 
 ```python
 import asyncio
-from unpod import AsyncClient
+from unpod import AsyncClient, Runner
 
-async def create_pipe():
+async def create_agent():
     client = AsyncClient()
-    pipe = await client.pipes.create(
+    voice = await client.agents.voice.create(
+        "my-agent",                        # agent_id - MUST match AgentRunner(agent_id=...)
+        brain=Runner(),                    # this checklist runs its own worker
         name="My Agent",
         voice_profile="vp_en_female_hd",   # a profile_id from step 1
-        agent_id="my-agent",               # MUST match AgentRunner(agent_id=...)
     )
-    print(pipe.pipe_id)  # pipe_... - used for REST API calls
-    return pipe
+    print(voice.agent_id, voice.voice_profile_name)
+    return voice
 
-asyncio.run(create_pipe())
+asyncio.run(create_agent())
 ```
 
 <Warning>
-**`agent_id` vs `pipe.pipe_id`**
+**`agent_id` is a string you choose, and it must match everywhere.**
 
-- `pipe.pipe_id` - ID assigned by Unpod, used in REST API calls
-- `agent_id` - string name you choose; must exactly match `AgentRunner(agent_id=...)`
-
-These are different. Mismatching them is the most common first-run failure.
+The `agent_id` you pass here must exactly match `AgentRunner(agent_id=...)` in
+step 4. Mismatching them is the most common first-run failure - the call arrives
+and no runner claims it.
 </Warning>
 
-Other pipe options (`recording`, `max_call_duration_s`, `agent_endpoint`) are in
-[Speech Pipe](/speech-stack/pipes).
+Other options (`greeting`, `recording`, `max_call_duration_s`, `max_concurrent`)
+and the other three brain sources are in [Agents](/speech-stack/agents).
 
 ## 3. Attach a Phone Number
 
-`attach()` takes the number's `number_id` (`num_...`) and the `pipe_id`.
+Numbers attach to an **`agent_id`**, not to a pipe id.
 
 ```python
 import asyncio
 from unpod import AsyncClient
 
-async def assign_number(pipe_id: str) -> None:
+async def assign_number(agent_id: str) -> None:
     client = AsyncClient()
     numbers = await client.numbers.list(status="active")
     free = [n for n in numbers if n.pipe_id is None]
     if not free:
         print("No free numbers. Provision one in the Unpod dashboard first.")
         return
-    await client.numbers.attach(number_id=free[0].number_id, pipe_id=pipe_id)
+    await client.numbers.attach(free[0].number_id, agent_id)
     print(f"Attached {free[0].number}")
 
-asyncio.run(assign_number("pipe_..."))
+asyncio.run(assign_number("my-agent"))
 ```
+
+<Note>
+`client.numbers.attach()` used to take `pipe_id=`. It takes `agent_id` now -
+supervoice resolves the pipe from the agent. `client.agents.numbers.attach(agent_id, number)`
+does the same thing keyed by the E.164 number instead of the id.
+</Note>
 
 No numbers yet, or bringing your own carrier? See
 [Phone Numbers](/speech-stack/numbers) and [Trunks](/speech-stack/numbers#trunks).
@@ -85,7 +92,7 @@ from unpod import AgentRunner
 
 AgentRunner(
     entrypoint=entrypoint,
-    agent_id="my-agent",   # must match the pipe's agent_id above
+    agent_id="my-agent",   # must match the agent_id from step 2
 ).start()
 ```
 
@@ -93,7 +100,7 @@ AgentRunner(
 
 ```python
 import asyncio
-from unpod import AsyncClient, AgentRunner, CallContext
+from unpod import AsyncClient, AgentRunner, CallContext, Runner
 from unpod.adapters.langchain import LangChainAdapter
 
 async def setup():
@@ -103,19 +110,20 @@ async def setup():
     profiles = await client.voice_profiles.list()
     profile = profiles[0]
 
-    # 2. Create the Speech Pipe
-    pipe = await client.pipes.create(
+    # 2. Create the agent
+    voice = await client.agents.voice.create(
+        "my-agent",
+        brain=Runner(),
         name="My Agent",
         voice_profile=profile.profile_id,
-        agent_id="my-agent",
     )
 
     # 3. Attach the first free number
     free = [n for n in await client.numbers.list() if n.pipe_id is None]
     if free:
-        await client.numbers.attach(number_id=free[0].number_id, pipe_id=pipe.pipe_id)
+        await client.numbers.attach(free[0].number_id, "my-agent")
 
-    print(f"Speech Pipe created: {pipe.pipe_id}")
+    print(f"Agent created: {voice.agent_id}")
     print(f"Number: {free[0].number if free else 'none assigned'}")
 
 asyncio.run(setup())

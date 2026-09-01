@@ -1,5 +1,6 @@
 ---
 title: "Bring Your Agent"
+icon: 'bot'
 description: "Connect your existing LangChain, OpenAI, Anthropic, HTTP, or custom Python agent to Unpod voice infrastructure."
 ---
 
@@ -38,7 +39,7 @@ async def entrypoint(ctx: CallContext) -> None:
 
 <Note>
 `AgentRunner` requires `UNPOD_API_KEY` in your environment, and the
-`agent_id` you pass must match your Speech Pipe's `agent_id` - see
+`agent_id` you pass must match the agent's `agent_id` - see
 [IDs You'll Meet](/get-started/core-concepts#ids-youll-meet). The
 [Provisioning checklist](/speech-stack/setup-checklist#environment-variables) lists
 every variable.
@@ -47,7 +48,7 @@ every variable.
 ```python
 AgentRunner(
     entrypoint=entrypoint,
-    agent_id="my-agent",  # must match agent_id in your Speech Pipe config
+    agent_id="my-agent",  # must match the agent you created
 ).start()
 ```
 
@@ -255,7 +256,7 @@ class MyAdapter:
   <Card title="AgentRunner & Sessions" icon="sliders-horizontal" href="/speech-stack/agent-runner">
     say(), transfer(), recording controls during live calls
   </Card>
-  <Card title="SuperDialog" icon="diagram-project" href="/superdialog/introduction">
+  <Card title="SuperDialog" icon="workflow" href="/superdialog/introduction">
     Conversation runtime: playbooks (default) and flow graphs
   </Card>
   <Card title="SuperDialog + Voice" icon="plug" href="/superdialog/embedding-guides/unpod-voice">

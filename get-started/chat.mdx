@@ -1,5 +1,6 @@
 ---
 title: 'Chat'
+icon: 'message-square'
 sidebarTitle: 'Chat'
 description: 'Your trained agent, over an OpenAI-compatible chat API. One URL swap.'
 ---
@@ -38,25 +39,49 @@ model id (`public:PB_...`), and prefilled snippets. See
   </Tab>
   <Tab title="LiveKit">
     ```python
-    from livekit.agents import Agent, AgentSession
-    from superdialog import DialogMachine
-    from superdialog.adapters.livekit import DialogMachineLLM
+    import os
 
-    dm = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")
+    from livekit.agents import AgentSession
+    from livekit.plugins import openai
 
-    async def entrypoint(ctx):
-        await AgentSession().start(agent=Agent(llm=DialogMachineLLM(dm)), room=ctx.room)
+    # The playbook holds the conversation state server-side, so pin a stable id
+    # per call -- without `user` every turn restarts the playbook at step 0.
+    session = AgentSession(
+        llm=openai.LLM(
+            model="playbook-5",
+            base_url="https://inference.unpod.ai/v1",
+            api_key=os.environ["UNPOD_API_KEY"],
+            user=ctx.room.name,
+        ),
+        stt=...,  # your STT
+        tts=...,  # your TTS
+    )
+    # No user message on the first turn -> the playbook speaks its own opener.
+    await session.generate_reply()
+    # HTTP 410 session_ended = the playbook hung up. Close the room; do not retry.
     ```
-    The agent runs in-process in the `llm=` slot. Full guide:
+    The playbook is a hosted endpoint in the `llm=` slot - no agent code
+    in-process. Full guide:
     [LiveKit embedding](/superdialog/embedding-guides/livekit).
   </Tab>
   <Tab title="Pipecat">
     ```python
-    from superdialog import DialogMachine
-    from superdialog.adapters.pipecat import make_processor
+    import os
 
-    agent = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")
-    processor = make_processor(agent)  # place between STT and TTS
+    from pipecat.pipeline.pipeline import Pipeline
+    from pipecat.services.openai.llm import OpenAILLMService
+
+    # The playbook holds the conversation state server-side. Pipecat has no `user`
+    # passthrough, so pin the stable id as a header -- without it every turn
+    # restarts the playbook at step 0.
+    llm = OpenAILLMService(
+        model="playbook-5",
+        base_url="https://inference.unpod.ai/v1",
+        api_key=os.environ["UNPOD_API_KEY"],
+        default_headers={"X-Session-Id": session_id},
+    )
+    pipeline = Pipeline([transport.input(), stt, llm, tts, transport.output()])
+    # HTTP 410 session_ended = the playbook hung up. End the pipeline; do not retry.
     ```
     Full guide: [Pipecat embedding](/superdialog/embedding-guides/pipecat).
   </Tab>

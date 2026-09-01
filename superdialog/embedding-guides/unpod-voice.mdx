@@ -1,5 +1,6 @@
 ---
 title: "Unpod (hosted voice)"
+icon: 'phone-call'
 description: "Connect a SuperDialog dialog machine to Unpod voice calls via the unpod SDK."
 ---
 
@@ -65,21 +66,27 @@ AgentRunner(
 
 ---
 
-## Step 3 - Register a Speech Pipe (once)
+## Step 3 - Register the agent (once)
 
-A Speech Pipe is the voice front-end calls arrive on. Create one, attach a
-number, and give it the **same `agent_id`** your `AgentRunner` uses - a mismatch
-is the most common first-run failure.
+An **agent** is the voice front-end calls arrive on: one `agent_id`, one brain,
+and one or more voices. Create it with a `Runner()` brain - meaning your own
+process answers turns - attach a number, and use the **same `agent_id`** your
+`AgentRunner` uses. A mismatch is the most common first-run failure.
 
 ```python
-pipe = await client.pipes.create(
+from unpod import Runner
+
+await client.agents.voice.create(
+    "kyc-bot",                 # agent_id - must match AgentRunner(agent_id=...)
+    brain=Runner(),            # the DialogMachine below answers turns
     name="KYC Bot",
     voice_profile=profiles[0].profile_id,
-    agent_id="kyc-bot",        # must match AgentRunner(agent_id=...)
     recording=True,
 )
-await client.numbers.attach(number_id=numbers[0].number_id, pipe_id=pipe.pipe_id)
+await client.numbers.attach(numbers[0].number_id, "kyc-bot")
 ```
+
+See [Agents](/speech-stack/agents) for the other three brain sources.
 
 Full script, env vars, and voice-profile lookup:
 [Provisioning checklist](/speech-stack/setup-checklist).
@@ -88,7 +95,7 @@ Full script, env vars, and voice-profile lookup:
 
 ## Complete example
 
-The long-lived runner process. Pipe and number are provisioned once beforehand
+The long-lived runner process. Agent and number are provisioned once beforehand
 - see [Provisioning checklist](/speech-stack/setup-checklist).
 
 ```python

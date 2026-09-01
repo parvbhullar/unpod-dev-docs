@@ -1,18 +1,19 @@
 ---
 title: 'Phone Numbers'
-description: 'Get numbers directly from Unpod or bring your own, then attach them to your Speech Pipes.'
+icon: 'hash'
+description: 'Get numbers directly from Unpod or bring your own, then attach them to your agents.'
 ---
 
 ## Overview
 
 A [Number](/get-started/core-concepts#number) is the phone number callers
-dial; it routes to whatever Speech Pipe it is attached to. Phone numbers in
+dial; it routes to whatever agent it is attached to. Phone numbers in
 Unpod come from two sources:
 
 - **Unpod Numbers** (default) - provision directly from the Unpod platform. No carrier account, no [trunk](#trunks), no SIP.
 - **BYON (Bring Your Own Number)** - route numbers you already own from any provider over a [trunk](#trunks) you register once.
 
-Once a number is in your account, you attach it to a Speech Pipe. All inbound calls to that number are routed to the Speech Pipe's `AgentRunner`.
+Once a number is in your account, you attach it to an `agent_id`. All inbound calls to that number are routed to that agent.
 
 <Note>
 Support for Twilio, Telnyx, and Plivo numbers is coming soon - you will be able to import numbers from these providers directly into Unpod.
@@ -70,7 +71,7 @@ arrive this way.
   </Step>
   <Step title="Sync">
     Click **Sync** on the trunk, or run `await client.numbers.sync()`. The trunk's
-    numbers appear in your account, ready to attach to a [Speech Pipe](/speech-stack/pipes).
+    numbers appear in your account, ready to attach to an [agent](/speech-stack/agents).
   </Step>
 </Steps>
 
@@ -110,7 +111,7 @@ await client.trunks.delete(trunk.trunk_id)
 result = await client.numbers.sync()   # {"synced": int, "new": int}
 ```
 
-One-time provisioning end to end (profile, pipe, number, env vars):
+One-time provisioning end to end (profile, agent, number, env vars):
 [Provisioning checklist](/speech-stack/setup-checklist).
 
 ---
@@ -145,14 +146,15 @@ asyncio.run(main())
 | `number` | `str` | E.164 format, e.g. `+14155550100` |
 | `status` | `str` | `active`, `inactive`, `pending` |
 | `trunk_type` | `str` | `unpod` or `byo` |
-| `pipe_id` | `str \| None` | Attached Speech Pipe, or `None` if free |
+| `pipe_id` | `str \| None` | The agent-voice row this number is attached to, or `None` if free. Still spelled `pipe_id` on the number record |
 | `country` | `str` | ISO 3166-1 alpha-2 country code |
 
 ---
 
-## Attaching a Number to a Speech Pipe
+## Attaching a Number to an Agent
 
-A number can be attached to exactly one Speech Pipe at a time. Inbound calls to that number are routed to the Speech Pipe's configured runners.
+A number can be attached to exactly one agent at a time. Inbound calls to that
+number are routed to that agent.
 
 ```python
 import asyncio
@@ -160,14 +162,28 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient() as client:  # reads UNPOD_API_KEY
-        number = await client.numbers.attach(
-            number_id="num_...",
-            pipe_id="pipe_...",
-        )
-        print("Attached:", number.number, "-> pipe", number.pipe_id)
+        number = await client.numbers.attach("num_...", "support-bot")
+        print("Attached:", number.number, "-> agent support-bot")
 
 asyncio.run(main())
 ```
+
+### `attach()` parameters
+
+| Parameter | Type | Description |
+|---|---|---|
+| `number_id` | `str` | The number's id (`num_...`) |
+| `agent_id` | `str` | The agent to route calls to |
+| `number` | `str \| None` | The E.164, optional. Pass it when `number_id` is a supervoice id so telephony can resolve the row it owns |
+
+<Warning>
+`attach()` used to take **`pipe_id=`**. It takes `agent_id` now - supervoice
+stopped storing a pipe pin and resolves the pipe from the agent instead. Old
+calls raise a `TypeError`.
+</Warning>
+
+`client.agents.numbers.attach(agent_id, number)` does the same job keyed by the
+E.164 number rather than the number id - see [Agents](/speech-stack/agents).
 
 ---
 
@@ -195,31 +211,31 @@ asyncio.run(main())
 import asyncio
 from unpod import AsyncClient
 
-async def attach_first_free(pipe_id: str) -> None:
+async def attach_first_free(agent_id: str) -> None:
     async with AsyncClient() as client:  # reads UNPOD_API_KEY
         numbers = await client.numbers.list(status="active")
         free = [n for n in numbers if n.pipe_id is None]
         if not free:
             raise RuntimeError("No free numbers available")
-        await client.numbers.attach(number_id=free[0].number_id, pipe_id=pipe_id)
+        await client.numbers.attach(free[0].number_id, agent_id)
         print("Attached", free[0].number)
 
-asyncio.run(attach_first_free("pipe_..."))
+asyncio.run(attach_first_free("support-bot"))
 ```
 
-### Rotate numbers across Speech Pipes
+### Rotate numbers across agents
 
 ```python
 import asyncio
 from unpod import AsyncClient
 
-async def rotate(numbers: list[str], pipes: list[str]) -> None:
+async def rotate(numbers: list[str], agents: list[str]) -> None:
     async with AsyncClient() as client:  # reads UNPOD_API_KEY
-        for num_id, pipe_id in zip(numbers, pipes):
-            await client.numbers.attach(number_id=num_id, pipe_id=pipe_id)
-            print(f"{num_id} -> {pipe_id}")
+        for num_id, agent_id in zip(numbers, agents):
+            await client.numbers.attach(num_id, agent_id)
+            print(f"{num_id} -> {agent_id}")
 
-asyncio.run(rotate(["num_a", "num_b"], ["pipe_x", "pipe_y"]))
+asyncio.run(rotate(["num_a", "num_b"], ["support-bot", "sales-bot"]))
 ```
 
 ---
@@ -227,10 +243,10 @@ asyncio.run(rotate(["num_a", "num_b"], ["pipe_x", "pipe_y"]))
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Voice Profiles" icon="waveform" href="/speech-stack/voice-profiles">
-    Choose the voice profile for your Speech Pipe.
+  <Card title="Voice Profiles" icon="audio-lines" href="/speech-stack/voice-profiles">
+    Choose the voice profile your agent speaks with.
   </Card>
-  <Card title="Speech Pipe" icon="bot" href="/speech-stack/pipes">
-    Create and configure your Speech Pipe via the SDK.
+  <Card title="Agents" icon="robot" href="/speech-stack/agents">
+    Create and configure the agent a number routes to.
   </Card>
 </CardGroup>

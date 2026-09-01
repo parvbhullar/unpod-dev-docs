@@ -18,6 +18,7 @@
     "href": "https://unpod.ai"
   },
   "feedback": {
+    "thumbsRating": false,
     "suggestEdit": false,
     "raiseIssue": false
   },
@@ -28,6 +29,7 @@
         "groups": [
           {
             "group": "Start Here",
+            "icon": "flag",
             "pages": [
               "get-started/why-unpod",
               "get-started/getting-started",
@@ -98,37 +100,82 @@
         "groups": [
           {
             "group": "Agent Studio",
+            "icon": "bot",
             "pages": [
-              "playbook/playground",
-              "playbook/what-is-a-playbook",
-              "playbook/build-an-agent",
-              "playbook/test-by-voice",
-              "playbook/optimize",
-              "playbook/publish-and-share",
-              "playbook/library",
-              "playbook/developer-setup",
-              "playbook/api"
+              {
+                "group": "Build & Test",
+                "icon": "palette",
+                "expanded": false,
+                "pages": [
+                  "playbook/playground",
+                  "playbook/what-is-a-playbook",
+                  "playbook/build-an-agent",
+                  "playbook/test-by-voice",
+                  "playbook/optimize"
+                ]
+              },
+              {
+                "group": "Ship",
+                "icon": "ship",
+                "expanded": false,
+                "pages": [
+                  "playbook/publish-and-share",
+                  "playbook/library",
+                  "playbook/developer-setup",
+                  "playbook/api"
+                ]
+              }
             ]
           },
           {
             "group": "SuperDialog Framework",
+            "icon": "zap",
             "pages": [
-              "superdialog/introduction",
-              "superdialog/quickstart",
-              "superdialog/thinking-in-playbooks",
-              "superdialog/playbooks",
-              "superdialog/tools",
-              "superdialog/sessions",
-              "superdialog/flows",
-              "superdialog/embedding-guides/testing",
-              "superdialog/evals",
-              "superdialog/architecture",
-              "superdialog/cli",
-              "superdialog/api-reference"
+              {
+                "group": "Start",
+                "icon": "rocket",
+                "expanded": false,
+                "pages": [
+                  "superdialog/introduction",
+                  "superdialog/quickstart",
+                  "superdialog/thinking-in-playbooks"
+                ]
+              },
+              {
+                "group": "Core Building Blocks",
+                "icon": "boxes",
+                "expanded": false,
+                "pages": [
+                  "superdialog/playbooks",
+                  "superdialog/tools",
+                  "superdialog/sessions",
+                  "superdialog/flows"
+                ]
+              },
+              {
+                "group": "Test & Ship",
+                "icon": "flask-conical",
+                "expanded": false,
+                "pages": [
+                  "superdialog/embedding-guides/testing",
+                  "superdialog/evals"
+                ]
+              },
+              {
+                "group": "Reference",
+                "icon": "library",
+                "expanded": false,
+                "pages": [
+                  "superdialog/architecture",
+                  "superdialog/cli",
+                  "superdialog/api-reference"
+                ]
+              }
             ]
           },
           {
             "group": "Embed in your stack",
+            "icon": "puzzle",
             "pages": [
               "superdialog/embedding-guides/overview",
               "superdialog/embedding-guides/livekit",
@@ -143,22 +190,49 @@
         "tab": "Run Agents",
         "groups": [
           {
-            "group": "Speech stack",
+            "group": "Overview",
+            "icon": "book-open",
             "pages": [
               "speech-stack/introduction",
-              "speech-stack/setup-checklist",
+              "speech-stack/setup-checklist"
+            ]
+          },
+          {
+            "group": "Speech Infrastructure",
+            "icon": "audio-lines",
+            "pages": [
+              "speech-stack/agents",
               "speech-stack/pipes",
               "speech-stack/numbers",
-              "speech-stack/voice-profiles",
+              "speech-stack/voice-profiles"
+            ]
+          },
+          {
+            "group": "Connect Your Agent",
+            "icon": "blocks",
+            "pages": [
               "speech-stack/websocket",
               "speech-stack/bring-your-agent",
               "speech-stack/adapters",
-              "speech-stack/level-up-superdialog",
+              "speech-stack/level-up-superdialog"
+            ]
+          },
+          {
+            "group": "Call Runtime",
+            "icon": "activity",
+            "pages": [
               "speech-stack/agent-runner",
               "speech-stack/call-lifecycle",
               "speech-stack/hooks-events",
-              "speech-stack/outbound-calls",
+              "speech-stack/outbound-calls"
+            ]
+          },
+          {
+            "group": "Operate",
+            "icon": "server",
+            "pages": [
               "speech-stack/recordings-transcripts",
+              "speech-stack/analytics",
               "speech-stack/observability",
               "speech-stack/deploy"
             ]
@@ -339,6 +413,7 @@
           },
           {
             "group": "API Lists",
+            "icon": "list",
             "pages": [
               {
                 "group": "Organisation",

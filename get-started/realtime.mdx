@@ -1,5 +1,6 @@
 ---
 title: 'Realtime'
+icon: 'audio-lines'
 sidebarTitle: 'Realtime'
 description: 'Your trained agent, over one speech-in speech-out session. Brain included.'
 ---
@@ -10,21 +11,27 @@ as one session. Your app or telephony connects; Unpod runs the conversation.
 
 ## How it connects
 
-A **Speech Pipe** bundles a voice profile with an agent. Sessions reach it
+An **agent** bundles a brain with one or more voice profiles. Sessions reach it
 from the web over WebSocket or from a phone number over SIP - same agent,
 same behaviour, either way.
 
 ## Go live in 3 steps
 
-### 1. Create a Speech Pipe
+### 1. Create an agent
 
 ```python
-pipe = await client.pipes.create(
+from unpod import Prompt
+
+voice = await client.agents.voice.create(
+    "my-bot",                                        # agent_id
+    brain=Prompt("You are a concise support assistant."),
     name="Support Bot",
-    voice_profile="vp_en_female_hd",   # from voice_profiles.list()
-    agent_id="my-bot",
+    voice_profile="vp_en_female_hd",                 # from voice_profiles.list()
 )
 ```
+
+`brain=` takes one of `Prompt` / `Playbook` / `Runner` / `Endpoint` - see
+[Agents](/speech-stack/agents).
 
 ### 2. Connect a session
 
@@ -37,7 +44,8 @@ pipe = await client.pipes.create(
     await session.connect();                      // mic + speaker, full duplex
     session.on("agent_reply", (text) => console.log("Agent:", text));
     ```
-    Mint tokens server-side with `client.sessions.create_token(pipe_id=...)`.
+    Mint tokens server-side with `client.sessions.create_token(pipe_id=...)` -
+    browser sessions still key on the pipe id of the agent-voice row.
     Protocol and auth: [WebSocket sessions](/speech-stack/websocket).
 
     <Warning>
@@ -48,7 +56,7 @@ pipe = await client.pipes.create(
     </Warning>
   </Tab>
   <Tab title="Telephony / SIP">
-    Attach a [number](/speech-stack/numbers) to the pipe - provision from
+    Attach a [number](/speech-stack/numbers) to the `agent_id` - provision from
     Unpod or bring your own over a [trunk](/speech-stack/numbers#trunks). LiveKit SIP
     works too: [LiveKit integration](/telephony/integrations/livekit/api).
   </Tab>

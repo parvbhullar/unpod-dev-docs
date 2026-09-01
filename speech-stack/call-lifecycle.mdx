@@ -1,5 +1,6 @@
 ---
 title: 'Call Lifecycle & States'
+icon: 'git-branch'
 description: 'How a call flows end to end, every state it moves through, voicemail detection, and the end reasons your agent observes.'
 ---
 
@@ -101,7 +102,7 @@ returns.
 ## Inbound: what happens when someone calls your number
 
 Inbound is simpler - there is no queue, because there is nothing to rate-limit.
-The moment a caller dials a number attached to your Speech Pipe, the call is
+The moment a caller dials a number attached to your agent, the call is
 already live and Unpod connects your agent to it.
 
 <Steps>
@@ -110,7 +111,7 @@ already live and Unpod connects your agent to it.
     and adds the caller as a participant.
   </Step>
   <Step title="Unpod resolves your pipe">
-    Unpod matches the dialed number to your Speech Pipe and its voice profile.
+    Unpod matches the dialed number to your agent and its voice profile.
   </Step>
   <Step title="Your agent is bridged to the live call">
     A Unpod media worker joins the room the caller is already in and bridges the
@@ -131,7 +132,7 @@ Unpod's side, text crosses into your runner, and reply text comes back for TTS.
 <Note>
 Your `agent_id` selects **which dialog brain** runs for the call - it is not
 how Unpod routes the phone number. Number routing is handled by the
-[Speech Pipe](/get-started/core-concepts#pipe) the number is attached to.
+[agent](/get-started/core-concepts#agent) the number is attached to.
 </Note>
 
 ## Voicemail detection
@@ -196,6 +197,6 @@ async def on_end(final_state: str) -> None:
 ## Related
 
 - [Outbound Calls](/speech-stack/outbound-calls) - the `calls.create()` API in detail
-- [Speech Pipes](/speech-stack/pipes) - what ties a number, voice profile, and agent together
+- [Agents](/speech-stack/agents) - one `agent_id`, one brain, N voices; what a number attaches to
 - [Hooks & Events](/speech-stack/hooks-events) - every lifecycle event you can hook
 - [AgentRunner & Sessions](/speech-stack/agent-runner) - ending and transferring live calls

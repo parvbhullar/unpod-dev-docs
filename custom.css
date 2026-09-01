@@ -5,11 +5,11 @@
    ============================================================ */
 
 /* ---- Animated "Playground" navbar link --------------------- */
-/* Scoped to the top navbar only, so in-page cards/links that
-   point at the Playground stay normal. */
-#navbar a[href*="superdialog.unpod.ai/playground"],
-header a[href*="superdialog.unpod.ai/playground"],
-a[href*="superdialog.unpod.ai/playground"] {
+/* Playground is a `tab` in docs.json, so its link carries `.nav-tabs-item`.
+   Key the pill off that class ONLY. Broader selectors (`header a`,
+   `#navbar a`) also matched in-page Cards and inline body links, turning
+   them into purple blobs with white text. */
+a.nav-tabs-item[href*="superdialog.unpod.ai/playground"] {
   position: relative;
   display: inline-flex !important;
   align-items: center;
@@ -26,16 +26,12 @@ a[href*="superdialog.unpod.ai/playground"] {
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-#navbar a[href*="superdialog.unpod.ai/playground"]:hover,
-header a[href*="superdialog.unpod.ai/playground"]:hover,
-a[href*="superdialog.unpod.ai/playground"]:hover {
+.nav-tabs a[href*="superdialog.unpod.ai/playground"]:hover {
   transform: translateY(-1px) scale(1.04);
   box-shadow: 0 8px 22px rgba(121, 108, 255, 0.45);
 }
 
-#navbar a[href*="superdialog.unpod.ai/playground"] *,
-header a[href*="superdialog.unpod.ai/playground"] *,
-a[href*="superdialog.unpod.ai/playground"] * {
+.nav-tabs a[href*="superdialog.unpod.ai/playground"] * {
   color: #fff !important;
   fill: currentColor;
 }
@@ -51,10 +47,8 @@ a[href*="superdialog.unpod.ai/playground"] * {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #navbar a[href*="superdialog.unpod.ai/playground"],
-  header a[href*="superdialog.unpod.ai/playground"],
-  a[href*="superdialog.unpod.ai/playground"] {
-    animation: none;
+  .nav-tabs a[href*="superdialog.unpod.ai/playground"] {
+    animation: none !important;
   }
 }
 
@@ -470,4 +464,337 @@ div:has(svg[aria-roledescription^="flowchart"]) > [class*="ontrol"] {
 @keyframes pg-nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
 @media (prefers-reduced-motion: reduce) {
   .pg-cta, .pg-cta::before, .pg-cta__icon, .pg-cta__arrow { animation: none; }
+}
+
+/* ============================================================
+   .pg-card — accented Playground card
+   Drop-in replacement for a <Card> inside a <CardGroup> when the
+   Playground is the primary CTA of the group. Geometry copies
+   Mintlify's own card (rounded-2xl, px-6 py-5, my-2) so it lines
+   up with plain Cards beside it; only the skin differs.
+   ============================================================ */
+.pg-card {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  height: 100%;
+  margin: 0.5rem 0;
+  padding: 20px 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(121, 108, 255, 0.45);
+  background:
+    radial-gradient(130% 120% at 0% 0%, rgba(121, 108, 255, 0.13), transparent 60%),
+    var(--pg-card-bg, #ffffff);
+  text-decoration: none !important;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.dark .pg-card { --pg-card-bg: #0c0c11; border-color: rgba(154, 144, 255, 0.42); }
+
+.pg-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(121, 108, 255, 0.9);
+  box-shadow: 0 14px 34px -12px rgba(90, 79, 255, 0.45);
+}
+
+/* hover sweep, same language as .int-card */
+.pg-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 40%, rgba(154, 144, 255, 0.18) 50%, transparent 60%);
+  transform: translateX(-120%);
+  transition: transform 0.55s ease;
+  pointer-events: none;
+}
+.pg-card:hover::after { transform: translateX(120%); }
+
+.pg-card__badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  color: #fff;
+  background: linear-gradient(110deg, #5a4fff, #796cff, #9a90ff, #796cff);
+  background-size: 300% 100%;
+  animation: pg-shimmer 4s linear infinite;
+}
+
+.pg-card__icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  color: #796cff;
+}
+.dark .pg-card__icon { color: #9a90ff; }
+.pg-card__icon svg { width: 24px; height: 24px; display: block; }
+
+.pg-card__title {
+  display: block;
+  margin-top: 16px;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.3;
+  color: #27272a;
+}
+.dark .pg-card__title { color: #ffffff; }
+
+.pg-card__desc {
+  display: block;
+  margin-top: 4px;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #52525b;
+}
+.dark .pg-card__desc { color: #a1a1aa; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pg-card, .pg-card::after, .pg-card__badge { animation: none; transition: none; }
+}
+
+/* ============================================================
+   .ul-stack — "Where Unpod sits" layer diagram
+   Replaces where-unpod-sits.svg: theme-aware, fluid width, and
+   nothing can clip (the old SVG drew its LAYER labels behind the
+   inner box edge). Markup: .ul-stack > (.ul-layer | .ul-link)…
+   ============================================================ */
+.ul-stack {
+  --ul: #796cff;
+  --ul-d: #5a4fff;
+  --ul-l: #9a90ff;
+  --ul-cy: #06b6d4;
+  --ul-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin: 1.9rem 0 1.6rem;
+}
+
+.ul-stack__title {
+  font-family: var(--ul-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #8b8b96;
+  margin-bottom: 14px;
+}
+
+/* ---- a layer panel ---- */
+.ul-layer {
+  --lc: var(--ul);
+  position: relative;
+  border-radius: 18px;
+  padding: 26px 22px 20px;
+  border: 1px solid color-mix(in srgb, var(--lc) 32%, transparent);
+  background:
+    radial-gradient(120% 130% at 50% 0%, color-mix(in srgb, var(--lc) 9%, transparent), transparent 65%),
+    var(--ul-panel, #ffffff);
+  overflow: hidden;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  animation: ul-in 0.5s ease both;
+}
+.dark .ul-layer { --ul-panel: #0b0b10; }
+/* !important: the entrance animation has fill-mode `both`, so it keeps
+   asserting transform after it finishes and would swallow the hover lift. */
+.ul-layer:hover {
+  transform: translateY(-3px) !important;
+  border-color: color-mix(in srgb, var(--lc) 70%, transparent);
+  box-shadow: 0 18px 40px -20px color-mix(in srgb, var(--lc) 65%, transparent);
+}
+.ul-layer.is-cyan { --lc: var(--ul-cy); }
+
+/* layer number — own line, never overlaps the card below */
+.ul-layer__tag {
+  display: inline-block;
+  font-family: var(--ul-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  color: var(--lc);
+  background: color-mix(in srgb, var(--lc) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--lc) 30%, transparent);
+  margin-bottom: 12px;
+}
+
+.ul-layer__card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+  text-align: center;
+  padding: 16px 18px;
+  border-radius: 13px;
+  border: 1px solid color-mix(in srgb, var(--lc) 28%, transparent);
+  background: var(--ul-card, #fbfbff);
+}
+.dark .ul-layer__card { --ul-card: #05050a; }
+
+.ul-layer__name {
+  font-family: var(--ul-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #18181b;
+  line-height: 1.25;
+}
+.dark .ul-layer__name { color: #f4f4f5; }
+
+.ul-layer__vendors {
+  font-family: var(--ul-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--lc);
+  opacity: 0.9;
+}
+
+/* ---- the brand layer — filled, breathing glow, sheen sweep ---- */
+.ul-layer.is-brand {
+  --lc: var(--ul);
+  border-color: var(--ul);
+  background: linear-gradient(150deg, var(--ul), var(--ul-d));
+  animation: ul-in 0.5s ease both, ul-breathe 3s ease-in-out 0.5s infinite;
+}
+.ul-layer.is-brand .ul-layer__tag {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.ul-layer.is-brand .ul-layer__card {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.dark .ul-layer.is-brand .ul-layer__card { background: rgba(0, 0, 0, 0.22); }
+.ul-layer.is-brand .ul-layer__name,
+.ul-layer.is-brand .ul-layer__vendors { color: #fff; }
+.ul-layer.is-brand .ul-layer__vendors { opacity: 0.85; }
+.ul-layer.is-brand::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -55%;
+  width: 42%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  animation: ul-sheen 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ---- connector between two layers ---- */
+.ul-link {
+  position: relative;
+  align-self: center;
+  width: 3px;
+  height: 54px;
+  margin: 6px 0;
+  border-radius: 3px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ul-cy) 25%, transparent), var(--ul-cy));
+  animation: ul-in 0.5s ease both;
+}
+/* travelling dot — upward by default ("used by" points at layer 3) */
+.ul-link::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ul-cy);
+  box-shadow: 0 0 10px 2px color-mix(in srgb, var(--ul-cy) 70%, transparent);
+  transform: translateX(-50%);
+  animation: uf-run-v-rev 1.8s linear infinite;
+}
+/* arrowhead at the top */
+.ul-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid var(--ul-cy);
+}
+/* downward variant ("builds on" points at layer 1) */
+.ul-link.is-down {
+  background: linear-gradient(0deg, color-mix(in srgb, var(--ul-cy) 25%, transparent), var(--ul-cy));
+}
+.ul-link.is-down::before {
+  bottom: auto;
+  top: 0;
+  animation: uf-run-v 1.8s linear infinite;
+}
+.ul-link.is-down::after {
+  top: auto;
+  bottom: -2px;
+  border-bottom: 0;
+  border-top: 10px solid var(--ul-cy);
+}
+
+.ul-link__lbl {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 12px;
+  white-space: nowrap;
+  font-family: var(--ul-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ul-cy);
+}
+
+/* staggered entrance, top to bottom */
+.ul-stack > :nth-child(2) { animation-delay: 0.05s; }
+.ul-stack > :nth-child(3) { animation-delay: 0.15s; }
+.ul-stack > :nth-child(4) { animation-delay: 0.25s; }
+.ul-stack > :nth-child(5) { animation-delay: 0.35s; }
+.ul-stack > :nth-child(6) { animation-delay: 0.45s; }
+
+@keyframes ul-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ul-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(121, 108, 255, 0.45), 0 14px 34px -20px rgba(90, 79, 255, 0.6); }
+  50%      { box-shadow: 0 0 0 7px rgba(121, 108, 255, 0), 0 20px 44px -18px rgba(90, 79, 255, 0.75); }
+}
+@keyframes ul-sheen { 0% { left: -55%; } 55%, 100% { left: 120%; } }
+
+@media (max-width: 640px) {
+  .ul-link { height: 46px; }
+  .ul-link__lbl { left: 50%; top: 100%; margin: 4px 0 0; transform: translateX(-50%); }
+  .ul-link.is-down .ul-link__lbl { top: auto; bottom: 100%; margin: 0 0 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ul-layer, .ul-layer.is-brand, .ul-layer.is-brand::after,
+  .ul-link, .ul-link::before { animation: none; }
+}
+
+/* ============================================================
+   HIDE PAGE FEEDBACK TOOLBAR
+   Mintlify renders "Was this page helpful? Yes / No" plus the
+   "Suggest edits" link inside a single .feedback-toolbar block
+   at the bottom of every page. docs.json feedback flags are set
+   to false; this is the belt-and-braces rule so the bar stays
+   gone regardless of theme defaults.
+   ============================================================ */
+.feedback-toolbar {
+  display: none !important;
 }

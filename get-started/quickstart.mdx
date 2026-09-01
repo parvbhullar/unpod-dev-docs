@@ -1,6 +1,7 @@
 ---
 title: 'Quickstart'
-description: 'Place your first real phone call with an AI agent - six SDK calls, about five minutes, nothing to deploy.'
+icon: 'zap'
+description: 'Talk to your own voice agent in the browser in about 5 minutes. No phone number needed.'
 ---
 
 In this quickstart you will create a named agent with a voice and a brain,
@@ -61,13 +62,20 @@ choosing an instance type than choosing a ringtone.
 
 ```python step1_voices.py
 import asyncio
-from unpod import AsyncClient
+from unpod import AsyncClient, Runner
 
 async def main() -> None:
     async with AsyncClient() as client:
         profiles = await client.voice_profiles.list(language="en")
         for p in profiles:
             print(p)
+        voice = await client.agents.voice.create(
+            "my-support-agent",                     # agent_id
+            brain=Runner(),                         # your own worker, written in step 4
+            name="Support Bot",
+            voice_profile=profiles[0].profile_id,
+        )
+        print("Agent:", voice.agent_id, voice.voice_profile_name)
 
 asyncio.run(main())
 ```
@@ -88,6 +96,14 @@ temperature=0.3  estimated_cost='0.0385'  latency='~699ms'
 
 The `name` is the handle - `Riya` is what you pass to `create()` in the next
 step.
+1. **`voice_profiles.list()`** - the catalog of STT + TTS bundles. Pick any;
+   swap later without touching your agent. See
+   [Voice profiles](/speech-stack/voice-profiles).
+2. **`agents.voice.create()`** - creates the agent and its first voice, and says
+   the brain out loud. `brain=Runner()` means *your* process answers turns; step
+   4 writes it. Swap in `brain=Prompt("You are ...")` and you can skip step 4
+   entirely - Unpod runs the brain and nothing of yours needs to be up. See
+   [Agents](/speech-stack/agents).
 
 <Tip>
 A reliable order for choosing: get **language** coverage right first - the
@@ -106,6 +122,7 @@ You choose both names here, and they do different jobs. `agent_id` is the
 one string you type again - attaching a number, placing a call, and reading
 results all take this exact string. `name` is the human label, shown in
 dashboards, referenced by nobody's code.
+## Step 4 - Write the agent
 
 ```python step2_agent.py
 import asyncio

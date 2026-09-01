@@ -1,0 +1,271 @@
+---
+title: 'Agents'
+icon: 'robot'
+description: 'One agent_id, one brain, N voices - create and manage agents with the Unpod SDK.'
+---
+
+## What Is an Agent?
+
+An **agent** is one `agent_id`, one **brain**, and one or more **voices**. The
+brain answers turns; each voice is a voice profile the agent can speak with. The
+brain belongs to the agent, not to a voice - so editing the brain reaches every
+voice at once.
+
+`client.agents` replaces the old five-concern publish with three separate
+statements:
+
+| Statement | Surface | Means |
+|---|---|---|
+| The content is ready | your playbook, prompt, worker, or endpoint | there is something to say |
+| The agent can speak | `client.agents.voice` | it has a voice profile |
+| The agent can be reached | `client.agents.numbers` | a phone number routes to it |
+
+<Note>
+`client.pipes` is the deprecated predecessor of a single agent-voice row. It
+still writes the same rows, but every call now raises a `DeprecationWarning`.
+See [Speech Pipe](/speech-stack/pipes) for the migration table.
+</Note>
+
+---
+
+## The Brain: One Parameter, Four Sources
+
+`brain=` takes exactly one of four typed sources. Passing two is
+unrepresentable, so there is no precedence rule and no validation error to
+memorise.
+
+```python
+from unpod import Playbook, Prompt, Runner, Endpoint
+```
+
+| Source | Constructor | Who answers a turn | You deploy |
+|---|---|---|---|
+| **Playbook** | `Playbook(playbook_id)` | Unpod's playbook pool | nothing - the playbook must be published |
+| **Prompt** | `Prompt(text)` | Unpod, as a one-node playbook | nothing |
+| **Runner** | `Runner(agent_id=None)` | your own worker, over WebSocket | an [AgentRunner](/speech-stack/agent-runner) process |
+| **Endpoint** | `Endpoint(url, model=..., api_key=...)` | your own HTTP service - Unpod calls **you** per turn | an OpenAI-compatible chat-completions URL |
+
+- `Playbook(id)` is a **live reference**, not a snapshot: editing the playbook
+  changes the agent on its next call.
+- `Prompt(text)` is the shortest path from nothing to a talking agent - no
+  process of yours runs at all.
+- `Runner()` normally registers under the agent's own id. Pass an id only when
+  agent `sales-bot` is served by a runner registered as `my-brain-v2`.
+- `Endpoint(...)` accepts `model`, `api_key`, `headers`, `query`, `extra_body`,
+  `timeout_s` and `max_retries`. The `api_key` is stored on the agent and
+  **redacted on every read path** - the API never echoes it back.
+
+---
+
+## Creating an Agent
+
+```python
+import asyncio
+from unpod import AsyncClient, Prompt
+
+async def main():
+    async with AsyncClient() as client:
+        voice = await client.agents.voice.create(
+            "support-bot",                                  # agent_id
+            brain=Prompt("You are a concise support assistant."),
+            name="Support Bot",                             # defaults to agent_id
+            voice_profile="vp_en_female_hd",                # from voice_profiles.list()
+            greeting="Hi! How can I help you today?",       # the opening line
+            recording=True,
+            max_call_duration_s=600,
+        )
+        print("Created:", voice.agent_id, voice.voice_profile_name)
+
+asyncio.run(main())
+```
+
+### `agents.voice.create()` parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `agent_id` | `str` | required | Positional. Your own id - the rendezvous key for runners, numbers, and calls |
+| `brain` | `Brain` | required | Exactly one of `Playbook` / `Prompt` / `Runner` / `Endpoint` |
+| `name` | `str \| None` | `agent_id` | Display name for the agent |
+| `voice_profile` | `str \| None` | `None` | Voice profile id (`vp_...`) or catalog name |
+| `greeting` | `str \| None` | `None` | What the agent opens the call with |
+| `recording` | `bool` | `False` | Enable call recording |
+| `max_call_duration_s` | `int` | `3600` | Hard cap in seconds |
+| `max_concurrent` | `int` | `1` | Concurrent calls this agent accepts |
+| `brain_execution` | `str \| None` | `"bridge"` (server default) | Where the brain runs |
+
+<Tip>
+Swap `brain=Prompt(...)` for `brain=Runner()` and the same call configures an
+agent your own [AgentRunner](/speech-stack/agent-runner) drives. Nothing else
+about the agent changes.
+</Tip>
+
+---
+
+## Adding More Voices
+
+A second voice inherits the agent's brain unchanged - same logic, another
+language or persona.
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:
+        await client.agents.voice.add(
+            "support-bot",
+            voice_profile="vp_hi_female_hd",
+            greeting="Namaste! Main aapki kaise madad kar sakta hoon?",
+        )
+
+        # Remove one voice; the agent keeps the rest
+        await client.agents.voice.remove("support-bot", "vp_hi_female_hd")
+
+asyncio.run(main())
+```
+
+---
+
+## Reading Agents
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:
+        for agent in await client.agents.list():
+            print(agent.agent_id, agent.brain.get("type"), len(agent.voices))
+
+        agent = await client.agents.get("support-bot")
+        for v in agent.voices:
+            print(v.voice_profile_id, v.voice_profile_name, v.is_default)
+
+asyncio.run(main())
+```
+
+### `Agent` fields
+
+| Field | Type | Description |
+|---|---|---|
+| `agent_id` | `str` | Your agent id |
+| `name` | `str` | Display name |
+| `brain` | `dict` | The brain as stored - `{type, ref, cfg}` |
+| `brain_execution` | `str` | Default `"bridge"` |
+| `voices` | `list[AgentVoice]` | Every voice the agent speaks with |
+
+### `AgentVoice` fields
+
+| Field | Type | Description |
+|---|---|---|
+| `agent_id` | `str` | The agent this voice belongs to |
+| `voice_profile_id` | `str \| None` | Voice profile id |
+| `voice_profile_name` | `str \| None` | The profile's display name, joined server-side |
+| `name` | `str` | The **agent's** name - unrelated to the profile name |
+| `brain` | `dict` | Inherited from the agent |
+| `brain_execution` | `str` | Default `"bridge"` |
+| `is_default` | `bool` | Whether this is the agent's default voice |
+
+---
+
+## Updating an Agent
+
+```python
+import asyncio
+from unpod import AsyncClient, Playbook
+
+async def main():
+    async with AsyncClient() as client:
+        agent = await client.agents.update(
+            "support-bot",
+            brain=Playbook("PB_abc123"),     # reaches EVERY voice
+            name="Premium Support",
+            greeting="Thanks for calling Premium Support.",
+        )
+        print(agent.brain, len(agent.voices))
+
+asyncio.run(main())
+```
+
+<Warning>
+A brain change reaches **every voice** of the agent. That is the point of the
+model - one brain, N voices - but it means an update is never scoped to a single
+language.
+</Warning>
+
+---
+
+## Deleting an Agent
+
+```python
+await client.agents.delete("support-bot")   # the agent and every voice it speaks with
+```
+
+---
+
+## Attaching a Phone Number
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:
+        await client.agents.numbers.attach("support-bot", "+14155550101")
+
+        # Release it later
+        await client.agents.numbers.detach("num_...")
+
+asyncio.run(main())
+```
+
+`attach()` also takes `number_id=` (the upstream id), plus
+`inbound_trunk_id=` / `outbound_trunk_id=`. Pass the real `number_id` when you
+have it: on the upsert branch the path id is stored as the cross-plane
+back-reference, so passing only a phone number records a phone number where a
+database id belongs.
+
+<Note>
+`detach()` is a `DELETE` on `/attach`, not a `POST` to `/detach` - the platform
+models detaching as removing the attachment. There is no `/detach` route.
+</Note>
+
+For the number lifecycle itself - provisioning, syncing, trunks - see
+[Numbers](/speech-stack/numbers).
+
+---
+
+## Full Method Reference
+
+| Call | Returns | Notes |
+|---|---|---|
+| `agents.voice.create(agent_id, brain=..., ...)` | `AgentVoice` | Creates the agent **and** its first voice |
+| `agents.create(agent_id, brain=..., **kw)` | `AgentVoice` | Alias for the above, kept for older examples |
+| `agents.list()` | `list[Agent]` | Every agent in the project, each with all its voices |
+| `agents.get(agent_id)` | `Agent` | Brain plus every voice |
+| `agents.update(agent_id, brain=, name=, greeting=, brain_execution=, **fields)` | `Agent` | A brain change reaches every voice |
+| `agents.delete(agent_id)` | `None` | The agent and every voice |
+| `agents.voice.add(agent_id, voice_profile=, greeting=)` | `AgentVoice` | Inherits the brain unchanged |
+| `agents.voice.remove(agent_id, voice_profile_id)` | `None` | Keeps the other voices |
+| `agents.numbers.attach(agent_id, number, ...)` | `dict` | Routes a number to the agent |
+| `agents.numbers.detach(number_id)` | `dict` | Releases whatever agent holds it |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="AgentRunner & Sessions" icon="code" href="/speech-stack/agent-runner">
+    Run the worker a `Runner()` brain points at, and act on live calls - say,
+    transfer, end, record.
+  </Card>
+  <Card title="Voice Profiles" icon="waveform-lines" href="/speech-stack/voice-profiles">
+    Browse the catalog and pick the `profile_id` you pass as `voice_profile`.
+  </Card>
+  <Card title="Numbers" icon="phone" href="/speech-stack/numbers">
+    Provision, sync, and route phone numbers.
+  </Card>
+  <Card title="Analytics" icon="chart-simple" href="/speech-stack/analytics">
+    Attach a prompt plus a field spec and get structured data from every call.
+  </Card>
+</CardGroup>

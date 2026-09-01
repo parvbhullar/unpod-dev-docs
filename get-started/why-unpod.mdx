@@ -45,7 +45,7 @@ Speech is solved. Telephony is solved. The layers that run the conversation
 are where projects stall.
 
 <CardGroup cols={1}>
-  <Card title="Prompts lose the plot" icon="file-warning" horizontal>
+  <Card title="Prompts lose the plot" icon="triangle-alert" horizontal>
     Every top model drops ~39% from single-turn to multi-turn - mostly
     unreliability, not capability. Take a wrong turn and the conversation
     never recovers. Prompt-tuning plateaus around 85%: nothing in a
@@ -93,9 +93,37 @@ placed and read back in six SDK calls. Or use a trained agent like a model:
 Same trained agent, three ways in. Your orchestration, speech, and transport
 stay where they are.
 
-<Frame>
-  <img src="/images/diagrams/where-unpod-sits.svg" alt="Animated architecture diagram showing Unpod between raw telephony providers and agent platforms." />
-</Frame>
+<div className="ul-stack" role="img" aria-label="Layer diagram: agent platforms use Unpod, which builds on raw telephony providers.">
+  <div className="ul-stack__title">Where Unpod sits</div>
+
+  <div className="ul-layer">
+    <span className="ul-layer__tag">Layer 3</span>
+    <div className="ul-layer__card">
+      <span className="ul-layer__name">Agent platforms</span>
+      <span className="ul-layer__vendors">Vapi / Retell / Bland</span>
+    </div>
+  </div>
+
+  <div className="ul-link"><span className="ul-link__lbl">used by</span></div>
+
+  <div className="ul-layer is-brand">
+    <span className="ul-layer__tag">Layer 2</span>
+    <div className="ul-layer__card">
+      <span className="ul-layer__name">Unpod</span>
+      <span className="ul-layer__vendors">Communication infra</span>
+    </div>
+  </div>
+
+  <div className="ul-link is-down"><span className="ul-link__lbl">builds on</span></div>
+
+  <div className="ul-layer">
+    <span className="ul-layer__tag">Layer 1</span>
+    <div className="ul-layer__card">
+      <span className="ul-layer__name">Raw telephony</span>
+      <span className="ul-layer__vendors">Twilio / Plivo / Bandwidth</span>
+    </div>
+  </div>
+</div>
 
 ## Start building
 
@@ -103,9 +131,17 @@ stay where they are.
   <Card title="Getting Started" icon="play" href="/get-started/getting-started">
     Choose your path - and the right credential for it.
   </Card>
-  <Card title="Playground" icon="wand-sparkles" href="https://superdialog.unpod.ai/playground?tab=preview">
-    Build and hear an agent in the browser. No account needed.
-  </Card>
+  <a className="pg-card" href="https://superdialog.unpod.ai/playground?tab=preview" target="_blank" rel="noreferrer">
+    <span className="pg-card__badge">Try it</span>
+    <span className="pg-card__icon">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2l1.9 5.3L19 9.2l-5.1 1.9L12 16.4l-1.9-5.3L5 9.2l5.1-1.9L12 2z" />
+        <path d="M18.4 14.1l.85 2.3 2.3.85-2.3.85-.85 2.3-.85-2.3-2.3-.85 2.3-.85.85-2.3z" />
+      </svg>
+    </span>
+    <span className="pg-card__title">Playground</span>
+    <span className="pg-card__desc">Build and hear an agent in the browser. No account needed.</span>
+  </a>
   <Card title="GitHub" icon="github" href="https://github.com/unpod-ai/unpod">
     Open source, MIT. Self-host the full stack.
   </Card>

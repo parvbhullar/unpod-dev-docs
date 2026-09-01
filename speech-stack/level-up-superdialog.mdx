@@ -1,5 +1,6 @@
 ---
 title: "Run a SuperDialog agent"
+icon: 'workflow'
 description: 'When a plain LLM brain stops being enough: plug a structured SuperDialog agent into your voice agent.'
 ---
 
@@ -27,7 +28,7 @@ async def handle_call(ctx: CallContext) -> None:
 AgentRunner(entrypoint=handle_call, agent_id="my-agent").start()
 ```
 
-The runnable end-to-end version - Speech Pipe registration, pre-call data,
+The runnable end-to-end version - agent registration, pre-call data,
 mid-call `assist()`, flow switching - lives in
 [Embedding guide: Unpod voice](/superdialog/embedding-guides/unpod-voice).
 
@@ -90,7 +91,7 @@ are in [Playbooks](/superdialog/playbooks); HTTP, Python, and MCP tools are in
   <Card title="Thinking in Playbooks" icon="brain" href="/superdialog/thinking-in-playbooks">
     The mental model: checkpoints that gate outcomes, and when not to use one.
   </Card>
-  <Card title="SuperDialog" icon="diagram-project" href="/superdialog/introduction">
+  <Card title="SuperDialog" icon="workflow" href="/superdialog/introduction">
     The framework itself: playbooks, tools, sessions, CLI.
   </Card>
   <Card title="Bring Your Agent" icon="bot" href="/speech-stack/bring-your-agent">
