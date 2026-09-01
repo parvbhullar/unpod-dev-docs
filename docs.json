@@ -35,14 +35,60 @@
             ]
           },
           {
-            "group": "Use it like a model",
+            "group": "Quickstarts",
             "pages": [
-              "get-started/chat",
+              "get-started/quickstart",
               "get-started/realtime",
               "get-started/phone",
-              "get-started/quickstart",
               "get-started/first-phone-call",
               "get-started/vs-competition"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Core Engine",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "core-engine/overview"
+            ]
+          },
+          {
+            "group": "Communication State",
+            "icon": "database",
+            "pages": [
+              "core-engine/entities",
+              "core-engine/conversations",
+              "core-engine/outcomes",
+              "core-engine/context-graph"
+            ]
+          },
+          {
+            "group": "Execution",
+            "icon": "workflow",
+            "pages": [
+              "core-engine/agent-workforce",
+              "core-engine/flows-journeys",
+              "core-engine/intelligence"
+            ]
+          },
+          {
+            "group": "Transport",
+            "icon": "phone-outgoing",
+            "pages": [
+              "core-engine/calling-engine",
+              "core-engine/channels"
+            ]
+          },
+          {
+            "group": "Control",
+            "icon": "shield-check",
+            "pages": [
+              "core-engine/teams-policies",
+              "core-engine/events",
+              "core-engine/observability"
             ]
           }
         ]

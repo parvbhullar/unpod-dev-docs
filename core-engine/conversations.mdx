@@ -1,0 +1,68 @@
+---
+title: 'Conversations'
+description: 'The channel-neutral thread - every interaction belongs to a conversation, and the conversation belongs to an entity.'
+---
+
+A conversation is the channel-neutral thread. Every interaction - a call, a
+WhatsApp message, an email - belongs to a conversation, and the conversation
+belongs to an [entity](/core-engine/entities). That one link is why an agent
+picking up a thread knows where things stand without being briefed: the
+history is attached to the person, not scattered across channel APIs.
+
+Conversations are the thin waist of communication state. A WhatsApp message,
+a 12-minute phone call, and an inbound email are technically nothing alike -
+different providers, payloads, and storage. But they share the four facts
+that matter: who participated, which conversation they belong to, what
+outcome resulted, and which event fired. Conversations normalize every
+channel down to that shape, so everything above them - agents, flows,
+analytics - works on threads instead of channel-specific records.
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| Conversations | The channel-neutral thread tying interactions to one entity over time, in order | In build. Today the platform shows a per-person view: [Conversation view](/platform/space-view/conversation) |
+| Interactions | One touch on a thread - a call, a message, an email - with participants and an outcome | In build. Calls exist today: each call produces a transcript, see [Recordings & Transcripts](/speech-stack/recordings-transcripts) |
+
+## On the spine
+
+Conversations sit at the center of the spine: channels deliver to an entity,
+and every touch lands as an interaction on that entity's conversation. The
+component reads entity identity to attach each interaction to the right
+thread, and writes the interaction record and its resulting
+[outcome](/core-engine/outcomes). Every change - interaction created,
+conversation updated, outcome recorded - emits an
+[event](/core-engine/events).
+
+## What stays hidden
+
+Channel-specific storage details. How a WhatsApp payload, a call recording
+reference, and a raw email are persisted differs per channel, and none of it
+surfaces in the conversation model. You query threads, interactions, and
+outcomes; the per-channel record formats stay internal.
+
+## Status
+
+**In build.** The channel-neutral thread model is shipping in the open.
+Today, each call produces a transcript
+([Recordings & Transcripts](/speech-stack/recordings-transcripts)) and the
+platform shows a per-person conversation view
+([Conversation view](/platform/space-view/conversation)). There is no
+callable conversations API yet.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Conversation view" icon="messages-square" href="/platform/space-view/conversation">
+    The per-person conversation view in the platform today.
+  </Card>
+  <Card title="Recordings & Transcripts" icon="file-audio" href="/speech-stack/recordings-transcripts">
+    What each call produces today - the first interaction type.
+  </Card>
+  <Card title="Entities" icon="users" href="/core-engine/entities">
+    The system-of-record identity every conversation belongs to.
+  </Card>
+  <Card title="Events" icon="radio" href="/core-engine/events">
+    The events conversations and interactions emit.
+  </Card>
+</CardGroup>

@@ -1,87 +1,45 @@
 ---
 title: 'Getting Started'
-description: 'Your first request against a trained agent, in about 2 minutes.'
+description: 'Choose your path into Unpod - and the right credential for it.'
 ---
 
-## Prerequisites
+One backend, several doors. Pick the outcome you want; each path is one page
+and takes minutes.
 
-- An **endpoint key** - publish a playbook, then open **Deploy as Endpoint →
-  Manage API Keys** in the [Playground](https://superdialog.unpod.ai/playground).
-- Basic REST knowledge. That's it - no SDK required for this page.
+## Choose your path
 
-## Authentication
+| I want to... | Start here | You need |
+|---|---|---|
+| **Place a real phone call with an agent** | [Quickstart](/get-started/quickstart) - six SDK calls, nothing to deploy | Platform token + a number |
+| Talk to an agent in the browser | [Realtime](/get-started/realtime) | A browser - runs in the hosted Playground |
+| Publish an agent to a number, no code | [Phone](/get-started/phone) | A [Playground](https://superdialog.unpod.ai/playground) account |
+| Run my own Python brain on calls | [Run Your Own Brain](/get-started/first-phone-call) | SDK key + a number |
+| Call a trained agent like a model, over REST | [Chat API](/playbook/api) | Endpoint key |
 
-Requests to the Chat API carry one header:
+Not sure? Take the **Quickstart** - it is the shortest path to something
+real: your phone rings, an agent speaks, and the transcript comes back in
+code.
 
-```
-Authorization: Bearer $UNPOD_API_KEY
-```
+## Which credential is which
 
-<Note>
-Unpod has two credentials, and they are not interchangeable:
+Unpod's credentials are not interchangeable:
 
-| You are calling | Host | Header | Key from |
+| You are calling | Host | Auth | From |
 |---|---|---|---|
-| **Chat API** (this page) | `inference.unpod.ai` | `Authorization: Bearer` | Playground → Deploy as Endpoint |
-| **Python SDK** (pipes, numbers, runner) | `api.unpod.ai` | handled by the SDK | [unpod.ai/api-keys](https://unpod.ai/api-keys/) |
+| **Python SDK REST** (agents, numbers, calls) | `api.unpod.ai` | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE`, or `UNPOD_API_KEY` | [Quickstart → Prerequisites](/get-started/quickstart#prerequisites) |
+| **AgentRunner** (your own brain) | the orchestrator | `UNPOD_API_KEY` (`sk_...`) | [unpod.ai/api-keys](https://unpod.ai/api-keys/) |
+| **Chat API** (trained agent as a model) | `inference.unpod.ai` | `Authorization: Bearer` endpoint key | Playground → Deploy as Endpoint |
 
-The SDK reads its key from `UNPOD_API_KEY` too - set whichever one matches the
-path you are on.
-</Note>
+The SDK reads all of it from the environment; token auth wins over the API
+key when both are present. Set whichever matches the path you are on.
 
-## Your first request
-
-Every trained agent is callable over the same
-[chat/completions](/playbook/api) shape you already know. `model` is the
-agent - here, a public example playbook:
-
-```bash
-curl https://inference.unpod.ai/v1/chat/completions \
-  -H "Authorization: Bearer $UNPOD_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"public:PB_7ZRMzCA1ojQ9LlcK","messages":[{"role":"user","content":"hi"}]}'
-```
-
-```json
-{
-  "choices": [
-    {
-      "message": {
-        "role": "assistant",
-        "content": "Hi! Welcome to Lumina Spa - I'm Mira, your booking assistant. How can I help you today?"
-      },
-      "finish_reason": "stop"
-    }
-  ]
-}
-```
-
-Not a generic reply - a trained persona, following its own playbook.
-
-## Keep the conversation
-
-Add a `user` id and the agent remembers the thread across requests:
-
-```bash
-curl https://inference.unpod.ai/v1/chat/completions \
-  -H "Authorization: Bearer $UNPOD_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"public:PB_7ZRMzCA1ojQ9LlcK","messages":[{"role":"user","content":"hi"}],"user":"sess_abc"}'
-```
-
-## Go further
+## Before the first line of code
 
 <CardGroup cols={2}>
-  <Card title="Train your own" icon="wand-sparkles" href="/playbook/build-an-agent">
-    Describe your use case in the Playground; the playbook writes itself.
+  <Card title="Why Unpod" icon="compass" href="/get-started/why-unpod">
+    The communication backend for agentic apps - the case in two minutes.
   </Card>
-  <Card title="Use it over chat" icon="terminal" href="/get-started/chat">
-    Drop the endpoint into LiveKit, Pipecat, or any chat workflow.
-  </Card>
-  <Card title="Use it in realtime" icon="audio-waveform" href="/get-started/realtime">
-    Give it a voice - speech in, speech out, brain included.
-  </Card>
-  <Card title="Put it on a number" icon="phone" href="/get-started/phone">
-    No code - publish straight to a live phone number.
+  <Card title="How Unpod fits together" icon="network" href="/get-started/core-concepts">
+    The spine, the four layers, and every term defined once.
   </Card>
 </CardGroup>

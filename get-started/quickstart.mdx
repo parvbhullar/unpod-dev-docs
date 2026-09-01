@@ -1,223 +1,388 @@
 ---
 title: 'Quickstart'
-description: 'Talk to your own voice agent in the browser in about 5 minutes. No phone number needed.'
+description: 'Place your first real phone call with an AI agent - six SDK calls, about five minutes, nothing to deploy.'
 ---
 
-Talk to your own agent in the browser. **No phone number, no carrier account.**
-You write the brain; Unpod runs microphone capture, speech-to-text,
-text-to-speech, and the audio bridge.
-
-Want a real phone call instead? Go to
-[Make your first phone call](/get-started/first-phone-call).
+In this quickstart you will create a named agent with a voice and a brain,
+attach a phone number to it, place a real outbound call, and read the
+transcript and recording back in code. About five minutes, and nothing to
+deploy: the carrier, the speech pipelines, turn detection, barge-in,
+recording and the call record all run on Unpod's side. What crosses the
+boundary is text.
 
 ## Prerequisites
 
-- Python 3.12+
-- An **SDK key** (`sk_...`) from [unpod.ai/api-keys](https://unpod.ai/api-keys/).
-  This is not the endpoint key the [Chat API](/playbook/api) uses - see
-  [Getting started](/get-started/getting-started#authentication).
-- An LLM provider key (any provider; this page uses Anthropic)
-
-## Step 1 - Install
-
-<Tabs>
-  <Tab title="pip">
-    ```bash
-    pip install "unpod[dialog]"
-    ```
-  </Tab>
-  <Tab title="uv">
-    ```bash
-    uv add "unpod[dialog]"
-    ```
-  </Tab>
-</Tabs>
-
-## Step 2 - Set two keys
-
-```bash .env
-UNPOD_API_KEY="sk_..."
-ANTHROPIC_API_KEY="sk-ant-..."
-```
-
-That is everything the default setup needs. `UNPOD_API_KEY` authenticates you;
-the provider key is read by whichever LLM you plug in.
-
-<Warning>
-The SDK does not read `.env` by itself. Load it with `load_dotenv()` (as the
-snippets below do) or export the variables in your shell - either way, before
-you construct `AsyncClient()` or `AgentRunner()`, which is when the SDK reads
-them.
-</Warning>
-
-<Accordion title="Pointing at a local or self-hosted stack">
-Set these two instead of the defaults. `UNPOD_BASE_URL` does not work for local
-services.
+- **Python 3.12+**
+- **An Unpod org** with a platform token and at least one phone number -
+  provision a number from the dashboard under **Dev Platform → Numbers**
+- **The SDK:**
 
 ```bash
-UNPOD_SERVICE_BASE_URL=http://localhost:8000/platform
-UNPOD_ORCHESTRATOR_URL=ws://localhost:8000
+pip install unpod
 ```
 
-The hosted default is `UNPOD_BASE_URL="api.unpod.ai"`. The SDK derives REST
-(`https://<host>/platform`) and the orchestrator (`wss://<host>`) from that one
-host, so you set it once.
-</Accordion>
+Set your credentials in the environment:
 
-## Step 3 - Create a speech pipe
+```bash
+export UNPOD_BASE_URL="https://api.unpod.ai"
+export UNPOD_SERVICE_BASE_URL="https://api.unpod.ai"
+export UNPOD_PLATFORM_TOKEN="..."   # org-scoped REST auth
+export UNPOD_ORG_HANDLE="your-org"
+export UNPOD_API_KEY="sk_..."       # AgentRunner bearer; not needed on this page
+```
 
-A **pipe** ties a voice to your agent. Run this once:
+`AsyncClient()` reads all of it from the environment, and token auth wins
+over the API key when both are present.
 
-```python setup.py
-from dotenv import load_dotenv
-load_dotenv(override=True)
+## The six steps
 
+| # | Call | What it does |
+|---|---|---|
+| 1 | `voice_profiles.list()` | Pick a voice |
+| 2 | `agents.voice.create()` | Brain + voice, under a name you choose |
+| 3 | `telephony.numbers.list()` | Find a free number |
+| 4 | `agents.numbers.attach()` | Bind it to the agent |
+| 5 | `calls.create()` | Dial - returns queued, with a `call_id` |
+| 6 | `calls.get()` | Status, transcript, recording, duration |
+
+**`agent_id` is the only identifier you re-type.** The voice name, the
+number, and the `call_id` each cross exactly one step boundary; `number_id`
+and `voice_profile_id` you never need at all. Every step after the second
+takes the agent id and resolves the rest server-side. This page uses
+`my-support`; name yours whatever your team will recognise.
+
+<Steps>
+<Step title="Pick a voice profile">
+
+A voice profile is not a voice. It is a pre-benchmarked pipeline with a
+price tag - an STT model, a TTS provider and voice, a chat model, and the
+measured cost and latency of running all three. Choosing one is closer to
+choosing an instance type than choosing a ringtone.
+
+```python step1_voices.py
 import asyncio
 from unpod import AsyncClient
 
-async def main():
+async def main() -> None:
     async with AsyncClient() as client:
         profiles = await client.voice_profiles.list(language="en")
-        pipe = await client.pipes.create(
-            name="Support Bot",
-            voice_profile=profiles[0].profile_id,
-            agent_id="my-support-agent",
-        )
-        print("Pipe ID:", pipe.pipe_id)
+        for p in profiles:
+            print(p)
 
 asyncio.run(main())
 ```
 
-What it does:
-
-1. **`voice_profiles.list()`** - the catalog of STT + TTS bundles. Pick any;
-   swap later without touching your agent. See
-   [Voice profiles](/speech-stack/voice-profiles).
-2. **`pipes.create()`** - binds that voice to an `agent_id`.
-
-<Note>
-**`agent_id` is a string you choose**, and it must be identical here and in your
-`AgentRunner` below. A mismatch is the most common reason a call never reaches
-your code.
-</Note>
-
-Save the printed `pipe_id` - Step 5 needs it.
-
-## Step 4 - Write the agent
-
-```python agent.py
-from dotenv import load_dotenv
-load_dotenv(override=True)
-
-from anthropic import AsyncAnthropic
-from unpod import AgentRunner, CallContext
-from unpod.adapters import AnthropicAdapter
-
-async def handle_call(ctx: CallContext) -> None:
-    ctx.session.dialog_machine = AnthropicAdapter(
-        client=AsyncAnthropic(),
-        model="claude-haiku-4-5-20251001",
-        system_prompt="You are Alex, a friendly support agent.",
-    )
-    await ctx.session.run()
-
-AgentRunner(entrypoint=handle_call, agent_id="my-support-agent").start()
+```text Real output, one entry
+name='Riya'                     # ← the handle you pass to create()
+description='English Voice'  gender='F'  quality='good'
+profile_id='e2531acb-ad1e-4408-94ca-77dd3279d208'
+voice_temperature=0.8  voice_speed=1.02
+greeting_message="Hello! How are you? I'm Riya, what can I help you with today?"
+transcriber={'name': 'smallestai', 'model': 'pulse',
+             'languages': [{'code': 'multi', 'name': 'Multilingual'}]}
+voice={'name': 'Unpod', 'voice': 'Riya', 'model': 'unpod-tts-1.5-max',
+       'languages': [{'code': 'en'}, {'code': 'hi'}]}
+chat_model={'name': 'OpenAI', 'codename': 'gpt-4.1-mini'}
+temperature=0.3  estimated_cost='0.0385'  latency='~699ms'
 ```
 
-What each part does:
+The `name` is the handle - `Riya` is what you pass to `create()` in the next
+step.
 
-1. **`handle_call`** - runs once per conversation. `ctx` carries the call; the
-   `session` is how you act on it.
-2. **`ctx.session.dialog_machine`** - your brain. Any adapter works here:
-   Anthropic, OpenAI, LangChain, a plain HTTP endpoint, or a SuperDialog
-   playbook. See [Bring your agent](/speech-stack/bring-your-agent).
-3. **`session.run()`** - hands each transcribed turn to the brain and speaks
-   the reply back.
-4. **`AgentRunner(...).start()`** - registers with Unpod and waits for calls.
-   It reads `UNPOD_API_KEY` from the environment.
+<Tip>
+A reliable order for choosing: get **language** coverage right first - the
+only constraint that can break the product; check both what the transcriber
+understands and what the voice can speak. Then shortlist voices that fit the
+persona, **listen to them in the dashboard** rather than picking from a table
+of model names, and let quality tier, latency and cost break the tie.
+`voice_speed` and `voice_temperature` settle a voice that is close but
+slightly too fast or too animated.
+</Tip>
 
-<Accordion title="Use a SuperDialog playbook instead of a raw prompt">
-```python
-from superdialog import DialogMachine
+</Step>
+<Step title="Create the agent">
 
-async def handle_call(ctx: CallContext) -> None:
-    ctx.session.dialog_machine = DialogMachine(
-        "support.yaml", llm="anthropic/claude-haiku-4-5-20251001"
-    )
-    await ctx.session.run()
+You choose both names here, and they do different jobs. `agent_id` is the
+one string you type again - attaching a number, placing a call, and reading
+results all take this exact string. `name` is the human label, shown in
+dashboards, referenced by nobody's code.
+
+```python step2_agent.py
+import asyncio
+from unpod import AsyncClient, Prompt
+
+PROMPT_TEXT = (
+    "You are Riya, a support agent for an online electronics store. "
+    "Greet the caller by name if you know it, ask what problem they are "
+    "calling about, confirm the order number, and tell them the resolution "
+    "timeline. Keep every reply under two sentences. End the call politely "
+    "once the caller has no further questions."
+)
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        voice = await client.agents.voice.create(
+            agent_id="my-support",   # you choose this; everything later resolves from it
+            name="My Support Line",  # human label, shown in dashboards
+            brain=Prompt(PROMPT_TEXT),
+            voice_profile="Riya",
+            recording=True,
+        )
+        print(f"agent_id        = {voice.agent_id}")
+        print(f"name            = {voice.name}")
+        print(f"voice_profile   = {voice.voice_profile_name}")
+        print(f"brain.type      = {voice.brain.get('type')}")
+        print(f"brain_execution = {voice.brain_execution}")
+
+asyncio.run(main())
 ```
 
-Checkpoints, slots, and tools instead of one long prompt - see
-[Thinking in playbooks](/superdialog/thinking-in-playbooks).
-</Accordion>
-
-## Step 5 - Talk to it
-
-Start the runner and leave it running:
-
-```bash
-python agent.py
+```text Output
+agent_id        = my-support
+name            = My Support Line
+voice_profile   = Riya
+brain.type      = prompt
+brain_execution = bridge
 ```
 
-You should see it register and wait for calls:
+`Prompt` is the shortest path to something that answers: the brain is a bare
+instruction string, the platform runs it as a one-node playbook, and there is
+nothing to deploy or publish first. One thing in that prompt is doing more work than it looks:
+the two-sentence cap. On a phone line, **reply length is a latency setting**,
+not a style preference.
 
-```
-AgentRunner registered  agent_id=my-support-agent  transport=dial_out
-Waiting for calls...
-```
+Things to know about `create()`:
 
-Now open the Playground in your browser and press to talk:
+- `recording` is **off by default**. Turn it on now; you cannot recover a
+  call you did not record.
+- `greeting` overrides the profile's own greeting line.
+- `max_call_duration_s` defaults to 3600, and `max_concurrent` defaults
+  to 1 - raise it before any load test, or your second caller waits.
+- `agents.voice.add(agent_id, voice_profile=...)` gives the same brain a
+  second voice, because the brain lives on the agent.
 
-<Card title="Open the Playground" href="https://superdialog.unpod.ai/playground?tab=preview">
-  Microphone capture, the session token exchange, and the audio bridge - no
-  local UI to run.
-</Card>
+</Step>
+<Step title="Find a free number">
 
-<Note>
-Prefer to keep it in the terminal? `superdialog playbook chat --playbook x.yaml`
-talks to a playbook with no infrastructure at all - see
-[CLI](/superdialog/cli).
-</Note>
+List first - you can only attach a number the org holds and that nothing
+else has claimed.
 
-<Accordion title="Embedding the browser session in your own app">
-Your backend mints a short-lived token per user and the frontend connects with it:
-
-```python
+```python step3_numbers.py
+import asyncio
 from unpod import AsyncClient
 
-async def get_session_token(pipe_id: str, user_id: str) -> str:
+async def main() -> None:
     async with AsyncClient() as client:
-        token = await client.sessions.create_token(
-            pipe_id=pipe_id,
-            metadata={"user_id": user_id},
-        )
-        return token.token   # single-use; check token.expires_at
+        numbers = await client.telephony.numbers.list()
+        for n in numbers:
+            print(f"{n.number}  status={n.status}  country={n.country}")
+
+asyncio.run(main())
 ```
 
-`@unpod/web-sdk` is **not yet published on npm**, so browser embedding is not
-available today. To run the local playground harness from source, see
-[Run it locally](/playbook/developer-setup).
-</Accordion>
+```text Output
++918071539102  status=not_assigned  country=IN
++918071539118  status=assigned      country=IN
+```
 
-## What Unpod owns vs what you own
+Only rows with `status="not_assigned"` can be attached. `numbers.list()`
+also takes optional `status` and `country` filters. If nothing is free,
+provision a number from the dashboard first.
 
-| Unpod owns | You own |
-|---|---|
-| STT, TTS, voice profiles | The prompt or playbook |
-| Audio transport and the bridge | Tools and business logic |
-| Routing, threading, retries | Customer data and memory |
-| Numbers and telephony | Model choice |
+</Step>
+<Step title="Attach it to the agent">
+
+```python step4_attach.py
+import asyncio
+from unpod import AsyncClient
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        result = await client.agents.numbers.attach(
+            "my-support", "+918071539102")  # the not_assigned number from step 3
+        print(f"number={result.get('number')} "
+              f"agent_id={result.get('agent_id')} "
+              f"status={result.get('status')}")
+
+asyncio.run(main())
+```
+
+From here you never pass the number again - `calls.create()` resolves it
+from the agent. `agents.numbers.detach(number_id)` reverses it, and a number
+moves to a different agent by detaching and attaching again.
+
+</Step>
+<Step title="Place the call">
+
+The minimal call is three pieces of information: the agent, the destination,
+and `data` - the per-call context the brain can read. It is what turns
+"greet the caller by name if you know it" from a wish into an instruction.
+
+```python step5_call.py
+import asyncio
+from unpod import AsyncClient
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        call = await client.calls.create(
+            agent_id="my-support",
+            to_number="+9188473xxxxx",   # your phone
+            data={"customer_name": "Arshpreet", "order_id": "ORD-10482"},
+        )
+        print(f"call_id={call.call_id} status={call.status} "
+              f"from={call.from_number}")
+
+asyncio.run(main())
+```
+
+Three things people expect to pass, and should not:
+
+- **No `from_number`.** Caller ID resolves from the number attached to the
+  agent.
+- **Nothing about the voice.** The agent already knows which profile it
+  speaks with and which brain answers.
+- **The result is the queued state, not a finished call.** The platform
+  enqueues and returns immediately.
+
+<Note>
+A `from_number` of `None` on the queued record means no number is attached
+to the agent, and the dial has nothing to originate from - go back to
+step 4.
+</Note>
+
+</Step>
+<Step title="Read the result">
+
+`calls.create()` is asynchronous, so you poll until the call reaches a
+terminal state - and a call reaches one in **two different ways**, both of
+which you have to check. `ended_at` is stamped when a connected call hangs
+up, but a call that never started - busy, no answer, rejected - finishes
+without ever being stamped. Poll on `ended_at` alone and a busy signal hangs
+your script for the full budget.
+
+```python step6_result.py
+import asyncio
+from unpod import AsyncClient
+
+CALL_ID = "..."   # from step 5
+
+TERMINAL = {"completed", "ended", "failed", "no_answer",
+            "busy", "canceled", "cancelled", "rejected"}
+
+async def wait_for_call(client, call_id, budget_s=300, poll_s=5):
+    waited = 0
+    call = await client.calls.get(call_id)
+    while call.ended_at is None and call.status not in TERMINAL:
+        if waited >= budget_s:
+            break
+        await asyncio.sleep(poll_s)
+        waited += poll_s
+        call = await client.calls.get(call_id)
+    return call
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        call = await wait_for_call(client, CALL_ID)
+        print(f"status        = {call.status}")
+        print(f"end_reason    = {call.end_reason}")
+        print(f"disposition   = {call.disposition}")
+        print(f"from -> to    = {call.from_number} -> {call.to_number}")
+        print(f"duration_s    = {call.duration_s}")
+        print(f"recording_url = {call.recording_url}")
+        print(f"session_id    = {call.session_id}")
+        print(f"transcript    = {len(call.transcript or [])} turns")
+        for turn in call.transcript or []:
+            print(f"[{turn.get('role')}] {turn.get('content')}")
+
+asyncio.run(main())
+```
+
+One `calls.get()` is the whole result: status, end reason, disposition,
+duration, recording URL, and the transcript turn by turn. If you want the
+orchestration run behind it - room, participants, usage -
+`client.sessions.get(call.session_id)` reads that, and the `session_id` is
+what support will ask for if something looked wrong.
+`calls.hangup(call_id)` ends a live call from your side.
+
+</Step>
+</Steps>
+
+That is the whole integration. Your phone rang, an agent spoke, and the
+record of it came back in code.
+
+## Good to know about reading calls
+
+- `calls.list()` leaves transcripts out so a page of 500 calls stays small:
+  on a list row `transcript` is `None` (*not loaded*), as distinct from `[]`
+  (the call genuinely said nothing). Every row still carries
+  `transcript_turns`. Use `list` to find the call, `get` to read it.
+- Want typed fields instead of raw transcripts? Attach an analytics block to
+  the agent - an extraction schema that runs on every completed session, read
+  back with `client.analytics.list_results(agent_id="my-support", limit=100)`.
+  Attach it **before your first call**: blocks run forward and never
+  backfill.
+
+## Which brain
+
+Everything above used `Prompt` because it deploys nothing. All four brains
+sit in the same loop, behind the same voice - the real question is how much
+you are willing to run. Swapping costs one line:
+
+```python
+from unpod import Prompt, Playbook, Endpoint, Runner
+
+brain = Prompt("You are Riya, a support agent...")
+brain = Playbook("PB_abc123")
+brain = Endpoint("https://llm.acme.dev/v1/chat/completions",
+                 model="acme-support-v4", api_key="sk_...", timeout_s=8)
+brain = Runner()                # registers under this agent's own id
+brain = Runner("my-brain-v2")   # or a differently-named runner
+```
+
+| Brain | Best when | You deploy |
+|---|---|---|
+| `Prompt` | The whole job fits in a paragraph | Nothing |
+| `Playbook` | Production workflows - branches, slots, tools, non-engineer edits | Nothing - see [What is a playbook](/playbook/what-is-a-playbook) |
+| `Endpoint` | An existing model or inference service you must use | An HTTP service |
+| `Runner` | Custom logic mid-call - DB reads, tool calls, your framework | A worker - see [Run your own brain](/get-started/first-phone-call) |
+
+## Before production
+
+Six settings and one habit. Defaults are tuned for a first call, not for a
+campaign.
+
+| Setting | Do this | Why |
+|---|---|---|
+| `recording` | Turn it on | Off by default; an unrecorded call cannot be recovered |
+| `max_concurrent` | Raise past 1 | The default serialises your callers |
+| `max_call_duration_s` | Lower it for outbound | A stuck campaign call bills the full hour |
+| `voice_profile` | Cheapest that covers the language | The spread recurs every month |
+| Prompt | Cap the reply length | Reply length moves seconds; profile choice moves hundreds of milliseconds |
+| Analytics block | Attach before the first call | Blocks run forward, never backfill |
+| [Tool](/superdialog/tools) tier | Declare side effects | Anything that charges or sends needs a reversibility tier, so a rewind cannot do it twice |
+
+## Troubleshooting
+
+- **The call stays `queued` and `from_number` is `None`** - no number is
+  attached to the agent. Re-run step 4 and check the attach response.
+- **Your script hangs on a busy line** - you are polling `ended_at` alone.
+  A never-connected call finishes by terminal status only; use the
+  `wait_for_call()` pattern from step 6.
+- **`transcript` is `None`** - on a list row it means *not loaded* (use
+  `calls.get()`); on a never-connected call there are simply no turns.
+- **No `not_assigned` number in step 3** - provision one from the dashboard
+  under **Dev Platform → Numbers**, or detach one from another agent.
 
 ## Next
 
 <CardGroup cols={3}>
-  <Card title="Make a phone call" icon="phone" href="/get-started/first-phone-call">
-    Put this same agent on a real number.
+  <Card title="Run your own brain" icon="bot" href="/get-started/first-phone-call">
+    A `Runner` at the text boundary - your process, your framework.
   </Card>
-  <Card title="Bring your own agent" icon="bot" href="/speech-stack/bring-your-agent">
-    LangChain, an HTTP webhook, or any brain you already have.
+  <Card title="What is a playbook" icon="git-branch" href="/playbook/what-is-a-playbook">
+    Branches, slots, and tools instead of one long prompt.
   </Card>
-  <Card title="Ship it" icon="rocket" href="/speech-stack/deploy">
-    Capacity, scaling, and graceful shutdown.
+  <Card title="Talk to it in the browser" icon="monitor-smartphone" href="/get-started/realtime">
+    The same agent over a browser session - no number involved.
   </Card>
 </CardGroup>

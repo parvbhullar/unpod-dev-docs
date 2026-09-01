@@ -1,0 +1,74 @@
+---
+title: 'Teams & Policies'
+description: 'The multi-tenant authorization boundary - who can touch what, and which actions need a human first.'
+---
+
+Teams & Policies are the multi-tenant authorization boundary: every resource
+in the Core Engine belongs to a project, every actor holds a role inside it,
+and sensitive actions can be gated behind human approval.
+
+Trusting a backend with your customer conversations sets a high bar. Unpod
+treats control as architecture, not as an enterprise questionnaire filled in
+later: scoping is not a filter applied at the API edge - an entity,
+conversation, or recording outside your project does not exist for your keys.
+Teams and roles decide who reads and writes; policies decide which actions -
+sending a payment link, placing a call outside allowed hours, escalating a
+journey - stop and wait for a human before they run.
+
+Deployment is part of control. The Core Engine runs managed, dedicated,
+hybrid, or [self-hosted](/platform/self-hosting/quickstart) - and the SDK
+does not change between them. Where the data lives is a deployment decision,
+not a rewrite.
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| Projects | The scoping container every resource belongs to - a Space in the Platform | [Space APIs](/api/space/organizations) - production |
+| Teams | The people who share access to a project | Platform space membership - production |
+| Roles | What a member can see and do inside a project | Platform space membership - production |
+| Service accounts | Non-human credentials - the API keys your agents and servers hold | [API Keys](/platform/studio-view/api-key) - production |
+| Policies | Rules that gate sensitive actions on the spine | In build - shipping with the [journey engine](/core-engine/flows-journeys) |
+| Approvals | The human sign-off step a policy inserts before an action runs | In build - shipping with the [journey engine](/core-engine/flows-journeys) |
+
+## On the spine
+
+Teams & Policies do not sit on the spine - they govern it. Every read and
+write against [entities](/core-engine/entities),
+[conversations](/core-engine/conversations), and
+[outcomes](/core-engine/outcomes) resolves through a project scope and a
+role before it executes. Policies read the action an agent or journey is
+about to take and either let it pass or hold it as a pending approval; each
+grant, denial, and approval decision emits an audit event alongside the
+[event stream](/core-engine/events).
+
+## What stays hidden
+
+Internal organization mappings. How projects, teams, and billing tenants map
+onto each other inside Unpod - and how a key resolves to its scope at
+request time - is not a public surface. You work with projects, roles, and
+keys; the tenancy machinery underneath is Unpod's job.
+
+## Status
+
+Spaces, roles, and API keys: production - every call, message, and record in
+the system is already scoped through them. Policy-gated approvals: in build,
+shipping with the journey engine. Self-hosted deployment: available today
+via the [self-hosting quickstart](/platform/self-hosting/quickstart).
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="API Keys" icon="key" href="/platform/studio-view/api-key">
+    Create and rotate the credentials your agents and servers hold.
+  </Card>
+  <Card title="Space APIs" icon="building" href="/api/space/organizations">
+    Address a project and its records over REST.
+  </Card>
+  <Card title="Self-Hosting" icon="server" href="/platform/self-hosting/quickstart">
+    Run the stack in your own infrastructure - same SDK.
+  </Card>
+  <Card title="Observability" icon="chart-line" href="/core-engine/observability">
+    See what your agents did - logs, recordings, traces.
+  </Card>
+</CardGroup>

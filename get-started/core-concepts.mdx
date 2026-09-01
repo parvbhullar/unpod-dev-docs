@@ -1,21 +1,78 @@
 ---
-title: 'Core Concepts'
+title: 'How Unpod fits together'
 description: 'The single source of truth for Unpod terminology - every term defined once, with deep links.'
 ---
 
 This page defines every Unpod term once. Other pages link here instead of
 redefining things. If a definition seems to conflict elsewhere, this page wins.
 
-The one rule that explains the whole architecture: **the wire between Unpod and
-your code carries text, not audio.** Unpod owns the phone call, the speech, and
-the carriers. You own the brain that decides what to say. Everything below
-follows from that split.
+Unpod is the communication backend for agentic apps. Everything in it hangs
+off one data plane - the spine.
+
+## The Spine
+
+```
+             Agents         Flows
+                \             /
+                 v           v
+CHANNELS ---> ENTITY -> CONVERSATION -> INTERACTION -> OUTCOME ---> EVENTS
+                  |                                |
+                  +--------- CONTEXT --------------+
+                 ^           ^
+              Teams       Policies
+```
+
+Read it as: channels deliver to an entity; every touch belongs to a
+channel-neutral conversation; each call, message, or email is an interaction;
+each interaction produces a structured outcome; every change emits an event.
+Context underlies entity through outcome. Agents and Flows act on the spine;
+Teams and Policies govern it.
+
+## The Four Layers
+
+| Layer | Unpod primitives | Role |
+|---|---|---|
+| Communication state | Entities, Conversations, Context Graph, Outcomes | The durable system of record |
+| Execution | Flows, Journeys, Agent Workforce | Decides and performs what happens next |
+| Transport | Calling Engine, WhatsApp, Email, other Channels | Reaches the human |
+| Control | Teams, Policies, Events, Observability | Governs, secures and exposes execution |
+
+## The Components
+
+Each component has its own page under Core Engine, opening with the same
+mental model listed here.
+
+| Component | Mental model | Public primitives |
+|---|---|---|
+| [Calling Engine](/core-engine/calling-engine) | Programmable realtime voice runtime | calls, numbers, SIP, transfers, streams |
+| [Channels](/core-engine/channels) | One communication API | messages, identities, connectors, routing |
+| [Agent Workforce](/core-engine/agent-workforce) | Workers that communicate and act | agents, tools, policies, handoffs |
+| [Flows](/core-engine/flows-journeys) | Durable communication workflows | flows, steps, journeys, waits, signals |
+| [Context Graph](/core-engine/context-graph) | Persistent communication memory | facts, relationships, summaries, retrieval |
+| [Entities](/core-engine/entities) | System-of-record identity | people, organizations, identities |
+| [Teams](/core-engine/teams-policies) | Multi-tenant authorization boundary | projects, teams, roles, service accounts |
+| [Events](/core-engine/events) | Everything that happened, once | event stream, webhooks, subscriptions, replay |
+
+Statuses vary by component: the Calling Engine, Agent Workforce, Outcomes,
+and Teams & Policies carry production traffic today; Conversations and
+Flows & Journeys are in build; the Context Graph is early access. Each
+linked page carries its own status line.
+
+The rest of this page is the speech stack - the Calling Engine's developer
+surface, and the part of Unpod a Python dev builds against first. The rule
+that explains it is [SuperDialog](/superdialog/introduction)'s defining rule:
+**the wire carries text, not audio - you own the brain.** Unpod owns the
+phone call, the speech, and the carriers. You own the brain that decides what
+to say. That rule is SuperDialog's, not the whole platform's - a WhatsApp or
+email agent never touches audio in the first place - but the text/audio split
+still governs everything the speech stack hands your code: text in, text out.
 
 ## Use It Like a Model
 
-Train an agent on your use case, then use it like a model - a playbook + a
-small model trained on your workflows, or any third-party model, over
-whichever surface fits your stack:
+Train an agent on your use case, then use it like a model - a playbook + any
+third-party model, or - in early access - a small model trained on your
+workflows ([Intelligence](/core-engine/intelligence)), over whichever surface
+fits your stack:
 
 | Surface | I/O | Live in |
 |---|---|---|
@@ -27,7 +84,8 @@ Not sure which? [Getting Started](/get-started/getting-started).
 
 ## Architecture at a Glance
 
-A single inbound call, end to end:
+A single inbound call, end to end - the Transport layer's voice path, as the
+speech stack exposes it:
 
 <Frame>
   <img src="/images/diagrams/unpod-voice-stack.svg" alt="Animated Unpod voice stack diagram showing phone, browser, and mobile entrypoints flowing through the managed speech layer into your AgentRunner, dialog machine, and tools." />
@@ -44,11 +102,16 @@ the caller hears it. SuperDialog is one option for the brain - powerful, but
 optional.
 
 You own everything from the AgentRunner down. Everything above it is managed.
+On the spine, the whole call is one interaction: it belongs to a conversation,
+resolves to an entity, and reports a structured outcome when it ends.
 
 ## Glossary
 
 One canonical definition each. Headings are anchor-able, so other pages can deep
-link (for example `/get-started/core-concepts#pipe`).
+link (for example `/get-started/core-concepts#pipe`). These are the speech
+stack's terms; the spine's terms (entity, conversation, interaction, outcome,
+event, context) are defined on their [Core Engine](/core-engine/overview)
+pages.
 
 ### Number
 
@@ -215,10 +278,17 @@ terms precisely.
 | **SuperDialog** | The optional dialog framework (`superdialog` package): flow graphs, tools, and state for structured conversations. One choice of brain - not required. |
 | **Platform** | The hosted UI and self-hostable stack: dashboard, agent studio, spaces, analytics, and telephony management on top of the Speech Stack. |
 
+In the docs, **Core Engine** names the communication backend as a whole - the
+spine and the components at the top of this page. Start at the
+[Core Engine overview](/core-engine/overview).
+
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Make Your First Call" icon="phone" href="/get-started/first-phone-call">
+  <Card title="Core Engine" icon="network" href="/core-engine/overview">
+    The spine, the four layers, and every component's page.
+  </Card>
+  <Card title="Run Your Own Brain" icon="phone" href="/get-started/first-phone-call">
     Wire a number, a pipe, and a runner end to end.
   </Card>
   <Card title="Speech Stack" icon="layers" href="/speech-stack/introduction">

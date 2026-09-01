@@ -1,0 +1,71 @@
+---
+title: 'Observability'
+description: 'When it breaks, you can see where - exactly. Every journey observable from carrier to outcome.'
+---
+
+When it breaks, you can see where - exactly. That is the whole job of
+Observability, the part of the Control layer that exposes execution.
+
+A communication journey crosses more systems than almost anything else you
+run: a carrier delivers audio, the speech pipeline turns it into text, a
+model produces a turn, a tool call fires, an outcome gets written. When a
+customer says "your agent hung up on me", the answer has to be findable in
+one place - not reconstructed from five dashboards. The target is one
+correlated trace per journey: carrier to speech to model turn to tool call to
+outcome, on a single trace ID. Today that correlation exists at the call
+level - call logs, recordings, transcripts, and speech-pipeline
+observability, all production - and the journey-wide trace is in build on
+top of it.
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| Traces | One correlated record per journey - carrier, speech, model turns, tool calls, outcome - on a single trace ID | Call-level today: [Speech observability](/speech-stack/observability). Journey-wide: in build |
+| Call logs | Every call with its timeline, status, and hangup cause | [Call logs](/platform/studio-view/call-logs) |
+| Recordings | The audio of a call, retrievable after it ends | [Recordings and transcripts](/speech-stack/recordings-transcripts) |
+| Transcripts | The turn-by-turn text of a conversation, queryable via API | [Recordings and transcripts](/speech-stack/recordings-transcripts) |
+| Metrics | Latency, duration, and pipeline health, aggregated across calls | [Analytics](/platform/space-view/analytics) |
+
+## On the spine
+
+Observability sits in the Control layer. It writes nothing to the spine; it
+reads all of it. Every interaction leaves a trail - logs, a recording, a
+transcript, per-turn metrics - and every [event](/core-engine/events) the
+spine emits is a point on a trace. When the correlated journey trace ships,
+one trace ID will follow an entity's journey across channels, so a failed
+tool call and the carrier leg it happened on appear in the same view.
+
+## What stays hidden
+
+The telemetry pipeline internals stay hidden: how spans are collected,
+buffered, and shipped, which storage backend holds traces, how sampling and
+retention are implemented. You query logs, traces, and metrics; how they got
+there is not your problem, and keeping it hidden means the pipeline can
+change without breaking your queries.
+
+## Status
+
+**Call-level observability: production.** Call logs, recordings, and
+transcripts carry production traffic today, alongside speech-pipeline
+observability for live calls.
+
+**Correlated journey trace: in build.** One trace ID from carrier to
+outcome, across channels, shipping in the open.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Speech observability" icon="activity" href="/speech-stack/observability">
+    Live-call and pipeline observability inside the Speech Stack.
+  </Card>
+  <Card title="Call logs" icon="list" href="/platform/studio-view/call-logs">
+    Every call's timeline, status, and hangup cause in the Studio.
+  </Card>
+  <Card title="Recordings and transcripts" icon="file-audio" href="/speech-stack/recordings-transcripts">
+    Retrieve the audio and turn-by-turn text of any call.
+  </Card>
+  <Card title="Analytics" icon="chart-line" href="/platform/space-view/analytics">
+    Aggregated metrics across calls and agents.
+  </Card>
+</CardGroup>

@@ -1,0 +1,84 @@
+---
+title: 'Entities'
+description: 'System-of-record identity - one person, one history, across every channel.'
+---
+
+An entity is system-of-record identity: a call, a WhatsApp reply, and an
+email from the same person are one entity with one history - not three
+records in three systems.
+
+Every channel API hands you a different handle for the same human: a phone
+number on the call, a WhatsApp ID on the message, an address on the email.
+Without a shared identity layer, your agent treats each as a stranger and
+your data splits three ways. Entities collapse those handles into one
+record, so every touch on every channel resolves to the same person before
+your agent sees it.
+
+People and organizations are both first-class. In an enterprise sale the
+customer is the company - individual contacts roll up to it. In a consumer
+sale the customer is the person. Your CRM stays where it is; the entity
+table is the working copy your agents read and write in real time.
+
+Upsert a person once with their known identities, and every future
+interaction on any of those channels resolves to them. This is the shape
+the unified SDK takes:
+
+```python
+entity = unpod.entities.upsert(
+    name="Priya Sharma",
+    identities=[
+        {"channel": "phone", "value": "+91981..."},
+        {"channel": "whatsapp", "value": "+91981..."},
+        {"channel": "email", "value": "priya@acme.com"},
+    ],
+)
+```
+
+Today this lives in [People in the Platform](/platform/space-view/people)
+and the [Space APIs](/api/space/organizations).
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| People | A human the system knows - the record every channel resolves to | [People](/platform/space-view/people) - production |
+| Organizations | A company as a first-class customer; contacts roll up to it | [Organizations API](/api/space/organizations) - in build |
+| Identities | Channel handles (phone, WhatsApp, email) attached to a person | Managed with [People](/platform/space-view/people) - production |
+
+## On the spine
+
+Entities are where the spine starts: channels deliver every inbound touch
+to an entity, and every [conversation](/core-engine/conversations) belongs
+to one. Entities read identity handles from channel payloads, write the
+resolved person or organization record, and emit entity created, updated,
+and merged events. The [Context Graph](/core-engine/context-graph) hangs
+facts and history off the entity record.
+
+## What stays hidden
+
+Matching and dedup implementation. How a raw phone number or email is
+normalized, scored, and resolved to an existing entity - and how duplicate
+records get merged - is Unpod's job. You upsert identities and read one
+record; the resolution machinery is not a public surface.
+
+## Status
+
+People and identities: production. Companies (organizations): in build -
+domain rollup and dedupe are shipping in the open.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="People" icon="users" href="/platform/space-view/people">
+    Manage people and their channel identities in the Platform today.
+  </Card>
+  <Card title="Organizations API" icon="building" href="/api/space/organizations">
+    Company records and rollup via the Space APIs.
+  </Card>
+  <Card title="Conversations" icon="messages" href="/core-engine/conversations">
+    The channel-neutral threads every entity's touches belong to.
+  </Card>
+  <Card title="Context Graph" icon="share-nodes" href="/core-engine/context-graph">
+    Persistent communication memory attached to each entity.
+  </Card>
+</CardGroup>
