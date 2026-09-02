@@ -185,16 +185,19 @@ Python. Unpod is brain-agnostic: it routes text in and text out. "Agent" and
 ### AgentRunner
 
 A long-lived Python process you run. It registers with the Unpod orchestrator
-over WebSocket, advertises capacity, and serves a per-call bridge that Unpod
-dials into. For each call it builds a `CallContext` and invokes your entrypoint.
+over WebSocket, advertises capacity, and under the default `dial_out`
+transport **dials out** to a per-call bridge when work is assigned. The older
+`serve` transport flips that around and has Unpod dial into your runner
+instead. For each call it builds a `CallContext` and invokes your entrypoint.
 You identify it with an `agent_id` (see [IDs You'll Meet](#ids-youll-meet)). See
 [SDK Setup](/speech-stack/agent-runner).
 
 ### Session
 
 Your control interface for one live call, reached as `ctx.session`. It exposes
-controls (`say()`, `transfer_to_human()`, `end()`, recording controls), hooks,
-metrics, and the `dialog_machine` slot where you plug in your brain. Calling
+controls (`say()`, `transfer_to_human()`, `end()`), hooks, metrics, and the
+`dialog_machine` slot where you plug in your brain. Recording is configured on
+the agent itself; live pause/resume controls are not implemented. Calling
 `session.run()` keeps the call alive and routes each transcribed turn to your
 brain. See [Session Controls](/speech-stack/agent-runner).
 
@@ -232,14 +235,25 @@ using.
 **Management API** is for setup and orchestration: register a trunk, sync
 numbers, create an agent, trigger an outbound call, fetch transcripts and
 analytics. You construct a `Client` (sync) or `AsyncClient` (async); it reads
-`UNPOD_API_KEY` from the environment.
+credentials from the environment, preferring `UNPOD_PLATFORM_TOKEN` over
+`UNPOD_API_KEY`.
 
 ```python
 from unpod import AsyncClient, Runner
 
-client = AsyncClient()                       # REST, reads UNPOD_API_KEY
+client = AsyncClient()   # UNPOD_PLATFORM_TOKEN first, else UNPOD_API_KEY
 await client.agents.voice.create("support-bot", brain=Runner(), name="Support")
 ```
+
+<Warning>
+The sync `Client` **raises** if you call it from inside a running event loop:
+`RuntimeError("Client cannot be used from a running event loop; use AsyncClient")`.
+Use it from scripts and sync web handlers; use `AsyncClient` everywhere `async`
+is already in play - including inside an `AgentRunner` entrypoint.
+</Warning>
+
+A few resources need a platform token specifically, and some are unreachable in
+proxy mode. See [Client, Auth & Planes](/speech-stack/client-auth).
 
 **Connectivity API** is for the call itself: your `AgentRunner` holds a
 persistent WSS connection to the orchestrator, and each call gives you a live

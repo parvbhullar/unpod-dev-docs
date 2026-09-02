@@ -1,7 +1,7 @@
 ---
 title: 'Quickstart'
 icon: 'zap'
-description: 'Talk to your own voice agent in the browser in about 5 minutes. No phone number needed.'
+description: 'Create an agent, attach a number, place a real call, and inspect the result in about five minutes.'
 ---
 
 In this quickstart you will create a named agent with a voice and a brain,
@@ -66,7 +66,10 @@ from unpod import AsyncClient, Runner
 
 async def main() -> None:
     async with AsyncClient() as client:
-        profiles = await client.voice_profiles.list(language="en")
+        profiles = await client.voice_profiles.list()
+        # list() takes a language= kwarg, but it is NOT applied server-side.
+        # Print one in full first: the language codes live in the nested
+        # transcriber/voice dicts, not in the flat `languages` field.
         for p in profiles:
             print(p)
         voice = await client.agents.voice.create(
@@ -97,7 +100,10 @@ temperature=0.3  estimated_cost='0.0385'  latency='~699ms'
 The `name` is the handle - `Riya` is what you pass to `create()` in the next
 step.
 1. **`voice_profiles.list()`** - the catalog of STT + TTS bundles. Pick any;
-   swap later without touching your agent. See
+   swap later without touching your agent. It reads the **platform** plane, so
+   it needs `UNPOD_PLATFORM_TOKEN` - a bare `UNPOD_API_KEY` is refused. Its
+   `language=` argument is a no-op server-side; filter the returned list
+   yourself - and note the codes are nested, as the output below shows. See
    [Voice profiles](/speech-stack/voice-profiles).
 2. **`agents.voice.create()`** - creates the agent and its first voice, and says
    the brain out loud. `brain=Runner()` means *your* process answers turns; step
@@ -192,19 +198,34 @@ async def main() -> None:
     async with AsyncClient() as client:
         numbers = await client.telephony.numbers.list()
         for n in numbers:
-            print(f"{n.number}  status={n.status}  country={n.country}")
+            print(f"{n.number}  status={n.status}")
+
+        free = [n for n in numbers if n.status == "not_assigned"]
 
 asyncio.run(main())
 ```
 
 ```text Output
-+918071539102  status=not_assigned  country=IN
-+918071539118  status=assigned      country=IN
++918071539102  status=not_assigned
++918071539118  status=assigned
 ```
 
-Only rows with `status="not_assigned"` can be attached. `numbers.list()`
-also takes optional `status` and `country` filters. If nothing is free,
-provision a number from the dashboard first.
+Only rows with `status == "not_assigned"` can be attached - the status is
+derived so that it always means attachable (an unassigned but inactive number
+reports `closed`, never `not_assigned`). If nothing is free, provision a number
+from the dashboard first.
+
+<Note>
+`client.telephony.numbers.list()` takes **no arguments** and each row carries
+only `number` and `status` - there is no `country` or id field on this model, by
+design: every verb on this plane is keyed by the E.164 number. It sends
+`include_assigned=true`, so you see your org's attached numbers alongside the
+claimable pool.
+
+The other number surface, `client.numbers.list()`, has more fields and accepts
+`country=` / `trunk_type=` filters, but uses a different status vocabulary - see
+[Phone Numbers](/speech-stack/numbers#two-number-surfaces).
+</Note>
 
 </Step>
 <Step title="Attach it to the agent">

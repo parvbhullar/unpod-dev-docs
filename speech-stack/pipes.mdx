@@ -178,12 +178,17 @@ AgentRunner(entrypoint=handle_call, agent_id="my-bot").start()
 {
   "text": "I'd like to reschedule my appointment",
   "context": { },
-  "session_id": "sess_xyz789",
   "system_instructions": ["..."]   // only after assist() is called
 }
 // 200 response
 { "text": "Sure - what date works for you?" }
 ```
+
+<Note>
+`HTTPAdapter` has a `session_id` field in its body shape but never populates it,
+so the key is always absent. Pass `ctx.session_id` in a header instead - see
+[HTTP endpoint](/speech-stack/bring-your-agent#http-endpoint).
+</Note>
 
 Streaming, `assist()`, and error surfaces:
 [Adapters](/speech-stack/adapters).

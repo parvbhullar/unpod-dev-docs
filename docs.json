@@ -204,7 +204,9 @@
               "speech-stack/agents",
               "speech-stack/pipes",
               "speech-stack/numbers",
-              "speech-stack/voice-profiles"
+              "speech-stack/telephony-sdk",
+              "speech-stack/voice-profiles",
+              "speech-stack/domain-dictionaries"
             ]
           },
           {
@@ -234,7 +236,15 @@
               "speech-stack/recordings-transcripts",
               "speech-stack/analytics",
               "speech-stack/observability",
+              "speech-stack/logging-errors",
               "speech-stack/deploy"
+            ]
+          },
+          {
+            "group": "SDK Reference",
+            "pages": [
+              "speech-stack/client-auth",
+              "speech-stack/sdk-changelog"
             ]
           }
         ]

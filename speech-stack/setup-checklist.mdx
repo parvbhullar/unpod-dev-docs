@@ -8,21 +8,31 @@ Before your first call routes to your agent, complete these four steps once.
 
 ## 1. Pick a Voice Profile
 
+<Warning>
+This step needs a **platform** credential: set `UNPOD_PLATFORM_TOKEN` (plus
+`UNPOD_ORG_HANDLE`) before running it. `client.voice_profiles` reads
+backend-core's platform plane, and a bare `UNPOD_API_KEY` is refused there. See
+the [credential matrix](#which-credential-goes-where).
+</Warning>
+
 ```python
 import asyncio
 from unpod import AsyncClient
 
 async def list_profiles():
-    client = AsyncClient()
+    client = AsyncClient()          # UNPOD_PLATFORM_TOKEN + UNPOD_ORG_HANDLE
     profiles = await client.voice_profiles.list()
     for p in profiles:
-        print(p.profile_id, p.name)
+        print(p)          # print one in full - the language codes are nested
 
 asyncio.run(list_profiles())
 ```
 
-Copy a `profile_id` (`vp_...`) for step 2. See
-[Voice Profiles](/speech-stack/voice-profiles) for filtering and fields.
+Copy a `profile_id` (`vp_...`) for step 2. The `language=` kwarg is **not**
+applied server-side, and the flat `p.languages` field is usually empty - the
+codes arrive in the nested `voice` / `transcriber` dicts. See [Voice
+Profiles](/speech-stack/voice-profiles#listing-voice-profiles-via-sdk) for a
+filter that handles both.
 
 ## 2. Create an Agent
 
@@ -63,23 +73,37 @@ Numbers attach to an **`agent_id`**, not to a pipe id.
 import asyncio
 from unpod import AsyncClient
 
+# client.numbers.list() reads the platform pool, which reports NOT_ASSIGNED;
+# a supervoice row reports available. Accept both, case-insensitively.
+FREE_STATUSES = {"not_assigned", "available"}
+
 async def assign_number(agent_id: str) -> None:
     client = AsyncClient()
-    numbers = await client.numbers.list(status="active")
-    free = [n for n in numbers if n.pipe_id is None]
+    numbers = await client.numbers.list()
+    free = [n for n in numbers if (n.status or "").lower() in FREE_STATUSES]
     if not free:
         print("No free numbers. Provision one in the Unpod dashboard first.")
         return
-    await client.numbers.attach(free[0].number_id, agent_id)
+    await client.numbers.attach(free[0].number_id, agent_id, number=free[0].number)
     print(f"Attached {free[0].number}")
 
 asyncio.run(assign_number("my-agent"))
 ```
 
+<Warning>
+Do **not** filter with `list(status="active")` or `n.pipe_id is None`. Neither
+plane emits `"active"`, so that filter returns nothing; and pool rows carry no
+`pipe_id`, so that test passes every row including already-attached ones. Filter
+on `status` as shown. Details in
+[Phone Numbers](/speech-stack/numbers#two-number-surfaces).
+</Warning>
+
 <Note>
 `client.numbers.attach()` used to take `pipe_id=`. It takes `agent_id` now -
 supervoice resolves the pipe from the agent. `client.agents.numbers.attach(agent_id, number)`
-does the same thing keyed by the E.164 number instead of the id.
+does the same thing keyed by the E.164 number instead of the id, and
+[`client.telephony.numbers.attach()`](/speech-stack/telephony-sdk) attaches
+several numbers in one request.
 </Note>
 
 No numbers yet, or bringing your own carrier? See
@@ -103,10 +127,12 @@ import asyncio
 from unpod import AsyncClient, AgentRunner, CallContext, Runner
 from unpod.adapters.langchain import LangChainAdapter
 
-async def setup():
-    client = AsyncClient()
+FREE_STATUSES = {"not_assigned", "available"}
 
-    # 1. Pick a voice profile
+async def setup():
+    client = AsyncClient()      # UNPOD_PLATFORM_TOKEN + UNPOD_ORG_HANDLE
+
+    # 1. Pick a voice profile (platform plane)
     profiles = await client.voice_profiles.list()
     profile = profiles[0]
 
@@ -119,9 +145,10 @@ async def setup():
     )
 
     # 3. Attach the first free number
-    free = [n for n in await client.numbers.list() if n.pipe_id is None]
+    numbers = await client.numbers.list()
+    free = [n for n in numbers if (n.status or "").lower() in FREE_STATUSES]
     if free:
-        await client.numbers.attach(free[0].number_id, "my-agent")
+        await client.numbers.attach(free[0].number_id, "my-agent", number=free[0].number)
 
     print(f"Agent created: {voice.agent_id}")
     print(f"Number: {free[0].number if free else 'none assigned'}")
@@ -141,20 +168,69 @@ AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
 
 ## Environment Variables
 
+Every variable the SDK reads. `.env` is loaded for you - `import unpod` calls
+`load_dotenv()` at import time.
+
+### Credentials
+
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `UNPOD_API_KEY` | Yes | Direct-mode Bearer key. **Required by the `AgentRunner`** (orchestrator connection); also the management-client fallback when `UNPOD_PLATFORM_TOKEN` is unset |
-| `UNPOD_PLATFORM_TOKEN` | No | Backend-core DRF token - enables management **proxy mode** (preferred for the `AsyncClient`/`Client`). Falls back to `UNPOD_API_KEY` if unset |
-| `UNPOD_ORG_HANDLE` | No | Org handle sent as the `Org-Handle` header alongside `UNPOD_PLATFORM_TOKEN` (required for org-scoped / telephony endpoints) |
-| `UNPOD_BASE_URL` | No | Single shared endpoint. REST derives `https://<host>/platform` and the runner derives `wss://<host>` |
-| `UNPOD_SERVICE_BASE_URL` | No | Management REST override only. Takes precedence over `UNPOD_BASE_URL` when set |
-| `UNPOD_ORCHESTRATOR_URL` | No | Runner WebSocket override only. Takes precedence over `UNPOD_BASE_URL` when set |
+| `UNPOD_PLATFORM_TOKEN` | No | Backend-core DRF token - enables management **proxy mode**, and `AsyncClient`/`Client` **prefer it** over `UNPOD_API_KEY`. Required for the platform-plane resources |
+| `UNPOD_ORG_HANDLE` | No | Org handle sent as the `Org-Handle` header alongside `UNPOD_PLATFORM_TOKEN`. Required for org-scoped / telephony endpoints |
+| `UNPOD_AGENT_SECRET` | No | `transport="serve"` only: HMAC secret used to verify inbound bridge connections. Fallback for the `agent_secret=` argument |
+
+### URLs
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `UNPOD_BASE_URL` | No | Single shared endpoint. REST derives `https://<host>/platform`, the telephony plane `https://<host>/api/v2/platform`, and the runner `wss://<host>` |
+| `UNPOD_SERVICE_BASE_URL` | No | Management REST override only. Wins over `UNPOD_BASE_URL` |
+| `UNPOD_PLATFORM_BASE_URL` | No | backend-core platform plane override (`telephony`, `voice_profiles`, `analytics`). Wins over `UNPOD_BASE_URL` |
+| `UNPOD_ORCHESTRATOR_BASE_URL` | No | **Management-side** orchestrator REST base, used by `client.sessions.end/transfer/merge`. Defaults to the service base with `/platform` swapped for `/orchestrator` |
+| `UNPOD_ORCHESTRATOR_URL` | No | **Runner-side** orchestrator WebSocket override. Distinct from the variable above - one is REST, one is WSS |
+| `UNPOD_RUNNER_URL` | No | `transport="serve"` only: the runner's own public `wss://` URL. Fallback for `serving_url=` |
+
+### Telemetry
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `UNPOD_USAGE_INGEST_URL` | No | Usage/billing ledger ingest endpoint. The reporter is a **no-op unless this is set** |
+| `UNPOD_USAGE_INGEST_TOKEN` | No | Bearer token for the ingest endpoint above |
+| `LANGFUSE_SECRET_KEY` | No | Enables Langfuse tracing spans. Tracing is off without it - see [Observability](/speech-stack/observability#4-langfuse-tracing) |
+
+### Worker identity
+
+Read for log correlation and capacity reporting; normally injected by your
+orchestrator, not set by hand.
+
+| Variable | Description |
+|----------|-------------|
+| `UNPOD_WORKER_HOSTNAME` | Overrides the detected hostname in the register frame |
+| `UNPOD_WORKER_ADDRESS` | Overrides the detected address (use it to report the public one) |
+| `UNPOD_WORKER_REGION` | Region reported with the worker |
+| `UNPOD_WORKER_DEPLOYMENT` | `cloud` or `local`; an unrecognised value is dropped rather than sent |
+
+### Which credential goes where
+
+The two credentials are not interchangeable - resources live on different
+planes:
+
+| Resource | Plane | Credential |
+|---|---|---|
+| `client.agents`, `client.calls`, `client.numbers`, `client.trunks`, `client.pipes`, `client.domain_dictionaries`, `client.recordings`, `client.transcripts`, `client.api_keys` | supervoice management | `UNPOD_API_KEY` (Bearer) or `UNPOD_PLATFORM_TOKEN` |
+| `client.telephony`, `client.voice_profiles`, `client.analytics` | backend-core platform | **`UNPOD_PLATFORM_TOKEN` / `TokenAuth` / `JWTAuth` + `Org-Handle`** - a bare API key is refused |
+| `client.sessions.end` / `.transfer` / `.merge` | orchestrator | Same credential, but **not reachable in proxy mode** - these target the orchestrator base directly |
+| `AgentRunner` | orchestrator WSS | `UNPOD_API_KEY` |
+
+Full details, including passing `auth=` explicitly:
+[Client, Auth & Planes](/speech-stack/client-auth).
 
 ### Which URL setting to use
 
-- `UNPOD_BASE_URL` - management API and runner share one host.
-- `UNPOD_SERVICE_BASE_URL` - management REST override only.
+- `UNPOD_BASE_URL` - management API, telephony plane and runner all share one host.
+- `UNPOD_SERVICE_BASE_URL` / `UNPOD_PLATFORM_BASE_URL` - override one REST plane.
 - `UNPOD_ORCHESTRATOR_URL` - runner WebSocket override only.
-- `base_url=` / `orchestrator_base_url=` in code - one script or test overrides `.env`.
+- `base_url=` / `orchestrator_base_url=` in code - one script or test overrides `.env`. The platform plane has **no constructor argument**; override it with `UNPOD_PLATFORM_BASE_URL`.
 
 Production values and the `serve`-transport extras: [Deploy](/speech-stack/deploy).

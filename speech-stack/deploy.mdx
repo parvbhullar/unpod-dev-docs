@@ -27,8 +27,8 @@ A production deployment should have:
 
 - A stable `UNPOD_API_KEY` - **required by the `AgentRunner`** for the orchestrator connection ([full variable table](/speech-stack/setup-checklist#environment-variables))
 - A clear `agent_id` shared by every replica of the same agent
-- Capacity limits (`max_sessions`, `permits_per_minute`) that match your traffic
-- Shutdown handling so active calls can drain before the process exits
+- A capacity limit (`max_sessions`) that matches your traffic
+- A `SIGTERM` handler, so active calls can drain before the process exits
 - Observability for active calls, failures, and latency
 - **(legacy `serve` transport only)** a public `serving_url` so Unpod can reach the runner bridge, and an `agent_secret` so inbound bridge connections are signed and verified
 
@@ -69,12 +69,20 @@ authenticated by the per-call token embedded in the `job.assign` `bridge_url`, s
 </Note>
 
 In `serve` mode, with an agent secret set, every inbound bridge connection is
-HMAC-verified (signed URLs, replay-protected). Without one, the runner accepts
-unsigned connections - acceptable only for local dev.
+HMAC-verified. Without one, the runner accepts unsigned connections - acceptable
+only for local dev.
 
 ```bash
 export UNPOD_AGENT_SECRET="a-long-random-secret"
 ```
+
+The scheme: the media agent signs `session_id|job_id|nonce|ts` with the secret
+(HMAC-SHA256, base64) and appends `session_id`, `job_id`, `nonce`, `ts` and
+`signature` to the connect URL. The runner rejects a bad signature
+(constant-time compare), a `ts` more than **30 s** from its own clock, and any
+`nonce` it has already accepted. **The two hosts must agree on the secret and
+have synced clocks** - a 30 s skew rejects every connection. Full contract:
+[Logging & Errors](/speech-stack/logging-errors#bridge-hmac-verification-serve-transport).
 
 ### 3. Capacity
 
@@ -83,10 +91,16 @@ AgentRunner(
     entrypoint=handle_call,
     agent_id="my-agent",
     max_sessions=50,          # orchestrator never dispatches beyond this
-    permits_per_minute=120,   # rate of new call acceptance
     drain_timeout_s=60,
 )
 ```
+
+<Warning>
+`max_sessions` is the **only** capacity lever that does anything.
+`permits_per_minute` is accepted by the constructor but never read - it rate
+limits nothing. To protect a downstream system from bursts, lower
+`max_sessions` or throttle inside your entrypoint.
+</Warning>
 
 ### 4. Scaling - add replicas
 
@@ -101,8 +115,36 @@ UNPOD_API_KEY=sk_... python agent.py
 
 ### 5. Shutdown and supervision
 
-On `SIGTERM` the runner stops accepting dispatches and drains active calls for
-up to `drain_timeout_s` before exiting - container- and systemd-friendly.
+<Warning>
+**The SDK installs no signal handlers.** An unhandled `SIGTERM` kills the
+process immediately and cuts every call in flight. You must install the handler
+and call `await runner.shutdown()` yourself:
+
+```python
+import asyncio, signal
+from unpod import AgentRunner
+
+async def main() -> None:
+    runner = AgentRunner(entrypoint=handle_call, agent_id="my-agent", drain_timeout_s=60)
+    loop = asyncio.get_running_loop()
+    stopping = asyncio.Event()
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        loop.add_signal_handler(sig, stopping.set)
+
+    serve = asyncio.create_task(runner.run())
+    await stopping.wait()
+    await runner.shutdown()
+    serve.cancel()
+
+asyncio.run(main())
+```
+
+Set the platform's termination grace period **above** `drain_timeout_s` - e.g.
+Kubernetes `terminationGracePeriodSeconds: 90` for a 60 s drain - or you will be
+`SIGKILL`ed mid-drain. `shutdown()` always costs the full window (it does not
+poll and return early) and does not cancel calls still running afterwards. See
+[Graceful shutdown](/speech-stack/agent-runner#graceful-shutdown).
+</Warning>
 
 <Note>
 Under the default `dial_out` transport the runner **auto-reconnects** its

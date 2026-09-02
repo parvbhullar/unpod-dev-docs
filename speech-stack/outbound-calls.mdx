@@ -31,7 +31,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:
         call = await client.calls.create(
             agent_id="my-agent",         # or pipe_id= for older code
             to_number="+14155550100",    # E.164 format
@@ -121,7 +121,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:
         call = await client.calls.get("cal_...")
         print(call.call_id, call.status, call.direction)
         # status: "pending", "ringing", "active", "completed", "failed", "cancelled"
@@ -151,7 +151,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:
         # All outbound calls for one Speech Pipe row
         calls = await client.calls.list(
             pipe_id="pipe_...",
@@ -179,7 +179,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:
         await client.calls.hangup("cal_...")
         print("Call terminated")
 
@@ -204,7 +204,7 @@ contacts = [
 ]
 
 async def dial_all(contacts: list[dict]) -> None:
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:
         for contact in contacts:
             call = await client.calls.create(
                 agent_id=AGENT_ID,
@@ -235,7 +235,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def process_callback_queue(queue: list[dict]) -> None:
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:
         for request in queue:
             # Capacity is handled for you: the orchestrator rejects a dispatch
             # when the agent's runners are full
@@ -262,7 +262,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def get_transcript(session_id: str) -> None:
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:
         session = await client.transcripts.get(session_id)
         for entry in session.transcript:
             print(f"[{entry.role}] {entry.content}")

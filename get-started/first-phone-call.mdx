@@ -19,6 +19,8 @@ SIP - the speech pipeline and the carrier stay on Unpod's side.
 - Python 3.12+ and `pip install unpod`
 - `UNPOD_API_KEY` (`sk_...`) in the environment - the runner's bearer, from
   [unpod.ai/api-keys](https://unpod.ai/api-keys/)
+- `UNPOD_PLATFORM_TOKEN` plus `UNPOD_ORG_HANDLE` in the environment - needed
+  for `voice_profiles.list()` during one-time setup
 - **A number in your account.** Provision one from the dashboard under
   **Dev Platform → Numbers**. No carrier account, no SIP trunk - see
   [Numbers](/speech-stack/numbers).
@@ -31,12 +33,13 @@ carrier credentials.
 
 ## Step 1 - Provision the number
 
-Provisioning uses the **Management API** - the REST half of the [SDK](https://github.com/unpod-ai/unpod-python-sdk), reached
-through `AsyncClient`. For REST auth it accepts either the org-scoped
-`UNPOD_PLATFORM_TOKEN` (with `UNPOD_ORG_HANDLE`) or `UNPOD_API_KEY`; this
-page uses `UNPOD_API_KEY`, since the runner needs it anyway. The REST
-endpoint derives from `UNPOD_BASE_URL` (default `api.unpod.ai` →
-`https://<host>/platform`).
+Provisioning uses the **Management API** - the REST half of the
+[SDK](https://github.com/unpod-ai/unpod-python-sdk), reached through
+`AsyncClient`. This setup script starts with `voice_profiles.list()`, so run it
+with `UNPOD_PLATFORM_TOKEN` plus `UNPOD_ORG_HANDLE`. The later REST calls on
+this page also work with `UNPOD_API_KEY`, and the runner still requires that
+API key for its own WebSocket connection. The REST endpoint derives from
+`UNPOD_BASE_URL` (default `api.unpod.ai` → `https://<host>/platform`).
 
 The Runner path drives the lower-level **pipes/numbers** surface directly -
 the [Quickstart](/get-started/quickstart)'s `agents.*` calls wrap the same
@@ -56,7 +59,11 @@ from unpod import AsyncClient, Runner
 async def setup() -> None:
     async with AsyncClient() as client:
         # 1. Pick a voice profile from the read-only catalog.
-        profiles = await client.voice_profiles.list(language="en")
+        #    list() takes a language= kwarg but it is NOT applied server-side.
+        #    The flat `languages` field is usually empty - the codes arrive in
+        #    the nested voice/transcriber dicts. See the Voice Profiles page for
+        #    a `speaks(profile, code)` helper that checks both.
+        profiles = await client.voice_profiles.list()
         if not profiles:
             print("No voice profiles found.")
             return
@@ -75,14 +82,18 @@ async def setup() -> None:
         print(f"Created agent: {voice.agent_id}")
 
         # 3. Find a number in your account that is not attached yet.
-        numbers = await client.numbers.list(status="active")
-        free = [n for n in numbers if n.pipe_id is None]
+        #    The pool reports NOT_ASSIGNED; a supervoice row reports available.
+        #    Do not filter on status="active" (no plane emits it) or on
+        #    pipe_id is None (pool rows carry no pipe_id).
+        numbers = await client.numbers.list()
+        free = [n for n in numbers if (n.status or "").lower() in {"not_assigned", "available"}]
         if not free:
             print("No free numbers - provision one under Dev Platform -> Numbers.")
             return
 
         # 4. Attach it to the agent.
-        number = await client.numbers.attach(free[0].number_id, "browser-playground")
+        number = await client.numbers.attach(
+            free[0].number_id, "browser-playground", number=free[0].number)
         print(f"Attached {number.number} -> agent browser-playground")
 
 asyncio.run(setup())
@@ -93,10 +104,19 @@ What it does:
 1. **`voice_profiles.list()`** - pick a voice from the read-only catalog.
 2. **`agents.voice.create()`** - create the agent, its brain, and its first voice.
 3. **`numbers.list()`** - find a number in your account with nothing attached.
+   Filter on `status`, not on `pipe_id` - see
+   [Phone Numbers](/speech-stack/numbers#two-number-surfaces).
 4. **`numbers.attach()`** - route that number to the `agent_id`. It takes
    `agent_id`, not a pipe id.
 
 If step 3 finds nothing, provision a number from the dashboard first.
+
+<Note>
+Step 1 (`voice_profiles.list()`) reads the **platform** plane and needs
+`UNPOD_PLATFORM_TOKEN` plus `UNPOD_ORG_HANDLE`; a bare `UNPOD_API_KEY` is
+refused there. Steps 2-4 work with either credential. See the [credential
+matrix](/speech-stack/setup-checklist#which-credential-goes-where).
+</Note>
 
 <Accordion title="Bringing your own number instead">
 BYON numbers arrive over a trunk you register once, then sync into your account:

@@ -92,6 +92,23 @@ asyncio.run(main())
 | `max_call_duration_s` | `int` | `3600` | Hard cap in seconds |
 | `max_concurrent` | `int` | `1` | Concurrent calls this agent accepts |
 | `brain_execution` | `str \| None` | `"bridge"` (server default) | Where the brain runs |
+| `domain` | `str \| None` | `None` | The [domain dictionary](/speech-stack/domain-dictionaries) this agent hears and speaks with. Use a bundled seed (`banking`, `real_estate`, `hospital`) for zero setup, or a domain you authored. Stamped on the agent row, so a voice added later inherits it |
+
+<Tip>
+`domain=` is how you stop the recognizer guessing at your jargon. One
+dictionary is authored per domain and reused by every agent tagged with it:
+
+```python
+await client.domain_dictionaries.upsert(
+    "banking", vocabulary={"IRDAI": "irda i", "NEFT": "neft"}
+)
+await client.agents.voice.create(
+    "collections", brain=Prompt("..."), domain="banking"
+)
+```
+
+See [Domain Dictionaries](/speech-stack/domain-dictionaries).
+</Tip>
 
 <Tip>
 Swap `brain=Prompt(...)` for `brain=Runner()` and the same call configures an
@@ -164,6 +181,7 @@ asyncio.run(main())
 | `name` | `str` | The **agent's** name - unrelated to the profile name |
 | `brain` | `dict` | Inherited from the agent |
 | `brain_execution` | `str` | Default `"bridge"` |
+| `domain` | `str \| None` | The [domain dictionary](/speech-stack/domain-dictionaries) this voice speaks with, inherited from the agent |
 | `is_default` | `bool` | Whether this is the agent's default voice |
 
 ---
@@ -243,7 +261,7 @@ For the number lifecycle itself - provisioning, syncing, trunks - see
 | `agents.create(agent_id, brain=..., **kw)` | `AgentVoice` | Alias for the above, kept for older examples |
 | `agents.list()` | `list[Agent]` | Every agent in the project, each with all its voices |
 | `agents.get(agent_id)` | `Agent` | Brain plus every voice |
-| `agents.update(agent_id, brain=, name=, greeting=, brain_execution=, **fields)` | `Agent` | A brain change reaches every voice |
+| `agents.update(agent_id, brain=, name=, greeting=, brain_execution=, domain=, **fields)` | `Agent` | A brain change reaches every voice. `domain=""` detaches the dictionary; omitting it leaves the current tag alone |
 | `agents.delete(agent_id)` | `None` | The agent and every voice |
 | `agents.voice.add(agent_id, voice_profile=, greeting=)` | `AgentVoice` | Inherits the brain unchanged |
 | `agents.voice.remove(agent_id, voice_profile_id)` | `None` | Keeps the other voices |
