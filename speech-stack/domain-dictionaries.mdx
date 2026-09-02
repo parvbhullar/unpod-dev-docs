@@ -1,0 +1,301 @@
+---
+title: 'Domain Dictionaries'
+icon: 'book-marked'
+description: 'Teach the recognizer your jargon and the synthesizer how to say it - authored once per domain, reused by every agent tagged with it.'
+---
+
+Every domain has words a general-purpose speech stack gets wrong. `IRDAI`
+comes back as "irda i". `NEFT` is read out as three letters when callers say
+it as a word. A **domain dictionary** fixes both halves - what the agent
+**hears** and what it **says** - and it is authored **once per domain**, not
+once per agent.
+
+```python
+import asyncio
+from unpod import AsyncClient, Prompt
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        # 1. Author the dictionary for the domain
+        await client.domain_dictionaries.upsert(
+            "banking",
+            vocabulary={"IRDAI": "irda i", "NEFT": "neft"},
+            pronunciation={"NEFT": "neft", "IRDAI": "eye-are-dee-ay-eye"},
+        )
+
+        # 2. Tag the agent with it
+        await client.agents.voice.create(
+            "collections",
+            brain=Prompt("You are a collections assistant."),
+            domain="banking",
+        )
+
+asyncio.run(main())
+```
+
+<Warning>
+**Both steps are required.** The `domain` tag **on the agent** is what the call
+path resolves - nothing looks a dictionary up by name at call time. A dictionary
+with no agent tagged changes nothing, and an agent tagged with a domain that has
+neither a bundled seed nor rows of your own gets no keyterms.
+</Warning>
+
+---
+
+## The three sections
+
+| Section | Applies to | `key` | `value` |
+|---|---|---|---|
+| `vocabulary` | **STT** | the term as written | an optional misheard variant |
+| `pronunciation` | **TTS** | the term as written | its respelling |
+| `fillers` | TTS | a language code (`en`, `hi`) | phrases, one per line |
+
+### Vocabulary - what the agent hears
+
+Both halves of a vocabulary row become STT keyterms, so the recognizer stops
+guessing. Put the term in `key` and the way it actually comes back in `value`:
+
+```python
+await client.domain_dictionaries.upsert(
+    "banking",
+    vocabulary={
+        "IRDAI": "irda i",        # both "IRDAI" and "irda i" are boosted
+        "NEFT": "",               # value is optional
+        "Bharat BillPay": "bharat bill pay",
+    },
+)
+```
+
+### Pronunciation - what the agent says
+
+```python
+await client.domain_dictionaries.upsert(
+    "hospital",
+    pronunciation={"CBC": "see bee see", "ECG": "ee see gee"},
+)
+```
+
+### Fillers
+
+The phrases the agent speaks while it is still thinking - keyed by language
+code, one phrase per line. This is the **supported** way to fill processing
+silences; `session.set_filler()` is
+[not implemented](/speech-stack/agent-runner#speaking).
+
+```python
+await client.domain_dictionaries.upsert(
+    "banking",
+    fillers={
+        "en": "One moment please.\nLet me check that for you.",
+        "hi": "एक मिनट रुकिए।",
+    },
+    settings={"enabled": True, "selection": "random", "deferred_ms": 700},
+)
+```
+
+`settings` carries the filler knobs (`enabled`, `selection`, `deferred_ms`).
+**Omitting `settings` leaves the stored values alone**, so an older client
+cannot wipe them by not sending them.
+
+---
+
+## Bundled seeds
+
+Three domains ship with content, so they work with **no rows of your own**:
+
+| Seed | Use it for |
+|---|---|
+| `banking` | Banking, lending, collections, insurance |
+| `real_estate` | Property, brokerage, leasing |
+| `hospital` | Clinical, diagnostics, appointments |
+
+```python
+# Zero setup: the seed is already there
+await client.agents.voice.create("intake", brain=Prompt("..."), domain="hospital")
+```
+
+Reads are **merged** - the seed unioned with your rows, **yours winning per
+key**. `seed_vocabulary` and `seed_pronunciation` expose the bundled half
+read-only, so you can tell what you inherited from what you typed.
+
+---
+
+## Authoring
+
+### `upsert()` replaces, it does not merge
+
+```python
+dictionary = await client.domain_dictionaries.upsert(
+    "banking",
+    vocabulary={"IRDAI": "irda i"},
+    pronunciation=None,
+    fillers=None,
+    settings=None,
+)
+```
+
+<Warning>
+**`upsert()` replaces your whole tenant layer for that domain.** Whatever you
+send becomes the entire set of your rows - it is not a per-key merge. To add
+one term, read first and send the edited list back:
+
+```python
+current = await client.domain_dictionaries.get("banking")
+rows = [{"key": r.key, "value": r.value} for r in current.vocabulary]
+rows.append({"key": "UPI", "value": "you pee eye"})
+await client.domain_dictionaries.upsert("banking", vocabulary=rows)
+```
+
+The bundled seed is untouched either way and keeps applying underneath.
+</Warning>
+
+Every section accepts three spellings, so a dict is natural to write and a
+fetched list is natural to round-trip:
+
+```python
+vocabulary={"IRDAI": "irda i"}                          # mapping
+vocabulary=[{"key": "IRDAI", "value": "irda i"}]        # list of rows
+vocabulary=[KVItem(key="IRDAI", value="irda i")]        # list of KVItem
+```
+
+### Reading
+
+```python
+domains = await client.domain_dictionaries.list()
+for d in domains:
+    print(d.domain, "seeded" if d.seeded else "custom", d.agent_ids)
+
+d = await client.domain_dictionaries.get("banking")   # seed + your rows, merged
+print(d.resolved_key)      # the seed behind it, or None for a purely custom domain
+print(d.keyterms)          # every STT keyterm this contributes, deduped, in order
+```
+
+### Cloning
+
+Start a custom domain from another domain's seed content:
+
+```python
+await client.domain_dictionaries.clone("banking", "banking-emea")
+```
+
+Returns **409** when the target already holds rows - a clone that silently
+overwrote them would look identical to one that failed.
+
+### Deleting
+
+```python
+await client.domain_dictionaries.delete("banking")       # seeded: RESET to the seed
+await client.domain_dictionaries.delete("banking-emea")  # custom: ceases to exist
+```
+
+A **seeded** domain is reset, not removed - the bundled seed remains and agents
+tagged with it keep working. A **custom** domain is gone, and the agents and
+voice profiles pointing at it are untagged.
+
+---
+
+## Tagging agents
+
+The tag lives on the agent, and that is the only thing the runtime reads.
+
+```python
+# at create time
+await client.agents.voice.create("collections", brain=Prompt("..."), domain="banking")
+
+# retag later - reaches every voice the agent speaks with
+await client.agents.update("collections", domain="real_estate")
+
+# detach entirely
+await client.agents.update("collections", domain="")
+```
+
+<Note>
+An agent has **exactly one** dictionary. Omitting `domain=` on `update()`
+leaves the current tag alone; passing `""` clears it.
+</Note>
+
+### The reverse index
+
+`attach()` / `detach()` maintain the dictionary's own list of agent ids -
+useful for "who uses this dictionary?" - but they **do not** change what an
+agent speaks with:
+
+```python
+await client.domain_dictionaries.attach("banking", "collections")
+await client.domain_dictionaries.detach("banking", "collections")
+```
+
+<Warning>
+`attach()` writes the **index only**. The tag the runtime resolves is on the
+agent, so use `agents.voice.create(..., domain=...)` or
+`agents.update(..., domain=...)` to change which dictionary an agent actually
+uses. `attach()` is also exclusive - it pulls the agent out of every other
+domain's index.
+</Warning>
+
+---
+
+## API reference
+
+All methods are on `client.domain_dictionaries` and live on the **supervoice
+management plane**, so a Bearer `UNPOD_API_KEY` is sufficient. Present on both
+`AsyncClient` and the sync `Client`.
+
+| Method | Returns | Description |
+|---|---|---|
+| `list()` | `list[DomainListItem]` | Every domain - bundled seeds plus yours |
+| `get(domain)` | `DomainDictionary` | One domain, seed and your rows merged |
+| `upsert(domain, *, vocabulary=, pronunciation=, fillers=, settings=)` | `DomainDictionary` | **Replaces** your rows for that domain |
+| `attach(domain, agent_id)` | `DomainDictionary` | Add to the reverse index (exclusive) |
+| `detach(domain, agent_id)` | `DomainDictionary` | Remove from the reverse index |
+| `clone(source_domain, new_domain)` | `DomainDictionary` | Seed a new domain from another; 409 if it has rows |
+| `delete(domain)` | `None` | Reset a seeded domain; remove a custom one |
+
+### `DomainDictionary` fields
+
+| Field | Type | Description |
+|---|---|---|
+| `domain` | `str` | The domain name |
+| `resolved_key` | `str \| None` | The bundled seed this resolved to, or `None` for a custom domain |
+| `vocabulary` | `list[KVItem]` | **What the runtime uses** (seed ∪ yours) |
+| `pronunciation` | `list[KVItem]` | Same, for TTS |
+| `fillers` | `list[KVItem]` | Language code → phrases |
+| `seed_vocabulary` | `list[KVItem]` | The bundled half, read-only |
+| `seed_pronunciation` | `list[KVItem]` | The bundled half, read-only |
+| `settings` | `dict` | Filler knobs, defaults already layered in |
+| `agent_ids` | `list[str]` | The reverse index - **not** the source of truth |
+| `updated_by_user_id` | `str \| None` | Who last wrote it |
+| `keyterms` | `list[str]` *(property)* | Every STT keyterm, deduped, in order |
+
+### `DomainListItem` fields
+
+| Field | Type | Description |
+|---|---|---|
+| `domain` | `str` | The domain name |
+| `seeded` | `bool` | True when a bundled seed ships for it |
+| `agent_ids` | `list[str]` | Agents in the reverse index |
+
+### `KVItem` fields
+
+| Field | Type | Description |
+|---|---|---|
+| `key` | `str` | Term, or language code in `fillers` |
+| `value` | `str` | Variant / respelling / phrases. Defaults to `""` |
+
+<Note>
+`DomainDictionary`, `DomainListItem` and `KVItem` are all importable from
+`unpod.models`.
+</Note>
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Agents" icon="robot" href="/speech-stack/agents">
+    Tag an agent with `domain=` at create or update time.
+  </Card>
+  <Card title="Voice Profiles" icon="mic" href="/speech-stack/voice-profiles">
+    The STT/TTS pipeline the dictionary feeds.
+  </Card>
+</CardGroup>

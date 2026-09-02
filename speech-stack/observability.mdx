@@ -99,7 +99,6 @@ LANGFUSE_SECRET_KEY="sk-lf-..."
 s = runner.stats()        # RunnerStats snapshot
 
 s.in_flight               # current active calls
-s.queued                  # dispatches waiting for capacity
 s.capacity                # your max_sessions setting
 s.completed_last_hour
 s.failed_last_hour
@@ -109,13 +108,30 @@ s.mean_call_duration_s
 Poll this on a timer for liveness dashboards - see
 [AgentRunner & Sessions](/speech-stack/agent-runner#running-in-production).
 
+<Note>
+`s.queued` is on the model but is **always `0`** - the runner does not queue.
+Alert on `in_flight` nearing `capacity` instead.
+</Note>
+
 ## 6. Post-call timing
 
-After the call, the transcript carries a per-turn, per-stage latency breakdown
-(`audio_ingress_ms`, `stt_ms`, `bridge_to_dev_ms`, `dev_brain_ms`, `tts_ms`) - see [Recordings & Transcripts](/speech-stack/recordings-transcripts).
+Per-stage latency is available **live, per turn**, from the `turn_complete`
+hook - `asr_ms`, `llm_ttft_ms`, `tts_ttfb_ms`, `stt_ms`, `tts_ms`, `ttfa_ms`
+and `llm_total_ms` (see [Per-turn timing & token hooks](#1-per-turn-timing--token-hooks) above).
+Persist those yourself if you want them after the fact.
+
+<Warning>
+**Post-call transcripts carry no timing.** `client.transcripts.get()` /
+`.list()` and `client.recordings.list()` all return `Session` objects whose
+`transcript` is a list of `{role, content, timestamp}` entries. The
+`Transcript` / `TurnTiming` models exported from `unpod.models` (with
+`audio_ingress_ms`, `bridge_to_dev_ms`, `dev_brain_ms`, ...) are **not returned
+by any resource** - no REST read populates them today.
+</Warning>
 
 <Tip>
-High `dev_brain_ms` with healthy `stt_ms`/`tts_ms` means the latency is in
-YOUR brain - usually a `stream()` that is not actually streaming. See
+To diagnose where a slow turn went, log `turn_complete` to your own store: a
+high `llm_total_ms` with healthy `stt_ms`/`tts_ms` means the latency is in YOUR
+brain - usually a `stream()` that is not actually streaming. See
 [Streaming is the hot path](/speech-stack/bring-your-agent#streaming-is-the-hot-path).
 </Tip>

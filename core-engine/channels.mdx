@@ -1,0 +1,82 @@
+---
+title: 'Channels'
+description: 'One communication API - adding a channel changes routing, not architecture.'
+---
+
+Channels are one communication API. Voice, WhatsApp, email, SMS, web chat:
+each is a different way to reach the same human, and every one of them writes
+the same spine - entity, conversation, interaction, outcome, event. That is
+the whole design. Adding a channel to your application changes routing, not
+architecture, because nothing downstream of Transport knows or cares which
+wire the message rode in on.
+
+Two kinds of connector, and the distinction matters. **Channel connectors**
+(WhatsApp, email, SMS, web chat, LinkedIn) carry conversations - they deliver
+interactions to an entity and back. **System connectors** (CRM, Sheets,
+Shopify, HubSpot) push and pull rows - they sync records with communication
+state but never carry a conversation. A HubSpot sync updates an entity; a
+WhatsApp message extends a conversation. Same backend, different verbs.
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| Messages | One unit of content on any channel - a WhatsApp message, an email, an SMS, a chat turn | Web chat via the [Chat API](/get-started/chat); WhatsApp live via provider; email and SMS in build |
+| Identities | The per-channel addresses (phone number, email address, WhatsApp ID) that resolve to one entity | [Entities](/core-engine/entities) |
+| Connectors | The bindings to each channel provider - and to systems like CRMs, which sync rows rather than carry conversations | Per channel; see [Status](#status) |
+| Routing | Which channel, which identity, which agent handles the next touch | Voice routing in [Telephony](/telephony/introduction); cross-channel routing in build with [Conversations](/core-engine/conversations) |
+
+Voice is a channel too - the largest one. It has its own component page
+because the rails underneath it are deep: see the
+[Calling Engine](/core-engine/calling-engine).
+
+## On the spine
+
+Channels sit in the Transport layer: they reach the human. An inbound message
+resolves its sender identity to an entity, lands in that entity's
+channel-neutral conversation, and runs as one interaction; an outbound
+message is an interaction routed out through the channel the entity is
+reachable on. Every delivery, reply, and failure emits an event, so the rest
+of your system reacts to a WhatsApp reply exactly the way it reacts to a
+completed call.
+
+## What stays hidden
+
+Provider quirks, wherever normalization is safe. WhatsApp template approval
+mechanics, SES bounce classification, per-carrier SMS segmentation, chat
+transport details - these differ per provider and change under you. The API
+gives you a message with a status; the connector absorbs the rest. Where a
+channel has semantics you genuinely need (WhatsApp's 24-hour session window,
+for one), they surface as explicit fields, not leaked provider payloads.
+
+## Status
+
+Per channel, honestly:
+
+- **Voice** - production, via the
+  [Calling Engine](/core-engine/calling-engine) (~5 lakh calls/month).
+- **WhatsApp** - live via provider.
+- **Email (AWS SES)** - in build.
+- **SMS** - in build.
+- **LinkedIn** - partner access.
+- **Web chat** - today via the [Chat API](/get-started/chat).
+
+The unified messages surface described above is the shape channels converge
+on; today each channel is reached through the paths linked here.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Calling Engine" icon="phone" href="/core-engine/calling-engine">
+    The voice channel: owned rails, numbers, calls, streams.
+  </Card>
+  <Card title="Conversations" icon="messages-square" href="/core-engine/conversations">
+    The channel-neutral thread every channel writes into.
+  </Card>
+  <Card title="Chat API" icon="message-circle" href="/get-started/chat">
+    Web chat today: text in, text out, one URL swap.
+  </Card>
+  <Card title="Telephony" icon="network" href="/telephony/introduction">
+    SIP, PSTN, and carrier-level details for the voice channel.
+  </Card>
+</CardGroup>

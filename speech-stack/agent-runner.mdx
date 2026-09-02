@@ -24,8 +24,8 @@ export UNPOD_API_KEY="sk_..."
 export UNPOD_BASE_URL="api.unpod.ai"   # one URL; the runner derives wss://<host>
 ```
 
-The [Quickstart](/get-started/quickstart#step-2-set-two-keys) documents every
-environment variable.
+The [Setup Checklist](/speech-stack/setup-checklist#environment-variables)
+documents every environment variable the SDK reads.
 
 ## The runner
 
@@ -66,7 +66,7 @@ AgentRunner(
     api_key: str | None = None,            # falls back to UNPOD_API_KEY
     max_sessions: int = 50,                 # max concurrent sessions
     max_concurrent_calls: int | None = None, # alias for max_sessions
-    permits_per_minute: int = 120,          # rate of new call acceptance
+    permits_per_minute: int = 120,          # accepted but NOT enforced (see table)
     drain_timeout_s: int = 60,              # graceful shutdown window
     dev_mode: bool = False,                 # local orchestrator, dev pool
     base_url: str | None = None,            # override orchestrator URL
@@ -79,7 +79,7 @@ AgentRunner(
 | Parameter | Description |
 |---|---|
 | `max_sessions` | Max simultaneous sessions this runner accepts; the orchestrator will not dispatch beyond it. |
-| `permits_per_minute` | Rate of new call acceptance. Lower it to protect downstream systems. |
+| `permits_per_minute` | Accepted for forward compatibility but **not yet enforced** - the value is stored and never read. Cap concurrency with `max_sessions` instead. |
 | `drain_timeout_s` | On shutdown, wait this long for active calls to finish before force-exiting. |
 | `dev_mode` | Register in a dev pool against a local orchestrator. |
 | `transport` | `"dial_out"` (v2, default): the runner never listens - it dials **out** per call to the `bridge_url` delivered in the `job.assign` frame. `"serve"` (legacy, deprecated): the runner hosts a bridge server that media agents dial into. |
@@ -102,10 +102,11 @@ async def on_call_end(ctx: CallContext, final_state: str) -> None:
 
 <Note>
 This is the **runner-level** `call_end` (signature `(ctx, final_state)`), fired
-once per call on the runner. The **session-level** `call_end`
-(`@ctx.session.on("call_end")`, signature `(final_state)`) fires inside a single
-call and is where you read the telephony `end_reason` via
-`ctx.session.data.get("end_reason")`. See
+once per call on the runner, with `final_state` in `"ended"` / `"failed"`. The
+**session-level** `call_end` (`@ctx.session.on("call_end")`, signature
+`(outcome)`) fires inside a single call with `"hangup"` / `"error"`. Neither
+carries the telephony end reason - that is only readable **after** the call from
+`client.calls.get(call_id).end_reason`. See
 [Call Lifecycle](/speech-stack/call-lifecycle#reacting-to-outcomes-in-your-agent).
 </Note>
 
@@ -124,7 +125,6 @@ async def handle_call(ctx: CallContext) -> None:
     ctx.user_number   # str: caller's E.164 number
     ctx.instructions  # str | None: per-call override instructions
     ctx.data          # dict: metadata from dispatch (e.g. CRM data)
-    ctx.room          # dict: LiveKit room metadata (informational; brain is text-only)
     ctx.session       # Session: call control object
 ```
 
@@ -144,8 +144,16 @@ record, end - all from inside your entrypoint.
 
 ```python
 await ctx.session.say("Thank you for your patience.")   # speak via TTS, returns immediately
-await ctx.session.set_filler("One moment please...")    # played during processing silences
 ```
+
+<Warning>
+**Do not call `ctx.session.set_filler(...)`.** The method exists but the bridge
+protocol has no filler verb, so it is delivered as an `agent.say` and the caller
+**hears the sentinel `__filler:<text>` read aloud**. Configure thinking-time
+fillers on the agent's [domain
+dictionary](/speech-stack/domain-dictionaries#fillers) instead - that is the
+supported path.
+</Warning>
 
 ### Interrupting
 
@@ -159,14 +167,45 @@ async def on_user_turn(text: str) -> None:
 ### Transferring
 
 ```python
-await ctx.session.transfer_to_human(queue="tier-2-support")   # cold transfer to a human queue
-await ctx.session.transfer_to_agent(agent_id="billing-agent") # cold transfer to another agent
+# general form
+await ctx.session.transfer(
+    "+15551230000",
+    transfer_type="number",       # "number" | "human" | "agent"
+    mode="cold",                  # "cold" | "warm"
+    announcement="",              # spoken to the destination on a warm transfer
+)
+
+# shorthands - both forward mode= and announcement=
+await ctx.session.transfer_to_human("tier-2-support")
+await ctx.session.transfer_to_agent("billing-agent")
+
+await ctx.session.transfer_to_human(
+    "tier-2-support",
+    mode="warm",
+    announcement="Escalation from the billing flow.",
+)
 ```
 
+Either mode ends your job once the handoff succeeds.
+
+| Mode | Behaviour |
+|---|---|
+| `cold` (default) | Immediate handoff, SIP REFER where the trunk supports it. |
+| `warm` | An **announced** transfer, not a private consult: the destination is dialed into the **same room**, so the caller hears the ringing and the `announcement` too. |
+
+<Warning>
+Destination allowlisting is **opt-in**. Number targets are always shape-checked
+as E.164, but only allowlisted when `transfer_allowed_numbers` /
+`transfer_allowed_prefixes` is set in pipe config. `human` and `agent` targets
+**bypass the allowlist entirely** - if a queue or agent id can reach your
+session from untrusted input, validate it yourself before transferring.
+</Warning>
+
 <Tip>
-A cold transfer drops your session the moment it is initiated. For a warm
-handoff, use the out-of-band `client.sessions.transfer(..., mode="warm")` -
-see below.
+`ctx.session.transfer(...)` is the in-session path and supports `mode="warm"`
+directly. The out-of-band `client.sessions.transfer(...)` shown
+[below](#out-of-band-session-control) does the same thing from **outside** the
+call - your backend or an ops tool - when you only hold a session id.
 </Tip>
 
 ### Ending
@@ -180,14 +219,16 @@ Common reasons: `"completed"`, `"no_response"`, `"error"`, `"transferred"`,
 
 ### Recording control
 
-```python
-await ctx.session.recording.pause(reason="PII")  # e.g. before card numbers
-await ctx.session.recording.resume()
-```
-
 <Warning>
-Pause/resume requires recording to be enabled on the agent
-(`recording=True`); otherwise these calls are ignored.
+**`ctx.session.recording.pause()` / `.resume()` are not implemented.** The
+methods exist, but there is no recording-control verb on the bridge protocol, so
+each one is delivered as an `agent.say` and the caller **hears the sentinel
+(`__recording_pause:PII`, `__recording_resume`) read aloud**. Do not call them.
+
+To keep sensitive audio out of a recording today, leave `recording=False` on
+agents that handle it, or run the PII-collecting step as a separate
+non-recorded agent and
+[transfer](#transferring) into it.
 </Warning>
 
 ### Per-call data
@@ -239,17 +280,22 @@ only `duration_s` is meaningful - for real per-turn numbers use the `llm_call` /
 |---|---|---|
 | `say` | `async (text: str) → None` | Speak text via TTS |
 | `interrupt` | `async () → None` | Stop current utterance |
-| `set_filler` | `async (text: str) → None` | Set filler phrase |
-| `transfer_to_human` | `async (queue: str) → None` | Cold transfer to human queue |
-| `transfer_to_agent` | `async (agent_id: str) → None` | Cold transfer to another agent |
+| `transfer` | `async (target: str, *, transfer_type: str = "number", mode: str = "cold", announcement: str = "") → None` | Transfer to a number, human queue, or agent |
+| `transfer_to_human` | `async (queue: str, *, mode: str = "cold", announcement: str = "") → None` | Transfer to a human queue |
+| `transfer_to_agent` | `async (agent_id: str, *, mode: str = "cold", announcement: str = "") → None` | Transfer to another agent |
 | `end` | `async (reason: str = "completed") → None` | End the call |
 | `run` | `async () → None` | Main event loop |
 | `on` | `(event: str) → decorator` | Register hook |
-| `recording.pause` | `async (reason: str = "") → None` | Pause recording |
-| `recording.resume` | `async () → None` | Resume recording |
 | `metrics` | `property → MetricsTracker` | Per-call metrics (`.live()`) |
 | `dialog_machine` | `property (get/set)` | Dialog adapter - auto-wraps superdialog types |
 | `data` | `dict[str, Any]` | Per-call scratch space |
+
+<Warning>
+`set_filler`, `recording.pause` and `recording.resume` are present on `Session`
+but **not implemented on the wire** - they are spoken aloud as sentinels. They
+are deliberately omitted from the table above; see
+[Speaking](#speaking) and [Recording control](#recording-control).
+</Warning>
 
 ## Out-of-band session control
 
@@ -259,7 +305,7 @@ via the Management SDK, targeting it by session ID:
 ```python
 from unpod import AsyncClient
 
-async with AsyncClient() as client:  # reads UNPOD_API_KEY; see setup-checklist for the full credential table
+async with AsyncClient() as client:  # UNPOD_PLATFORM_TOKEN first, then UNPOD_API_KEY - see the credential table
     await client.sessions.end(session_id)
 
     await client.sessions.transfer(          # warm handoff supported here
@@ -283,18 +329,65 @@ async with AsyncClient() as client:  # reads UNPOD_API_KEY; see setup-checklist 
 ```python
 s = runner.stats()        # RunnerStats snapshot
 s.in_flight               # current active calls
-s.queued                  # dispatches waiting for capacity
 s.capacity                # your max_sessions setting
 s.completed_last_hour     # completed calls
 s.failed_last_hour        # failed calls
 s.mean_call_duration_s    # average call length
 ```
 
+<Note>
+`RunnerStats.queued` exists on the model but is **always `0`** - the runner
+never queues. When it is at capacity the orchestrator simply stops dispatching
+to it. Alert on `in_flight` approaching `capacity`, not on `queued`.
+</Note>
+
 ### Graceful shutdown
 
-Send `SIGTERM` (standard for containers and systemd). The runner stops
-accepting dispatches, waits up to `drain_timeout_s` for active calls, then
-exits. Or call `await runner.shutdown()` yourself.
+<Warning>
+**The SDK installs no signal handlers.** An unhandled `SIGTERM` terminates the
+process immediately and cuts every call in flight. Draining only happens if
+your code calls `await runner.shutdown()`, so install the handler yourself.
+</Warning>
+
+```python
+import asyncio
+import signal
+
+from unpod import AgentRunner
+
+async def main() -> None:
+    runner = AgentRunner(entrypoint=handle_call, agent_id="my-agent", drain_timeout_s=60)
+
+    loop = asyncio.get_running_loop()
+    stopping = asyncio.Event()
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        loop.add_signal_handler(sig, stopping.set)
+
+    serve = asyncio.create_task(runner.run())   # run() is the async entry; start() is the blocking one
+    await stopping.wait()
+    await runner.shutdown()                     # drains, then returns
+    serve.cancel()
+
+asyncio.run(main())
+```
+
+Set your orchestrator's termination grace period **above** `drain_timeout_s`
+(e.g. Kubernetes `terminationGracePeriodSeconds: 90` for a 60 s drain), or the
+platform will `SIGKILL` you mid-drain.
+
+<Note>
+Current `shutdown()` limitations, so you can size the grace period honestly:
+
+- It sets the shutting-down flag, then sleeps for the **full**
+  `drain_timeout_s` whenever any call is in flight. There is no drain polling,
+  so it does not return early when the last call ends - shutdown always costs
+  the full window.
+- It does not cancel jobs still running after the window; it logs which calls
+  are still active and returns.
+- Under `transport="serve"` it does not close the listening socket, so new
+  bridge connections can still be accepted while draining. The default
+  `dial_out` transport never listens and is unaffected.
+</Note>
 
 ### Multiple runners
 
@@ -308,6 +401,6 @@ The orchestrator load-balances on reported capacity - no shared state needed.
     Plug your existing brain into session.dialog_machine.
   </Card>
   <Card title="Hooks & Events" icon="bell" href="/speech-stack/hooks-events">
-    React to every turn, interruption, silence, and lifecycle event.
+    React to turns, interruptions, lifecycle changes, and metrics.
   </Card>
 </CardGroup>

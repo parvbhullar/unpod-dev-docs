@@ -182,17 +182,44 @@ generic failure and log them.
 
 ## Reacting to outcomes in your agent
 
-Observe telephony outcomes through hooks rather than polling:
+<Warning>
+**The telephony `end_reason` is not available inside the call.** `session.data`
+starts empty and is only ever written by your own code - nothing in the SDK puts
+an `end_reason` in it, so `ctx.session.data.get("end_reason")` always returns
+`None`. The end reason is a post-call REST field.
+</Warning>
+
+The session `call_end` hook tells you *how the session loop exited*
+(`"hangup"` / `"error"`), which is enough to decide whether a follow-up is
+needed. Read the reason itself afterwards:
 
 ```python
 @ctx.session.on("call_end")
-async def on_end(final_state: str) -> None:
-    reason = ctx.session.data.get("end_reason")
-    if reason == "VOICEMAIL_DETECTED_PRECONNECT":
-        await schedule_retry(ctx.user_number, after_minutes=120)
-    elif reason in ("SIP_FAILED_WRONG_NUMBER", "SIP_FAILED_NUMBER_BLOCKED"):
-        await mark_unreachable(ctx.user_number)
+async def on_end(outcome: str) -> None:
+    # outcome is "hangup" or "error" - not a telephony end_reason
+    ctx.session.data["needs_followup"] = outcome == "error"
 ```
+
+Then resolve the reason out of band, once the call record is written:
+
+```python
+from unpod import AsyncClient
+
+async def resolve_outcome(call_id: str) -> None:
+    async with AsyncClient() as client:
+        call = await client.calls.get(call_id)
+        if call.end_reason == "VOICEMAIL_DETECTED_PRECONNECT":
+            await schedule_retry(call.user_number, after_minutes=120)
+        elif call.end_reason in ("SIP_FAILED_WRONG_NUMBER", "SIP_FAILED_NUMBER_BLOCKED"):
+            await mark_unreachable(call.user_number)
+```
+
+<Tip>
+For outbound campaigns, do this from the job that enqueued the call rather than
+from the entrypoint - the record is complete only after the call ends, and your
+entrypoint is already gone by then. `client.calls.get()` also gives you
+`status` and `duration_s` in the same read.
+</Tip>
 
 ## Related
 

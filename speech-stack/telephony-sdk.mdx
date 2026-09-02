@@ -1,0 +1,271 @@
+---
+title: 'Telephony SDK'
+icon: 'network'
+description: 'client.telephony - attach numbers to agents in batches, read SBC connection state, and audit cross-plane sync.'
+---
+
+`client.telephony` is the SDK surface over the **backend-core platform plane**
+(`/api/v2/platform/telephony/*`). It is a different service from the supervoice
+management plane behind `client.numbers` and `client.trunks`, and the SDK's own
+reference calls attaching a number to an agent here **the primary flow**.
+
+```python
+import asyncio
+from unpod import AsyncClient, JWTAuth
+
+async def main() -> None:
+    async with AsyncClient(auth=JWTAuth(TOKEN, org_handle="acme")) as client:
+        nums = await client.telephony.numbers.list()
+        free = [n.number for n in nums if n.status == "not_assigned"]
+
+        result = await client.telephony.numbers.attach(free[:2], agent_id="asst_sales")
+        for r in result.numbers:
+            print(r.number, r.ok, r.connection_state, r.error)
+
+asyncio.run(main())
+```
+
+<Warning>
+**This plane needs a platform credential and an org handle.** Pass
+`JWTAuth(token, org_handle=...)` or `TokenAuth(token, org_handle=...)`, or set
+`UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE`. It is `Org-Handle`-scoped and is
+**not reachable** with a bare Bearer `UNPOD_API_KEY`. See
+[Client, Auth & Planes](/speech-stack/client-auth).
+</Warning>
+
+---
+
+## Which surface to use
+
+| | `client.telephony.numbers` | `client.numbers` |
+|---|---|---|
+| Keyed by | the **E.164 number** | an opaque `number_id` |
+| Credential | platform token + `Org-Handle` | Bearer `UNPOD_API_KEY` works |
+| `status` | `not_assigned`, `assigned`, `closed` | see [the other vocabulary](/speech-stack/numbers#two-number-surfaces) |
+| Attach several at once | **Yes**, with per-number `ok`/`error` | No |
+| Reports `connection_state` | **Yes** | No |
+| Verdict | **Primary** | Works, but `delete()`/`release()` target dead routes |
+
+Use `client.numbers` when a plain API key is all you have; use this namespace
+for batch attach, SBC state, and the cross-plane audit.
+
+---
+
+## Numbers
+
+### List
+
+```python
+numbers = await client.telephony.numbers.list()
+for n in numbers:
+    print(n.number, n.status)
+```
+
+Takes **no arguments**. Each row carries only `number` and `status` - the
+Postgres id is deliberately not exposed, because every verb on this plane is
+keyed by the E.164 number.
+
+`list()` sends `include_assigned=true`, so you see your org's **attached**
+numbers alongside the claimable pool. Another org's assigned numbers are never
+returned either way.
+
+| `status` | Meaning |
+|---|---|
+| `not_assigned` | **Attachable.** Always safe to attach |
+| `assigned` | Already bound to an agent or pipeline |
+| `closed` | Not attachable - unassigned but inactive, or closed |
+
+<Tip>
+The status is derived from the platform's `state` plus `active` precisely so
+that `not_assigned` **always** means attachable: an unassigned-but-inactive
+number reports `closed`, never `not_assigned`. A listing must not promise an
+attach that would fail.
+</Tip>
+
+### Attach numbers to an agent
+
+```python
+result = await client.telephony.numbers.attach(
+    "+14155550101",                 # one E.164 string, or a sequence of them
+    agent_id="asst_sales",
+)
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `numbers` | `str \| Sequence[str]` | One E.164 number or several. A bare `str` counts as **one** number, never iterated character by character |
+| `agent_id` | `str \| None` | The agent the number routes to. Optional - omitting it wires the number for agent use without binding one yet |
+| `attach_type` | `"agent" \| "pipeline"` | Termination path. Omitted by default; the platform defaults it to `"agent"` |
+| `pipe_id` | `str \| None` | **Required when `attach_type="pipeline"`** |
+| `bridge_slug` | `str \| None` | Advanced: target a specific voice bridge instead of the org's resolved one |
+| `region` | `str \| None` | Advanced: region for a newly created bridge |
+
+Everything after `numbers` is keyword-only. E.164 validation lives on the
+platform, so there is exactly one rule and the SDK cannot drift from it.
+
+<Warning>
+**On the default `attach_type="agent"`, the platform requires a platform agent
+whose handle equals `agent_id` and which your org owns.** On a miss the whole
+request fails with HTTP 400 and `"Agent not found for this organization."`
+*before it touches any number* - it is an anti-IDOR gate, since handles are not
+globally unique.
+
+A `pipes.create(agent_id=...)` pipe or a running `AgentRunner` does **not**
+satisfy it: that record is created through the dashboard or platform API, not by
+this SDK.
+</Warning>
+
+<Tip>
+**The escape hatch is `attach_type="pipeline"`,** which is deliberately exempt
+from that gate - the pipeline path never resolves a platform agent and forwards
+`agent_id` to supervoice as an opaque string, matched there against your own
+project-scoped pipes. It costs one extra argument:
+
+```python
+result = await client.telephony.numbers.attach(
+    "+14155550101",
+    agent_id="my-voice-agent",   # opaque here - no platform agent row needed
+    attach_type="pipeline",
+    pipe_id=pipe.pipe_id,        # REQUIRED on this path
+)
+```
+
+Omit `pipe_id` and the request is rejected up front by the serializer.
+</Tip>
+
+### Partial success
+
+Attach and detach are **partial-success** operations. Never assume the whole
+batch landed - read every row:
+
+```python
+result = await client.telephony.numbers.attach(numbers, agent_id="asst_sales")
+
+ok      = [r.number for r in result.numbers if r.ok]
+failed  = [(r.number, r.error) for r in result.numbers if not r.ok]
+```
+
+The platform answers **201 when at least one** number attached and **400 when
+none did** - so a `2xx` does not mean every number succeeded.
+
+### Detach
+
+```python
+result = await client.telephony.numbers.detach(["+14155550101", "+14155550102"])
+```
+
+Needs only the numbers - the termination, agent and pipe are read from the
+stored record. The supervoice number record is **released, not deleted**, so
+the number stays available for a later attach. Partial-success, same as attach.
+
+### `connection_state`
+
+Each `NumberResult` carries the SBC link lifecycle, echoed from the platform as
+the stored enum name:
+
+| State | Meaning |
+|---|---|
+| `NOT_LINKED` | No SBC link yet |
+| `PENDING_VERIFY` | Link created, awaiting verification |
+| `LINKED` | Live |
+| `ERROR` | Link failed |
+
+---
+
+## Overview - the cross-plane audit
+
+```python
+for row in await client.telephony.overview():
+    print(row.number, row.connection_state, row.sync_state, row.in_sync)
+```
+
+Per-number lifecycle **plus** cross-plane sync state. This is the page to reach
+for when a number is attached on one plane but calls are not arriving: `in_sync`
+tells you whether the two planes agree.
+
+| Field | Type | Description |
+|---|---|---|
+| `number` | `str \| None` | The E.164 |
+| `number_id` | `int \| None` | Platform id |
+| `bridge_slug` | `str \| None` | The voice bridge it resolved to |
+| `connection_state` | `str \| None` | SBC link state, as above |
+| `termination_kind` | `str \| None` | `agent` or `pipeline` |
+| `agent_id` | `str \| None` | What it routes to |
+| `provider` | `str \| None` | Carrier |
+| `sync_state` | `str \| None` | Cross-plane sync status |
+| `in_sync` | `bool \| None` | Whether both planes agree |
+
+---
+
+## Trunks (BYO carrier)
+
+<Note>
+`client.telephony.trunks` is the **Leg A / BYO-carrier** path - your own SIP
+carrier into Unpod's SBC. Leg A is the hardcoded SBC default today, so this
+surface is **future/beta** and not yet the primary production flow. For wiring
+numbers to agents (Leg B) use `numbers.attach` above.
+</Note>
+
+```python
+trunk = await client.telephony.trunks.create(
+    "acme-carrier",
+    "sip.acme-carrier.com",
+    username="acme",
+    password="...",
+    transport="tls",
+    port="5061",
+    source_ips=["203.0.113.10"],      # the carrier's inbound IP ACL
+)
+
+trunks = await client.telephony.trunks.list()     # secrets masked on read
+one    = await client.telephony.trunks.get(trunk.id)
+await client.telephony.trunks.delete(trunk.id)
+```
+
+Map numbers onto a trunk - note these take **integer number ids**, not E.164
+strings, unlike everything on `numbers`:
+
+```python
+result = await client.telephony.trunks.attach_numbers(
+    trunk.id, [101, 102], bridge_slug=None, region=None)
+
+print(result.origin_endpoint.ingress)   # where the carrier sends inbound calls
+print(result.origin_endpoint.dids)
+print(result.origin_endpoint.accepted_source_ips)
+
+await client.telephony.trunks.detach_numbers(trunk.id, [101])
+```
+
+`attach_numbers` / `detach_numbers` are partial-success too, with the same
+`NumberResult` rows.
+
+---
+
+## Models
+
+Importable from `unpod.telephony`.
+
+| Model | Used by |
+|---|---|
+| `Number` | `numbers.list()` - `number`, `status` |
+| `NumberResult` | Every attach/detach row - `number_id`, `number`, `connection_state`, `agent_id`, `ok`, `error` |
+| `AgentAttachResult` | `numbers.attach()` - `agent_id`, `numbers`, `message` |
+| `AgentDetachResult` | `numbers.detach()` - `numbers`, `message` |
+| `AttachResult` | `trunks.attach_numbers()` - `trunk_id`, `origin_endpoint`, `numbers`, `message` |
+| `DetachResult` | `trunks.detach_numbers()` - `trunk_id`, `numbers`, `message` |
+| `OriginEndpoint` | `ingress`, `dids`, `accepted_source_ips`, `region` |
+| `NumberOverview` | `overview()` |
+| `Trunk` | `trunks.*` - `auth_password` is masked on read |
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Phone Numbers" icon="hash" href="/speech-stack/numbers">
+    The other number surface, and when to prefer it.
+  </Card>
+  <Card title="Client, Auth & Planes" icon="key" href="/speech-stack/client-auth">
+    Which credential reaches which plane.
+  </Card>
+</CardGroup>

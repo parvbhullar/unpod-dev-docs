@@ -19,7 +19,30 @@ When you attach a voice profile to an agent, every call that voice handles uses 
   <img src="/images/diagrams/voice-profile-pipeline.svg" alt="Voice profile pipeline diagram showing caller speech passing through STT, dialog machine text handling, TTS plus voice, and caller playback." />
 </Frame>
 
-Voice profiles are managed by Unpod. You browse and select from the available list - you do not configure STT/TTS providers directly.
+Voice profiles are managed by Unpod. You browse and select from the available list - you do not configure STT/TTS providers directly. The resource is **read-only**: only `list()` and `get()` exist.
+
+<Warning>
+**`client.voice_profiles` needs a platform credential, not an API key.** It
+reads backend-core's `/api/v2/platform/voice-profiles/` - the same plane as
+[`client.telephony`](/speech-stack/telephony-sdk) and `client.analytics` - so a
+bare Bearer `UNPOD_API_KEY` is **refused**. Set `UNPOD_PLATFORM_TOKEN` (plus
+`UNPOD_ORG_HANDLE`), or pass `auth=` explicitly:
+
+```python
+import os
+from unpod import AsyncClient, JWTAuth
+
+# Option A: environment. AsyncClient() prefers UNPOD_PLATFORM_TOKEN over UNPOD_API_KEY.
+#   export UNPOD_PLATFORM_TOKEN="..."
+#   export UNPOD_ORG_HANDLE="acme"
+
+# Option B: explicit
+client = AsyncClient(auth=JWTAuth(os.environ["UNPOD_JWT"], org_handle="acme"))
+```
+
+See [Client, Auth & Planes](/speech-stack/client-auth) for the full credential
+matrix.
+</Warning>
 
 ---
 
@@ -30,13 +53,9 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
-        # All profiles
+    # UNPOD_PLATFORM_TOKEN (+ UNPOD_ORG_HANDLE) - an API key alone is refused here
+    async with AsyncClient() as client:
         profiles = await client.voice_profiles.list()
-
-        # Filter by language
-        en_profiles = await client.voice_profiles.list(language="en")
-        es_profiles = await client.voice_profiles.list(language="es")
 
         for p in profiles:
             print(
@@ -48,6 +67,44 @@ async def main():
 
 asyncio.run(main())
 ```
+
+<Warning>
+**`language=` is a no-op.** The SDK sends `?language=en`, but the backing view
+ignores query parameters, so you get the full list back either way. You have to
+filter in Python.
+
+**Do not filter on `p.languages` alone.** It is a real field, but it defaults to
+`[]` and real responses usually leave it empty - the language codes arrive
+inside the nested `voice` and `transcriber` dicts instead (the model allows
+extra fields, so they are there). Filtering on the flat field alone silently
+matches nothing.
+
+```python
+def speaks(profile, code: str) -> bool:
+    """True when a profile covers `code`, wherever the response put it."""
+    if code in (profile.languages or []):
+        return True
+    if (profile.language or "") == code:
+        return True
+    # Real responses carry the codes in the nested provider dicts, e.g.
+    # voice={"languages": [{"code": "en"}, {"code": "hi"}]}
+    for block in ("voice", "transcriber"):
+        nested = getattr(profile, block, None) or {}
+        for entry in nested.get("languages") or []:
+            value = entry.get("code") if isinstance(entry, dict) else entry
+            if value in (code, "multi"):
+                return True
+    return False
+```
+
+```python
+profiles = await client.voice_profiles.list()
+en_profiles = [p for p in profiles if speaks(p, "en")]
+```
+
+Print one profile first (`print(profiles[0])`) to see the shape your deployment
+returns before committing to a filter.
+</Warning>
 
 ### VoiceProfile fields
 
@@ -71,7 +128,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:  # platform credential, as above
         profile = await client.voice_profiles.get("vp_en_female_hd")
         print(profile.name, profile.quality, profile.languages)
 
@@ -110,11 +167,13 @@ import asyncio
 from unpod import AsyncClient, Prompt
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
-        # List to find the right profile
-        profiles = await client.voice_profiles.list(language="en")
+    async with AsyncClient() as client:  # platform credential, as above
+        # List, then filter in Python - the language= kwarg is not applied server-side
+        profiles = await client.voice_profiles.list()
         hd_female = next(
-            p for p in profiles if p.quality == "high" and p.gender == "female"
+            p
+            for p in profiles
+            if speaks(p, "en") and p.quality == "high" and p.gender == "female"
         )
 
         voice = await client.agents.voice.create(
@@ -140,7 +199,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:
         await client.agents.voice.add(
             "support-bot",
             voice_profile="vp_es_male_std",     # Spanish male

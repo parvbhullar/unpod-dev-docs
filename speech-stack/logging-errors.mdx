@@ -1,0 +1,246 @@
+---
+title: 'Logging & Errors'
+icon: 'terminal'
+description: 'Turn on SDK logs in one line, read WebSocket close codes, and understand the bridge HMAC contract.'
+---
+
+When a call does not arrive, the runner's logs are the fastest path to the
+answer. The SDK ships a one-line dev setup, correlating ids on every message,
+and a close-code vocabulary that distinguishes "wrong credential" from "network
+blip".
+
+## Turn logs on
+
+```python
+import logging
+import unpod
+
+unpod.enable_logging(logging.INFO)     # or "INFO", or logging.DEBUG
+```
+
+That is the single best debugging affordance in the package. It attaches a
+stream handler to the `unpod` logger with a readable format:
+
+```text
+2026-09-02 11:04:18,332 INFO     unpod.runner | runner starting worker_id=w_3f2a agent_id=my-agent pool=prod transport=dial_out max_concurrent=50 orchestrator=wss://api.unpod.ai
+```
+
+| Argument | Default | Description |
+|---|---|---|
+| `level` | `logging.INFO` | Accepts a level int or its name |
+| `stream` | `sys.stderr` | Any writable stream |
+
+Behaviour worth knowing:
+
+- **Idempotent** - calling it twice does not double-log; the second call just
+  updates the level.
+- **It never touches the root logger**, so it cannot disturb your app's own
+  configuration. It sets `propagate = False` on the `unpod` logger so your root
+  handlers do not print each line a second time.
+- The package attaches a `NullHandler` at import, so **nothing is emitted until
+  you either call this or configure logging yourself** (`logging.basicConfig`).
+
+<Tip>
+In production, skip `enable_logging` and configure the `unpod` logger through
+your normal logging setup - a JSON formatter, your aggregator's handler, per-child
+levels:
+
+```python
+logging.getLogger("unpod.runner").setLevel(logging.INFO)
+logging.getLogger("unpod.bridge").setLevel(logging.WARNING)   # quiet per-frame noise
+```
+</Tip>
+
+### What each level means
+
+| Level | What lands here |
+|---|---|
+| `INFO` | Lifecycle on a healthy run: control link up/down, registration, job accepted, call start/end |
+| `WARNING` | Recoverable trouble: a dial attempt that will retry, a refused handshake, a control drop that will reconnect |
+| `ERROR` | A call or the runner is lost: dial retries exhausted, entrypoint raised, fatal auth rejection |
+| `DEBUG` | Per-heartbeat, per-frame noise |
+
+### Correlating ids
+
+Every message carries `worker_id`, `job_id` or `session_id`, because the
+orchestrator, the media worker and your runner are **three processes** and those
+ids are the only way to line their logs up. Log the same ids from your own
+entrypoint:
+
+```python
+async def handle_call(ctx: CallContext) -> None:
+    log = logging.getLogger("myapp").getChild(ctx.session_id)
+    log.info("entrypoint start call_id=%s agent_id=%s", ctx.call_id, ctx.agent_id)
+```
+
+### Secrets are redacted
+
+Bridge URLs carry the per-call token as a query parameter, so the SDK redacts
+before logging. `token`, `signature`, `api_key` and `call_token` values become
+`***`, and the host and path are kept - the part you actually need to debug
+routing.
+
+```python
+from unpod._logging import redact_url
+
+redact_url("wss://api.unpod.ai/bridge?session_id=s1&call_token=abc123")
+# 'wss://api.unpod.ai/bridge?session_id=s1&call_token=***'
+```
+
+Use it before logging any URL you built yourself. It never raises - an
+unparseable input returns `"<unparseable-url>"`.
+
+---
+
+## Errors and close codes
+
+### `RunnerAuthError`
+
+```python
+from unpod import AgentRunner, RunnerAuthError
+
+try:
+    runner.start()
+except RunnerAuthError:
+    # Non-retriable: the credential or the policy is wrong. Do not loop.
+    alert("unpod runner rejected - check UNPOD_API_KEY")
+    raise
+```
+
+A subclass of `ConnectionError`, raised when the orchestrator refuses the
+runner's credential. It is the **non-retriable** signal, thrown on control-socket
+close codes:
+
+| Close code | Meaning |
+|---|---|
+| `4001` | The orchestrator rejected the credential |
+| `1008` | Policy violation |
+
+<Warning>
+Catch this and alert on it. Everything else reconnects with jittered backoff,
+so a silent retry loop on a bad API key is indistinguishable from a network
+outage - which is exactly the dead end this exception exists to prevent. It is
+also the one failure a supervisor restart will not fix.
+</Warning>
+
+### Dial close codes
+
+When the runner dials **out** to the media worker's bridge (the default
+`dial_out` transport), a rejected dial carries a hint rather than a bare
+"connection closed":
+
+| Close code | Meaning | What to check |
+|---|---|---|
+| `4003` | The worker rejected the pairing | Unknown `call_id`, an expired pairing (the dial arrived **more than 20 s** after dispatch), or a bad `call_token`. Usually a slow entrypoint or a stalled event loop |
+| `4009` | The worker already has a live bridge socket for this call | A duplicate dial - typically two runner processes claiming the same call |
+
+---
+
+## Bridge HMAC verification (`serve` transport)
+
+<Note>
+This applies **only** to the legacy `transport="serve"`, where media agents dial
+**into** your runner. Under the default `dial_out` transport the runner never
+listens and the per-call bridge is authenticated by the token embedded in the
+`bridge_url`, so `agent_secret` is ignored.
+</Note>
+
+With `agent_secret` set (or `UNPOD_AGENT_SECRET` in the environment), the runner
+verifies every inbound bridge connection before running your entrypoint.
+
+**The scheme.** The media agent signs the pipe-delimited message
+`session_id|job_id|nonce|ts` with the shared secret using HMAC-SHA256,
+base64-encodes it, and appends five query parameters to the connect URL:
+
+| Parameter | Description |
+|---|---|
+| `session_id` | Call session id |
+| `job_id` | Dispatched job id |
+| `nonce` | Per-connection nonce |
+| `ts` | Client timestamp, **milliseconds** since the epoch |
+| `signature` | Base64 HMAC-SHA256 of the message above |
+
+**A connection is rejected when** any of the five is missing or `ts` is not an
+integer; the recomputed HMAC does not match (constant-time compare); `ts` is more
+than **30 s** from the runner's clock; or the `nonce` has already been accepted
+on this runner. On success the nonce is recorded, so replaying the same URL
+fails.
+
+```python
+from unpod.connectivity.bridge_auth import verify_connection, verify_signed_url
+
+seen: set[str] = set()
+
+ok = verify_signed_url(
+    secret=SECRET,
+    session_id="s1", job_id="j1", nonce="n1",
+    ts=1_756_800_000_000, signature="…",
+    seen_nonces=seen,
+    max_skew_ms=30_000,
+)
+```
+
+`verify_connection(ws, secret=..., seen_nonces=...)` is the wrapper the runner
+uses: it pulls the parameters off the connection's request path and delegates.
+
+<Warning>
+**Two operational traps.**
+
+1. **Clock skew.** A ±30 s window means a drifting container clock rejects
+   *every* connection. Run NTP on both hosts. The rejection is logged as
+   `bridge auth: STALE rejected …` with the actual offset.
+2. **Proxies that drop the query string.** An unsigned dial reaching a runner
+   that *has* a secret configured looks identical to a proxy stripping the
+   query - both log `bridge auth: rejected — connect URL is missing …`.
+
+A mismatched secret between worker and runner logs
+`bridge auth: BAD SIGNATURE rejected …`. Neither signature is ever logged, only
+the fact that they differ.
+</Warning>
+
+Without a secret the runner accepts unsigned connections - acceptable only for
+local dev. See [Deploy](/speech-stack/deploy).
+
+---
+
+## A debugging checklist
+
+<Steps>
+  <Step title="Turn on logs">
+    `unpod.enable_logging("DEBUG")` in the runner process. If you see nothing at
+    all, logging was never configured - that is what this call fixes.
+  </Step>
+  <Step title="Confirm registration">
+    At `INFO` you should see `runner starting worker_id=…` followed by
+    `control: registered worker_id=… heartbeat=…`. If instead you see
+    `control: expected 'registered', got …`, the orchestrator refused the
+    register frame - check the `agent_id` and pool.
+  </Step>
+  <Step title="Check the agent_id matches">
+    A call that arrives with no runner claiming it is almost always an
+    `agent_id` mismatch between `agents.voice.create(...)` and
+    `AgentRunner(agent_id=...)`.
+  </Step>
+  <Step title="Read the close code">
+    `4001`/`1008` → credential, and it will not self-heal. `4003`/`4009` → a
+    pairing or duplicate-dial problem. Anything else reconnects on its own.
+  </Step>
+  <Step title="Rule out a raising hook">
+    A hook that raises propagates out of `session.run()` and ends the call as
+    `failed`. The registry logs the handler's qualified name first - search for
+    `raised`. See [Hooks & Events](/speech-stack/hooks-events#multiple-hooks-for-the-same-event).
+  </Step>
+</Steps>
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Deploy" icon="rocket" href="/speech-stack/deploy">
+    Production configuration, capacity, and shutdown.
+  </Card>
+  <Card title="Observability" icon="gauge" href="/speech-stack/observability">
+    Latency, cost and token metrics per turn.
+  </Card>
+</CardGroup>

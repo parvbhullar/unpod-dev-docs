@@ -4,16 +4,23 @@ icon: 'phone-outgoing'
 description: 'Take the agent you built in the browser quickstart to a real inbound or outbound phone call.'
 ---
 
-You built and talked to your agent in the browser in the
-[Quickstart](/get-started/quickstart). Now give it a phone number.
+The [Quickstart](/get-started/quickstart) placed a call with a `Prompt`
+brain and deployed nothing. This page is the `Runner` path: your own
+long-lived Python process at the text boundary - for DB reads mid-call, your
+own framework, or logic a prompt cannot carry.
 
-Nothing about the agent changes - same `entrypoint`, same brain, same
-[`AgentRunner`](/get-started/core-concepts#agentrunner). The only new work is
-provisioning: telling Unpod which number routes to your agent.
+The deal is unchanged: your
+[`AgentRunner`](/get-started/core-concepts#agentrunner) receives a
+transcribed turn as a string and returns a string. No frames, no codecs, no
+SIP - the speech pipeline and the carrier stay on Unpod's side.
 
 ## Prerequisites
 
-- The agent from the [Quickstart](/get-started/quickstart), running
+- Python 3.12+ and `pip install unpod`
+- `UNPOD_API_KEY` (`sk_...`) in the environment - the runner's bearer, from
+  [unpod.ai/api-keys](https://unpod.ai/api-keys/)
+- `UNPOD_PLATFORM_TOKEN` plus `UNPOD_ORG_HANDLE` in the environment - needed
+  for `voice_profiles.list()` during one-time setup
 - **A number in your account.** Provision one from the dashboard under
   **Dev Platform → Numbers**. No carrier account, no SIP trunk - see
   [Numbers](/speech-stack/numbers).
@@ -26,10 +33,17 @@ carrier credentials.
 
 ## Step 1 - Provision the number
 
-Provisioning uses the **Management API** - the REST half of the [SDK](https://github.com/unpod-ai/unpod-python-sdk), reached
-through `AsyncClient`. It reads `UNPOD_API_KEY` and derives its REST endpoint
-from `UNPOD_BASE_URL` (`https://<host>/platform`) - both set in the
-[Quickstart](/get-started/quickstart#step-2-set-two-keys).
+Provisioning uses the **Management API** - the REST half of the
+[SDK](https://github.com/unpod-ai/unpod-python-sdk), reached through
+`AsyncClient`. This setup script starts with `voice_profiles.list()`, so run it
+with `UNPOD_PLATFORM_TOKEN` plus `UNPOD_ORG_HANDLE`. The later REST calls on
+this page also work with `UNPOD_API_KEY`, and the runner still requires that
+API key for its own WebSocket connection. The REST endpoint derives from
+`UNPOD_BASE_URL` (default `api.unpod.ai` → `https://<host>/platform`).
+
+The Runner path drives the lower-level **pipes/numbers** surface directly -
+the [Quickstart](/get-started/quickstart)'s `agents.*` calls wrap the same
+objects one level up.
 
 If you need one-off overrides in code, pass `base_url=` to `AsyncClient` or
 `AgentRunner`; those arguments win over `.env` for that process only.
@@ -45,7 +59,11 @@ from unpod import AsyncClient, Runner
 async def setup() -> None:
     async with AsyncClient() as client:
         # 1. Pick a voice profile from the read-only catalog.
-        profiles = await client.voice_profiles.list(language="en")
+        #    list() takes a language= kwarg but it is NOT applied server-side.
+        #    The flat `languages` field is usually empty - the codes arrive in
+        #    the nested voice/transcriber dicts. See the Voice Profiles page for
+        #    a `speaks(profile, code)` helper that checks both.
+        profiles = await client.voice_profiles.list()
         if not profiles:
             print("No voice profiles found.")
             return
@@ -64,14 +82,18 @@ async def setup() -> None:
         print(f"Created agent: {voice.agent_id}")
 
         # 3. Find a number in your account that is not attached yet.
-        numbers = await client.numbers.list(status="active")
-        free = [n for n in numbers if n.pipe_id is None]
+        #    The pool reports NOT_ASSIGNED; a supervoice row reports available.
+        #    Do not filter on status="active" (no plane emits it) or on
+        #    pipe_id is None (pool rows carry no pipe_id).
+        numbers = await client.numbers.list()
+        free = [n for n in numbers if (n.status or "").lower() in {"not_assigned", "available"}]
         if not free:
             print("No free numbers - provision one under Dev Platform -> Numbers.")
             return
 
         # 4. Attach it to the agent.
-        number = await client.numbers.attach(free[0].number_id, "browser-playground")
+        number = await client.numbers.attach(
+            free[0].number_id, "browser-playground", number=free[0].number)
         print(f"Attached {number.number} -> agent browser-playground")
 
 asyncio.run(setup())
@@ -82,10 +104,19 @@ What it does:
 1. **`voice_profiles.list()`** - pick a voice from the read-only catalog.
 2. **`agents.voice.create()`** - create the agent, its brain, and its first voice.
 3. **`numbers.list()`** - find a number in your account with nothing attached.
+   Filter on `status`, not on `pipe_id` - see
+   [Phone Numbers](/speech-stack/numbers#two-number-surfaces).
 4. **`numbers.attach()`** - route that number to the `agent_id`. It takes
    `agent_id`, not a pipe id.
 
 If step 3 finds nothing, provision a number from the dashboard first.
+
+<Note>
+Step 1 (`voice_profiles.list()`) reads the **platform** plane and needs
+`UNPOD_PLATFORM_TOKEN` plus `UNPOD_ORG_HANDLE`; a bare `UNPOD_API_KEY` is
+refused there. Steps 2-4 work with either credential. See the [credential
+matrix](/speech-stack/setup-checklist#which-credential-goes-where).
+</Note>
 
 <Accordion title="Bringing your own number instead">
 BYON numbers arrive over a trunk you register once, then sync into your account:
@@ -106,12 +137,14 @@ inbound calls never reach your runner. See
 
 ## Step 2 - Answer an inbound call
 
-Same shape as the Quickstart agent - one `entrypoint`, one `AgentRunner`. The
-brain here is SuperDialog's `LLMAgent` instead of the Anthropic adapter; either
-works, and nothing about the call path changes:
+One `entrypoint`, one `AgentRunner`. The brain here is SuperDialog's
+`LLMAgent`; any adapter works - Anthropic, OpenAI, LangChain, an HTTP
+endpoint, or a playbook (see
+[Bring your agent](/speech-stack/bring-your-agent)) - and nothing about the
+call path changes:
 
 ```python
-# agent.py - standalone runner, no playground server needed
+# agent.py - your process at the text boundary
 import os
 from unpod import AgentRunner, CallContext
 from superdialog import LLMAgent
@@ -126,7 +159,7 @@ async def entrypoint(ctx: CallContext) -> None:
 def build_runner() -> AgentRunner:
     return AgentRunner(
         entrypoint=entrypoint,
-        agent_id=os.getenv("AGENT_ID", "browser-playground"),
+        agent_id=os.getenv("AGENT_ID", "my-runner-agent"),
         # base_url and api_key derive from UNPOD_BASE_URL / UNPOD_API_KEY
         # unless you pass explicit args here.
     )
@@ -150,6 +183,17 @@ and speaks - the same brain you heard in the browser, now on the phone.
 The runner does not need to restart when you provision the number. Run `setup.py`
 once, then leave the runner up; it serves every inbound call until you stop it.
 </Note>
+
+## If the runner will not connect
+
+Three close codes cover almost every failure:
+
+- **4001** on the control socket - the orchestrator refused the credential.
+  Do not retry: a reconnect loop on a bad key is indistinguishable from a
+  network outage.
+- **4003** on the bridge - the pairing failed: an unknown `call_id`, an
+  expired pairing (it expires ~20s after dispatch), or a bad call token.
+- **4009** - that call already has a live bridge socket.
 
 ## Step 3 - Make an outbound call (optional)
 

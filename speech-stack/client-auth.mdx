@@ -1,0 +1,250 @@
+---
+title: 'Client, Auth & Planes'
+icon: 'key'
+description: 'Which credential reaches which resource, the sync vs async client, and the management surfaces that have no page of their own.'
+---
+
+The management SDK looks like one client, but it talks to **three services**.
+Most credential surprises come from calling a resource that lives on a plane
+your credential cannot reach.
+
+```python
+from unpod import AsyncClient
+
+async with AsyncClient() as client:
+    ...
+```
+
+`AsyncClient()` takes no required arguments - it resolves credentials and base
+URLs from the environment. `.env` is loaded for you: `import unpod` calls
+`load_dotenv()` at import time.
+
+<Tip>
+Because `.env` is loaded at import, an **already-exported** shell variable wins
+over the file. To make the file authoritative, load it yourself with
+`load_dotenv(override=True)` **before** `import unpod`.
+</Tip>
+
+---
+
+## Credential resolution
+
+`AsyncClient` / `Client` pick auth in this order:
+
+<Steps>
+  <Step title="An explicit auth= strategy">
+    Whatever you pass wins, unconditionally.
+  </Step>
+  <Step title="UNPOD_PLATFORM_TOKEN">
+    Becomes `TokenAuth(token, org_handle=UNPOD_ORG_HANDLE)` - header
+    `Authorization: Token …`, plus `Org-Handle` when the handle is set. **This is
+    preferred over the API key.**
+  </Step>
+  <Step title="api_key= or UNPOD_API_KEY">
+    Becomes `BearerAuth(api_key)` - header `Authorization: Bearer …`.
+  </Step>
+  <Step title="Nothing">
+    Raises, telling you to supply one of the three.
+  </Step>
+</Steps>
+
+<Warning>
+Inline comments claiming `AsyncClient()` "reads `UNPOD_API_KEY`" are only half
+right: with both variables set, **the platform token wins**. If you meant to use
+the API key, unset `UNPOD_PLATFORM_TOKEN` or pass `auth=BearerAuth(...)`
+explicitly.
+</Warning>
+
+### The three auth strategies
+
+All are exported from `unpod`.
+
+| Strategy | Header(s) | Use it for |
+|---|---|---|
+| `BearerAuth(api_key)` | `Authorization: Bearer <key>` | **Direct** mode against supervoice; the tenant is resolved from the key |
+| `TokenAuth(token, org_handle=None)` | `Authorization: Token <key>` + `Org-Handle` | A per-user DRF token against backend-core's native platform surface |
+| `JWTAuth(token, org_handle=None)` | `Authorization: JWT <token>` + `Org-Handle` | **Proxy** mode through backend-core, which injects the org's supervoice key |
+
+```python
+import os
+from unpod import AsyncClient, BearerAuth, JWTAuth, TokenAuth
+
+client = AsyncClient(auth=BearerAuth(os.environ["UNPOD_API_KEY"]))
+client = AsyncClient(auth=TokenAuth(os.environ["UNPOD_PLATFORM_TOKEN"], org_handle="acme"))
+client = AsyncClient(auth=JWTAuth(os.environ["UNPOD_JWT"], org_handle="acme"))
+```
+
+`org_handle` is optional on the type but **required in practice** for
+org-scoped endpoints - everything under
+[`client.telephony`](/speech-stack/telephony-sdk).
+
+---
+
+## The three planes
+
+| Plane | Base | Resources |
+|---|---|---|
+| **supervoice management** | `https://<host>/platform` | `agents`, `calls`, `numbers`, `trunks`, `pipes`, `domain_dictionaries`, `recordings`, `transcripts`, `sessions` (reads), `api_keys` |
+| **backend-core platform** | `https://<host>/api/v2/platform` | `telephony`, `voice_profiles`, `analytics` |
+| **orchestrator** | `https://<host>/orchestrator` | `sessions.end`, `sessions.transfer`, `sessions.merge` |
+
+### What each plane will accept
+
+| Resource | Bearer `UNPOD_API_KEY` | Platform token / JWT |
+|---|---|---|
+| `agents`, `calls`, `numbers`, `trunks`, `pipes`, `domain_dictionaries`, `recordings`, `transcripts`, `api_keys` | Yes | Yes |
+| `voice_profiles` | **No - refused** | Yes |
+| `analytics` | **No - refused** | Yes |
+| `telephony` | **No - refused** | Yes, **with `Org-Handle`** |
+| `sessions.end` / `.transfer` / `.merge` | Yes | Yes, but **not in proxy mode** |
+| `AgentRunner` | Yes (required) | n/a |
+
+<Warning>
+**Session lifecycle operations are not available in proxy mode.**
+`sessions.end`, `.transfer` and `.merge` target the **orchestrator** base
+directly and keep the bare `/v1/sessions/...` form, so they do not travel
+through the backend-core proxy. `sessions.list()`, `.get()` and
+`.create_token()` are ordinary management reads and are unaffected.
+</Warning>
+
+### Overriding the bases
+
+| Variable | Overrides |
+|---|---|
+| `UNPOD_BASE_URL` | All three, derived from one host |
+| `UNPOD_SERVICE_BASE_URL` | supervoice management only |
+| `UNPOD_PLATFORM_BASE_URL` | backend-core platform only |
+| `UNPOD_ORCHESTRATOR_BASE_URL` | orchestrator REST only |
+
+In code, `AsyncClient(base_url=..., orchestrator_base_url=...)`. There is **no**
+constructor argument for the platform plane - use `UNPOD_PLATFORM_BASE_URL`.
+
+Full table: [Environment
+variables](/speech-stack/setup-checklist#environment-variables).
+
+---
+
+## Sync vs async
+
+Both clients expose the same resources; the sync one wraps the async one.
+
+```python
+from unpod import Client
+
+client = Client()                       # blocking
+agents = client.agents.list()           # no await
+```
+
+<Warning>
+**The sync `Client` raises inside a running event loop:**
+
+```text
+RuntimeError: Client cannot be used from a running event loop; use AsyncClient
+```
+
+Use `Client` from scripts, notebooks, cron jobs and sync web handlers. Use
+`AsyncClient` anywhere `async` is already in play - including inside an
+`AgentRunner` entrypoint, where you are always on a running loop.
+</Warning>
+
+`AsyncClient` is an async context manager and closes all three HTTP clients on
+exit. Prefer `async with`; if you construct one directly, call
+`await client.close()`.
+
+---
+
+## Resources without a page of their own
+
+### `client.sessions` - reads
+
+Documented elsewhere for `create_token`, `end`, `transfer` and `merge`; it also
+lists and fetches:
+
+```python
+sessions = await client.sessions.list()
+session  = await client.sessions.get(session_id)
+
+print(session.duration_s, session.end_reason, session.recording_url)
+for entry in session.transcript:          # {role, content, timestamp}
+    print(entry.role, entry.content)
+```
+
+Both return `unpod.models.Session`. This is where a **post-call** `end_reason`
+is readable for a session - it is never available inside the call. See
+[Call Lifecycle](/speech-stack/call-lifecycle#reacting-to-outcomes-in-your-agent).
+
+### `client.api_keys`
+
+```python
+key = await client.api_keys.create("ci-runner", org_id="org_123")
+print(key.raw_key)      # shown ONCE - store it now
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `name` | `str` | Human-readable label |
+| `org_id` | `str` | The organisation the key is scoped to |
+| `project_id` | `str \| None` | Optional project within the org; defaults to `org_id` server-side |
+
+<Warning>
+`raw_key` is the plaintext secret and is returned **only at creation**.
+Subsequent fetches omit it - there is no way to read it back, so write it to
+your secret store in the same block that creates it.
+</Warning>
+
+`ApiKey` fields: `key_id`, `name`, `org_id`, `project_id`, `status`
+(default `active`), `created`, `raw_key`.
+
+<Note>
+`create()` is the only method. There is no list, rotate or revoke on this
+resource - manage existing keys from the dashboard.
+</Note>
+
+---
+
+## Models
+
+Everything importable from `unpod.models`:
+
+| Model | Where it comes from |
+|---|---|
+| `Call`, `CallCreate` | `client.calls` |
+| `CallMetrics`, `CostBreakdown`, `TokenUsage` | `session.metrics.live()` |
+| `RunnerStats` | `runner.stats()` |
+| `Number` | `client.numbers` |
+| `Trunk`, `TrunkCreate`, `ByoConfigCreate` | `client.trunks` |
+| `Pipe`, `PipeCreate`, `PipeUpdate` | `client.pipes` (deprecated surface) |
+| `Session`, `TranscriptEntry` | `client.sessions`, `client.transcripts`, `client.recordings` |
+| `SessionToken` | `client.sessions.create_token()` |
+| `SessionEndResult`, `SessionTransferResult`, `SessionMergeResult`, `MergeOutcome` | session lifecycle ops |
+| `OrchestratorSession`, `OrchestratorParticipant` | orchestrator reads |
+| `Recording` | `client.recordings` |
+| `VoiceProfile` | `client.voice_profiles` |
+| `AnalyticsField`, `AnalyticsBlock`, `AnalyticsResult` | `client.analytics` |
+| `DomainDictionary`, `DomainListItem`, `KVItem` | `client.domain_dictionaries` |
+| `ApiKey` | `client.api_keys` |
+
+<Warning>
+`Transcript`, `TranscriptTurn` and `TurnTiming` are exported but **no resource
+returns them** - no REST read populates the per-stage timing fields today. Read
+latency from the `turn_complete` hook instead. See
+[Observability](/speech-stack/observability#6-post-call-timing).
+</Warning>
+
+`Agent` and `AgentVoice` are the exception - they live in `unpod.agents`
+alongside the brain types (`Playbook`, `Prompt`, `Runner`, `Endpoint`), not in
+`unpod.models`. Telephony has its own models, importable from `unpod.telephony`
+- see [Telephony SDK](/speech-stack/telephony-sdk#models).
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Provisioning checklist" icon="list-checks" href="/speech-stack/setup-checklist">
+    Every environment variable, and which credential each step needs.
+  </Card>
+  <Card title="Logging & Errors" icon="terminal" href="/speech-stack/logging-errors">
+    Turn on logs and read the close codes.
+  </Card>
+</CardGroup>

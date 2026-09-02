@@ -21,6 +21,47 @@ Support for Twilio, Telnyx, and Plivo numbers is coming soon - you will be able 
 
 ---
 
+## Two number surfaces
+
+The SDK exposes numbers on **two different planes**, and they do not share a
+vocabulary, an identifier, or a credential. Pick one deliberately.
+
+| | `client.telephony.numbers` | `client.numbers` |
+|---|---|---|
+| Plane | backend-core platform (`/api/v2/platform`) | supervoice management (`/platform`) |
+| Keyed by | the **E.164 number** (`"+14155550101"`) | an opaque **`number_id`** (`num_…`) |
+| Credential | `UNPOD_PLATFORM_TOKEN` / `TokenAuth` / `JWTAuth` **+ `Org-Handle`** | Bearer `UNPOD_API_KEY` works |
+| `status` values | `not_assigned`, `assigned`, `closed` | whatever the pool row carries - see the warning below |
+| Batch attach | Yes, with per-number `ok`/`error` | No, one number per call |
+| Status | **Primary** - the SDK's own reference calls attach-to-agent the primary flow | Works for `list` / `attach` / `detach` / `sync`; `delete()` and `release()` target routes that do not exist |
+
+This page documents `client.numbers`, which is what most quickstarts use because
+a plain API key is enough. For batch attach, `connection_state`, and the
+cross-plane `overview()`, use
+[the telephony namespace](/speech-stack/telephony-sdk).
+
+<Warning>
+**`client.numbers.list()` reads the platform pool, not supervoice.** Two
+consequences that bite the first script you write:
+
+- `status` arrives **verbatim from the platform** as `NOT_ASSIGNED` / `ASSIGNED`
+  / `CLOSED` (the model accepts a raw `state` key under the `status` name and
+  otherwise defaults to `available`). `active`, `inactive` and `pending` are
+  **not** values either plane emits - `list(status="active")` matches nothing.
+- `pipe_id` is **absent** from pool rows, so `n.pipe_id is None` is true for
+  **every** row and tells you nothing about whether a number is free.
+
+Compare `status` case-insensitively against both vocabularies, and do not use
+`pipe_id` as a free/attached test:
+
+```python
+FREE = {"not_assigned", "available"}
+free = [n for n in await client.numbers.list() if (n.status or "").lower() in FREE]
+```
+</Warning>
+
+---
+
 ## Number Sources
 
 | Source | Description |
@@ -44,10 +85,10 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:
         numbers = await client.numbers.list()
         for n in numbers:
-            print(n.number_id, n.number, n.status, n.pipe_id or "unattached")
+            print(n.number_id, n.number, n.status)
 
 asyncio.run(main())
 ```
@@ -123,31 +164,37 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
-        # All numbers
+    async with AsyncClient() as client:  # Bearer UNPOD_API_KEY is fine on this plane
         numbers = await client.numbers.list()
-
-        # Filter by status or country
-        active = await client.numbers.list(status="active")
         us_numbers = await client.numbers.list(country="US")
         byon = await client.numbers.list(trunk_type="byo")
 
         for n in numbers:
-            print(n.number_id, n.number, n.status, n.pipe_id or "unattached")
+            print(n.number_id, n.number, n.status)
 
 asyncio.run(main())
 ```
+
+<Note>
+`list()` also accepts `status=`, but pass it a value the plane actually emits
+(`"NOT_ASSIGNED"`, `"ASSIGNED"`, `"CLOSED"`) - or omit it and filter in Python,
+which is what the examples below do. `country=` and `trunk_type=` are applied
+server-side.
+</Note>
 
 ### Number fields
 
 | Field | Type | Description |
 |---|---|---|
-| `number_id` | `str` | Unique number ID (`num_...`) |
+| `number_id` | `str` | Unique number ID (`num_...`), aliased from `id`. Also readable as `.id` |
 | `number` | `str` | E.164 format, e.g. `+14155550100` |
-| `status` | `str` | `active`, `inactive`, `pending` |
-| `trunk_type` | `str` | `unpod` or `byo` |
-| `pipe_id` | `str \| None` | The agent-voice row this number is attached to, or `None` if free. Still spelled `pipe_id` on the number record |
-| `country` | `str` | ISO 3166-1 alpha-2 country code |
+| `status` | `str` | Defaults to `available`; accepts a raw `state` key, so a pool row lands here as `NOT_ASSIGNED` / `ASSIGNED` / `CLOSED`. supervoice's own vocabulary is `available` / `assigned` / `in_call` / `disabled`. **Compare case-insensitively** |
+| `trunk_type` | `str` | `livekit` (default), `unpod`, or `byo` |
+| `trunk_id` | `str \| None` | The trunk this number rides on |
+| `pipe_id` | `str \| None` | The agent-voice row this number is attached to. **Absent on pool rows from `list()`**, so `None` does not mean "free" there |
+| `active_call_id` | `str \| None` | Set while the number is mid-call |
+| `country` | `str \| None` | ISO 3166-1 alpha-2 country code |
+| `capabilities` | `list[str]` | e.g. `["voice"]` |
 
 ---
 
@@ -161,7 +208,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:
         number = await client.numbers.attach("num_...", "support-bot")
         print("Attached:", number.number, "-> agent support-bot")
 
@@ -185,6 +232,22 @@ calls raise a `TypeError`.
 `client.agents.numbers.attach(agent_id, number)` does the same job keyed by the
 E.164 number rather than the number id - see [Agents](/speech-stack/agents).
 
+<Note>
+This attach posts to the speech endpoint
+(`/api/v2/platform/speech/v1/numbers/{id}/attach`), which delegates to the
+platform's attach orchestration - it creates the voice-bridge number and the
+LiveKit trunks and pushes the ids back to supervoice. To attach **several**
+numbers in one request, or to read the resulting SBC `connection_state`, use
+[`client.telephony.numbers.attach()`](/speech-stack/telephony-sdk#attach-numbers-to-an-agent).
+</Note>
+
+<Warning>
+`client.numbers.delete()` and `client.numbers.release()` both target
+`DELETE /api/v2/platform/telephony/numbers/{id}`, which **is not a live route**.
+To free a number, `detach()` it - the record is released and stays available for
+a later attach.
+</Warning>
+
 ---
 
 ## Detaching a Number
@@ -194,7 +257,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:
         number = await client.numbers.detach("num_...")
         print("Detached:", number.number)
 
@@ -211,17 +274,26 @@ asyncio.run(main())
 import asyncio
 from unpod import AsyncClient
 
+# The pool reports NOT_ASSIGNED; a supervoice row reports available. Accept both.
+FREE_STATUSES = {"not_assigned", "available"}
+
 async def attach_first_free(agent_id: str) -> None:
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
-        numbers = await client.numbers.list(status="active")
-        free = [n for n in numbers if n.pipe_id is None]
+    async with AsyncClient() as client:
+        numbers = await client.numbers.list()
+        free = [n for n in numbers if (n.status or "").lower() in FREE_STATUSES]
         if not free:
             raise RuntimeError("No free numbers available")
-        await client.numbers.attach(free[0].number_id, agent_id)
+        await client.numbers.attach(free[0].number_id, agent_id, number=free[0].number)
         print("Attached", free[0].number)
 
 asyncio.run(attach_first_free("support-bot"))
 ```
+
+<Tip>
+Do **not** write `if n.pipe_id is None` here - pool rows never carry `pipe_id`,
+so that filter passes everything, including numbers already attached to another
+agent. Filter on `status`.
+</Tip>
 
 ### Rotate numbers across agents
 
@@ -230,7 +302,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def rotate(numbers: list[str], agents: list[str]) -> None:
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:
         for num_id, agent_id in zip(numbers, agents):
             await client.numbers.attach(num_id, agent_id)
             print(f"{num_id} -> {agent_id}")

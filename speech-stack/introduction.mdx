@@ -7,7 +7,7 @@ description: 'What runs between the caller audio and your agent text - whether u
 
 ## What runs the call
 
-Unpod gives your agent voice. It handles everything between the user's audio and your agent's text logic.
+Unpod gives your agent voice. It handles everything between the user's audio and your agent's text logic. The Speech Stack is the developer surface of the [Calling Engine](/core-engine/calling-engine) - one channel in the Transport layer of the [Core Engine](/core-engine/overview).
 
 Your agent receives plain text. It returns plain text. The Speech Stack handles everything else: transcription, synthesis, VAD, barge-in detection, endpointing, and transport.
 
@@ -20,7 +20,7 @@ Your agent receives plain text. It returns plain text. The Speech Stack handles 
     Users dial a phone number. Unpod handles SIP, PSTN, number provisioning, and routing. No carrier account or SIP trunk needed.
   </Card>
   <Card title="Browser / App" icon="monitor-smartphone">
-    Users connect from a web app or mobile app via the Unpod Web SDK. Same speech pipeline - no phone number required.
+    Users connect from a web app or mobile app - same speech pipeline, no phone number required. Today browser sessions run via the hosted Playground; the embeddable `@unpod/web-sdk` is not yet published on npm.
   </Card>
 </CardGroup>
 
@@ -36,7 +36,7 @@ Both paths run through the same managed speech pipeline (STT, TTS, VAD, barge-in
 
 <Steps>
   <Step title="User connects">
-    Via a phone number (PSTN/SIP) or directly from a browser/app using the Web SDK.
+    Via a phone number (PSTN/SIP), or from a browser/app (via the hosted Playground today; Web SDK not yet published).
   </Step>
   <Step title="Speech pipeline runs">
     Unpod transcribes audio (STT), detects turn end (VAD + endpointing), and handles barge-in interruptions. Your agent gets clean text.
@@ -78,16 +78,16 @@ Both paths run through the same managed speech pipeline (STT, TTS, VAD, barge-in
 | I want to... | Start here |
 |---|---|
 | Handle phone calls | [Telephony Quickstart](/get-started/first-phone-call) - provision a number and attach it to your agent |
-| Add voice to a web app | [Web SDK Quickstart](/get-started/quickstart) - embed the Unpod Web SDK in your frontend |
-| Connect both | Start with telephony, then add the Web SDK - same agent, two entry points |
+| Make a real SDK call fast | [Quickstart](/get-started/quickstart) - create an agent, attach a number, place an outbound call, and inspect the result |
+| Connect both | Start with telephony, then add browser/app sessions - same agent, two entry points |
 
 ---
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Quickstart" icon="bolt" href="/get-started/first-phone-call">
-    End-to-end: agent running and accepting sessions in under 10 minutes.
+  <Card title="Quickstart" icon="bolt" href="/get-started/quickstart">
+    A named agent, a number, a live call - six SDK calls, one file.
   </Card>
   <Card title="Run a SuperDialog agent" icon="layers" href="/speech-stack/level-up-superdialog">
     Drive conversations with structured flows and tools.

@@ -54,8 +54,8 @@ Your backend generates a short-lived token for each user session. Pass it to the
 from unpod import AsyncClient
 
 async def get_session_token(pipe_id: str, user_id: str) -> str:
-    # reads UNPOD_API_KEY from the env; see the credential table in
-    # /speech-stack/setup-checklist for UNPOD_PLATFORM_TOKEN + UNPOD_ORG_HANDLE
+    # credentials from the env: UNPOD_PLATFORM_TOKEN wins, else UNPOD_API_KEY.
+    # See /speech-stack/client-auth for the full matrix.
     async with AsyncClient() as client:
         token = await client.sessions.create_token(
             pipe_id=pipe_id,

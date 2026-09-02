@@ -1,0 +1,171 @@
+---
+title: 'Python SDK Changelog'
+icon: 'history'
+description: 'Version history and upgrade notes for the unpod Python package.'
+---
+
+Version history for the **`unpod` Python package**. While the SDK is pre-1.0,
+**breaking changes ship in a minor bump**, so read this page before moving from
+`0.2.x` to `0.3.x`.
+
+<Note>
+This is the SDK's own history. For the REST surface see the
+[API changelog](/api/changelog) - the two version independently.
+</Note>
+
+```bash
+pip install --upgrade unpod
+python -c "import importlib.metadata as m; print(m.version('unpod'))"
+```
+
+---
+
+## 0.3.0
+
+Two things ship here: **domain dictionaries** - the words an agent hears and
+says - and a round of route fixes that make several management resources
+actually reach the platform.
+
+### Breaking
+
+#### `numbers.attach()` signature changed
+
+```python
+# 0.2.x
+await client.numbers.attach(number_id, pipe.pipe_id)
+
+# 0.3.0
+await client.numbers.attach(number_id, pipe.agent_id)
+await client.numbers.attach(number_id, agent_id, number="+919800000001")
+```
+
+Was `attach(number_id, pipe_id, agent_id=None)`; now
+`attach(number_id, agent_id, number=None)`. **Old positional calls raise
+`TypeError`.**
+
+The binding is the **agent**, not the pipe - supervoice stopped storing a pipe
+pin and resolves the pipe from the agent at call time. The call now posts to the
+speech numbers endpoint, which delegates to the platform's attach orchestration:
+that is the path that creates the voice-bridge number and the LiveKit trunks and
+pushes the number plus both trunk ids back to supervoice. The old route posted
+straight to supervoice, which bound the agent but left the number with nothing
+to route through.
+
+The new optional `number` argument is the E.164 - pass it when `number_id` is a
+supervoice id, so telephony can resolve the row it owns.
+
+#### `Call.transcript` now defaults to `None`, not `[]`
+
+`None` means the turns were **not loaded**; `[]` means the call genuinely has no
+turns. `calls.list()` projects the turns out to keep a page small, and the old
+`[]` default made "not loaded" indistinguishable from "silent call".
+
+```python
+if not call.transcript:            # still works - None and [] are both falsy
+    ...
+
+n = len(call.transcript or [])     # MUST now handle None on a list row
+n = call.transcript_turns          # better: works without fetching the turns
+```
+
+Use the new `Call.transcript_turns` (an `int`, present on list rows too) to see
+whether there is anything worth fetching before you spend a `calls.get(call_id)`.
+
+### Added
+
+- **`client.domain_dictionaries`** - `list`, `get`, `upsert`, `attach`,
+  `detach`, `clone`, `delete`, plus the models `DomainDictionary`,
+  `DomainListItem` and `KVItem`. Present on both `AsyncClient` and the sync
+  `Client`. See [Domain Dictionaries](/speech-stack/domain-dictionaries).
+- **`domain=` on the agent surfaces** - `agents.voice.create(..., domain=...)`,
+  `agents.update(..., domain=...)` (pass `""` to detach, omit to leave the tag
+  alone) and the `AgentVoice.domain` field. Also on the deprecated
+  `pipes.create(...)` route and `Pipe` / `PipeCreate` / `PipeUpdate`.
+- **`Call.transcript_turns: int`** - turn count on list rows as well as detail
+  reads.
+- **`AgentVoice.voice_profile_name: str | None`** - the profile's display name,
+  joined server-side. Note `AgentVoice.name` is the **agent's** name; the two
+  are unrelated.
+
+### Fixed
+
+**Speech routes now use the canonical external mount.** `sessions`,
+`transcripts` and `recordings` used a short `/v1/...` form that is not an API
+path on the deployment - the edge redirected it, so the SDK received a redirect
+or HTML where it expected JSON. All now use `/api/v2/platform/speech/v1/...`
+(`calls` already did, which is why it worked while its siblings did not):
+
+- `sessions.list()`, `sessions.get()`, `sessions.create_token()`
+- `transcripts.list()`, `transcripts.get()`
+- `recordings.list()`
+
+Session **lifecycle** calls (`end`, `transfer`, `merge`) are unchanged - they
+target the orchestrator on a different base URL and keep the bare `/v1/...`
+form. See [Client, Auth & Planes](/speech-stack/client-auth#the-three-planes).
+
+---
+
+## 0.2.1 and earlier
+
+See the package's git history.
+
+---
+
+## Upgrade checklist: 0.2.x → 0.3.0
+
+<Steps>
+  <Step title="Fix every numbers.attach() call">
+    Grep for `numbers.attach(`. The second positional argument is now an
+    `agent_id`, not a `pipe_id`. Old calls raise `TypeError`, so this fails loudly
+    rather than silently mis-binding.
+  </Step>
+  <Step title="Guard len() on Call.transcript">
+    Grep for `.transcript`. Anything doing `len(call.transcript)` or iterating
+    it on a **list** row must handle `None`. Use `call.transcript_turns` for the
+    count.
+  </Step>
+  <Step title="Re-check sessions / transcripts / recordings">
+    If you had worked around these returning HTML or a redirect, remove the
+    workaround - they now return JSON.
+  </Step>
+  <Step title="Adopt domain dictionaries">
+    If your agents mishear domain jargon, author a dictionary and tag the agent.
+    Three bundled seeds (`banking`, `real_estate`, `hospital`) need no rows of
+    your own. See [Domain Dictionaries](/speech-stack/domain-dictionaries).
+  </Step>
+</Steps>
+
+---
+
+## Known gaps in the current release
+
+Documented so you do not build on them. Each is a surface that exists in the
+package but does not work end to end:
+
+| Surface | Status |
+|---|---|
+| `session.set_filler()` | Not implemented on the wire - **spoken aloud as a sentinel**. Use [domain dictionary fillers](/speech-stack/domain-dictionaries#fillers) |
+| `session.recording.pause()` / `.resume()` | Not implemented on the wire - **spoken aloud as a sentinel** |
+| `session.data["end_reason"]` | Never written by the SDK. Read `calls.get(call_id).end_reason` after the call |
+| `SIGTERM` handling | No signal handlers are installed - [install your own](/speech-stack/agent-runner#graceful-shutdown) |
+| `permits_per_minute` | Accepted but never read; rate limits nothing |
+| `RunnerStats.queued` | Always `0`; the runner never queues |
+| `CallContext.room` | Always `{}`; never assigned |
+| `user_partial`, `tool_call`, `tool_result`, `silence` hooks | [Register but never fire](/speech-stack/hooks-events#registrable-but-never-fired) |
+| `HTTPAdapter` `session_id` | Never populated; the key is always absent from the request body |
+| `Transcript` / `TurnTiming` per-stage timing | Exported models that no resource returns |
+| `client.numbers.delete()` / `.release()` | Target a route that does not exist. Use `detach()` |
+| `voice_profiles.list(language=...)` | Sent, but ignored server-side. Filter in Python |
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Client, Auth & Planes" icon="key" href="/speech-stack/client-auth">
+    Which credential reaches which resource.
+  </Card>
+  <Card title="Domain Dictionaries" icon="book-marked" href="/speech-stack/domain-dictionaries">
+    The headline feature of 0.3.0.
+  </Card>
+</CardGroup>

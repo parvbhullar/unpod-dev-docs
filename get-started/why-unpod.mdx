@@ -1,16 +1,48 @@
 ---
 title: 'Why Unpod'
-icon: 'sparkles'
-description: 'The intelligence layer for realtime AI.'
+description: 'The communication backend for agentic apps.'
 ---
 
-Train an agent on your use case. Use it like a model - over chat, realtime
-voice, or a phone number.
+**Unpod is the communication backend for agentic apps.** One SDK to build
+agents that call, message, email, remember context, run durable workflows,
+and react to every customer interaction in real time.
 
-## Why realtime agents fail
+Supabase made database, auth, storage and realtime feel like one backend —
+Unpod does the same for software that talks to people.
 
-Speech is solved. Telephony is solved. The layer that runs the conversation
-is where projects stall.
+## One backend problem
+
+The moment an agent's job is a human conversation, it inherits questions no
+model answers and no channel API solves: who is this person across channels?
+What happened before? Which channel right now? What happens when they reply
+tomorrow? Did it produce the outcome? Teams answer them by stitching together
+a channel API, a workflow engine, an agent framework, a database, a CRM, a
+vector store, and an observability stack. Those are not seven integration
+problems — they are one backend problem.
+
+## Four layers, one substrate
+
+Unpod answers it with four layers over a single substrate of communication
+state. The Calling Engine is the trusted anchor, but it is one Transport
+channel — an app can live on WhatsApp and email without placing a call.
+
+| Layer | Unpod primitives | Role |
+|---|---|---|
+| Communication state | Entities, Conversations, Context Graph, Outcomes | The durable system of record |
+| Execution | Flows, Journeys, Agent Workforce | Decides and performs what happens next |
+| Transport | Calling Engine, WhatsApp, Email, other Channels | Reaches the human |
+| Control | Teams, Policies, Events, Observability | Governs, secures and exposes execution |
+
+**Status:** the Calling Engine (~5 lakh calls a month on owned voice rails),
+Agent Workforce, Outcomes, and Teams carry production traffic today;
+Conversations, Flows & Journeys, and the unified event stream are in build.
+The [Core Engine overview](/core-engine/overview) walks the full map, with
+an honest status per component.
+
+## Why Execution and Transport are the hard layers
+
+Speech is solved. Telephony is solved. The layers that run the conversation
+are where projects stall.
 
 <CardGroup cols={1}>
   <Card title="Prompts lose the plot" icon="triangle-alert" horizontal>
@@ -28,6 +60,8 @@ is where projects stall.
 
 ## What Unpod runs
 
+This is why Unpod owns the runtime instead of wrapping a model:
+
 <CardGroup cols={1}>
   <Card title="Playbooks" icon="git-branch" horizontal>
     Conversations as checkpoints and outcomes, not prose. Every step is
@@ -35,8 +69,9 @@ is where projects stall.
   </Card>
   <Card title="Context layer" icon="layers" horizontal>
     Each turn gets only the context it needs - so the agent stays fast on a
-    third-party model, or faster on a fine-tuned ~1B SLM trained on your
-    workflows. Swap either way without touching the conversation.
+    third-party model, or - in early access - faster on a fine-tuned ~1B SLM
+    trained on your workflows ([Intelligence](/core-engine/intelligence)).
+    Swap either way without touching the conversation.
   </Card>
   <Card title="Sessions" icon="repeat" horizontal>
     Pass a session id and the agent keeps its state - across turns, and
@@ -44,7 +79,10 @@ is where projects stall.
   </Card>
 </CardGroup>
 
-## Use it like a model
+## Quickstarts
+
+The fastest path is the [Quickstart](/get-started/quickstart) - a real call
+placed and read back in six SDK calls. Or use a trained agent like a model:
 
 | Surface | I/O | Live in |
 |---|---|---|
@@ -91,7 +129,7 @@ stay where they are.
 
 <CardGroup cols={3}>
   <Card title="Getting Started" icon="play" href="/get-started/getting-started">
-    Your first request, in about 2 minutes.
+    Choose your path - and the right credential for it.
   </Card>
   <a className="pg-card" href="https://superdialog.unpod.ai/playground?tab=preview" target="_blank" rel="noreferrer">
     <span className="pg-card__badge">Try it</span>

@@ -14,6 +14,11 @@ It is the **brain** layer for conversational systems: it takes a prompt or an
 authored artifact and turns it into a running conversation runtime - managing
 turn-by-turn logic, tool calls, outcome tracking, and conversation memory.
 
+In the Unpod platform, SuperDialog is how you build the
+[Agent Workforce](/core-engine/agent-workforce) - the Execution layer of the
+[Core Engine](/core-engine/overview). Its defining rule: **the wire between
+Unpod and your code carries text, not audio** - you own the brain.
+
 <Frame>
   <img src="/images/diagrams/superdialog-text-loop.svg" alt="Animated SuperDialog text loop diagram showing user text entering the Agent protocol, agent.turn using tools and state, and reply text coming back." />
 </Frame>
