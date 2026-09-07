@@ -21,6 +21,8 @@ SIP - the speech pipeline and the carrier stay on Unpod's side.
   [unpod.ai/api-keys](https://unpod.ai/api-keys/)
 - `UNPOD_PLATFORM_TOKEN` plus `UNPOD_ORG_HANDLE` in the environment - needed
   for `voice_profiles.list()` during one-time setup
+- `UNPOD_SERVICE_BASE_URL="https://api.unpod.ai"` - the bare host override
+  needed by `client.numbers.attach()`
 - **A number in your account.** Provision one from the dashboard under
   **Dev Platform → Numbers**. No carrier account, no SIP trunk - see
   [Numbers](/speech-stack/numbers).
@@ -39,7 +41,9 @@ Provisioning uses the **Management API** - the REST half of the
 with `UNPOD_PLATFORM_TOKEN` plus `UNPOD_ORG_HANDLE`. The later REST calls on
 this page also work with `UNPOD_API_KEY`, and the runner still requires that
 API key for its own WebSocket connection. The REST endpoint derives from
-`UNPOD_BASE_URL` (default `api.unpod.ai` → `https://<host>/platform`).
+`UNPOD_BASE_URL`, but `client.numbers.attach()` needs the bare host override
+`UNPOD_SERVICE_BASE_URL="https://api.unpod.ai"` so its `/api/v2/platform/...`
+path does not get doubled under `/platform`.
 
 The Runner path drives the lower-level **pipes/numbers** surface directly -
 the [Quickstart](/get-started/quickstart)'s `agents.*` calls wrap the same
@@ -75,7 +79,7 @@ async def setup() -> None:
             "browser-playground",         # agent_id - must match AgentRunner's
             brain=Runner(),               # your own worker answers turns
             name="browser-agent",
-            voice_profile=vp.name,        # name (case-insensitive) or profile_id
+            voice_profile=vp.profile_id,  # profile_id is the safer key
             recording=True,
             max_call_duration_s=600,
         )
@@ -159,7 +163,7 @@ async def entrypoint(ctx: CallContext) -> None:
 def build_runner() -> AgentRunner:
     return AgentRunner(
         entrypoint=entrypoint,
-        agent_id=os.getenv("AGENT_ID", "my-runner-agent"),
+        agent_id=os.getenv("AGENT_ID", "browser-playground"),
         # base_url and api_key derive from UNPOD_BASE_URL / UNPOD_API_KEY
         # unless you pass explicit args here.
     )

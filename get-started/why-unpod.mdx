@@ -1,11 +1,13 @@
 ---
 title: 'Why Unpod'
+icon: 'sparkles'
 description: 'The communication backend for agentic apps.'
 ---
 
 **Unpod is the communication backend for agentic apps.** One SDK to build
-agents that call, message, email, remember context, run durable workflows,
-and react to every customer interaction in real time.
+agents that call, message, email, remember context, run durable journeys,
+and react to every customer interaction in real time. Use one primitive, or
+the whole backend.
 
 Supabase made database, auth, storage and realtime feel like one backend —
 Unpod does the same for software that talks to people.
@@ -20,6 +22,12 @@ a channel API, a workflow engine, an agent framework, a database, a CRM, a
 vector store, and an observability stack. Those are not seven integration
 problems — they are one backend problem.
 
+The substrate is not a channel — it is communication state: who the person
+is, which conversation this is, what happened, what outcome it produced, and
+which event that emitted. Agents, journeys, and intelligence blocks execute
+against that state; transport carries it to the human. That is why adding a
+channel changes routing, not your application's architecture.
+
 ## Four layers, one substrate
 
 Unpod answers it with four layers over a single substrate of communication
@@ -28,9 +36,9 @@ channel — an app can live on WhatsApp and email without placing a call.
 
 | Layer | Unpod primitives | Role |
 |---|---|---|
-| Communication state | Entities, Conversations, Context Graph, Outcomes | The durable system of record |
+| Communication state | Entities, Conversations, Context Graph, Outcomes | The durable system of record every channel reads and writes |
 | Execution | Flows, Journeys, Agent Workforce | Decides and performs what happens next |
-| Transport | Calling Engine, WhatsApp, Email, other Channels | Reaches the human |
+| Transport | Calling Engine, WhatsApp, Email, other Channels | Reaches the human; calling is the wedge, not the whole product |
 | Control | Teams, Policies, Events, Observability | Governs, secures and exposes execution |
 
 **Status:** the Calling Engine (~5 lakh calls a month on owned voice rails),
@@ -92,6 +100,9 @@ placed and read back in six SDK calls. Or use a trained agent like a model:
 
 Same trained agent, three ways in. Your orchestration, speech, and transport
 stay where they are.
+
+The adoption path is straightforward: first call → one channel → one entity →
+one agent → one journey → a reply wakes the journey → persistent context.
 
 <div className="ul-stack" role="img" aria-label="Layer diagram: agent platforms use Unpod, which builds on raw telephony providers.">
   <div className="ul-stack__title">Where Unpod sits</div>

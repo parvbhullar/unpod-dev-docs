@@ -38,6 +38,7 @@
           },
           {
             "group": "Quickstarts",
+            "icon": "rocket",
             "pages": [
               "get-started/quickstart",
               "get-started/realtime",
@@ -53,6 +54,7 @@
         "groups": [
           {
             "group": "Overview",
+            "icon": "compass",
             "pages": [
               "core-engine/overview"
             ]
@@ -242,6 +244,7 @@
           },
           {
             "group": "SDK Reference",
+            "icon": "code",
             "pages": [
               "speech-stack/client-auth",
               "speech-stack/sdk-changelog"
@@ -364,6 +367,7 @@
               "platform/studio-view/dashboard",
               {
                 "group": "Agents",
+                "icon": "bot",
                 "pages": [
                   "platform/studio-view/identity",
                   "platform/studio-view/persona",

@@ -1,6 +1,7 @@
 ---
 title: 'One backend, channels in, outcomes out'
 sidebarTitle: 'Overview'
+icon: 'layers'
 description: 'The Core Engine at a glance - communication state, execution, transport, and control as one backend for agentic apps.'
 ---
 
@@ -25,16 +26,9 @@ backend problem.
 
 The data plane every component reads from and writes to:
 
-```
-             Agents         Flows
-                \             /
-                 v           v
-CHANNELS ---> ENTITY -> CONVERSATION -> INTERACTION -> OUTCOME ---> EVENTS
-                  |                                |
-                  +--------- CONTEXT --------------+
-                 ^           ^
-              Teams       Policies
-```
+<Frame>
+  <img src="/images/diagrams/unpod-spine.svg" alt="Animated Unpod spine diagram: channels deliver to an entity, whose conversation carries interactions that resolve to outcomes and emit events, with the Context Graph underneath, Agents and Flows acting on the spine, and Teams and Policies governing it." />
+</Frame>
 
 Channels deliver to an entity; every touch belongs to a channel-neutral
 conversation; each call, message, or email is an interaction that produces a

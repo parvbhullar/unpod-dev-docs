@@ -1,5 +1,6 @@
 ---
 title: 'Flows & Journeys'
+icon: 'workflow'
 description: 'Durable communication workflows - versioned step sequences that entities traverse over hours or days.'
 ---
 
@@ -15,6 +16,11 @@ timing - branch on the [outcome](/core-engine/outcomes) of each step, and pause
 for a human to approve the next move. When the person replies on any channel,
 the inbound reply reaches the running journey as a signal and stops or branches
 it. Your agent never calls someone who already answered yesterday's email.
+
+The build model is `campaign -> flow -> journey`. A campaign is the
+customer-facing container; one linked flow defines the step sequence; one
+journey runs per contact through that flow. The execution rule stays small:
+the outcome of step `N` is the input of step `N+1`.
 
 <Note>
 Journey flows are campaign step sequences, a different concept from
@@ -39,6 +45,24 @@ calling - it dispatches a task to the
 directly today. The journey adds the before and after: when to place the call,
 and what its outcome means for the next step.
 
+## Step actions
+
+The first journey-engine shape is multi-step outreach. The step types map to
+existing dispatch surfaces rather than inventing a second calling system.
+
+| Step | Requires | Dispatch |
+|---|---|---|
+| Call | Voice agent + outbound number | Existing calling engine task |
+| WhatsApp | WABA connector + approved template | Provider connector |
+| Email | Sending identity + template or AI-composed body | Provider connector |
+| LinkedIn | Connected account | Provider connector |
+| Wait | Duration or smart-timing rule | In-workflow timer |
+| Human approval | Assignee or policy gate | Pause the journey, resume on signal |
+
+The important constraint is architectural: a call step does not place a call
+itself. It writes a task against the existing engine, watches the result, and
+records the outcome back on the same communication state.
+
 ## On the spine
 
 A journey is attached to one entity. It reads the entity's
@@ -48,6 +72,10 @@ interactions through Transport as tasks, and consumes the structured
 step. Every journey transition - started, step completed, waiting, signaled,
 exited - emits an [event](/core-engine/events), so the rest of your system can
 react without polling.
+
+An inbound reply on any connected channel is the load-bearing signal. It must
+be able to wake the running journey and stop or branch it, or outreach keeps
+calling people who already replied somewhere else.
 
 ## What stays hidden
 

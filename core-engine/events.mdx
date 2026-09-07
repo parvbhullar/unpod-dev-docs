@@ -1,5 +1,6 @@
 ---
 title: 'Events'
+icon: 'zap'
 description: 'Everything that happened, once - every state change emitted as
   an event your systems can consume.'
 ---
@@ -28,9 +29,9 @@ you missed.
 
 ## On the spine
 
-```
-ENTITY -> CONVERSATION -> INTERACTION -> OUTCOME ---> EVENTS
-```
+<Frame>
+  <img src="/images/diagrams/spine-events.svg" alt="Animated diagram: every write on the spine - entity, conversation, interaction, outcome - emits into the append-only event stream, which delivers to webhooks, subscriptions, replay, and waiting journeys." />
+</Frame>
 
 Events sit at the end of the spine and read all of it: every write to an
 entity, conversation, interaction, or outcome emits an event. They write

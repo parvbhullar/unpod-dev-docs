@@ -8,9 +8,10 @@ description: 'The Unpod Platform: an open-source, AI-native communication platfo
 
 Unpod is an **open-source, AI-native communication platform**
 ([github.com/unpod-ai/unpod](https://github.com/unpod-ai/unpod), MIT-licensed)
-for creating AI agents with dedicated phone numbers. Agents handle incoming
-calls and messages, filter communications intelligently, and deliver
-actionable insights - integrated with your existing business tools.
+for building agents that call, message, email, remember context, and execute
+durable workflows against one shared communication state. Dedicated phone
+numbers are the wedge, not the whole product: calls, messages, outcomes,
+journeys, and reporting live on the same backend.
 
 You can use it two ways:
 
@@ -29,6 +30,9 @@ The same platform powers both: agents you build in the cloud run identically
 on-prem, so you can start managed and move in-house (or the reverse) without
 rebuilding.
 
+The architectural rule is the same in both: adding a channel changes routing,
+not your application's data model.
+
 ## What the platform includes
 
 - **AI Voice Agents** - conversational agents powered by LLMs, with
@@ -37,6 +41,10 @@ rebuilding.
   workflows
 - **Multi-channel** - voice calls, WhatsApp, and email through one agent
   interface
+- **Shared communication state** - one entity, one conversation thread, one
+  outcome model across channels
+- **Journeys and outcomes** - durable follow-up flows that wait, branch, and
+  react when the person replies later
 - **Telephony** - dedicated phone numbers with SIP trunking and call routing
 - **Knowledge Base** - upload documents and data sources for RAG-powered
   responses

@@ -51,6 +51,7 @@ function svgFile(title, body) {
       .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: ${COLORS.text}; letter-spacing: 3px; }
       .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: ${COLORS.muted}; letter-spacing: 2px; }
       .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: ${COLORS.muted}; letter-spacing: 1px; }
+      .mid { font: 700 19px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: ${COLORS.text}; letter-spacing: 2px; }
       .panel { fill: url(#hatch); stroke: ${COLORS.gray}; stroke-width: 2; }
       .box { fill: ${COLORS.bg}; stroke: ${COLORS.gray}; stroke-width: 2.5; }
       .purple { stroke: ${COLORS.purple}; }
@@ -100,6 +101,12 @@ function smallBox(x, y, w, h, label, color = "gray") {
   const colorClass = color === "cyan" ? "cyan" : color === "purple" ? "purple" : "";
   return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12" class="box ${colorClass}"/>
   ${textBlock(x + w / 2, y + h / 2 + 6, label, "small")}`;
+}
+
+function node(x, y, w, h, label, color = "gray", cls = "") {
+  const colorClass = color === "cyan" ? "cyan" : color === "purple" ? "purple" : "";
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="14" class="box ${colorClass} ${cls}"/>
+  ${textBlock(x + w / 2, y + h / 2 + 7, label, "mid", "middle", 26)}`;
 }
 
 function pill(x, y, w, h, label, color = "cyan") {
@@ -509,4 +516,98 @@ write("telephony-routing-flow", "TELEPHONY ROUTING FLOW", `
   ${flow("M1124 454 H1238", "cyan")}
   ${lineLabel(595, 350, "ROUTING", "purple")}
   ${lineLabel(990, 350, "MEDIA", "cyan")}
+`);
+
+write("unpod-spine", "UNPOD SPINE", `
+  ${panel(560, 120, 560, 190, "EXECUTION - ACTS ON IT", "purple")}
+  ${node(600, 200, 228, 96, "AGENTS", "purple")}
+  ${node(852, 200, 228, 96, "FLOWS", "purple")}
+  ${node(43, 400, 196, 104, "CHANNELS", "purple")}
+  ${node(321, 400, 196, 104, "ENTITY", "cyan")}
+  ${node(599, 400, 196, 104, "CONVERSATION", "cyan")}
+  ${node(877, 400, 196, 104, "INTERACTION", "cyan")}
+  ${node(1155, 400, 196, 104, "OUTCOME", "cyan")}
+  ${node(1433, 400, 196, 104, "EVENTS", "purple")}
+  ${flow("M241 452 H313", "purple")}
+  ${flow("M519 452 H591", "cyan")}
+  ${flow("M797 452 H869", "cyan")}
+  ${flow("M1075 452 H1147", "cyan")}
+  ${flow("M1353 452 H1425", "purple")}
+  ${lineLabel(277, 386, "DELIVERS", "purple")}
+  ${lineLabel(555, 386, "OWNS", "cyan")}
+  ${lineLabel(833, 386, "EACH TOUCH", "cyan")}
+  ${lineLabel(1111, 386, "RESOLVES", "cyan")}
+  ${lineLabel(1389, 386, "EMITS", "purple")}
+  ${flow("M714 314 L700 392", "purple")}
+  ${flow("M966 314 L974 392", "purple")}
+  ${flow("M1531 396 C1531 306 1300 248 1090 248", "purple", true, "slow")}
+  ${lineLabel(1320, 330, "SIGNALS RESUME", "purple")}
+  ${lineLabel(141, 546, "TRANSPORT", "purple")}
+  ${lineLabel(836, 546, "COMMUNICATION STATE", "cyan")}
+  ${lineLabel(1531, 546, "CONTROL", "purple")}
+  ${panel(321, 578, 1030, 136, "CONTEXT GRAPH", "cyan")}
+  ${textBlock(836, 678, "FACTS - RELATIONSHIPS - SUMMARIES - VALIDITY", "tiny")}
+  ${flow("M1253 512 V570", "cyan")}
+  ${lineLabel(1316, 546, "FEEDS", "cyan")}
+  ${flow("M419 570 V512", "cyan")}
+  ${lineLabel(360, 546, "READS", "cyan")}
+  ${panel(321, 768, 1030, 152, "CONTROL - GOVERNS THE SPINE", "purple")}
+  ${smallBox(372, 832, 440, 64, "TEAMS + SPACES", "purple")}
+  ${smallBox(860, 832, 440, 64, "POLICIES + APPROVALS", "purple")}
+  ${flow("M592 764 V722", "purple")}
+  ${flow("M1080 764 V722", "purple")}
+`);
+
+write("spine-events", "EVENTS ON THE SPINE", `
+  ${panel(56, 150, 340, 740, "THE SPINE", "cyan")}
+  ${node(76, 240, 300, 110, "ENTITY", "cyan")}
+  ${node(76, 400, 300, 110, "CONVERSATION", "cyan")}
+  ${node(76, 560, 300, 110, "INTERACTION", "cyan")}
+  ${node(76, 720, 300, 110, "OUTCOME", "cyan")}
+  ${flow("M226 356 V392", "cyan")}
+  ${flow("M226 516 V552", "cyan")}
+  ${flow("M226 676 V712", "cyan")}
+  ${panel(640, 150, 380, 740, "EVENT STREAM", "cyan")}
+  ${node(680, 300, 300, 120, "EVENTS", "cyan", "pulse")}
+  ${smallBox(680, 500, 300, 64, "APPEND ONLY", "cyan")}
+  ${smallBox(680, 600, 300, 64, "ONCE-ONLY DELIVERY", "cyan")}
+  ${textBlock(830, 730, "STABLE SCHEMAS", "tiny")}
+  ${textBlock(830, 770, "BROKER STAYS HIDDEN", "tiny")}
+  ${flow("M400 295 H630", "cyan")}
+  ${flow("M400 455 H630", "cyan")}
+  ${flow("M400 615 H630", "cyan")}
+  ${flow("M400 775 H630", "cyan")}
+  ${lineLabel(515, 262, "EMITS", "cyan")}
+  ${panel(1230, 150, 380, 740, "CONSUMERS", "purple")}
+  ${node(1270, 250, 300, 100, "WEBHOOKS", "purple")}
+  ${node(1270, 390, 300, 100, "SUBSCRIPTIONS", "purple")}
+  ${node(1270, 530, 300, 100, "REPLAY", "purple")}
+  ${node(1270, 670, 300, 120, ["FLOWS +", "JOURNEYS"], "purple")}
+  ${flow("M1022 300 H1260", "purple")}
+  ${flow("M1022 440 H1260", "purple")}
+  ${flow("M1022 580 H1260", "purple")}
+  ${flow("M1022 730 H1260", "purple")}
+  ${lineLabel(1120, 268, "DELIVERS", "purple")}
+  ${lineLabel(1120, 700, "RESUMES", "purple")}
+`);
+
+write("spine-outcomes", "OUTCOME ON THE SPINE", `
+  ${node(560, 140, 460, 112, ["FLOWS + JOURNEYS"], "purple")}
+  ${node(80, 400, 320, 140, "INTERACTION", "purple")}
+  ${panel(536, 318, 508, 320, "OUTCOME RECORD", "cyan")}
+  ${smallBox(576, 402, 428, 68, "DEFAULT FIELDS", "cyan")}
+  ${smallBox(576, 492, 428, 68, "CUSTOM SCHEMA", "cyan")}
+  ${textBlock(790, 606, "VERSIONED - ONE PER INTERACTION", "tiny")}
+  ${node(1180, 400, 320, 140, "EVENTS", "purple")}
+  ${node(536, 736, 508, 120, "CONTEXT GRAPH", "cyan")}
+  ${flow("M402 470 H526", "cyan")}
+  ${lineLabel(464, 436, "TRANSCRIPT", "cyan")}
+  ${flow("M1046 470 H1170", "purple")}
+  ${lineLabel(1108, 436, "EMITS", "purple")}
+  ${flow("M790 642 V726", "cyan")}
+  ${lineLabel(878, 690, "ROLLS UP", "cyan")}
+  ${flow("M790 314 V260", "purple")}
+  ${lineLabel(886, 292, "BRANCHES ON", "purple")}
+  ${textBlock(240, 586, "TURNS + TOOL RESULTS", "tiny")}
+  ${textBlock(1340, 586, "POST-CALL WEBHOOK", "tiny")}
 `);

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941" role="img" aria-label="UNPOD SPINE">
+  <defs>
+    <pattern id="hatch" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="16" stroke="#1a1d22" stroke-width="3" opacity="0.7"/>
+    </pattern>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8d75ff"/>
+    </marker>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00d8e8"/>
+    </marker>
+    <style>
+      svg { background: #020303; }
+      .title { font: 700 44px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 9px; }
+      .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
+      .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
+      .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
+      .mid { font: 700 19px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 2px; }
+      .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
+      .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
+      .purple { stroke: #8d75ff; }
+      .cyan { stroke: #00d8e8; }
+      .purpleText { fill: #8d75ff; }
+      .cyanText { fill: #00d8e8; }
+      .flow { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 14 22; animation: dash 1.8s linear infinite; }
+      .flow.fast { animation-duration: 1.35s; }
+      .flow.slow { animation-duration: 2.4s; }
+      .dim { opacity: 0.72; }
+      .pulse { filter: url(#glow); animation: pulse 1.7s ease-in-out infinite; transform-origin: center; }
+      @keyframes dash { to { stroke-dashoffset: -36; } }
+      @keyframes pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .flow, .pulse { animation: none; }
+      }
+    </style>
+  </defs>
+  <rect width="1672" height="941" fill="#020303"/>
+  <text x="836" y="70" text-anchor="middle" class="title">UNPOD SPINE</text>
+  
+  <rect x="560" y="120" width="560" height="190" rx="18" class="panel purple"/>
+  <text x="840" y="164" text-anchor="middle" class="label purpleText">
+    <tspan x="840" dy="0">EXECUTION - ACTS ON IT</tspan>
+  </text>
+  <rect x="600" y="200" width="228" height="96" rx="14" class="box purple "/>
+  <text x="714" y="255" text-anchor="middle" class="mid">
+    <tspan x="714" dy="0">AGENTS</tspan>
+  </text>
+  <rect x="852" y="200" width="228" height="96" rx="14" class="box purple "/>
+  <text x="966" y="255" text-anchor="middle" class="mid">
+    <tspan x="966" dy="0">FLOWS</tspan>
+  </text>
+  <rect x="43" y="400" width="196" height="104" rx="14" class="box purple "/>
+  <text x="141" y="459" text-anchor="middle" class="mid">
+    <tspan x="141" dy="0">CHANNELS</tspan>
+  </text>
+  <rect x="321" y="400" width="196" height="104" rx="14" class="box cyan "/>
+  <text x="419" y="459" text-anchor="middle" class="mid">
+    <tspan x="419" dy="0">ENTITY</tspan>
+  </text>
+  <rect x="599" y="400" width="196" height="104" rx="14" class="box cyan "/>
+  <text x="697" y="459" text-anchor="middle" class="mid">
+    <tspan x="697" dy="0">CONVERSATION</tspan>
+  </text>
+  <rect x="877" y="400" width="196" height="104" rx="14" class="box cyan "/>
+  <text x="975" y="459" text-anchor="middle" class="mid">
+    <tspan x="975" dy="0">INTERACTION</tspan>
+  </text>
+  <rect x="1155" y="400" width="196" height="104" rx="14" class="box cyan "/>
+  <text x="1253" y="459" text-anchor="middle" class="mid">
+    <tspan x="1253" dy="0">OUTCOME</tspan>
+  </text>
+  <rect x="1433" y="400" width="196" height="104" rx="14" class="box purple "/>
+  <text x="1531" y="459" text-anchor="middle" class="mid">
+    <tspan x="1531" dy="0">EVENTS</tspan>
+  </text>
+  <path d="M241 452 H313" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <path d="M519 452 H591" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M797 452 H869" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M1075 452 H1147" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <path d="M1353 452 H1425" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <text x="277" y="386" text-anchor="middle" class="tiny purpleText">
+    <tspan x="277" dy="0">DELIVERS</tspan>
+  </text>
+  <text x="555" y="386" text-anchor="middle" class="tiny cyanText">
+    <tspan x="555" dy="0">OWNS</tspan>
+  </text>
+  <text x="833" y="386" text-anchor="middle" class="tiny cyanText">
+    <tspan x="833" dy="0">EACH TOUCH</tspan>
+  </text>
+  <text x="1111" y="386" text-anchor="middle" class="tiny cyanText">
+    <tspan x="1111" dy="0">RESOLVES</tspan>
+  </text>
+  <text x="1389" y="386" text-anchor="middle" class="tiny purpleText">
+    <tspan x="1389" dy="0">EMITS</tspan>
+  </text>
+  <path d="M714 314 L700 392" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <path d="M966 314 L974 392" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <path d="M1531 396 C1531 306 1300 248 1090 248" class="flow purple slow" stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <text x="1320" y="330" text-anchor="middle" class="tiny purpleText">
+    <tspan x="1320" dy="0">SIGNALS RESUME</tspan>
+  </text>
+  <text x="141" y="546" text-anchor="middle" class="tiny purpleText">
+    <tspan x="141" dy="0">TRANSPORT</tspan>
+  </text>
+  <text x="836" y="546" text-anchor="middle" class="tiny cyanText">
+    <tspan x="836" dy="0">COMMUNICATION STATE</tspan>
+  </text>
+  <text x="1531" y="546" text-anchor="middle" class="tiny purpleText">
+    <tspan x="1531" dy="0">CONTROL</tspan>
+  </text>
+  <rect x="321" y="578" width="1030" height="136" rx="18" class="panel cyan"/>
+  <text x="836" y="622" text-anchor="middle" class="label cyanText">
+    <tspan x="836" dy="0">CONTEXT GRAPH</tspan>
+  </text>
+  <text x="836" y="678" text-anchor="middle" class="tiny">
+    <tspan x="836" dy="0">FACTS - RELATIONSHIPS - SUMMARIES - VALIDITY</tspan>
+  </text>
+  <path d="M1253 512 V570" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <text x="1316" y="546" text-anchor="middle" class="tiny cyanText">
+    <tspan x="1316" dy="0">FEEDS</tspan>
+  </text>
+  <path d="M419 570 V512" class="flow cyan " stroke="#00d8e8" marker-end="url(#arrow-cyan)"/>
+  <text x="360" y="546" text-anchor="middle" class="tiny cyanText">
+    <tspan x="360" dy="0">READS</tspan>
+  </text>
+  <rect x="321" y="768" width="1030" height="152" rx="18" class="panel purple"/>
+  <text x="836" y="812" text-anchor="middle" class="label purpleText">
+    <tspan x="836" dy="0">CONTROL - GOVERNS THE SPINE</tspan>
+  </text>
+  <rect x="372" y="832" width="440" height="64" rx="12" class="box purple"/>
+  <text x="592" y="870" text-anchor="middle" class="small">
+    <tspan x="592" dy="0">TEAMS + SPACES</tspan>
+  </text>
+  <rect x="860" y="832" width="440" height="64" rx="12" class="box purple"/>
+  <text x="1080" y="870" text-anchor="middle" class="small">
+    <tspan x="1080" dy="0">POLICIES + APPROVALS</tspan>
+  </text>
+  <path d="M592 764 V722" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+  <path d="M1080 764 V722" class="flow purple " stroke="#8d75ff" marker-end="url(#arrow-purple)"/>
+
+</svg>

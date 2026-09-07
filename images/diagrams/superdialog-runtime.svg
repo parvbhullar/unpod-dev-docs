@@ -23,6 +23,7 @@
       .label { font: 700 22px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 3px; }
       .small { font: 700 17px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 2px; }
       .tiny { font: 700 15px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #a8abb4; letter-spacing: 1px; }
+      .mid { font: 700 19px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #f0f0f0; letter-spacing: 2px; }
       .panel { fill: url(#hatch); stroke: #4a4d55; stroke-width: 2; }
       .box { fill: #020303; stroke: #4a4d55; stroke-width: 2.5; }
       .purple { stroke: #8d75ff; }

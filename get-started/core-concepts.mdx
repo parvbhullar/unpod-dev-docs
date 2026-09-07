@@ -1,5 +1,6 @@
 ---
 title: 'How Unpod fits together'
+icon: 'network'
 description: 'The single source of truth for Unpod terminology - every term defined once, with deep links.'
 ---
 
@@ -11,16 +12,9 @@ off one data plane - the spine.
 
 ## The Spine
 
-```
-             Agents         Flows
-                \             /
-                 v           v
-CHANNELS ---> ENTITY -> CONVERSATION -> INTERACTION -> OUTCOME ---> EVENTS
-                  |                                |
-                  +--------- CONTEXT --------------+
-                 ^           ^
-              Teams       Policies
-```
+<Frame>
+  <img src="/images/diagrams/unpod-spine.svg" alt="Animated Unpod spine diagram: channels deliver to an entity, whose conversation carries interactions that resolve to outcomes and emit events, with the Context Graph underneath, Agents and Flows acting on the spine, and Teams and Policies governing it." />
+</Frame>
 
 Read it as: channels deliver to an entity; every touch belongs to a
 channel-neutral conversation; each call, message, or email is an interaction;

@@ -1,5 +1,6 @@
 ---
 title: 'Outcomes'
+icon: 'clipboard-check'
 description: 'The structured result of every interaction - not a log entry,
   the actual condition the next step reads.'
 ---
@@ -30,11 +31,9 @@ read.
 
 ## On the spine
 
-```
-INTERACTION -> OUTCOME ---> EVENTS
-          |       |
-          +-- CONTEXT
-```
+<Frame>
+  <img src="/images/diagrams/spine-outcomes.svg" alt="Animated diagram: a finished interaction produces one versioned outcome record with default fields and a custom schema, which emits an event, rolls up into the Context Graph, and is what flows and journeys branch on." />
+</Frame>
 
 Outcomes read the finished interaction - transcript, turns, tool results -
 and write one structured record against it, which rolls up into the

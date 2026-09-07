@@ -46,8 +46,9 @@ asyncio.run(main())
 | Reports `connection_state` | **Yes** | No |
 | Verdict | **Primary** | Works, but `delete()`/`release()` target dead routes |
 
-Use `client.numbers` when a plain API key is all you have; use this namespace
-for batch attach, SBC state, and the cross-plane audit.
+Use `client.numbers` when you need the management-plane, `number_id`-keyed
+single-number flow; use this namespace for the primary attach path, batch
+attach, SBC state, and the cross-plane audit.
 
 ---
 
