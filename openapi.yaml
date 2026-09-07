@@ -237,61 +237,248 @@ paths:
           schema:
             type: string
             example: "space-agent-8qmk42nslp91wrh3dz7btxc4"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            example: 20
         - $ref: '#/components/parameters/OrgHandle'
       responses:
         '200':
           description: List of tasks for the agent
           content:
             application/json:
-              example:
-                count: 1
-                status_code: 200
-                message: "Tasks Fetched Successfully"
-                data:
-                  - _id: "697debb84c27faa892bfa0cc"
-                    thread_id: "thread_9xkL2mQpR7vNwY4sZ3cJ8hF1"
-                    user_info:
-                      email: "user@example.com"
-                      full_name: "John Doe"
-                    task_id: "T8ff2ccdffe9a11f0878d43cd8a99e069"
-                    run_id: "R8ff2ccdefe9a11f0878d43cd8a99e069"
-                    task:
-                      objective: "Call the lead and discuss the project requirements."
-                    input:
-                      name: "John Doe"
-                      contact_number: "1234567890"
-                      email: "john@example.com"
-                      context: "Follow up on proposal"
-                    output:
-                      call_id: "CALL_7dAb3kR9mXvQ2pLw"
-                      call_end_reason: "caller_hangup"
-                      start_time: "2026-02-07T05:57:45Z"
-                      end_time: "2026-02-07T06:02:30Z"
-                      assistant_number: "+911234567890"
-                      call_summary: "The agent successfully connected with John Doe and discussed project requirements."
-                      duration: 285
-                      recording_url: "https://cdn.unpod.dev/recordings/CALL_7dAb3kR9mXvQ2pLw.mp3"
-                      transcript:
-                        - role: "agent"
-                          content: "Hello, this is an AI assistant. Am I speaking with John Doe?"
-                        - role: "user"
-                          content: "Yes, this is John."
-                      post_call_data:
-                        summary: "Agent connected with John Doe and discussed project requirements."
-                        outcome: "interested"
-                        sentiment: "positive"
-                      call_type: "outbound"
-                      call_status: "completed"
-                    attachments: []
-                    assignee: "space-agent-8qmk42nslp91wrh3dz7btxc4"
-                    status: "completed"
-                    execution_type: "call"
-                    ref_id: "6902fb5840a736e125e80ebc"
-                    failure_count: 0
-                    last_failure_reason: null
-                    retry_attempt: 0
-                    last_status_change: "2026-02-07T06:02:35Z"
-                    scheduled_timestamp: null
+              examples:
+                v1:
+                  summary: Legacy response (v1)
+                  value:
+                    count: 1
+                    status_code: 200
+                    message: Tasks Fetched Successfully
+                    data:
+                    - _id: 697debb84c27faa892bfa0cc
+                      thread_id: thread_9xkL2mQpR7vNwY4sZ3cJ8hF1
+                      user_info:
+                        email: user@example.com
+                        full_name: John Doe
+                      task_id: T8ff2ccdffe9a11f0878d43cd8a99e069
+                      run_id: R8ff2ccdefe9a11f0878d43cd8a99e069
+                      task:
+                        objective: Call the lead and discuss the project requirements.
+                      input:
+                        name: John Doe
+                        contact_number: '1234567890'
+                        email: john@example.com
+                        context: Follow up on proposal
+                      output:
+                        call_id: CALL_7dAb3kR9mXvQ2pLw
+                        call_end_reason: caller_hangup
+                        start_time: '2026-02-07T05:57:45Z'
+                        end_time: '2026-02-07T06:02:30Z'
+                        assistant_number: '+911234567890'
+                        call_summary: The agent successfully connected with John Doe and discussed project requirements.
+                        duration: 285
+                        recording_url: https://cdn.unpod.dev/recordings/CALL_7dAb3kR9mXvQ2pLw.mp3
+                        transcript:
+                        - role: agent
+                          content: Hello, this is an AI assistant. Am I speaking with John Doe?
+                        - role: user
+                          content: Yes, this is John.
+                        post_call_data:
+                          summary: Agent connected with John Doe and discussed project requirements.
+                          outcome: interested
+                          sentiment: positive
+                        call_type: outbound
+                        call_status: completed
+                      attachments: []
+                      assignee: space-agent-8qmk42nslp91wrh3dz7btxc4
+                      status: completed
+                      execution_type: call
+                      ref_id: 6902fb5840a736e125e80ebc
+                      failure_count: 0
+                      last_failure_reason: null
+                      retry_attempt: 0
+                      last_status_change: '2026-02-07T06:02:35Z'
+                      scheduled_timestamp: null
+                v2:
+                  summary: Current response (v2) - grouped post_call_data, schema_version 2
+                  value:
+                    count: 38
+                    status_code: 200
+                    message: Tasks Fetched Successfully
+                    data:
+                    - _id: 697debb84c27faa892bfa0cd
+                      space_id: '42'
+                      thread_id: ''
+                      user: ''
+                      user_org_id: '101'
+                      user_info: {}
+                      created: '2026-02-07T05:51:51.607000'
+                      modified: '2026-02-07T05:54:03.857000'
+                      task_id: T1a2b3c4dfe9a11f0878d43cd8a99e069
+                      run_id: R1a2b3c4cfe9a11f0878d43cd8a99e069
+                      collection_ref: collection_data_SPTKN4XQ7M2VB9YH3KD8WZ1L
+                      task: {}
+                      input:
+                        contact_number: '+911234567890'
+                        quality: good
+                        name: ''
+                        token: SPTKN4XQ7M2VB9YH3KD8WZ1L
+                        space_token: SPTKN4XQ7M2VB9YH3KD8WZ1L
+                        org_id: 101
+                        missing_space_context: false
+                      output:
+                        call_type: inbound
+                        call_status: connected
+                        call_end_reason: USER_HUNG_UP_IN_CALL
+                      attachments: []
+                      assignee: space-agent-8qmk42nslp91wrh3dz7btxc4
+                      status: in_progress
+                      execution_type: call
+                      ref_id: 6902fb5840a736e125e80ebc
+                      failure_count: 0
+                      last_failure_reason: null
+                      provider: null
+                      retry_attempt: 0
+                      referenced_task: null
+                      follow_up_count: null
+                      follow_up_chain_id: null
+                      last_status_change: '2026-02-07T05:51:51.606885'
+                      scheduled_timestamp: null
+                    - _id: 697debb84c27faa892bfa0ce
+                      space_id: '42'
+                      thread_id: ''
+                      user: ''
+                      user_org_id: '101'
+                      user_info: {}
+                      created: '2026-02-07T05:47:38.682000'
+                      modified: '2026-02-07T05:51:28.673000'
+                      task_id: T5e6f7a8bfe9a11f0878d43cd8a99e069
+                      run_id: R5e6f7a8afe9a11f0878d43cd8a99e069
+                      collection_ref: collection_data_SPTKN4XQ7M2VB9YH3KD8WZ1L
+                      task: {}
+                      input:
+                        contact_number: '+911234567890'
+                        quality: good
+                        name: ''
+                        token: SPTKN4XQ7M2VB9YH3KD8WZ1L
+                        space_token: SPTKN4XQ7M2VB9YH3KD8WZ1L
+                        org_id: 101
+                        missing_space_context: false
+                      output:
+                        call_id: Unpod Bridge_1234567890_jC8KHDuwGuBi
+                        customer: ''
+                        contact_number: '+911234567890'
+                        call_end_reason: BLOCKED_USER
+                        recording_url: null
+                        transcript: []
+                        start_time: '2026-02-07T05:47:39.119969'
+                        end_time: '2026-02-07T05:47:39.119980'
+                        assistant_number: '+919876543210'
+                        call_summary: null
+                        duration: 0
+                        cost: 0.0
+                        post_call_data:
+                          schema_version: 2
+                          analytics:
+                            sentiment: null
+                            engagement: null
+                            tone: null
+                            contact_status: active
+                            outcome: NotConnected
+                            call_score: null
+                            call_score_breakdown: null
+                          summary:
+                            headline: null
+                            key_points: []
+                          lead:
+                            name: null
+                            labels: []
+                            objections: []
+                            pain_points: []
+                            questions_asked: []
+                          structured_data:
+                            outcome: null
+                            payment_release_choice: null
+                          next_action:
+                            label: []
+                            callback_requested: false
+                            scheduled_at: null
+                          follow_up:
+                            required: true
+                            state: skipped_inbound_call
+                            reason: not-connected retry
+                            next_at: null
+                            attempt: 1
+                            attempts_remaining: 2
+                            policy:
+                              max_call_attempts: 3
+                              max_followup_attempts: 2
+                              daily_limit: 3
+                              next_call_attempt_number: 2
+                          evaluation: null
+                          call_evaluation: null
+                          redial:
+                            status: null
+                          skipped:
+                          - stage: call_evaluation
+                            reason: policy:disabled_in_config
+                          - stage: critic
+                            reason: no_invariant_violations
+                          post_call_usage:
+                            thread_id: T5e6f7a8bfe9a11f0878d43cd8a99e069
+                            room_name: ''
+                            agent_id: space-agent-8qmk42nslp91wrh3dz7btxc4
+                            org_id: null
+                            space_token: null
+                            call_start: '2026-02-07T05:51:28.326798Z'
+                            call_end: '2026-02-07T05:51:28.326798Z'
+                            call_duration_s: '0.00'
+                            providers:
+                              llm_provider: Unpod
+                              llm_model: google/gemma-4-31b-it
+                              stt_provider: soniox
+                              stt_model: stt-rt-v5
+                              tts_provider: cartesia
+                              tts_model: sonic-3.5
+                            raw_counters:
+                              llm_prompt_tokens: '1508'
+                              llm_completion_tokens: '127'
+                              llm_cached_tokens: '0'
+                              tts_characters_count: '0'
+                              stt_audio_duration: '0'
+                            sku_deltas:
+                            - codename: llm.unpod.google/gemma_4_31b_it.input
+                              raw: '1508'
+                              unit_scale: '1'
+                            - codename: llm.unpod.google/gemma_4_31b_it.output
+                              raw: '127'
+                              unit_scale: '1'
+                        metadata:
+                          cost: 0.0
+                          type: ''
+                          usage: {}
+                        call_type: inbound
+                        call_status: failed
+                      attachments: []
+                      assignee: space-agent-8qmk42nslp91wrh3dz7btxc4
+                      status: completed
+                      execution_type: call
+                      ref_id: 6902fb5840a736e125e80ebc
+                      failure_count: 0
+                      last_failure_reason: null
+                      provider: null
+                      retry_attempt: 0
+                      referenced_task: null
+                      follow_up_count: null
+                      follow_up_chain_id: null
+                      last_status_change: '2026-02-07T05:47:38.682017'
+                      scheduled_timestamp: null
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
