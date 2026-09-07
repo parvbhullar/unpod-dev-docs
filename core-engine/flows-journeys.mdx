@@ -1,0 +1,85 @@
+---
+title: 'Flows & Journeys'
+description: 'Durable communication workflows - versioned step sequences that entities traverse over hours or days.'
+---
+
+Flows & Journeys are durable communication workflows. A **flow** is the plan: a
+versioned sequence of steps - call, message, wait, branch, human approval,
+exit. A **journey** is one entity's traversal of one flow. When a journey
+starts, the plan is copied for that entity, so editing a flow never mutates
+journeys already in flight.
+
+The point of the split is time. A single call lasts minutes; a real outreach
+sequence spans days. Journeys wait between steps - a fixed delay or smart
+timing - branch on the [outcome](/core-engine/outcomes) of each step, and pause
+for a human to approve the next move. When the person replies on any channel,
+the inbound reply reaches the running journey as a signal and stops or branches
+it. Your agent never calls someone who already answered yesterday's email.
+
+<Note>
+Journey flows are campaign step sequences, a different concept from
+SuperDialog's conversation-graph flows, which drive turns inside a single
+conversation. See [SuperDialog](/superdialog/introduction) for that engine.
+</Note>
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| Flows | The versioned step sequence - the plan | In build (journey engine) |
+| Steps | One unit in the sequence: a call, a message, a wait, a branch, an approval, an exit | Call steps run as tasks - [Make Call task](/api/execution/task-make-call-overview) |
+| Journeys | One entity's traversal of one flow, with the plan copied per entity | In build; step executions surface as [runs](/api/execution/runs-overview) |
+| Waits | The gap between steps - a fixed duration or smart timing | In build |
+| Signals | External input a running journey reacts to: an inbound reply, a human approval, a cancel | In build |
+
+Tasks are the unit of work inside Execution. A call step does not reimplement
+calling - it dispatches a task to the
+[Calling Engine](/core-engine/calling-engine) unchanged, the same
+[Make Call task](/api/execution/task-make-call-overview) you can dispatch
+directly today. The journey adds the before and after: when to place the call,
+and what its outcome means for the next step.
+
+## On the spine
+
+A journey is attached to one entity. It reads the entity's
+[context](/core-engine/context-graph) when choosing a branch, dispatches
+interactions through Transport as tasks, and consumes the structured
+[outcome](/core-engine/outcomes) each interaction produces to decide the next
+step. Every journey transition - started, step completed, waiting, signaled,
+exited - emits an [event](/core-engine/events), so the rest of your system can
+react without polling.
+
+## What stays hidden
+
+The workflow engine underneath - Temporal-style durable execution, timer
+persistence, retry semantics, replay - is deliberately not exposed. You define
+flows in terms of steps, waits, and signals; how a journey survives a restart
+or holds a three-day timer is Unpod's problem, not a queue you operate.
+
+## Status
+
+**In build.** The journey engine - waits, outcome branching, and human
+approval steps - is shipping in the open. Call steps are real today: dispatch
+them as [tasks](/api/execution/task-make-call-overview) and inspect
+[runs](/api/execution/runs-overview). Approval steps ship with the journey
+engine alongside [Teams & Policies](/core-engine/teams-policies).
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Outcomes" icon="clipboard-check" href="/core-engine/outcomes">
+    The structured results journeys branch on.
+  </Card>
+  <Card title="Agent Workforce" icon="users" href="/core-engine/agent-workforce">
+    The workers that execute call and action steps.
+  </Card>
+  <Card title="Events" icon="radio" href="/core-engine/events">
+    Every journey transition, emitted once.
+  </Card>
+  <Card title="Make Call task" icon="phone-outgoing" href="/api/execution/task-make-call-overview">
+    Dispatch a call as a task today.
+  </Card>
+  <Card title="Runs API" icon="list-checks" href="/api/execution/runs-overview">
+    Inspect task executions.
+  </Card>
+</CardGroup>

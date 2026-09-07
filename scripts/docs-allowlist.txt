@@ -10,3 +10,4 @@ telephony/integrations/retell
 telephony/integrations/twilio/api
 telephony/integrations/twilio/dashboard
 telephony/integrations/webrtc
+get-started/chat

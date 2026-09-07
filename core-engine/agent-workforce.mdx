@@ -1,0 +1,77 @@
+---
+title: 'Agent Workforce'
+description: 'Workers that communicate and act, spun up per task - one agent, one step, one entity.'
+---
+
+The Agent Workforce is workers that communicate and act. Each worker is an
+agent - voice, action, chat or browser - that runs against the instructions
+it was given, on one step, for one entity, spun up per task and torn down
+when the task completes. Not every kind ships today - see
+[Status](#status). There is no long-lived agent process holding state
+between customers; state lives on the spine, workers are disposable.
+
+**Tasks are the unit of work.** A task says: run this agent, with this
+instruction set, for this entity, now. Calling already runs this way - every
+outbound call is a task dispatched to a voice agent - through the
+[Task API](/api/execution/task-make-call-overview). Guardrails and human
+handoff are built in: a worker that hits a policy boundary or an escalation
+condition hands the conversation to a person instead of improvising.
+
+You build these workers with [SuperDialog](/superdialog/introduction), the
+open-source agent framework, and a
+[playbook](/playbook/what-is-a-playbook) is the instruction set a worker
+runs against. SuperDialog's defining rule -
+[the wire carries text, not audio](/superdialog/introduction) - is what lets
+the same playbook drive a phone call, a chat thread, or a browser session.
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| Agents | A worker built on SuperDialog, spun up per task | [Build an agent](/playbook/build-an-agent) |
+| Tools | Actions a worker can take mid-conversation | [SuperDialog tools](/superdialog/tools) |
+| Policies | Guardrails on what a worker may say and do | [Teams & Policies](/core-engine/teams-policies) |
+| Handoffs | Escalation from a worker to a human, mid-interaction | [Call lifecycle](/speech-stack/call-lifecycle) (voice) |
+
+## On the spine
+
+A worker reads context and the entity it was dispatched for, then acts:
+each task produces an interaction on the entity's conversation, and each
+interaction closes with a structured outcome. Task dispatch, tool calls,
+handoffs and completion all emit events. Workers never write to the spine
+directly outside their task - what a worker learned reaches the Context
+Graph through the outcome, not through a side channel.
+
+## What stays hidden
+
+Model-provider orchestration internals stay hidden: which LLM served a
+given turn, provider failover, prompt assembly, and inference routing.
+You declare the playbook and the tools; the workforce decides how to run
+them. A provider outage is Unpod's problem, not a change to your agent.
+
+## Status
+
+Production. Voice and action agents carry production traffic today, spun
+up per task with guardrails and human handoff. Browser agents are in
+build. Chat runs through the same workers via the
+[Chat API](/get-started/chat).
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="SuperDialog" icon="git-branch" href="/superdialog/introduction">
+    The open-source framework you build workers with.
+  </Card>
+  <Card title="What is a playbook" icon="book-open" href="/playbook/what-is-a-playbook">
+    The instruction set a worker runs against.
+  </Card>
+  <Card title="Build an agent" icon="hammer" href="/playbook/build-an-agent">
+    From a blank playbook to a running worker.
+  </Card>
+  <Card title="Task API" icon="phone-outgoing" href="/api/execution/task-make-call-overview">
+    Dispatch a task - calling runs this way today.
+  </Card>
+  <Card title="Flows & Journeys" icon="route" href="/core-engine/flows-journeys">
+    The workflows that dispatch tasks to the workforce.
+  </Card>
+</CardGroup>

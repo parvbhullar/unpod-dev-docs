@@ -1,0 +1,72 @@
+---
+title: 'Intelligence'
+description: 'Definable intelligence blocks that turn conversations into structure - and the per-org model your communication state trains.'
+---
+
+Intelligence is **definable blocks**: a block takes communication in and
+writes structure out - extraction, qualification & scoring, summarization,
+sentiment & intent, evaluation, or a custom block you define. Today blocks
+run on call outcomes; where the system is headed is placement anywhere in
+the pipeline - attached to a single step, a conversation, or the whole
+stream (in build). Every insight lands back in communication state, where
+the next block - and the next agent - can read it.
+
+That loop is the point. Because outcomes accumulate in one durable system of
+record, the memory can become a model: outcomes feed a dataset builder, the
+dataset drives RL simulation, and the result is a per-org SLM (~1B) served at
+your inference endpoint. You keep the trained model. A competitor arriving
+later starts at zero on the one input that cannot be bought, scraped, or
+copied: your own conversation history.
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| Blocks | A defined unit of analysis (extraction, scoring, summarization, sentiment & intent, evaluation, custom) attached to a step, a conversation, or the stream | Extraction, scoring, and summarization run on call outcomes - see [Post-call data](/api/post-call-data) |
+| Datasets | Outcome history from communication state, assembled by the dataset builder into training data | Early access, with SLM training |
+| Evaluations | Blocks that score whether a conversation did its job, per turn or per outcome | [SuperDialog evals](/superdialog/evals) is the callable surface today |
+| Trained models | The per-org SLM (~1B) trained on your outcomes and served at your inference endpoint | Early access |
+
+## On the spine
+
+Blocks read interactions, outcomes, and context; they never touch the audio
+path. What a block produces is written back to communication state - onto the
+[outcome](/core-engine/outcomes) it analyzed or into the
+[Context Graph](/core-engine/context-graph) - so downstream blocks and agents
+read it as ordinary state, not as a side channel. Each insight written emits
+an event, like any other change on the spine.
+
+## What stays hidden
+
+The training pipeline internals: how the dataset builder samples and labels
+outcomes, the RL simulation environment, and the fine-tuning stack behind the
+per-org SLM. You define blocks, ratify evaluations, and call the inference
+endpoint; how the model gets from your outcomes to that endpoint is not a
+surface you configure.
+
+## Status
+
+- Definable blocks: extraction, scoring, and summarization run on call
+  outcomes in production today via [Post-call data](/api/post-call-data);
+  placement on arbitrary steps and streams is in build.
+- Evaluations: conversation-level evals callable today through
+  [SuperDialog evals](/superdialog/evals).
+- Per-org SLM training (datasets, RL simulation, trained models): early
+  access.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Post-call data" icon="file-text" href="/api/post-call-data">
+    The API where extraction, scoring, and summarization results land today.
+  </Card>
+  <Card title="Outcomes" icon="target" href="/core-engine/outcomes">
+    The structured records blocks read from and write back to.
+  </Card>
+  <Card title="Context Graph" icon="waypoints" href="/core-engine/context-graph">
+    Where insights persist as retrievable communication memory.
+  </Card>
+  <Card title="SuperDialog evals" icon="list-checks" href="/superdialog/evals">
+    Score conversations against ratified expectations.
+  </Card>
+</CardGroup>

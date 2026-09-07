@@ -1,0 +1,81 @@
+---
+title: 'Calling Engine'
+description: 'A programmable realtime voice runtime - owned voice rails that turn a live phone call into text your code can act on.'
+---
+
+The Calling Engine is a programmable realtime voice runtime. It owns the
+rails nobody sane builds twice: phone numbers, SIP/PSTN carriage, the media
+gateway, STT routing, in-house TTS, the voice model router, voice profiles,
+VAD and barge-in. It runs in production at roughly 5 lakh calls a month.
+
+It is Unpod's distribution wedge and its trusted infrastructure anchor - and
+it is exactly one Transport channel of the [Core Engine](/core-engine/overview),
+not the substrate. The durable record of who was called and what happened
+lives in communication state; the Calling Engine's job is to reach the human
+and hand the conversation to your code as text. Your agent sees text in, text
+out. Everything between the caller's audio and that text - transcription,
+synthesis, turn detection, interruption handling, carrier failover - is the
+engine's problem, not yours.
+
+The developer surface for all of this today is the
+[Speech Stack](/speech-stack/introduction).
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| Calls | One live voice session, inbound or outbound, from ring to hangup | [Call lifecycle](/speech-stack/call-lifecycle), [Outbound calls](/speech-stack/outbound-calls) |
+| Numbers | Phone numbers callers dial - provisioned from Unpod or brought your own | [Numbers](/speech-stack/numbers) |
+| SIP | Carrier-grade SIP/PSTN carriage; a trunk only when you bring your own number | [Telephony](/telephony/introduction) |
+| Transfers | Handing a live call to a human or another destination | [Call lifecycle](/speech-stack/call-lifecycle) |
+| Streams | Realtime audio sessions from a browser or app - same pipeline, no number | [Realtime](/get-started/realtime) - via the hosted Playground today; the Web SDK is not yet published |
+
+## On the spine
+
+The Calling Engine sits in the Transport layer: it reaches the human. A call
+arrives on a number (or a stream opens from an app), the engine resolves who
+is on the line, and the conversation runs as one interaction. When the call
+ends, the engine writes the transcript, recording, and metrics, and the
+interaction reports a structured outcome. Post-call webhooks fire so the rest
+of your system - and yours alone - reacts to what happened. See
+[Hooks and events](/speech-stack/hooks-events).
+
+## What stays hidden
+
+You never see STT/TTS routing internals or the RTP/media topology. Which
+recognition provider handled a given utterance, how the voice model router
+failed over mid-call, where media servers sit and how packets move between
+them - these change constantly as the rails improve, and exposing them would
+turn every upgrade into your migration. You pick a
+[voice profile](/speech-stack/introduction); the engine owns the rest.
+
+## Status
+
+**Production.** Owned voice rails carrying roughly 5 lakh calls a month.
+Numbers, inbound and outbound calls, transfers, recordings and transcripts,
+and post-call webhooks all carry production traffic today. Browser/app
+streams run via the hosted Playground; the embeddable Web SDK is not yet
+published.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Speech Stack" icon="layers" href="/speech-stack/introduction">
+    The developer surface of the Calling Engine - how a call flows.
+  </Card>
+  <Card title="Call lifecycle" icon="phone-incoming" href="/speech-stack/call-lifecycle">
+    From ring to hangup: states, turns, transfers, and hangup causes.
+  </Card>
+  <Card title="Numbers" icon="hash" href="/speech-stack/numbers">
+    Provision numbers or bring your own; attach them to your agent.
+  </Card>
+  <Card title="Outbound calls" icon="phone-outgoing" href="/speech-stack/outbound-calls">
+    Place calls programmatically through the same pipeline.
+  </Card>
+  <Card title="Telephony" icon="network" href="/telephony/introduction">
+    SIP, PSTN, and carrier-level details.
+  </Card>
+  <Card title="Phone quickstart" icon="bolt" href="/get-started/phone">
+    A number answered by your agent, end to end.
+  </Card>
+</CardGroup>

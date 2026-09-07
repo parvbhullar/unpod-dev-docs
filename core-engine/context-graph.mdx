@@ -1,0 +1,74 @@
+---
+title: 'Context Graph'
+description: 'Persistent communication memory - every conversation makes the next one smarter.'
+---
+
+The Context Graph is persistent communication memory. Every conversation makes
+the next one smarter: outcomes, preferences, policies, and history consolidate
+into one context layer that agents read before they speak.
+
+Most agent memory is a vector store in someone else's cloud - opaque blobs
+retrieved by similarity, with no answer to "why does the agent believe this?"
+The Context Graph is built differently. Every fact carries its source, its
+timestamp, a validity window, and a sensitivity level. Retrieval respects
+tenant, permission, and purpose - not just similarity. A fact learned on a
+support call does not leak into a sales pitch, and a fact that expired last
+quarter stops being retrieved.
+
+What the graph holds: customer context, your knowledge base, the workflow
+model, the action graph, communication policy, the evaluation suite, outcome
+history, and optimization history. All of it is inspectable and exportable -
+export and erase APIs are part of the early-access surface, so the memory your
+agents run on is never a black box you cannot audit or delete.
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| Facts | Atomic statements with source, timestamp, validity window, and sensitivity | Early access |
+| Relationships | Typed links between facts, entities, and outcomes | Early access |
+| Summaries | Consolidated views of a conversation or entity | Post-call summaries ship today via the [Post-Call Data API](/api/post-call-data) |
+| Retrieval | Tenant-, permission-, and purpose-aware lookup | Knowledge base retrieval runs today in the [Studio knowledge base](/platform/studio-view/knowledge-base) |
+
+## On the spine
+
+Context underlies the spine from entity through outcome. The Context Graph
+reads entity records, conversation history, and structured outcomes, and
+writes back consolidated facts, relationships, and summaries. Agents and Flows
+read from it before every interaction; each interaction's outcome feeds the
+next consolidation pass. Changes to context will surface on the unified event
+stream as it ships (see [Events](/core-engine/events)).
+
+## What stays hidden
+
+The embedding and vector implementation is deliberately not exposed. Which
+models embed what, how the index is built, and how similarity is scored are
+internals we tune and swap freely. You work with facts, relationships,
+summaries, and retrieval - never with vectors.
+
+## Status
+
+**Early access.** Provenance, validity windows, and sensitivity levels are the
+early-access core. Two pieces carry production traffic today under other
+names: post-call summaries via the
+[Post-Call Data API](/api/post-call-data), and knowledge base retrieval in
+the [Studio knowledge base](/platform/studio-view/knowledge-base). The
+unified graph - one context layer across channels, with export and erase
+APIs - is what early access opens up.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Knowledge Base" icon="book-open" href="/platform/studio-view/knowledge-base">
+    Where knowledge retrieval lives in the Studio today.
+  </Card>
+  <Card title="Sessions" icon="messages-square" href="/superdialog/sessions">
+    How conversation state works inside a live SuperDialog session.
+  </Card>
+  <Card title="Entities" icon="users" href="/core-engine/entities">
+    The identities that context attaches to.
+  </Card>
+  <Card title="Intelligence" icon="brain" href="/core-engine/intelligence">
+    The blocks that extract and score what the graph consolidates.
+  </Card>
+</CardGroup>

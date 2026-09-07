@@ -1,0 +1,79 @@
+---
+title: 'Events'
+description: 'Everything that happened, once - every state change emitted as
+  an event your systems can consume.'
+---
+
+Events are everything that happened, once. Every state change on the spine -
+an interaction recorded, an outcome written, a journey advanced, an entity
+merged - emits exactly one event you can consume. Events are how your
+systems react to conversations without polling, and how the outside world
+reaches back in: an inbound reply arrives as an event, and a running
+journey waiting on it wakes up.
+
+The alternative is what teams build today: cron jobs polling a call-log
+API, glue code diffing CRM records, a queue you run yourself to fan out
+"call ended" to three services. Events replace that with one contract -
+subscribe to what you care about, receive each change once, replay what
+you missed.
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| Event stream | The ordered feed of every state change, consumable in realtime | In build - today the equivalent is per-call delivery via [Hooks & Events](/speech-stack/hooks-events) |
+| Webhooks | HTTP delivery of events to your endpoint | Production for post-call: one webhook per completed call carrying [post-call data](/api/post-call-data); request signing in build |
+| Subscriptions | Filters that pick which event types and sources reach a consumer | In build - today you configure the post-call webhook per agent via [Hooks & Events](/speech-stack/hooks-events) |
+| Replay | Re-delivery of past events from a point in the stream | In build |
+
+## On the spine
+
+```
+ENTITY -> CONVERSATION -> INTERACTION -> OUTCOME ---> EVENTS
+```
+
+Events sit at the end of the spine and read all of it: every write to an
+entity, conversation, interaction, or outcome emits an event. They write
+nothing back to communication state - the stream is an append-only record
+of what already happened. In the other direction, events are the input
+side of Execution: an inbound message or reply lands as an event, and
+[Flows & Journeys](/core-engine/flows-journeys) waiting on that signal
+resume.
+
+## What stays hidden
+
+The broker. Which messaging system carries the stream, how partitions and
+ordering are maintained, how delivery is retried and deduplicated - none
+of that is a public surface. You see events with stable schemas and
+once-only semantics; the infrastructure that guarantees them is Unpod's
+to run and swap without breaking your consumers.
+
+## Status
+
+- **Production**: the post-call webhook - every completed call delivers
+  its transcript and structured outcome to your endpoint. Configure it
+  per [Hooks & Events](/speech-stack/hooks-events); payload documented at
+  [post-call data](/api/post-call-data).
+- **In build**: the unified event stream, signed webhooks, subscriptions,
+  and replay - one feed across all channels and every spine primitive.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Hooks & Events" icon="bolt" href="/speech-stack/hooks-events">
+    The event surface that exists today - call lifecycle hooks and the
+    post-call webhook.
+  </Card>
+  <Card title="Post-Call Data" icon="webhook" href="/api/post-call-data">
+    The payload the production webhook delivers - transcripts, summaries,
+    extracted fields.
+  </Card>
+  <Card title="Outcomes" icon="clipboard-check" href="/core-engine/outcomes">
+    The structured records whose writes are the events you most often
+    consume.
+  </Card>
+  <Card title="Flows & Journeys" icon="route" href="/core-engine/flows-journeys">
+    The engine that reacts to events - outcome branching, waits, and
+    inbound signals.
+  </Card>
+</CardGroup>

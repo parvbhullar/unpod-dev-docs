@@ -1,0 +1,80 @@
+---
+title: 'Outcomes'
+description: 'The structured result of every interaction - not a log entry,
+  the actual condition the next step reads.'
+---
+
+An outcome is the structured result of an interaction. Not a log entry -
+the actual condition the next step reads. When a call ends, a message gets
+a reply, or an email bounces, the interaction resolves into typed fields
+that the rest of the system acts on. The rule the whole Execution layer is
+built on: **the outcome of step N is the input of step N+1.**
+
+The system defines a small set of default fields centrally and keeps it
+deliberately few - roughly five: connection (did we reach them), interest,
+callback (when to try again), channel preference, and disposition. On top
+of those, companies define their own custom outcomes - exactly as they
+already can for calls today, where post-call structured data carries
+whatever schema the use case needs. One class of outcome is special: an
+**exit outcome** removes a contact from a journey entirely, so "do not
+call again" is a state the engine enforces, not a note someone hopes gets
+read.
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| Outcomes | The structured, versioned result of one interaction | Production for calls - delivered as [post-call data](/api/post-call-data) |
+| Outcome fields | The centrally defined defaults: connection, interest, callback, channel preference, disposition | Extracted on every call today; see [post-call data](/api/post-call-data) |
+| Custom outcome schemas | Company-defined fields layered on the defaults | Defined per agent for calls today via [post-call data](/api/post-call-data); journey-wide schemas in build |
+
+## On the spine
+
+```
+INTERACTION -> OUTCOME ---> EVENTS
+          |       |
+          +-- CONTEXT
+```
+
+Outcomes read the finished interaction - transcript, turns, tool results -
+and write one structured record against it, which rolls up into the
+conversation and feeds the entity's context. Flows and journeys read that
+record to pick the next step; an exit outcome ends the journey for that
+contact. Every recorded outcome emits an event: today that is the
+post-call webhook, delivered per [Hooks & Events](/speech-stack/hooks-events).
+
+## What stays hidden
+
+Extraction internals. How an outcome is pulled from a transcript - which
+models run, how fields are validated against the schema, how versions are
+reconciled - is not a public surface. You define the schema and read the
+result; the extraction pipeline between them is Unpod's to run and improve
+without breaking your fields.
+
+## Status
+
+- **Production** for calls: post-call structured data is how calling
+  reports today - every completed call resolves to an outcome you can
+  receive by webhook or fetch by API.
+- **In build**: journey-level outcome branching - the journey engine
+  reading outcomes to choose the next step across channels.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Post-Call Data" icon="webhook" href="/api/post-call-data">
+    Receive call outcomes in your system today - transcripts, summaries,
+    and extracted fields by webhook.
+  </Card>
+  <Card title="Hooks & Events" icon="bolt" href="/speech-stack/hooks-events">
+    React to call lifecycle events, including the post-call moment where
+    outcomes land.
+  </Card>
+  <Card title="Flows & Journeys" icon="route" href="/core-engine/flows-journeys">
+    The engine that reads outcomes to decide step N+1.
+  </Card>
+  <Card title="Intelligence" icon="brain" href="/core-engine/intelligence">
+    The definable blocks - extraction, scoring, summarization - that turn
+    an interaction into an outcome.
+  </Card>
+</CardGroup>
