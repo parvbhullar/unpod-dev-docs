@@ -7,7 +7,214 @@ openapi: 'GET /api/v2/platform/agents/{agent_handle}/tasks/'
 
 <ResponseExample>
 
-```json Success Response (200)
+```json Success Response (200) v2
+{
+  "count": 38,
+  "status_code": 200,
+  "message": "Tasks Fetched Successfully",
+  "data": [
+    {
+      "_id": "697debb84c27faa892bfa0cd",
+      "space_id": "42",
+      "thread_id": "",
+      "user": "",
+      "user_org_id": "101",
+      "user_info": {},
+      "created": "2026-02-07T05:51:51.607000",
+      "modified": "2026-02-07T05:54:03.857000",
+      "task_id": "T1a2b3c4dfe9a11f0878d43cd8a99e069",
+      "run_id": "R1a2b3c4cfe9a11f0878d43cd8a99e069",
+      "collection_ref": "collection_data_SPTKN4XQ7M2VB9YH3KD8WZ1L",
+      "task": {},
+      "input": {
+        "contact_number": "+911234567890",
+        "quality": "good",
+        "name": "",
+        "token": "SPTKN4XQ7M2VB9YH3KD8WZ1L",
+        "space_token": "SPTKN4XQ7M2VB9YH3KD8WZ1L",
+        "org_id": 101,
+        "missing_space_context": false
+      },
+      "output": {
+        "call_type": "inbound",
+        "call_status": "connected",
+        "call_end_reason": "USER_HUNG_UP_IN_CALL"
+      },
+      "attachments": [],
+      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+      "status": "in_progress",
+      "execution_type": "call",
+      "ref_id": "6902fb5840a736e125e80ebc",
+      "failure_count": 0,
+      "last_failure_reason": null,
+      "provider": null,
+      "retry_attempt": 0,
+      "referenced_task": null,
+      "follow_up_count": null,
+      "follow_up_chain_id": null,
+      "last_status_change": "2026-02-07T05:51:51.606885",
+      "scheduled_timestamp": null
+    },
+    {
+      "_id": "697debb84c27faa892bfa0ce",
+      "space_id": "42",
+      "thread_id": "",
+      "user": "",
+      "user_org_id": "101",
+      "user_info": {},
+      "created": "2026-02-07T05:47:38.682000",
+      "modified": "2026-02-07T05:51:28.673000",
+      "task_id": "T5e6f7a8bfe9a11f0878d43cd8a99e069",
+      "run_id": "R5e6f7a8afe9a11f0878d43cd8a99e069",
+      "collection_ref": "collection_data_SPTKN4XQ7M2VB9YH3KD8WZ1L",
+      "task": {},
+      "input": {
+        "contact_number": "+911234567890",
+        "quality": "good",
+        "name": "",
+        "token": "SPTKN4XQ7M2VB9YH3KD8WZ1L",
+        "space_token": "SPTKN4XQ7M2VB9YH3KD8WZ1L",
+        "org_id": 101,
+        "missing_space_context": false
+      },
+      "output": {
+        "call_id": "Unpod Bridge_1234567890_jC8KHDuwGuBi",
+        "customer": "",
+        "contact_number": "+911234567890",
+        "call_end_reason": "BLOCKED_USER",
+        "recording_url": null,
+        "transcript": [],
+        "start_time": "2026-02-07T05:47:39.119969",
+        "end_time": "2026-02-07T05:47:39.119980",
+        "assistant_number": "+919876543210",
+        "call_summary": null,
+        "duration": 0,
+        "cost": 0.0,
+        "post_call_data": {
+          "schema_version": 2,
+          "analytics": {
+            "sentiment": null,
+            "engagement": null,
+            "tone": null,
+            "contact_status": "active",
+            "outcome": "NotConnected",
+            "call_score": null,
+            "call_score_breakdown": null
+          },
+          "summary": {
+            "headline": null,
+            "key_points": []
+          },
+          "lead": {
+            "name": null,
+            "labels": [],
+            "objections": [],
+            "pain_points": [],
+            "questions_asked": []
+          },
+          "structured_data": {
+            "outcome": null,
+            "payment_release_choice": null
+          },
+          "next_action": {
+            "label": [],
+            "callback_requested": false,
+            "scheduled_at": null
+          },
+          "follow_up": {
+            "required": true,
+            "state": "skipped_inbound_call",
+            "reason": "not-connected retry",
+            "next_at": null,
+            "attempt": 1,
+            "attempts_remaining": 2,
+            "policy": {
+              "max_call_attempts": 3,
+              "max_followup_attempts": 2,
+              "daily_limit": 3,
+              "next_call_attempt_number": 2
+            }
+          },
+          "evaluation": null,
+          "call_evaluation": null,
+          "redial": {
+            "status": null
+          },
+          "skipped": [
+            {
+              "stage": "call_evaluation",
+              "reason": "policy:disabled_in_config"
+            },
+            {
+              "stage": "critic",
+              "reason": "no_invariant_violations"
+            }
+          ],
+          "post_call_usage": {
+            "thread_id": "T5e6f7a8bfe9a11f0878d43cd8a99e069",
+            "room_name": "",
+            "agent_id": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+            "org_id": null,
+            "space_token": null,
+            "call_start": "2026-02-07T05:51:28.326798Z",
+            "call_end": "2026-02-07T05:51:28.326798Z",
+            "call_duration_s": "0.00",
+            "providers": {
+              "llm_provider": "Unpod",
+              "llm_model": "google/gemma-4-31b-it",
+              "stt_provider": "soniox",
+              "stt_model": "stt-rt-v5",
+              "tts_provider": "cartesia",
+              "tts_model": "sonic-3.5"
+            },
+            "raw_counters": {
+              "llm_prompt_tokens": "1508",
+              "llm_completion_tokens": "127",
+              "llm_cached_tokens": "0",
+              "tts_characters_count": "0",
+              "stt_audio_duration": "0"
+            },
+            "sku_deltas": [
+              {
+                "codename": "llm.unpod.google/gemma_4_31b_it.input",
+                "raw": "1508",
+                "unit_scale": "1"
+              },
+              {
+                "codename": "llm.unpod.google/gemma_4_31b_it.output",
+                "raw": "127",
+                "unit_scale": "1"
+              }
+            ]
+          }
+        },
+        "metadata": {
+          "cost": 0.0,
+          "type": "",
+          "usage": {}
+        },
+        "call_type": "inbound",
+        "call_status": "failed"
+      },
+      "attachments": [],
+      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+      "status": "completed",
+      "execution_type": "call",
+      "ref_id": "6902fb5840a736e125e80ebc",
+      "failure_count": 0,
+      "last_failure_reason": null,
+      "provider": null,
+      "retry_attempt": 0,
+      "referenced_task": null,
+      "follow_up_count": null,
+      "follow_up_chain_id": null,
+      "last_status_change": "2026-02-07T05:47:38.682017",
+      "scheduled_timestamp": null
+    }
+  ]
+}
+```
+```json Success Response (200) v1
 {
   "count": 1,
   "status_code": 200,
@@ -89,6 +296,10 @@ Fetch all tasks assigned to a specific agent/pilot using their handle. This retu
 **Prerequisites:** Make sure you have your API Token ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
 
+<Note>
+**Response versions:** the examples panel has two tabs. **v1** is the original legacy payload. **v2** is the current payload this endpoint returns — same envelope (`count`, `status_code`, `message`, `data`), but each task object carries extra fields and `output.post_call_data` uses `schema_version: 2`. Build new integrations against v2 and read `post_call_data.schema_version` before parsing analytics.
+</Note>
+
 ### Path Parameters
 
 | Name         | Type   | Required | Description                           |
@@ -99,15 +310,23 @@ Fetch all tasks assigned to a specific agent/pilot using their handle. This retu
 You can get the `agent_handle` by hitting the [Get All Agents](/api/agent/get-all-agents) API. The `handle` field in the response is your Agent Handle.
 </Note>
 
+### Query Parameters
+
+| Name      | Type    | Required | Description                                    |
+|-----------|---------|----------|------------------------------------------------|
+| page      | integer | No       | Page number to fetch, 1-based. Defaults to `1` |
+| page_size | integer | No       | Tasks per page. Defaults to `20`               |
+
+<Note>
+`count` is the **total** number of tasks for the agent, not the size of the current page — `data` holds at most `page_size` items. Page through until you have collected `count` tasks.
+</Note>
+
 ### Headers
 
 | Name          | Type   | Required | Description                     |
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Content-Type  | string | Yes      | `application/json`              |
-
-```
-```
 
 ### Response Fields
 
@@ -141,6 +360,27 @@ You can get the `agent_handle` by hitting the [Get All Agents](/api/agent/get-al
 | last_status_change  | string  | Timestamp of last status change               |
 | scheduled_timestamp | string  | Scheduled execution timestamp (null if now)   |
 
+### Task Object Fields — v2 Additions
+
+Present in v2 responses only. `status` also gains the `in_progress` value.
+
+| Field              | Type            | Description                                                            |
+|--------------------|-----------------|------------------------------------------------------------------------|
+| space_id           | string          | Numeric id of the space the task belongs to                            |
+| user               | string          | User identifier that triggered the task (empty for inbound calls)      |
+| user_org_id        | string          | Numeric id of the owning organisation                                  |
+| created            | string          | Task creation timestamp                                                |
+| modified           | string          | Timestamp of the last write to the task document                       |
+| collection_ref     | string          | Collection holding the source rows: `collection_data_<space_token>`    |
+| provider           | string \| null  | Telephony provider used for the call (null if not resolved yet)         |
+| referenced_task    | string \| null  | `task_id` this task was spawned from (follow-ups, retries)              |
+| follow_up_count    | integer \| null | Number of follow-up tasks created off this task                        |
+| follow_up_chain_id | string \| null  | Groups a task and all of its follow-ups into one chain                  |
+
+<Note>
+`user_info` and `task` are objects in both versions, but in v2 they come back empty (`{}`) for calls not created from a lead payload with an objective. Do not assume `task.objective` exists.
+</Note>
+
 ### Output Object Fields
 
 | Field            | Type   | Description                              |
@@ -158,6 +398,66 @@ You can get the `agent_handle` by hitting the [Get All Agents](/api/agent/get-al
 | call_type        | string | Direction of call: `outbound`, `inbound` |
 | call_status      | string | Status of the call: `completed`, etc.    |
 
+<Note>
+`output` is only fully populated once the call finishes. While `status` is `in_progress`, v2 returns a partial `output` with just `call_type`, `call_status` and `call_end_reason`.
+</Note>
+
+### Output Object Fields — v2 Additions
+
+| Field          | Type   | Description                                            |
+|----------------|--------|--------------------------------------------------------|
+| customer       | string | Customer name resolved for the call (empty if unknown) |
+| contact_number | string | Number dialled, or that dialled in, in E.164           |
+| cost           | number | Billed cost of the call                                |
+| metadata       | object | `cost`, `type` and a `usage` map for the call          |
+
+### post_call_data — v2 (`schema_version: 2`)
+
+In v1 `post_call_data` was a flat `{summary, outcome, sentiment}` object. In v2 it is grouped:
+
+| Field           | Type           | Description                                                                                         |
+|-----------------|----------------|-----------------------------------------------------------------------------------------------------|
+| schema_version  | integer        | Always `2` for this shape. Branch on this field                                                     |
+| analytics       | object         | `sentiment`, `engagement`, `tone`, `contact_status`, `outcome`, `call_score`, `call_score_breakdown` |
+| summary         | object         | `headline` plus a `key_points` array                                                                |
+| lead            | object         | `name`, `labels`, `objections`, `pain_points`, `questions_asked`                                    |
+| structured_data | object         | Playbook-defined extraction fields — keys vary per agent                                            |
+| next_action     | object         | `label`, `callback_requested`, `scheduled_at`                                                       |
+| follow_up       | object         | `required`, `state`, `reason`, `next_at`, `attempt`, `attempts_remaining`, `policy`                 |
+| evaluation      | object \| null | Playbook evaluation result (null when disabled)                                                      |
+| call_evaluation | object \| null | Call-quality evaluation result (null when disabled)                                                  |
+| redial          | object         | `status` of an automatic redial                                                                      |
+| skipped         | array          | Post-call stages that did not run, each `{stage, reason}`                                            |
+| post_call_usage | object         | Provider and token usage for billing — see below                                                     |
+
+#### follow_up.policy
+
+| Field                    | Type    | Description                                 |
+|--------------------------|---------|---------------------------------------------|
+| max_call_attempts        | integer | Total call attempts allowed for the contact |
+| max_followup_attempts    | integer | Follow-up attempts allowed after a connect  |
+| daily_limit              | integer | Attempts allowed per day                    |
+| next_call_attempt_number | integer | Attempt number the next call will use       |
+
+#### post_call_usage
+
+| Field           | Type           | Description                                                                           |
+|-----------------|----------------|---------------------------------------------------------------------------------------|
+| thread_id       | string         | Thread the call ran on — matches `task_id`                                             |
+| room_name       | string         | Media room name (empty for calls that never connected)                                |
+| agent_id        | string         | Agent handle that served the call                                                     |
+| org_id          | string \| null | Organisation id resolved at billing time                                               |
+| space_token     | string \| null | Space token resolved at billing time                                                   |
+| call_start      | string         | Billing window start                                                                  |
+| call_end        | string         | Billing window end                                                                    |
+| call_duration_s | string         | Billed duration in seconds, sent as a string                                          |
+| providers       | object         | `llm_provider`, `llm_model`, `stt_provider`, `stt_model`, `tts_provider`, `tts_model` |
+| raw_counters    | object         | Raw meters: LLM prompt/completion/cached tokens, TTS characters, STT audio duration   |
+| sku_deltas      | array          | Billable units, each `{codename, raw, unit_scale}` — all values are strings            |
+
+<Warning>
+Every numeric value under `post_call_usage` (`call_duration_s`, `raw_counters`, `sku_deltas`) is a **string**, not a number. Cast before doing arithmetic.
+</Warning>
 
 ## Common Error Codes
 
