@@ -7,7 +7,215 @@ openapi: 'GET /api/v2/platform/spaces/{space_token}/tasks/'
 
 <ResponseExample>
 
-```json Success Response (200)
+```json Success Response (200) v2
+{
+  "count": 38,
+  "status_code": 200,
+  "message": "Tasks Fetched Successfully",
+  "data": [
+    {
+      "_id": "6a9e50f7066c0e4516a22a07",
+      "space_id": "593",
+      "thread_id": "",
+      "user": "",
+      "user_org_id": "263",
+      "user_info": {},
+      "created": "2026-09-07T05:51:51.607000",
+      "modified": "2026-09-07T05:54:03.857000",
+      "task_id": "T3901cb27aa8011f1a814c5566158eaa5",
+      "run_id": "R3901cb26aa8011f1a814c5566158eaa5",
+      "collection_ref": "collection_data_EK6PB1ZXX1FT2TB8FNZPE39V",
+      "task": {},
+      "input": {
+        "contact_number": "+918109687225",
+        "quality": "good",
+        "name": "",
+        "token": "EK6PB1ZXX1FT2TB8FNZPE39V",
+        "space_token": "EK6PB1ZXX1FT2TB8FNZPE39V",
+        "org_id": 263,
+        "missing_space_context": false
+      },
+      "output": {
+        "call_type": "inbound",
+        "call_status": "connected",
+        "call_end_reason": "USER_HUNG_UP_IN_CALL"
+      },
+      "attachments": [],
+      "assignee": "sarvdhan-used-vehicle-finance-and-secured-loans-assistant-6kj8v0siouhg",
+      "status": "in_progress",
+      "execution_type": "call",
+      "ref_id": "6a88371afc539da073151bec",
+      "failure_count": 0,
+      "last_failure_reason": null,
+      "provider": null,
+      "retry_attempt": 0,
+      "referenced_task": null,
+      "follow_up_count": null,
+      "follow_up_chain_id": null,
+      "last_status_change": "2026-09-07T05:51:51.606885",
+      "scheduled_timestamp": null
+    },
+    {
+      "_id": "6a9e4ffa0d0f156912b9047b",
+      "space_id": "593",
+      "thread_id": "",
+      "user": "",
+      "user_org_id": "263",
+      "user_info": {},
+      "created": "2026-09-07T05:47:38.682000",
+      "modified": "2026-09-07T05:51:28.673000",
+      "task_id": "Ta25dc889aa7f11f1a814c5566158eaa5",
+      "run_id": "Ra25dc888aa7f11f1a814c5566158eaa5",
+      "collection_ref": "collection_data_EK6PB1ZXX1FT2TB8FNZPE39V",
+      "task": {},
+      "input": {
+        "contact_number": "+918109687225",
+        "quality": "good",
+        "name": "",
+        "token": "EK6PB1ZXX1FT2TB8FNZPE39V",
+        "space_token": "EK6PB1ZXX1FT2TB8FNZPE39V",
+        "org_id": 263,
+        "missing_space_context": false
+      },
+      "output": {
+        "call_id": "SarvDhan Bridge_08109687225_jC8KHDuwGuBi",
+        "customer": "",
+        "contact_number": "+918109687225",
+        "call_end_reason": "BLOCKED_USER",
+        "recording_url": null,
+        "transcript": [],
+        "start_time": "2026-09-07T05:47:39.119969",
+        "end_time": "2026-09-07T05:47:39.119980",
+        "assistant_number": "+918071539260",
+        "call_summary": null,
+        "duration": 0,
+        "cost": 0.0,
+        "post_call_data": {
+          "schema_version": 2,
+          "analytics": {
+            "sentiment": null,
+            "engagement": null,
+            "tone": null,
+            "contact_status": "active",
+            "outcome": "NotConnected",
+            "call_score": null,
+            "call_score_breakdown": null
+          },
+          "summary": {
+            "headline": null,
+            "key_points": []
+          },
+          "lead": {
+            "name": null,
+            "labels": [],
+            "objections": [],
+            "pain_points": [],
+            "questions_asked": []
+          },
+          "structured_data": {
+            "outcome": null,
+            "payment_release_choice": null
+          },
+          "next_action": {
+            "label": [],
+            "callback_requested": false,
+            "scheduled_at": null
+          },
+          "follow_up": {
+            "required": true,
+            "state": "skipped_inbound_call",
+            "reason": "not-connected retry",
+            "next_at": null,
+            "attempt": 1,
+            "attempts_remaining": 2,
+            "policy": {
+              "max_call_attempts": 3,
+              "max_followup_attempts": 2,
+              "daily_limit": 3,
+              "next_call_attempt_number": 2
+            }
+          },
+          "evaluation": null,
+          "call_evaluation": null,
+          "redial": {
+            "status": null
+          },
+          "skipped": [
+            {
+              "stage": "call_evaluation",
+              "reason": "policy:disabled_in_config"
+            },
+            {
+              "stage": "critic",
+              "reason": "no_invariant_violations"
+            }
+          ],
+          "post_call_usage": {
+            "thread_id": "Ta25dc889aa7f11f1a814c5566158eaa5",
+            "room_name": "",
+            "agent_id": "sarvdhan-used-vehicle-finance-and-secured-loans-assistant-6kj8v0siouhg",
+            "org_id": null,
+            "space_token": null,
+            "call_start": "2026-09-07T05:51:28.326798Z",
+            "call_end": "2026-09-07T05:51:28.326798Z",
+            "call_duration_s": "0.00",
+            "providers": {
+              "llm_provider": "Unpod",
+              "llm_model": "google/gemma-4-31b-it",
+              "stt_provider": "soniox",
+              "stt_model": "stt-rt-v5",
+              "tts_provider": "cartesia",
+              "tts_model": "sonic-3.5"
+            },
+            "raw_counters": {
+              "llm_prompt_tokens": "1508",
+              "llm_completion_tokens": "127",
+              "llm_cached_tokens": "0",
+              "tts_characters_count": "0",
+              "stt_audio_duration": "0"
+            },
+            "sku_deltas": [
+              {
+                "codename": "llm.unpod.google/gemma_4_31b_it.input",
+                "raw": "1508",
+                "unit_scale": "1"
+              },
+              {
+                "codename": "llm.unpod.google/gemma_4_31b_it.output",
+                "raw": "127",
+                "unit_scale": "1"
+              }
+            ]
+          }
+        },
+        "metadata": {
+          "cost": 0.0,
+          "type": "",
+          "usage": {}
+        },
+        "call_type": "inbound",
+        "call_status": "failed"
+      },
+      "attachments": [],
+      "assignee": "sarvdhan-used-vehicle-finance-and-secured-loans-assistant-6kj8v0siouhg",
+      "status": "completed",
+      "execution_type": "call",
+      "ref_id": "6a88371afc539da073151bec",
+      "failure_count": 0,
+      "last_failure_reason": null,
+      "provider": null,
+      "retry_attempt": 0,
+      "referenced_task": null,
+      "follow_up_count": null,
+      "follow_up_chain_id": null,
+      "last_status_change": "2026-09-07T05:47:38.682017",
+      "scheduled_timestamp": null
+    }
+  ]
+}
+```
+
+```json Success Response (200) v1
 {
   "count": 45,
   "status_code": 200,
