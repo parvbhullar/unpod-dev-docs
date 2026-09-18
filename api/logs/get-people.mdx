@@ -1,0 +1,186 @@
+---
+title: 'Get People'
+icon: 'user'
+description: 'Retrieve connector doc data (people/contact profile) for a knowledge base connector document'
+openapi: 'GET /api/v2/platform/knowledge_base/{kb_id}/connector-doc-data/{connector_id}/'
+---
+
+<ResponseExample>
+
+```json Success Response (200)
+{
+  "status_code": 200,
+  "message": "Doc data fetched successfully",
+  "data": {
+    "document_id": "670f1c2e9b1d4a0012ab34cd",
+    "name": "Jane Doe",
+    "overview": {
+      "summary": "Jane has been contacted 4 times regarding renewal. She responds best in the evening and has shown high interest.",
+      "profile_status": "qualified",
+      "analytics": {
+        "total_calls": 4,
+        "connected_calls": 3,
+        "response_rate": "75%",
+        "avg_call_duration": "3m 42s",
+        "last_connected": "2025-11-08T05:32:29Z",
+        "next_call_scheduled": "2025-11-15T10:00:00Z",
+        "preferred_time": "Evening",
+        "sentiment": "positive"
+      }
+    }
+  }
+}
+```
+
+```json Error Response (401)
+{
+  "status_code": 401,
+  "message": "Authentication credentials were not provided."
+}
+```
+
+</ResponseExample>
+
+# Get People
+
+Retrieve the People profile (connector doc data) for a knowledge base's connector document - powers the **People** tab in Call Logs, including summary, profile status, and call analytics for a contact.
+
+<Note>
+**Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
+</Note>
+
+---
+
+### Headers
+
+| Name          | Type   | Required | Description                     |
+|---------------|--------|----------|---------------------------------|
+| Org-Handle    | string | Yes      | Organization domain handle      |
+| Authorization | string | Yes      | API Key format: `Token <token>` |
+
+<Note>
+You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
+</Note>
+
+### Path Parameters
+
+| Name         | Type   | Required | Description                |
+|--------------|--------|----------|-----------------------------|
+| kb_id        | string | Yes      | Knowledge base token        |
+| connector_id | string | Yes      | Connector document id       |
+
+### Query Parameters
+
+| Name      | Type    | Required | Description                              |
+|-----------|---------|----------|-------------------------------------------|
+| domain    | string  | No       | Filter connector doc data by domain       |
+| page      | integer | No       | Page number for pagination (default = 1)  |
+| page_size | integer | No       | Number of items per page (default = 20)   |
+
+### Response Fields
+
+| Field       | Type    | Description              |
+|-------------|---------|--------------------------|
+| status_code | integer | HTTP status code          |
+| message     | string  | Response message          |
+| data        | object  | People / connector doc data object |
+
+### Data Object Fields
+
+| Field                    | Type    | Description                                            |
+|--------------------------|---------|--------------------------------------------------------|
+| document_id              | string  | Connector document id                                   |
+| name                     | string  | Contact/person name                                     |
+| overview.summary         | string  | AI-generated summary of the contact                     |
+| overview.profile_status  | string  | Profile status, e.g. `qualified`                        |
+| overview.analytics       | object  | Call analytics for this contact                         |
+
+### Analytics Object Fields
+
+| Field                | Type    | Description                                   |
+|----------------------|---------|------------------------------------------------|
+| total_calls          | integer | Total number of calls with this contact         |
+| connected_calls      | integer | Number of connected calls                       |
+| response_rate        | string  | Response rate percentage                        |
+| avg_call_duration    | string  | Average call duration                           |
+| last_connected       | string  | Timestamp of last connected call                |
+| next_call_scheduled  | string  | Timestamp of next scheduled call, if any        |
+| preferred_time       | string  | Contact's preferred time to be called           |
+| sentiment            | string  | Overall sentiment, `null` if not available      |
+
+---
+
+## Common Error Codes
+
+| Status Code | Description                                      |
+|-------------|--------------------------------------------------|
+| 200         | Success - People data fetched successfully       |
+| 400         | Bad Request - Invalid filter parameters          |
+| 401         | Unauthorized - Invalid or missing API token      |
+| 403         | Forbidden - Invalid organization handle or no access to this knowledge base |
+| 404         | Not Found - Knowledge base or connector document not found |
+| 500         | Internal Server Error - Server-side error        |
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript Node.js
+const axios = require('axios');
+
+const headers = {
+  'Authorization': 'Token your-api-token',
+  'Org-Handle': 'your-org-handle'
+};
+
+const getPeople = async (kbId, connectorId, filters = {}) => {
+  const params = {
+    page: 1,
+    page_size: 20,
+    ...filters
+  };
+  const response = await axios.get(
+    `https://unpod.ai/api/v2/platform/knowledge_base/${kbId}/connector-doc-data/${connectorId}/`,
+    { headers, params }
+  );
+  console.log(response.data.data.overview.summary);
+  return response.data.data;
+};
+
+getPeople('kb-token', 'connector-id');
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': 'Token your-api-token',
+    'Org-Handle': 'your-org-handle'
+}
+
+def get_people(kb_id: str, connector_id: str, page: int = 1, page_size: int = 20, **filters):
+    """Get People / connector doc data"""
+    url = f'https://unpod.ai/api/v2/platform/knowledge_base/{kb_id}/connector-doc-data/{connector_id}/'
+    params = {'page': page, 'page_size': page_size, **filters}
+    response = requests.get(url, headers=headers, params=params)
+    data = response.json()
+    print(data['data']['overview']['summary'])
+    return data['data']
+
+get_people('kb-token', 'connector-id')
+```
+
+```bash cURL
+curl -X GET "https://unpod.ai/api/v2/platform/knowledge_base/kb-token/connector-doc-data/connector-id/?page=1&page_size=20" \
+  -H "Org-Handle: your-org-handle" \
+  -H "Authorization: Token your-api-token"
+```
+
+</CodeGroup>
+
+## Best Practices
+
+1. **Pagination**: Use `page` and `page_size` when fetching large result sets
+2. **Domain Filter**: Use `domain` to scope connector doc data when a knowledge base spans multiple domains
+3. **Org-Handle**: Ensure the correct organization handle is included
+4. **Security**: Keep API tokens secure and rotate them regularly

@@ -812,6 +812,71 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /api/v2/platform/knowledge_base/{kb_id}/connector-doc-data/{connector_id}/:
+    get:
+      operationId: getConnectorDocData
+      summary: Get Connector Doc Data
+      tags: [Call Logs]
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+        - name: kb_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "8KZAMRAHSXXXXXXMAYNASMJC"
+          description: Knowledge base token.
+        - name: connector_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "670f1c2e9b1d4a0012ab34cd"
+          description: Connector document id.
+        - name: domain
+          in: query
+          schema:
+            type: string
+            example: "acme.com"
+          description: Filter connector doc data by domain.
+        - name: page
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            example: 20
+      responses:
+        '200':
+          description: Connector doc data (People profile) for the given knowledge base connector document
+          content:
+            application/json:
+              example:
+                status_code: 200
+                message: "Doc data fetched successfully"
+                data:
+                  document_id: "670f1c2e9b1d4a0012ab34cd"
+                  name: "Jane Doe"
+                  overview:
+                    summary: "Jane has been contacted 4 times regarding renewal. She responds best in the evening and has shown high interest."
+                    profile_status: "qualified"
+                    analytics:
+                      total_calls: 4
+                      connected_calls: 3
+                      response_rate: "75%"
+                      avg_call_duration: "3m 42s"
+                      last_connected: "2025-11-08T05:32:29Z"
+                      next_call_scheduled: "2025-11-15T10:00:00Z"
+                      preferred_time: "Evening"
+                      sentiment: "positive"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   # ─── Analytics ────────────────────────────────────────────────
   /api/v2/platform/organisation/analytics/:
     get:

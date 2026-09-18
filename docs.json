@@ -472,7 +472,8 @@
                 "expanded": false,
                 "pages": [
                   "api/logs/overview",
-                  "api/logs/get-call-logs"
+                  "api/logs/get-call-logs",
+                  "api/logs/get-people"
                 ]
               },
               {
