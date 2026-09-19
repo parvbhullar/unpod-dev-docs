@@ -860,20 +860,43 @@ paths:
                 status_code: 200
                 message: "Doc data fetched successfully"
                 data:
-                  document_id: "670f1c2e9b1d4a0012ab34cd"
-                  name: "Jane Doe"
+                  name: "John Doe"
+                  contact_number: "+15551234567"
+                  created: "2026-04-28T09:04:12"
+                  labels: ["Interested"]
                   overview:
-                    summary: "Jane has been contacted 4 times regarding renewal. She responds best in the evening and has shown high interest."
-                    profile_status: "qualified"
+                    summary: "## Profile Overview\nJohn is a professional individual who is actively engaged in resolving a pending payment. They have shown a clear interest in scheduling payment on a specific date..."
                     analytics:
-                      total_calls: 4
-                      connected_calls: 3
-                      response_rate: "75%"
-                      avg_call_duration: "3m 42s"
-                      last_connected: "2025-11-08T05:32:29Z"
-                      next_call_scheduled: "2025-11-15T10:00:00Z"
-                      preferred_time: "Evening"
-                      sentiment: "positive"
+                      avg_call_duration: "201.44s"
+                      response_rate: 64.29
+                      preferred_time: "Morning (9AM-12PM)"
+                      total_calls: 14
+                      connected_calls: 9
+                      last_connected: "2026-05-06T11:01:57.922160"
+                      sentiment: "Neutral"
+                    profile_status: "Lost"
+                    recent_conversations:
+                      - date: "2026-07-15 19:17"
+                        summary: "During the call, the agent attempted to engage the user, but the conversation did not progress beyond brief affirmations from the user..."
+                      - date: "2026-05-06 10:17"
+                        summary: "N/A"
+                    profile_summary:
+                      sentiment: "Neutral"
+                      tone: "Professional"
+                      engagement: "High"
+                      interest_level: "Very Interested"
+                      objections: []
+                      questions_asked:
+                        - "Can we speak in Hindi?"
+                        - "Can we speak in English?"
+                      pain_points:
+                        - "Delay in salary credit affecting payment"
+                      outcome: "Connected"
+                      next_action: "Schedule the payment for the 13th of each month"
+                      callback_requested: false
+                      callback_time: null
+                      summary_text: "John is a professional individual who is actively engaged in resolving a pending payment. They have shown a clear interest in scheduling payment on a specific date."
+                  document_id: "670f1c2e9b1d4a0012ab34cd"
         '401':
           $ref: '#/components/responses/Unauthorized'
 

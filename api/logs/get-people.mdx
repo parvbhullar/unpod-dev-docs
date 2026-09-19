@@ -12,22 +12,55 @@ openapi: 'GET /api/v2/platform/knowledge_base/{kb_id}/connector-doc-data/{connec
   "status_code": 200,
   "message": "Doc data fetched successfully",
   "data": {
-    "document_id": "670f1c2e9b1d4a0012ab34cd",
-    "name": "Jane Doe",
+    "name": "John Doe",
+    "contact_number": "+15551234567",
+    "created": "2026-04-28T09:04:12",
+    "labels": [
+      "Interested"
+    ],
     "overview": {
-      "summary": "Jane has been contacted 4 times regarding renewal. She responds best in the evening and has shown high interest.",
-      "profile_status": "qualified",
+      "summary": "## Profile Overview\nJohn is a professional individual who is actively engaged in resolving a pending payment. They have shown a clear interest in scheduling payment on a specific date...",
       "analytics": {
-        "total_calls": 4,
-        "connected_calls": 3,
-        "response_rate": "75%",
-        "avg_call_duration": "3m 42s",
-        "last_connected": "2025-11-08T05:32:29Z",
-        "next_call_scheduled": "2025-11-15T10:00:00Z",
-        "preferred_time": "Evening",
-        "sentiment": "positive"
+        "avg_call_duration": "201.44s",
+        "response_rate": 64.29,
+        "preferred_time": "Morning (9AM-12PM)",
+        "total_calls": 14,
+        "connected_calls": 9,
+        "last_connected": "2026-05-06T11:01:57.922160",
+        "sentiment": "Neutral"
+      },
+      "profile_status": "Lost",
+      "recent_conversations": [
+        {
+          "date": "2026-07-15 19:17",
+          "summary": "During the call, the agent attempted to engage the user, but the conversation did not progress beyond brief affirmations from the user..."
+        },
+        {
+          "date": "2026-05-06 10:17",
+          "summary": "N/A"
+        }
+      ],
+      "profile_summary": {
+        "sentiment": "Neutral",
+        "tone": "Professional",
+        "engagement": "High",
+        "interest_level": "Very Interested",
+        "objections": [],
+        "questions_asked": [
+          "Can we speak in Hindi?",
+          "Can we speak in English?"
+        ],
+        "pain_points": [
+          "Delay in salary credit affecting payment"
+        ],
+        "outcome": "Connected",
+        "next_action": "Schedule the payment for the 13th of each month",
+        "callback_requested": false,
+        "callback_time": null,
+        "summary_text": "John is a professional individual who is actively engaged in resolving a pending payment. They have shown a clear interest in scheduling payment on a specific date."
       }
-    }
+    },
+    "document_id": "670f1c2e9b1d4a0012ab34cd"
   }
 }
 ```
@@ -87,26 +120,55 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 
 ### Data Object Fields
 
-| Field                    | Type    | Description                                            |
-|--------------------------|---------|--------------------------------------------------------|
-| document_id              | string  | Connector document id                                   |
-| name                     | string  | Contact/person name                                     |
-| overview.summary         | string  | AI-generated summary of the contact                     |
-| overview.profile_status  | string  | Profile status, e.g. `qualified`                        |
-| overview.analytics       | object  | Call analytics for this contact                         |
+| Field                          | Type    | Description                                              |
+|--------------------------------|---------|-----------------------------------------------------------|
+| document_id                    | string  | Connector document id                                     |
+| name                           | string  | Contact/person name                                        |
+| contact_number                 | string  | Contact's phone number                                     |
+| created                        | string  | Timestamp when this contact record was created             |
+| labels                         | array   | Labels/tags applied to this contact, e.g. `Interested`      |
+| overview.summary               | string  | AI-generated markdown summary of the contact                |
+| overview.profile_status        | string  | Profile status, e.g. `Lost`, `Qualified`                    |
+| overview.analytics             | object  | Call analytics for this contact                             |
+| overview.recent_conversations  | array   | Recent call summaries, newest first                          |
+| overview.profile_summary       | object  | Structured AI breakdown of the latest conversation          |
 
 ### Analytics Object Fields
 
-| Field                | Type    | Description                                   |
-|----------------------|---------|------------------------------------------------|
-| total_calls          | integer | Total number of calls with this contact         |
-| connected_calls      | integer | Number of connected calls                       |
-| response_rate        | string  | Response rate percentage                        |
-| avg_call_duration    | string  | Average call duration                           |
-| last_connected       | string  | Timestamp of last connected call                |
-| next_call_scheduled  | string  | Timestamp of next scheduled call, if any        |
-| preferred_time       | string  | Contact's preferred time to be called           |
-| sentiment            | string  | Overall sentiment, `null` if not available      |
+| Field                | Type    | Description                                              |
+|----------------------|---------|-------------------------------------------------------------|
+| total_calls          | integer | Total number of calls with this contact                    |
+| connected_calls      | integer | Number of connected calls                                  |
+| response_rate        | number  | Response rate percentage                                    |
+| avg_call_duration    | string  | Average call duration, e.g. `201.44s`                       |
+| last_connected       | string  | Timestamp of last connected call                            |
+| next_call_scheduled  | string  | Timestamp of next scheduled call, if any (may be absent)    |
+| preferred_time       | string  | Contact's preferred time to be called                       |
+| sentiment            | string  | Overall sentiment, e.g. `Neutral`                            |
+
+### Recent Conversations Fields
+
+| Field   | Type   | Description                                |
+|---------|--------|----------------------------------------------|
+| date    | string | Timestamp of the call                        |
+| summary | string | Short summary of that call, `N/A` if none     |
+
+### Profile Summary Fields
+
+| Field              | Type         | Description                                    |
+|--------------------|--------------|---------------------------------------------------|
+| sentiment          | string       | Sentiment of the latest call                       |
+| tone               | string       | Tone of the contact during the call                |
+| engagement         | string       | Engagement level, e.g. `High`                      |
+| interest_level     | string       | Interest level, e.g. `Very Interested`             |
+| objections         | array        | Objections raised by the contact                   |
+| questions_asked    | array        | Questions asked by the contact                     |
+| pain_points        | array        | Pain points identified during the call             |
+| outcome            | string       | Outcome of the call, e.g. `Connected`              |
+| next_action        | string       | Recommended next action                            |
+| callback_requested | boolean      | Whether contact requested a callback               |
+| callback_time      | string\|null | Requested callback time, `null` if none            |
+| summary_text       | string       | Short plain-text summary of the profile            |
 
 ---
 
