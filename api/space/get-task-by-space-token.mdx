@@ -9,133 +9,219 @@ openapi: 'GET /api/v2/platform/spaces/{space_token}/tasks/'
 
 ```json Success Response (200) v2
 {
-  "count": 38,
+  "count": 1,
   "status_code": 200,
   "message": "Tasks Fetched Successfully",
   "data": [
     {
-      "_id": "6a9e50f7066c0e4516a22a07",
-      "space_id": "593",
+      "_id": "697debb84c27faa892bfa0cd",
+      "space_id": "42",
       "thread_id": "",
       "user": "",
-      "user_org_id": "263",
+      "user_org_id": "101",
       "user_info": {},
-      "created": "2026-09-07T05:51:51.607000",
-      "modified": "2026-09-07T05:54:03.857000",
-      "task_id": "T3901cb27aa8011f1a814c5566158eaa5",
-      "run_id": "R3901cb26aa8011f1a814c5566158eaa5",
-      "collection_ref": "collection_data_EK6PB1ZXX1FT2TB8FNZPE39V",
+      "created": "2026-02-07T05:51:51.607000",
+      "modified": "2026-02-07T06:06:30.000000",
+      "task_id": "T1a2b3c4dfe9a11f0878d43cd8a99e069",
+      "run_id": "R1a2b3c4cfe9a11f0878d43cd8a99e069",
+      "collection_ref": "collection_data_SPTKN4XQ7M2VB9YH3KD8WZ1L",
       "task": {},
       "input": {
-        "contact_number": "+918109687225",
+        "contact_number": "+911234567890",
         "quality": "good",
-        "name": "",
-        "token": "EK6PB1ZXX1FT2TB8FNZPE39V",
-        "space_token": "EK6PB1ZXX1FT2TB8FNZPE39V",
-        "org_id": 263,
+        "name": "Jane Doe",
+        "token": "SPTKN4XQ7M2VB9YH3KD8WZ1L",
+        "space_token": "SPTKN4XQ7M2VB9YH3KD8WZ1L",
+        "org_id": 101,
         "missing_space_context": false
       },
       "output": {
+        "call_id": "Unpod Bridge_1234567890_AbCdEfGhIjKl",
+        "customer": "Jane Doe",
+        "contact_number": "+911234567890",
         "call_type": "inbound",
         "call_status": "connected",
-        "call_end_reason": "USER_HUNG_UP_IN_CALL"
-      },
-      "attachments": [],
-      "assignee": "sarvdhan-used-vehicle-finance-and-secured-loans-assistant-6kj8v0siouhg",
-      "status": "in_progress",
-      "execution_type": "call",
-      "ref_id": "6a88371afc539da073151bec",
-      "failure_count": 0,
-      "last_failure_reason": null,
-      "provider": null,
-      "retry_attempt": 0,
-      "referenced_task": null,
-      "follow_up_count": null,
-      "follow_up_chain_id": null,
-      "last_status_change": "2026-09-07T05:51:51.606885",
-      "scheduled_timestamp": null
-    },
-    {
-      "_id": "6a9e4ffa0d0f156912b9047b",
-      "space_id": "593",
-      "thread_id": "",
-      "user": "",
-      "user_org_id": "263",
-      "user_info": {},
-      "created": "2026-09-07T05:47:38.682000",
-      "modified": "2026-09-07T05:51:28.673000",
-      "task_id": "Ta25dc889aa7f11f1a814c5566158eaa5",
-      "run_id": "Ra25dc888aa7f11f1a814c5566158eaa5",
-      "collection_ref": "collection_data_EK6PB1ZXX1FT2TB8FNZPE39V",
-      "task": {},
-      "input": {
-        "contact_number": "+918109687225",
-        "quality": "good",
-        "name": "",
-        "token": "EK6PB1ZXX1FT2TB8FNZPE39V",
-        "space_token": "EK6PB1ZXX1FT2TB8FNZPE39V",
-        "org_id": 263,
-        "missing_space_context": false
-      },
-      "output": {
-        "call_id": "SarvDhan Bridge_08109687225_jC8KHDuwGuBi",
-        "customer": "",
-        "contact_number": "+918109687225",
-        "call_end_reason": "BLOCKED_USER",
-        "recording_url": null,
-        "transcript": [],
-        "start_time": "2026-09-07T05:47:39.119969",
-        "end_time": "2026-09-07T05:47:39.119980",
-        "assistant_number": "+918071539260",
-        "call_summary": null,
-        "duration": 0,
-        "cost": 0.0,
+        "call_end_reason": "USER_HUNG_UP_IN_CALL",
+        "transcript": [
+          {
+            "role": "assistant",
+            "content": "Hello, main Sunrise Heights se bol rahi hoon. Kya abhi baat karne ka sahi samay hai?",
+            "timestamp": "2026-02-07 05:58:00.000000",
+            "participant": "agent",
+            "start_time": "2026-02-07T05:57:55.000000",
+            "end_time": "2026-02-07T05:58:00.000000",
+            "language": "hi"
+          },
+          {
+            "role": "user",
+            "content": "Haan, boliye.",
+            "timestamp": "2026-02-07 05:58:05.000000",
+            "participant": "sip_1234567890",
+            "start_time": "2026-02-07T05:58:03.000000",
+            "end_time": "2026-02-07T05:58:05.000000",
+            "language": "hi"
+          },
+          {
+            "role": "assistant",
+            "content": "Thank you! Yeh call aapke Sunrise Heights me dikhaye gaye interest ke regarding hai. Kya main continue karoon?",
+            "timestamp": "2026-02-07 05:58:15.000000",
+            "participant": "agent",
+            "start_time": "2026-02-07T05:58:08.000000",
+            "end_time": "2026-02-07T05:58:15.000000",
+            "language": "hi"
+          },
+          {
+            "role": "user",
+            "content": "Haan, main 2 BHK ke baare me dekh rahi thi.",
+            "timestamp": "2026-02-07 05:58:22.000000",
+            "participant": "sip_1234567890",
+            "start_time": "2026-02-07T05:58:19.000000",
+            "end_time": "2026-02-07T05:58:22.000000",
+            "language": "hi"
+          },
+          {
+            "role": "assistant",
+            "content": "Bilkul. Hamare paas spacious 2 BHK residences hain, zero-wastage layouts ke saath. Kya main aapki site visit schedule kar doon?",
+            "timestamp": "2026-02-07 05:58:40.000000",
+            "participant": "agent",
+            "start_time": "2026-02-07T05:58:25.000000",
+            "end_time": "2026-02-07T05:58:40.000000",
+            "language": "hi"
+          },
+          {
+            "role": "user",
+            "content": "Haan, kal 11 baje ke liye schedule kar dijiye.",
+            "timestamp": "2026-02-07 05:58:48.000000",
+            "participant": "sip_1234567890",
+            "start_time": "2026-02-07T05:58:45.000000",
+            "end_time": "2026-02-07T05:58:48.000000",
+            "language": "hi"
+          },
+          {
+            "role": "assistant",
+            "content": "Perfect. Maine aapki visit kal 11 AM ke liye schedule kar di hai. Hamare sales expert aapko assist karenge. Dhanyavaad!",
+            "timestamp": "2026-02-07 05:59:05.000000",
+            "participant": "agent",
+            "start_time": "2026-02-07T05:58:52.000000",
+            "end_time": "2026-02-07T05:59:05.000000",
+            "language": "hi"
+          }
+        ],
+        "recording_url": "https://cdn.unpod.ai/recordings/CALL_AbCdEfGhIjKl.mp3",
+        "files": [],
+        "start_time": "2026-02-07T05:57:45",
+        "end_time": "2026-02-07T06:06:25",
+        "call_timings": {
+          "call_dialed_at": "2026-02-07T05:57:44",
+          "call_connected_at": "2026-02-07T05:57:45",
+          "call_ended_at": "2026-02-07T06:06:25",
+          "ring_duration": 1,
+          "talk_duration": 520
+        },
+        "duration": 520,
+        "provider_call_id": "AbCdEfGhIjKlMnOpQrStUv@unpod.ai",
+        "assistant_number": "+919876543210",
+        "metadata": {
+          "cost": 0.600075,
+          "type": "",
+          "usage": {
+            "llm_provider": "Unpod",
+            "llm_model": "google/gemma-4-31b-it",
+            "tts_provider": "elevenlabs",
+            "tts_model": "eleven_v3",
+            "stt_provider": "soniox",
+            "stt_model": "stt-rt-v5",
+            "llm_prompt_tokens": 1199715,
+            "llm_completion_tokens": 1112,
+            "tts_characters_count": 4635,
+            "stt_audio_duration": 508.2,
+            "costs": {
+              "llm_cost": 0,
+              "stt_cost": 0.018,
+              "tts_cost": 0.4635
+            },
+            "total_cost": 0.5715
+          },
+          "provider": "livekit",
+          "room_name": "Unpod Bridge_1234567890_AbCdEfGhIjKl"
+        },
         "post_call_data": {
           "schema_version": 2,
           "analytics": {
-            "sentiment": null,
-            "engagement": null,
-            "tone": null,
+            "sentiment": "positive",
+            "engagement": "high",
+            "tone": "friendly",
             "contact_status": "active",
-            "outcome": "NotConnected",
-            "call_score": null,
-            "call_score_breakdown": null
+            "outcome": "Interested",
+            "call_score": 70,
+            "call_score_breakdown": {
+              "components": {
+                "interest_intent": 20,
+                "use_case_relevance": 10,
+                "timeline_urgency": 10,
+                "authority_influence": 10,
+                "engagement_quality": 10,
+                "next_step_commitment": 10
+              },
+              "total": 70,
+              "reason": "The user was actively engaged, showed strong interest in the offering, and agreed to a site visit."
+            }
           },
           "summary": {
-            "headline": null,
-            "key_points": []
+            "headline": "Site visit scheduled for tomorrow at 11 AM to explore the 2 BHK configuration.",
+            "key_points": [
+              "Customer showed interest in a 2 BHK residence.",
+              "Agent provided details about the residential project and its features.",
+              "Customer scheduled a site visit for tomorrow at 11:00 AM.",
+              "Agent confirmed the visit details and assured assistance during the visit."
+            ]
           },
           "lead": {
-            "name": null,
-            "labels": [],
+            "name": "Jane Doe",
+            "labels": [
+              "Interested"
+            ],
             "objections": [],
             "pain_points": [],
-            "questions_asked": []
+            "questions_asked": [
+              "What kind of space are you picturing for your family?",
+              "Can you repeat that once?",
+              "What are the available configurations?"
+            ]
           },
           "structured_data": {
-            "outcome": null,
-            "payment_release_choice": null
+            "status": "Qualified",
+            "outcome": "Call Disconnected",
+            "lead_intent": "High",
+            "end_call_reason": "Call Disconnected"
           },
           "next_action": {
-            "label": [],
+            "label": [
+              "Agent to schedule site visit for tomorrow at 11 AM",
+              "Agent to send visit details via WhatsApp and SMS"
+            ],
             "callback_requested": false,
             "scheduled_at": null
           },
           "follow_up": {
-            "required": true,
+            "required": false,
             "state": "skipped_inbound_call",
-            "reason": "not-connected retry",
+            "reason": "Outcome falls under stop list conditions. No follow-up required.",
             "next_at": null,
             "attempt": 1,
-            "attempts_remaining": 2,
+            "attempts_remaining": 1,
             "policy": {
-              "max_call_attempts": 3,
-              "max_followup_attempts": 2,
+              "max_call_attempts": 2,
+              "max_followup_attempts": 1,
               "daily_limit": 3,
-              "next_call_attempt_number": 2
+              "next_call_attempt_number": null
             }
           },
-          "evaluation": null,
+          "success_evaluation": {
+            "status": "completed",
+            "reason": "",
+            "result": 8
+          },
           "call_evaluation": null,
           "redial": {
             "status": null
@@ -146,61 +232,71 @@ openapi: 'GET /api/v2/platform/spaces/{space_token}/tasks/'
               "reason": "policy:disabled_in_config"
             },
             {
-              "stage": "critic",
-              "reason": "no_invariant_violations"
+              "stage": "realtime_agent_evaluation",
+              "reason": "policy:disabled_in_config"
+            },
+            {
+              "stage": "spam_detection",
+              "reason": "policy:disabled_in_config"
             }
-          ],
-          "post_call_usage": {
-            "thread_id": "Ta25dc889aa7f11f1a814c5566158eaa5",
-            "room_name": "",
-            "agent_id": "sarvdhan-used-vehicle-finance-and-secured-loans-assistant-6kj8v0siouhg",
-            "org_id": null,
-            "space_token": null,
-            "call_start": "2026-09-07T05:51:28.326798Z",
-            "call_end": "2026-09-07T05:51:28.326798Z",
-            "call_duration_s": "0.00",
-            "providers": {
-              "llm_provider": "Unpod",
-              "llm_model": "google/gemma-4-31b-it",
-              "stt_provider": "soniox",
-              "stt_model": "stt-rt-v5",
-              "tts_provider": "cartesia",
-              "tts_model": "sonic-3.5"
-            },
-            "raw_counters": {
-              "llm_prompt_tokens": "1508",
-              "llm_completion_tokens": "127",
-              "llm_cached_tokens": "0",
-              "tts_characters_count": "0",
-              "stt_audio_duration": "0"
-            },
-            "sku_deltas": [
-              {
-                "codename": "llm.unpod.google/gemma_4_31b_it.input",
-                "raw": "1508",
-                "unit_scale": "1"
-              },
-              {
-                "codename": "llm.unpod.google/gemma_4_31b_it.output",
-                "raw": "127",
-                "unit_scale": "1"
-              }
-            ]
+          ]
+        },
+        "call_traces": [
+          {
+            "status": "callRequested",
+            "timestamp": "2026-02-07T05:57:44.000000",
+            "previous_status": "",
+            "message": "call status set: callRequested",
+            "event": "status_change",
+            "end_reason": "",
+            "error_message": ""
+          },
+          {
+            "status": "ringing",
+            "timestamp": "2026-02-07T05:57:45.000000",
+            "previous_status": "callRequested",
+            "message": "call status changed: callRequested -> ringing",
+            "event": "status_change",
+            "end_reason": "",
+            "error_message": ""
+          },
+          {
+            "status": "active",
+            "timestamp": "2026-02-07T05:57:46.000000",
+            "previous_status": "ringing",
+            "message": "call status changed: ringing -> active",
+            "event": "status_change",
+            "end_reason": "",
+            "error_message": ""
+          },
+          {
+            "status": "hungUp",
+            "timestamp": "2026-02-07T06:06:24.000000",
+            "previous_status": "active",
+            "message": "call status changed: active -> hungUp | reason: USER_HUNG_UP_IN_CALL",
+            "event": "status_change",
+            "end_reason": "USER_HUNG_UP_IN_CALL",
+            "error_message": ""
+          },
+          {
+            "status": "connected",
+            "timestamp": "2026-02-07T06:06:29.000000",
+            "previous_status": "callEnded",
+            "message": "call finalized: connected",
+            "event": "finalized",
+            "end_reason": "USER_HUNG_UP_IN_CALL",
+            "error_message": ""
           }
-        },
-        "metadata": {
-          "cost": 0.0,
-          "type": "",
-          "usage": {}
-        },
-        "call_type": "inbound",
-        "call_status": "failed"
+        ],
+        "error": "",
+        "error_code": "",
+        "end_reason": "User"
       },
       "attachments": [],
-      "assignee": "sarvdhan-used-vehicle-finance-and-secured-loans-assistant-6kj8v0siouhg",
+      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
       "status": "completed",
       "execution_type": "call",
-      "ref_id": "6a88371afc539da073151bec",
+      "ref_id": "6902fb5840a736e125e80ebc",
       "failure_count": 0,
       "last_failure_reason": null,
       "provider": null,
@@ -208,7 +304,7 @@ openapi: 'GET /api/v2/platform/spaces/{space_token}/tasks/'
       "referenced_task": null,
       "follow_up_count": null,
       "follow_up_chain_id": null,
-      "last_status_change": "2026-09-07T05:47:38.682017",
+      "last_status_change": "2026-02-07T05:51:51.606885",
       "scheduled_timestamp": null
     }
   ]
