@@ -152,7 +152,6 @@ openapi: 'GET /api/v2/platform/spaces/{space_token}/tasks/'
             "engagement": "high",
             "tone": "friendly",
             "contact_status": "active",
-            "outcome": "Interested",
             "call_score": 70,
             "call_score_breakdown": {
               "components": {
@@ -306,65 +305,6 @@ openapi: 'GET /api/v2/platform/spaces/{space_token}/tasks/'
       "follow_up_chain_id": null,
       "last_status_change": "2026-02-07T05:51:51.606885",
       "scheduled_timestamp": null
-    }
-  ]
-}
-```
-
-```json Success Response (200) v1
-{
-  "count": 45,
-  "status_code": 200,
-  "message": "Tasks Fetched Successfully",
-  "data": [
-    {
-      "_id": "697debb84c27faa892bfa0cc",
-      "thread_id": "thread_9xkL2mQpR7vNwY4sZ3cJ8hF1",
-      "user_info": {
-        "email": "user@example.com",
-        "full_name": "John Doe"
-      },
-      "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
-      "run_id": "R8ff2ccdefe9a11f0878d43cd8a99e069",
-      "task": {
-        "objective": "Call the lead and discuss the project requirements."
-      },
-      "input": {
-        "name": "John Doe",
-        "contact_number": "1234567890",
-        "email": "john@example.com",
-        "context": "Follow up on proposal"
-      },
-      "output": {
-        "call_id": "CALL_7dAb3kR9mXvQ2pLw",
-        "start_time": "2026-02-07T05:57:45Z",
-        "end_time": "2026-02-07T06:02:30Z",
-        "duration": 285,
-        "recording_url": "https://cdn.unpod.ai/recordings/CALL_7dAb3kR9mXvQ2pLw.mp3",
-        "transcript": [
-          {
-            "role": "agent",
-            "content": "Hello, this is an AI assistant calling on behalf of Unpod. Am I speaking with John Doe?"
-          },
-          {
-            "role": "user",
-            "content": "Yes, this is John."
-          }
-        ],
-        "post_call_data": {
-          "summary": "The agent successfully connected with John Doe and discussed project requirements.",
-          "outcome": "interested",
-          "sentiment": "positive"
-        },
-        "call_type": "outbound",
-        "call_status": "completed"
-      },
-      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
-      "status": "completed",
-      "execution_type": "call",
-      "run_mode": "prod",
-      "created": "2026-02-07T05:57:45Z",
-      "modified": "2026-02-07T06:02:35Z"
     }
   ]
 }

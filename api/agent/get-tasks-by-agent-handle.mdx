@@ -152,7 +152,6 @@ openapi: 'GET /api/v2/platform/agents/{agent_handle}/tasks/'
             "engagement": "high",
             "tone": "friendly",
             "contact_status": "active",
-            "outcome": "Interested",
             "call_score": 70,
             "call_score_breakdown": {
               "components": {
@@ -310,71 +309,6 @@ openapi: 'GET /api/v2/platform/agents/{agent_handle}/tasks/'
   ]
 }
 ```
-```json Success Response (200) v1
-{
-  "count": 1,
-  "status_code": 200,
-  "message": "Tasks Fetched Successfully",
-  "data": [
-    {
-      "_id": "697debb84c27faa892bfa0cc",
-      "thread_id": "thread_9xkL2mQpR7vNwY4sZ3cJ8hF1",
-      "user_info": {
-        "email": "user@example.com",
-        "full_name": "John Doe"
-      },
-      "task_id": "T8ff2ccdffe9a11f0878d43cd8a99e069",
-      "run_id": "R8ff2ccdefe9a11f0878d43cd8a99e069",
-      "task": {
-        "objective": "Call the lead and discuss the project requirements."
-      },
-      "input": {
-        "name": "John Doe",
-        "contact_number": "1234567890",
-        "email": "john@example.com",
-        "context": "Follow up on proposal"
-      },
-      "output": {
-        "call_id": "CALL_7dAb3kR9mXvQ2pLw",
-        "call_end_reason": "caller_hangup",
-        "start_time": "2026-02-07T05:57:45Z",
-        "end_time": "2026-02-07T06:02:30Z",
-        "assistant_number": "+911234567890",
-        "call_summary": "The agent successfully connected with John Doe and discussed project requirements. Lead expressed interest.",
-        "duration": 285,
-        "recording_url": "https://cdn.unpod.ai/recordings/CALL_7dAb3kR9mXvQ2pLw.mp3",
-        "transcript": [
-          {
-            "role": "agent",
-            "content": "Hello, this is an AI assistant calling on behalf of Unpod. Am I speaking with John Doe?"
-          },
-          {
-            "role": "user",
-            "content": "Yes, this is John."
-          }
-        ],
-        "post_call_data": {
-          "summary": "The agent successfully connected with John Doe and discussed project requirements.",
-          "outcome": "interested",
-          "sentiment": "positive"
-        },
-        "call_type": "outbound",
-        "call_status": "completed"
-      },
-      "attachments": [],
-      "assignee": "space-agent-8qmk42nslp91wrh3dz7btxc4",
-      "status": "completed",
-      "execution_type": "call",
-      "ref_id": "6902fb5840a736e125e80ebc",
-      "failure_count": 0,
-      "last_failure_reason": null,
-      "retry_attempt": 0,
-      "last_status_change": "2026-02-07T06:02:35Z",
-      "scheduled_timestamp": null
-    }
-  ]
-}
-```
 
 ```json Error Response (404)
 {
@@ -390,10 +324,6 @@ Fetch all tasks assigned to a specific agent/pilot using their handle. This retu
 
 <Note>
 **Prerequisites:** Make sure you have your API Token ready. See [Authentication](/api/get-started/authentication) for details.
-</Note>
-
-<Note>
-**Response versions:** the examples panel has two tabs. **v1** is the original legacy payload. **v2** is the current payload this endpoint returns — same envelope (`count`, `status_code`, `message`, `data`), but each task object carries extra fields and `output.post_call_data` uses `schema_version: 2`. Build new integrations against v2 and read `post_call_data.schema_version` before parsing analytics.
 </Note>
 
 ### Path Parameters
@@ -456,9 +386,9 @@ You can get the `agent_handle` by hitting the [Get All Agents](/api/agent/get-al
 | last_status_change  | string  | Timestamp of last status change               |
 | scheduled_timestamp | string  | Scheduled execution timestamp (null if now)   |
 
-### Task Object Fields — v2 Additions
+### Additional Task Object Fields
 
-Present in v2 responses only. `status` also gains the `in_progress` value.
+`status` also supports the `in_progress` value.
 
 | Field              | Type            | Description                                                            |
 |--------------------|-----------------|------------------------------------------------------------------------|
@@ -474,7 +404,7 @@ Present in v2 responses only. `status` also gains the `in_progress` value.
 | follow_up_chain_id | string \| null  | Groups a task and all of its follow-ups into one chain                  |
 
 <Note>
-`user_info` and `task` are objects in both versions, but in v2 they come back empty (`{}`) for calls not created from a lead payload with an objective. Do not assume `task.objective` exists.
+`user_info` and `task` are objects, but they come back empty (`{}`) for calls not created from a lead payload with an objective. Do not assume `task.objective` exists.
 </Note>
 
 ### Output Object Fields
@@ -495,10 +425,10 @@ Present in v2 responses only. `status` also gains the `in_progress` value.
 | call_status      | string | Status of the call: `completed`, etc.    |
 
 <Note>
-`output` is only fully populated once the call finishes. While `status` is `in_progress`, v2 returns a partial `output` with just `call_type`, `call_status` and `call_end_reason`.
+`output` is only fully populated once the call finishes. While `status` is `in_progress`, it returns a partial `output` with just `call_type`, `call_status` and `call_end_reason`.
 </Note>
 
-### Output Object Fields — v2 Additions
+### Additional Output Object Fields
 
 | Field          | Type   | Description                                            |
 |----------------|--------|--------------------------------------------------------|
@@ -507,14 +437,14 @@ Present in v2 responses only. `status` also gains the `in_progress` value.
 | cost           | number | Billed cost of the call                                |
 | metadata       | object | `cost`, `type` and a `usage` map for the call          |
 
-### post_call_data — v2 (`schema_version: 2`)
+### post_call_data (`schema_version: 2`)
 
-In v1 `post_call_data` was a flat `{summary, outcome, sentiment}` object. In v2 it is grouped:
+`post_call_data` is grouped:
 
 | Field           | Type           | Description                                                                                         |
 |-----------------|----------------|-----------------------------------------------------------------------------------------------------|
 | schema_version  | integer        | Always `2` for this shape. Branch on this field                                                     |
-| analytics       | object         | `sentiment`, `engagement`, `tone`, `contact_status`, `outcome`, `call_score`, `call_score_breakdown` |
+| analytics       | object         | `sentiment`, `engagement`, `tone`, `contact_status`, `call_score`, `call_score_breakdown` |
 | summary         | object         | `headline` plus a `key_points` array                                                                |
 | lead            | object         | `name`, `labels`, `objections`, `pain_points`, `questions_asked`                                    |
 | structured_data | object         | Playbook-defined extraction fields — keys vary per agent                                            |
