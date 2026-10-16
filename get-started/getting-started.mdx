@@ -27,8 +27,8 @@ Unpod's credentials are not interchangeable:
 
 | You are calling | Host | Auth | From |
 |---|---|---|---|
-| **Python SDK REST** (agents, numbers, calls) | `api.unpod.ai` | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE`, or `UNPOD_API_KEY` | [Quickstart → Prerequisites](/get-started/quickstart#prerequisites) |
-| **AgentRunner** (your own brain) | the orchestrator | `UNPOD_API_KEY` (`sk_...`) | [unpod.ai/api-keys](https://unpod.ai/api-keys/) |
+| **Python SDK REST** (agents, numbers, calls) | `unpod.ai` | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | [Quickstart → Prerequisites](/get-started/quickstart#prerequisites) |
+| **AgentRunner** (your own brain) | the orchestrator | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | [Quickstart → Prerequisites](/get-started/quickstart#prerequisites) |
 | **Chat API** (trained agent as a model) | `inference.unpod.ai` | `Authorization: Bearer` endpoint key | Playground → Deploy as Endpoint |
 
 The SDK reads all of it from the environment; token auth wins over the API

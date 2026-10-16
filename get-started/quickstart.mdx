@@ -22,18 +22,35 @@ boundary is text.
 pip install unpod
 ```
 
-Set your credentials in the environment:
+Put your credentials in a `.env` file in the folder you run the scripts
+from:
 
-```bash
-export UNPOD_BASE_URL="https://api.unpod.ai"
-export UNPOD_SERVICE_BASE_URL="https://api.unpod.ai"
-export UNPOD_PLATFORM_TOKEN="..."   # org-scoped REST auth
-export UNPOD_ORG_HANDLE="your-org"
-export UNPOD_API_KEY="sk_..."       # AgentRunner bearer; not needed on this page
+```bash .env
+UNPOD_BASE_URL="https://unpod.ai"
+UNPOD_SERVICE_BASE_URL="https://unpod.ai"   # bare host - no path
+UNPOD_PLATFORM_TOKEN="..."                  # org-scoped REST auth
+UNPOD_ORG_HANDLE="your-org"                 # your organization's handle
 ```
 
-`AsyncClient()` reads all of it from the environment, and token auth wins
-over the API key when both are present.
+`import unpod` loads `.env` from the current working directory, and
+`AsyncClient()` reads every value from it - no `load_dotenv()` call needed.
+Plain `export` lines in your shell work too. Values already set in the
+shell win over `.env`.
+
+<Warning>
+Set **both** URLs, each to the **bare host** `https://unpod.ai` with no
+path segment. Each one feeds a different part of the SDK: without
+`UNPOD_SERVICE_BASE_URL` the agent and call methods fail, and without
+`UNPOD_BASE_URL` the voice-profile and number listings fail. If your team
+gave you a staging or dedicated host, use that host for both values
+instead.
+</Warning>
+
+<Note>
+Token auth (`UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE`) wins over
+`UNPOD_API_KEY` when both are set. Analytics and the telephony calls on
+this page need token auth, so use the token.
+</Note>
 
 ## The six steps
 
@@ -43,7 +60,7 @@ over the API key when both are present.
 | 2 | `agents.voice.create()` | Brain + voice, under a name you choose |
 | 3 | `telephony.numbers.list()` | Find a free number |
 | 4 | `agents.numbers.attach()` | Bind it to the agent |
-| 5 | `calls.create()` | Dial - returns queued, with a `call_id` |
+| 5 | `calls.create()` | Dial - returns `pending`, with a `call_id` |
 | 6 | `calls.get()` | Status, transcript, recording, duration |
 
 **`agent_id` is the only identifier you re-type.** The voice name, the
@@ -108,6 +125,17 @@ one string you type again - attaching a number, placing a call, and reading
 results all take this exact string. `name` is the human label, shown in
 dashboards, referenced by nobody's code.
 
+Pick the mode for the agent's brain. Both are managed - Unpod runs the
+brain and you deploy nothing:
+
+- **Prompt mode** - the brain is one instruction string. Fastest way to a
+  talking agent.
+- **Playbook mode** - the brain is a published [playbook](/playbook/what-is-a-playbook):
+  branches, slots, and tools you build and edit in the Playbook studio.
+
+<Tabs>
+<Tab title="Prompt mode">
+
 ```python step2_agent.py
 import asyncio
 from unpod import AsyncClient, Prompt
@@ -143,8 +171,64 @@ agent_id        = my-support
 name            = My Support Line
 voice_profile   = Riya
 brain.type      = prompt
-brain_execution = bridge
+brain_execution = embedded
 ```
+
+</Tab>
+<Tab title="Playbook mode">
+
+Publish your playbook first, then copy its id (`PB_...`) from the studio -
+see [Publish and share](/playbook/publish-and-share). An unpublished
+playbook cannot answer calls.
+
+```python step2_agent_playbook.py
+import asyncio
+from unpod import AsyncClient, Playbook
+
+PLAYBOOK_ID = "PB_..."   # your published playbook's id
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        voice = await client.agents.voice.create(
+            agent_id="my-support",
+            name="My Support Line",
+            brain=Playbook(PLAYBOOK_ID),
+            voice_profile="Riya",
+            recording=True,
+        )
+        print(f"agent_id        = {voice.agent_id}")
+        print(f"name            = {voice.name}")
+        print(f"voice_profile   = {voice.voice_profile_name}")
+        print(f"brain.type      = {voice.brain.get('type')}")
+        print(f"brain.ref       = {voice.brain.get('ref')}")
+
+asyncio.run(main())
+```
+
+```text Output
+agent_id        = my-support
+name            = My Support Line
+voice_profile   = Riya
+brain.type      = playbook
+brain.ref       = PB_...
+```
+
+`Playbook(id)` is a **live reference**, not a snapshot: publish a new
+version of the playbook and the agent uses it on its next call - no SDK
+call needed.
+
+</Tab>
+</Tabs>
+
+`brain_execution` is where the platform runs the brain. It is set for you;
+leave it alone unless support asks you to change it.
+
+An agent has **one** brain. Re-running `create()` with the same `agent_id`
+and the same brain is safe, but switching an existing agent from Prompt to
+Playbook (or back) through `create()` returns **409 Conflict**. Change the
+brain with `client.agents.update("my-support", brain=Playbook("PB_..."))`
+instead, or pick a new `agent_id` - see
+[Configure an agent](/speech-stack/agent-settings).
 
 `Prompt` is the shortest path to something that answers: the brain is a bare
 instruction string, the platform runs it as a one-node playbook, and there is
@@ -175,32 +259,60 @@ from unpod import AsyncClient
 async def main() -> None:
     async with AsyncClient() as client:
         numbers = await client.telephony.numbers.list()
+
         for n in numbers:
-            print(f"{n.number}  status={n.status}  country={n.country}")
+            print(f"{n.number}  status={n.status}")
+
+        attachable = [n.number for n in numbers if n.status == "not_assigned"]
+        if not attachable:
+            print("No unattached numbers on this org.")
+            return
+        print(f"\nFree to attach: {attachable[0]}")
 
 asyncio.run(main())
 ```
 
 ```text Output
-+918071539102  status=not_assigned  country=IN
-+918071539118  status=assigned      country=IN
++918071539102  status=not_assigned
++918071539118  status=assigned
+
+Free to attach: +918071539102
 ```
 
-Only rows with `status="not_assigned"` can be attached. `numbers.list()`
-also takes optional `status` and `country` filters. If nothing is free,
-provision a number from the dashboard first.
+Each row has two fields, `number` (E.164) and `status`:
+
+| `status` | Meaning |
+|---|---|
+| `not_assigned` | Free - you can attach it |
+| `assigned` | Already attached to an agent |
+| `closed` | Inactive - cannot be attached |
+
+`telephony.numbers.list()` takes no filters; filter the list in code as
+above. If nothing is free, provision a number from the dashboard under
+**Dev Platform → Numbers**, or detach one from another agent.
 
 </Step>
 <Step title="Attach it to the agent">
+
+This script is self-contained: it finds the first free number and attaches
+it, so you never copy a number by hand.
 
 ```python step4_attach.py
 import asyncio
 from unpod import AsyncClient
 
+AGENT_ID = "my-support"
+
 async def main() -> None:
     async with AsyncClient() as client:
-        result = await client.agents.numbers.attach(
-            "my-support", "+918071539102")  # the not_assigned number from step 3
+        numbers = await client.telephony.numbers.list()
+
+        attachable = [n.number for n in numbers if n.status == "not_assigned"]
+        if not attachable:
+            print("No unattached numbers on this org.")
+            return
+
+        result = await client.agents.numbers.attach(AGENT_ID, attachable[0])
         print(f"number={result.get('number')} "
               f"agent_id={result.get('agent_id')} "
               f"status={result.get('status')}")
@@ -208,9 +320,17 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
+```text Output
+number=<attached_phone_number> agent_id=my-support status=assigned
+```
+
+`status=assigned` confirms the binding. To attach a specific number,
+pass it directly: `await client.agents.numbers.attach("my-support", "+9180...")`.
+
 From here you never pass the number again - `calls.create()` resolves it
-from the agent. `agents.numbers.detach(number_id)` reverses it, and a number
-moves to a different agent by detaching and attaching again.
+from the agent. To move the number to a different agent later, use
+`client.agents.update("other-agent", number="+9180...")` - see
+[Configure an agent](/speech-stack/agent-settings#change-the-phone-number).
 
 </Step>
 <Step title="Place the call">
@@ -267,7 +387,10 @@ from unpod import AsyncClient
 
 CALL_ID = "..."   # from step 5
 
-TERMINAL = {"completed", "ended", "failed", "no_answer",
+# Terminal statuses. Current servers report connected / notConnected / failed;
+# the rest are older names a call record may still carry.
+TERMINAL = {"connected", "notConnected", "failed",
+            "completed", "not_connected", "ended", "no_answer",
             "busy", "canceled", "cancelled", "rejected"}
 
 async def wait_for_call(client, call_id, budget_s=300, poll_s=5):
@@ -364,7 +487,19 @@ campaign.
 
 ## Troubleshooting
 
-- **The call stays `queued` and `from_number` is `None`** - no number is
+- **`httpx.ConnectError` (`Name or service not known` / `getaddrinfo failed`)** -
+  the host in `UNPOD_BASE_URL` / `UNPOD_SERVICE_BASE_URL` does not exist.
+  Set both to `https://unpod.ai` (or the host your team gave you).
+- **`404`, or an HTML page instead of JSON** - `UNPOD_SERVICE_BASE_URL` is
+  missing or has a path on it. It must be the bare host, e.g.
+  `https://unpod.ai`.
+- **`401 Unauthorized`** - the token is wrong or `UNPOD_ORG_HANDLE` does not
+  match the org the token belongs to.
+- **`ValueError` asking for `UNPOD_PLATFORM_TOKEN`** - the SDK found no
+  credentials. Check that `.env` sits in the folder you run `python` from.
+- **`409 Conflict` from `agents.voice.create()`** - that `agent_id` already
+  exists with a different brain. Use `agents.update()` or a new id.
+- **The call stays `pending` and `from_number` is `None`** - no number is
   attached to the agent. Re-run step 4 and check the attach response.
 - **Your script hangs on a busy line** - you are polling `ended_at` alone.
   A never-connected call finishes by terminal status only; use the
@@ -377,6 +512,15 @@ campaign.
 ## Next
 
 <CardGroup cols={3}>
+  <Card title="Configure the agent" icon="sliders-horizontal" href="/speech-stack/agent-settings">
+    Change voice or number, background sound, noise cancellation, and more.
+  </Card>
+  <Card title="Handover & follow-up" icon="phone-forwarded" href="/speech-stack/agent-tools">
+    Transfer to a human, voicemail messages, automatic callbacks.
+  </Card>
+  <Card title="Domain dictionaries" icon="book-a" href="/speech-stack/domain-dictionaries">
+    Teach the agent your product names and how to say them.
+  </Card>
   <Card title="Run your own brain" icon="bot" href="/get-started/first-phone-call">
     A `Runner` at the text boundary - your process, your framework.
   </Card>

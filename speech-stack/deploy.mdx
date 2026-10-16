@@ -25,7 +25,7 @@ legacy `transport="serve"` model. See
 
 A production deployment should have:
 
-- A stable `UNPOD_API_KEY` - **required by the `AgentRunner`** for the orchestrator connection ([full variable table](/speech-stack/setup-checklist#environment-variables))
+- A stable `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` - **required by the `AgentRunner`** for the orchestrator connection ([full variable table](/speech-stack/setup-checklist#environment-variables))
 - A clear `agent_id` shared by every replica of the same agent
 - Capacity limits (`max_sessions`, `permits_per_minute`) that match your traffic
 - Shutdown handling so active calls can drain before the process exits
@@ -96,7 +96,7 @@ reported capacity. No shared state, no coordination needed.
 
 ```bash
 # replica 1, replica 2, ... identical:
-UNPOD_API_KEY=sk_... python agent.py
+UNPOD_PLATFORM_TOKEN=... UNPOD_ORG_HANDLE=your-org python agent.py
 ```
 
 ### 5. Shutdown and supervision
@@ -121,10 +121,10 @@ The minimum production `.env` - every variable defined in the
 [Provisioning checklist](/speech-stack/setup-checklist#environment-variables):
 
 ```bash
-UNPOD_API_KEY="sk_..."              # required by the AgentRunner
-UNPOD_BASE_URL="api.unpod.ai"
-UNPOD_PLATFORM_TOKEN="..."          # management client; falls back to UNPOD_API_KEY
-UNPOD_ORG_HANDLE="acme"             # org-scoped / telephony calls
+UNPOD_PLATFORM_TOKEN="..."                  # AgentRunner + management client
+UNPOD_ORG_HANDLE="acme"                     # required with the token
+UNPOD_BASE_URL="https://unpod.ai"           # runner derives wss://<host>
+UNPOD_SERVICE_BASE_URL="https://unpod.ai"   # management REST, bare host
 
 # Legacy transport="serve" only (ignored under the default dial_out transport):
 UNPOD_AGENT_SECRET="long-random-secret"

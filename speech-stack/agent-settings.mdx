@@ -1,0 +1,383 @@
+---
+title: 'Configure an Agent'
+icon: 'sliders-horizontal'
+description: 'Change an existing agent with one call - voice, phone number, background sound, noise cancellation, muting, limits, and model.'
+---
+
+Every setting on this page goes through one method:
+
+```python
+agent = await client.agents.update("my-support", recording=True, max_concurrent=5)
+```
+
+Three rules apply to every argument:
+
+- **Omitted means unchanged.** Pass only what you want to change.
+- **Settings are agent-wide.** One change reaches every voice of the agent.
+- **It takes effect on the next call.** Calls already in progress keep the
+  settings they started with.
+
+`update()` returns the stored `Agent`. Read it again at any time with
+`client.agents.get(agent_id)`.
+
+The examples use the `my-support` agent from the
+[Quickstart](/get-started/quickstart) and assume your `.env` is set up as
+described there.
+
+---
+
+## Read the current settings
+
+```python read_agent.py
+import asyncio
+from unpod import AsyncClient
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        agent = await client.agents.get("my-support")
+        print(f"agent_id           = {agent.agent_id}")
+        print(f"brain              = {agent.brain.get('type')}")
+        print(f"number             = {getattr(agent, 'number', None)}")
+        print(f"background_sound   = {agent.background_sound} "
+              f"(enabled={agent.background_sound_enabled}, "
+              f"volume={agent.background_sound_volume})")
+        print(f"noise_cancellation = {agent.noise_cancellation}")
+        for v in agent.voices:
+            print(f"voice              = {v.voice_profile_name} (default={v.is_default})")
+
+asyncio.run(main())
+```
+
+A value of `None` means the agent uses the platform default for that
+setting.
+
+---
+
+## Change the voice
+
+Swap the agent's voice profile in place. The brain, number, and call
+history stay as they are.
+
+```python update_voice.py
+import asyncio
+from unpod import AsyncClient
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        agent = await client.agents.update("my-support", voice_profile="Zara")
+        for v in agent.voices:
+            print(f"{v.voice_profile_name}  default={v.is_default}")
+
+asyncio.run(main())
+```
+
+`voice_profile` takes a profile name (case-insensitive) or its
+`profile_id` - list them with
+[`client.voice_profiles.list()`](/speech-stack/voice-profiles).
+
+To run **several** voices on one agent - for example one per language - add
+voices instead of replacing one:
+
+```python
+# Add a second voice. It shares the agent's brain.
+await client.agents.voice.add("my-support", voice_profile="Satvir Kaur",
+                              greeting="Sat Sri Akal! Main tuhadi ki madad kar sakdi haan?")
+
+# Change one voice's greeting, or make it the default voice.
+await client.agents.voice.update("my-support", "<voice_profile_id>",
+                                 greeting="Hello again!", make_default=True)
+
+# Remove a voice. The agent keeps the others.
+await client.agents.voice.remove("my-support", "<voice_profile_id>")
+```
+
+Get `<voice_profile_id>` from `agent.voices[i].voice_profile_id`.
+
+---
+
+## Change the greeting
+
+```python
+await client.agents.update("my-support",
+                           greeting="Hi, this is Riya from the electronics store.")
+```
+
+The greeting is the agent's opening line. It overrides the voice profile's
+own greeting.
+
+---
+
+## Change the phone number
+
+Pass `number=` to attach a number to the agent, or to move a number that
+another of your agents is using:
+
+```python update_number.py
+import asyncio
+from unpod import AsyncClient
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        agent = await client.agents.update("my-support", number="+918071539102")
+        print(f"agent_id={agent.agent_id} number={getattr(agent, 'number', None)}")
+
+asyncio.run(main())
+```
+
+```text Output
+agent_id=my-support number=+918071539102
+```
+
+- **Free number** in your org → it is attached.
+- **Number already on another of your agents** → it moves here. No detach
+  needed; inbound calls follow it to this agent.
+- Only your organization's numbers can be used. Any other number returns
+  `404`.
+
+To move a number without editing anything else, call the numbers API
+directly:
+
+```python
+await client.numbers.agent.change("+918071539102", "my-support")
+```
+
+To release a number from its agent (it goes back to `not_assigned` and can
+be attached again):
+
+```python
+await client.telephony.numbers.detach("+918071539102")
+```
+
+<Note>
+When you pass `number=` together with other settings, the settings are saved
+first. If the number step then fails, the other settings stay saved -
+re-run with just `number=` once you fix the cause.
+</Note>
+
+---
+
+## Background sound
+
+A background sound plays a quiet room ambience under the agent's voice, so
+the call sounds like a real office instead of studio silence.
+
+```python background_sound.py
+import asyncio
+from unpod import AsyncClient, BackgroundSound
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        agent = await client.agents.update(
+            "my-support",
+            background_sound=BackgroundSound.office,   # or "office"
+            background_sound_volume=0.3,               # 0.0 - 1.0
+            background_sound_enabled=True,
+        )
+        print(agent.background_sound, agent.background_sound_volume,
+              agent.background_sound_enabled)
+
+asyncio.run(main())
+```
+
+```text Output
+office 0.3 True
+```
+
+| Argument | Values | Notes |
+|---|---|---|
+| `background_sound` | `office`, `city`, `forest`, `crowded_room`, `none` | Any other value is rejected |
+| `background_sound_volume` | `0.0` to `1.0` | A gain, **not** a percentage - `30` raises `ValueError` |
+| `background_sound_enabled` | `True` / `False` | The on/off switch |
+
+To turn the sound **off**, use the switch - the chosen room is kept, so
+turning it back on needs no other change:
+
+```python
+await client.agents.update("my-support", background_sound_enabled=False)
+```
+
+<Warning>
+`background_sound_volume=0.0` is not "off" - it plays a silent bed. Use
+`background_sound_enabled=False` to switch the sound off.
+</Warning>
+
+---
+
+## Noise cancellation
+
+Noise cancellation cleans up the **caller's** audio before the agent hears
+it - traffic, fans, TV, a crowded street. It changes what the agent
+understands, never how the agent sounds.
+
+```python noise_cancellation.py
+import asyncio
+from unpod import AsyncClient, NoiseCancellation
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        agent = await client.agents.update(
+            "my-support",
+            noise_cancellation=NoiseCancellation.krisp,   # or "krisp"
+        )
+        print(agent.noise_cancellation)
+
+asyncio.run(main())
+```
+
+```text Output
+krisp
+```
+
+| Value | Where it runs |
+|---|---|
+| `rnnoise`, `hush` | Inside the media pipeline - work on any call |
+| `aic`, `krisp` | Inside the media pipeline - need the model/licence on the server |
+| `bvc`, `bvc-telephony` | LiveKit Cloud's canceller, at the room layer (`bvc-telephony` is tuned for phone audio) |
+| `none` | No cancellation - the agent hears raw audio |
+
+Not setting the field at all leaves the platform default in charge, which
+is **not** the same as `"none"`. Once you set a value, you cannot reset
+the agent to "platform default" - name the canceller you want instead.
+
+If a canceller's model or licence is missing on the server, the call still
+runs - just without filtering. An accepted value is not proof the
+canceller loaded.
+
+<Tip>
+Start with the default. Set a canceller only if the transcripts show the
+agent mishearing callers in noisy places, then compare a few calls before
+and after.
+</Tip>
+
+---
+
+## Mute the caller during the greeting
+
+By default the agent ignores the caller's audio until its **first reply**
+has finished playing. Without this, a caller saying "hello?" over the
+greeting is transcribed as their first turn and the agent answers it.
+
+Turn it off for an agent that must react the moment the caller speaks:
+
+```python
+await client.agents.update("my-support", mute_until_first_bot_complete=False)
+```
+
+| Value | Behaviour |
+|---|---|
+| not set / `True` | Caller is muted until the agent's first reply ends (default) |
+| `False` | Caller can interrupt from the first word |
+
+---
+
+## Who speaks first
+
+```python
+await client.agents.update("my-support", first_speaker="user")
+```
+
+`"agent"` (default) - the agent opens with its greeting.
+`"user"` - the agent waits for the caller to speak first.
+
+---
+
+## Recording and call limits
+
+```python
+await client.agents.update(
+    "my-support",
+    recording=True,            # record every call
+    max_call_duration_s=600,   # hard stop after 10 minutes
+    max_concurrent=5,          # calls this agent takes at once
+)
+```
+
+| Argument | Default | Notes |
+|---|---|---|
+| `recording` | `False` | An unrecorded call cannot be recovered later |
+| `max_call_duration_s` | `3600` | Lower it for outbound campaigns |
+| `max_concurrent` | `1` | Raise it before any load test, or callers queue |
+
+---
+
+## The LLM the brain runs on
+
+```python
+await client.agents.update("my-support", llm_model="openai/gpt-4.1-mini")
+```
+
+Use the `provider/model` form - a bare model name such as `"gpt-4.1-mini"`
+is rejected because the prefix is what routes the request. Not set means
+the platform's default model.
+
+---
+
+## Change the brain
+
+```python
+from unpod import Playbook, Prompt
+
+await client.agents.update("my-support", brain=Playbook("PB_..."))
+await client.agents.update("my-support", brain=Prompt("You are Riya, ..."))
+```
+
+A brain change reaches every voice of the agent. See
+[Agents → The Brain](/speech-stack/agents#the-brain-one-parameter-four-sources)
+for the four brain types.
+
+---
+
+## Silence timeout (built in)
+
+If the caller says nothing, the agent checks in and then ends the call:
+
+1. After about half of the timeout, the agent says *"Are you still there?"*
+2. It asks once more shortly before the timeout.
+3. At the timeout (60 seconds of silence by default) the call ends with
+   `end_reason="IDLE_TIMEOUT"`.
+
+The clock pauses during a [handover](/speech-stack/agent-tools#transfer-to-a-human),
+so a transfer is never cut off. The timeout is not configurable from the
+SDK yet.
+
+---
+
+## All update arguments
+
+| Argument | Type | What it changes |
+|---|---|---|
+| `brain` | `Prompt` / `Playbook` / `Runner` / `Endpoint` | What answers the caller |
+| `name` | `str` | Display name in dashboards |
+| `greeting` | `str` | The opening line |
+| `voice_profile` | `str` | Replaces the voice (name or `profile_id`) |
+| `number` | `str` | Attaches or moves a number (E.164 or number id) to this agent |
+| `background_sound` | `BackgroundSound` / `str` | Ambience room |
+| `background_sound_enabled` | `bool` | Ambience on/off |
+| `background_sound_volume` | `float` | Ambience level, 0.0-1.0 |
+| `noise_cancellation` | `NoiseCancellation` / `str` | Caller-audio canceller |
+| `mute_until_first_bot_complete` | `bool` | Mute caller during the first reply |
+| `first_speaker` | `"agent"` / `"user"` | Who opens the call |
+| `recording` | `bool` | Call recording |
+| `max_call_duration_s` | `int` | Hard cap per call, seconds |
+| `max_concurrent` | `int` | Parallel calls |
+| `llm_model` | `str` | `provider/model` for the brain |
+| `domain` | `str` | [Domain dictionary](/speech-stack/domain-dictionaries) tag; `""` removes it |
+| `tools` | `dict` | [Handover and voicemail](/speech-stack/agent-tools) config |
+| `automatic_followup_enabled` | `bool` | [Automatic follow-up calls](/speech-stack/agent-tools#automatic-follow-up-calls) |
+| `cache_mode` | `"active"` / `"shadow"` / `"off"` | Response cache for this agent |
+
+---
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Handover & follow-up" icon="phone-forwarded" href="/speech-stack/agent-tools">
+    Transfer to a human, voicemail message, automatic callbacks.
+  </Card>
+  <Card title="Domain dictionaries" icon="book-a" href="/speech-stack/domain-dictionaries">
+    Fix misheard product names and pronunciations.
+  </Card>
+  <Card title="Analytics" icon="chart-bar" href="/speech-stack/analytics">
+    Structured data from every call.
+  </Card>
+</CardGroup>

@@ -233,12 +233,13 @@ using.
 **Management API** is for setup and orchestration: register a trunk, sync
 numbers, create an agent, trigger an outbound call, fetch transcripts and
 analytics. You construct a `Client` (sync) or `AsyncClient` (async); it reads
-`UNPOD_API_KEY` from the environment.
+`UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE` and the host URLs from the
+environment or a `.env` file.
 
 ```python
 from unpod import AsyncClient, Runner
 
-client = AsyncClient()                       # REST, reads UNPOD_API_KEY
+client = AsyncClient()                       # REST, reads credentials from .env / env
 await client.agents.voice.create("support-bot", brain=Runner(), name="Support")
 ```
 

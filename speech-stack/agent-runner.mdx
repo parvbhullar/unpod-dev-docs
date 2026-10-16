@@ -20,8 +20,9 @@ uv add "unpod[langchain]"   # optional: LangChain adapter
 Source: [unpod-ai/unpod-python-sdk](https://github.com/unpod-ai/unpod-python-sdk).
 
 ```bash
-export UNPOD_API_KEY="sk_..."
-export UNPOD_BASE_URL="api.unpod.ai"   # one URL; the runner derives wss://<host>
+export UNPOD_PLATFORM_TOKEN="..."      # the runner registers with your platform token
+export UNPOD_ORG_HANDLE="your-org"
+export UNPOD_BASE_URL="https://unpod.ai"   # one URL; the runner derives wss://<host>
 ```
 
 The [Quickstart](/get-started/quickstart#prerequisites) documents every
@@ -63,7 +64,7 @@ runner.start()  # blocking
 AgentRunner(
     entrypoint: Callable[[CallContext], Awaitable[None]],
     agent_id: str,
-    api_key: str | None = None,            # falls back to UNPOD_API_KEY
+    platform_token: str | None = None,     # falls back to UNPOD_PLATFORM_TOKEN
     max_sessions: int = 50,                 # max concurrent sessions
     max_concurrent_calls: int | None = None, # alias for max_sessions
     permits_per_minute: int = 120,          # rate of new call acceptance
@@ -73,6 +74,7 @@ AgentRunner(
     serving_url: str | None = None,         # serve transport only; falls back to UNPOD_RUNNER_URL
     agent_secret: str | None = None,        # serve transport only; falls back to UNPOD_AGENT_SECRET
     transport: str = "dial_out",            # "dial_out" (v2 default) | "serve" (legacy)
+    org_handle: str | None = None,          # falls back to UNPOD_ORG_HANDLE
 )
 ```
 
@@ -259,7 +261,7 @@ via the Management SDK, targeting it by session ID:
 ```python
 from unpod import AsyncClient
 
-async with AsyncClient() as client:  # reads UNPOD_API_KEY; see setup-checklist for the full credential table
+async with AsyncClient() as client:  # reads credentials from .env; see setup-checklist
     await client.sessions.end(session_id)
 
     await client.sessions.transfer(          # warm handoff supported here

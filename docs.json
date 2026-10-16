@@ -203,6 +203,9 @@
             "icon": "audio-lines",
             "pages": [
               "speech-stack/agents",
+              "speech-stack/agent-settings",
+              "speech-stack/agent-tools",
+              "speech-stack/domain-dictionaries",
               "speech-stack/pipes",
               "speech-stack/numbers",
               "speech-stack/voice-profiles"

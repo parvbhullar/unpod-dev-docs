@@ -143,11 +143,11 @@ AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `UNPOD_API_KEY` | Yes | Direct-mode Bearer key. **Required by the `AgentRunner`** (orchestrator connection); also the management-client fallback when `UNPOD_PLATFORM_TOKEN` is unset |
-| `UNPOD_PLATFORM_TOKEN` | No | Backend-core DRF token - enables management **proxy mode** (preferred for the `AsyncClient`/`Client`). Falls back to `UNPOD_API_KEY` if unset |
-| `UNPOD_ORG_HANDLE` | No | Org handle sent as the `Org-Handle` header alongside `UNPOD_PLATFORM_TOKEN` (required for org-scoped / telephony endpoints) |
-| `UNPOD_BASE_URL` | No | Single shared endpoint. REST derives `https://<host>/platform` and the runner derives `wss://<host>` |
-| `UNPOD_SERVICE_BASE_URL` | No | Management REST override only. Takes precedence over `UNPOD_BASE_URL` when set |
+| `UNPOD_PLATFORM_TOKEN` | Yes | Org-scoped platform token. Used by `AsyncClient`/`Client` (proxy mode) **and required by the `AgentRunner`** to register with the orchestrator |
+| `UNPOD_ORG_HANDLE` | Yes | Your org handle, sent with the token. Required by the `AgentRunner` and by org-scoped calls (telephony, analytics, voice profiles) |
+| `UNPOD_SERVICE_BASE_URL` | Yes | Management REST host - the **bare host**, e.g. `https://unpod.ai`, no path |
+| `UNPOD_BASE_URL` | Yes | Shared host, e.g. `https://unpod.ai`. The runner derives `wss://<host>` from it |
+| `UNPOD_API_KEY` | No | Direct-mode Bearer key (`sk_...`). Management-client fallback when `UNPOD_PLATFORM_TOKEN` is unset; cannot reach telephony or analytics. The `AgentRunner` no longer accepts it |
 | `UNPOD_ORCHESTRATOR_URL` | No | Runner WebSocket override only. Takes precedence over `UNPOD_BASE_URL` when set |
 
 ### Which URL setting to use

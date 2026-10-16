@@ -1,0 +1,258 @@
+---
+title: 'Handover, Voicemail & Follow-up'
+icon: 'phone-forwarded'
+description: 'Let the agent transfer callers to a human, leave a voicemail message, and schedule callbacks on its own.'
+---
+
+Three things an agent can do beyond talking:
+
+| Feature | What happens on the call | Configured with |
+|---|---|---|
+| [Transfer to a human](#transfer-to-a-human) | Caller asks for a person; the agent dials your team and connects them | `agents.update(tools={"handover": ...})` |
+| [Voicemail message](#voicemail-message) | Agent reaches an answering machine, leaves a message, hangs up | `agents.update(tools={"voicemail": ...})` |
+| [Automatic follow-up](#automatic-follow-up-calls) | After the call, the platform schedules a callback when the caller asked for one | Analytics `follow_up` block + `automatic_followup_enabled=True` |
+
+<Info>
+Handover and voicemail work with **Prompt** and **Playbook** brains. A
+`Runner` or `Endpoint` brain answers turns itself, so the platform has no
+way to call these tools for it - transfer from a runner with
+[`ctx.session.transfer_to_human()`](/speech-stack/agent-runner) instead.
+</Info>
+
+---
+
+## How tool settings are saved
+
+All tool settings live in one `tools` dict on the agent, and
+`agents.update(tools=...)` **replaces the whole dict**. Sending only
+`{"handover": ...}` removes a voicemail message you set earlier.
+
+So always read, change, and write back:
+
+```python
+agent = await client.agents.get("my-support")
+tools = dict(getattr(agent, "tools", None) or {})   # current settings
+tools["handover"] = {...}                            # change one tool
+await client.agents.update("my-support", tools=tools)
+```
+
+Every example below follows this pattern.
+
+---
+
+## Transfer to a human
+
+When the caller asks for a person - *"let me talk to your manager"* - the
+agent calls the handover tool, dials your number, and connects the caller.
+
+```python handover.py
+import asyncio
+from unpod import AsyncClient
+
+AGENT_ID = "my-support"
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        agent = await client.agents.get(AGENT_ID)
+        tools = dict(getattr(agent, "tools", None) or {})
+
+        tools["handover"] = {
+            "enabled": True,
+            "numbers": ["+919876543210", "+919876543211"],  # dialled in order
+            "mode": "warm",                                 # or "cold"
+            "decision_timeout_s": 20,
+        }
+        await client.agents.update(AGENT_ID, tools=tools)
+
+        # Read back what the next call will use.
+        stored = (await client.agents.get(AGENT_ID)).tools.get("handover", {})
+        print(f"enabled = {stored.get('enabled')}")
+        print(f"mode    = {stored.get('mode')}")
+        print(f"numbers = {stored.get('numbers')}")
+
+asyncio.run(main())
+```
+
+```text Output
+enabled = True
+mode    = warm
+numbers = ['+919876543210', '+919876543211']
+```
+
+| Key | Required | Default | Notes |
+|---|---|---|---|
+| `enabled` | Yes | - | Must be `True`, or the agent never gets the tool |
+| `numbers` | Yes | - | E.164 only (`+` and country code). Dialled **in order**; the first to answer takes the call |
+| `mode` | No | `"warm"` | `"warm"` or `"cold"` - see below |
+| `decision_timeout_s` | No | `90` | Warm mode only. Seconds the human has to accept, `1`-`120` |
+
+### Warm vs cold
+
+| | Warm (default) | Cold |
+|---|---|---|
+| Caller hears | Hold music while your team is briefed | Transferred straight away |
+| Your team hears | A short briefing from the agent first, then "yes" connects | The caller, with no briefing |
+| If your team says no / stays silent | Caller returns to the agent, which apologises | - (no check) |
+| Transcript after handover | Kept - the agent stays in the call silently and keeps transcribing | Stops - the agent leaves |
+
+In **warm** mode, silence counts as *no*: after `decision_timeout_s` with no
+clear answer, the caller goes back to the agent. The call ends when the
+caller hangs up, and the transcript covers the whole conversation.
+
+### Turn handover off
+
+```python
+agent = await client.agents.get(AGENT_ID)
+tools = dict(agent.tools or {})
+tools["handover"] = {**tools.get("handover", {}), "enabled": False}
+await client.agents.update(AGENT_ID, tools=tools)
+```
+
+### Before you test it
+
+- The agent needs a **number attached** - the handover places a real
+  outbound call from it.
+- Tell the brain when to hand over. In a Prompt brain, add a line such as
+  *"If the caller asks for a human or a manager, transfer the call."*
+- A number with a wrong format is rejected when you save (`422`), not
+  mid-call.
+
+### Test on a real call
+
+1. Place a call to yourself with `calls.create()` (see the
+   [Quickstart](/get-started/quickstart)).
+2. Say *"Put me through to a human."*
+3. The first handover number rings. In warm mode, answer and say *"yes"*
+   after the briefing.
+
+---
+
+## Voicemail message
+
+Voicemail detection is **always on**. When the agent reaches an answering
+machine it leaves one message and hangs up, so the call does not sit on
+the voicemail box and keep billing.
+
+Set the message the agent leaves:
+
+```python voicemail.py
+import asyncio
+from unpod import AsyncClient
+
+AGENT_ID = "my-support"
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        agent = await client.agents.get(AGENT_ID)
+        tools = dict(getattr(agent, "tools", None) or {})
+
+        tools["voicemail"] = {
+            "message": "Hi, this is Riya from the electronics store. "
+                       "We will call you back shortly. Thank you."
+        }
+        await client.agents.update(AGENT_ID, tools=tools)
+        print((await client.agents.get(AGENT_ID)).tools.get("voicemail"))
+
+asyncio.run(main())
+```
+
+Without a message the agent says: *"Sorry I missed you. I will call back
+later. Thank you."*
+
+The call ends with `end_reason="AGENT_HUNG_UP_VOICEMAIL_DETECTED"`, so you
+can filter these calls when you read results.
+
+---
+
+## Automatic follow-up calls
+
+If a caller says *"call me back tomorrow at 5"*, the platform can schedule
+that callback on its own. It takes three steps, done once per agent:
+
+1. **Create a follow-up analytics block** from the built-in `follow_up`
+   template. After every call it decides whether a callback was asked for
+   and when.
+2. **Attach the block** to the agent.
+3. **Turn on** `automatic_followup_enabled` on the agent. Without this the
+   recommendation is still saved, but nothing is dialled.
+
+```python followup.py
+import asyncio
+from unpod import AsyncClient
+
+AGENT_ID = "my-support"
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        # 1. Fork the built-in follow_up template.
+        templates = await client.analytics.templates()
+        template = next(t for t in templates if t["template_id"] == "follow_up")
+        block = await client.analytics.create(
+            name=template["name"],
+            prompt=template["prompt"],
+            from_template="follow_up",
+        )
+        print(f"block_id = {block.block_id}")
+        for f in template["fields"]:
+            print(f"  field: {f['name']} ({f['type']})")
+
+        # 2. Attach it to the agent.
+        await client.analytics.attach(block.block_id, AGENT_ID)
+
+        # 3. Allow the agent to dial the callback automatically.
+        await client.agents.update(AGENT_ID, automatic_followup_enabled=True)
+        print("follow-up enabled")
+
+asyncio.run(main())
+```
+
+Run this **before** the calls you want covered - analytics blocks run on
+new calls only and never backfill.
+
+### What happens after a call
+
+1. The call ends and the follow-up block runs on its transcript.
+2. If the caller asked for a callback, the result has
+   `automatically_schedule=True` and a `follow_up_at` time.
+3. The platform creates a new call with `status="scheduled"` at that time.
+   Its `initial_call_id` points back to the original call.
+
+Read the decision and the scheduled call:
+
+```python
+# The block's verdict for each call
+for r in await client.analytics.list_results(agent_id=AGENT_ID, limit=20):
+    print(r.call_id, r.data.get("automatically_schedule"), r.data.get("follow_up_at"))
+
+# The callbacks waiting to be dialled
+for c in await client.calls.list(status="scheduled"):
+    print(c.call_id, c.scheduled_at, "follows", c.initial_call_id)
+```
+
+<Tip>
+To review callbacks before they are dialled, leave
+`automatic_followup_enabled` off: the block still records who asked for a
+callback and when, and your team can act on the results table instead.
+</Tip>
+
+To stop automatic callbacks:
+
+```python
+await client.agents.update(AGENT_ID, automatic_followup_enabled=False)
+```
+
+---
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Configure an agent" icon="sliders-horizontal" href="/speech-stack/agent-settings">
+    Voice, number, background sound, noise cancellation.
+  </Card>
+  <Card title="Analytics" icon="chart-bar" href="/speech-stack/analytics">
+    Blocks, field specs, and reading results.
+  </Card>
+  <Card title="Domain dictionaries" icon="book-a" href="/speech-stack/domain-dictionaries">
+    Fix misheard product names.
+  </Card>
+</CardGroup>

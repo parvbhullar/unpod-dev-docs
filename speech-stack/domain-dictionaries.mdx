@@ -1,0 +1,207 @@
+---
+title: 'Domain Dictionaries'
+icon: 'book-a'
+description: 'Teach an agent your product names, place names and jargon - what it should hear, how it should say it, and what it says while it thinks.'
+---
+
+Speech recognition mishears words it has never seen: *Powai* comes out as
+*Huawei*, *IRDAI* as *I read AI*. Text-to-speech mispronounces brand names.
+A **domain dictionary** fixes both for every agent that uses it.
+
+You write a dictionary once per domain (`real_estate`, `banking`, your
+company name) and tag any number of agents with it.
+
+## The three sections
+
+Every row is a `key → value` pair, and both word sections read the same
+way: **wrong → right**.
+
+| Section | Fixes | `key` | `value` |
+|---|---|---|---|
+| `vocabulary` | What the agent **hears** (speech-to-text) | The misheard form the recognizer produces | The term it should be (optional) |
+| `pronunciation` | How the agent **says** a word (text-to-speech) | The word as written | How to say it |
+| `fillers` | What the agent says while it thinks | Language code (`en`, `hi`, ...) | Phrases, one per line |
+
+A vocabulary row with an empty `value` simply boosts that term - use it for
+words the recognizer should expect but has no single typical mistake for.
+
+## Step 1 - Write the dictionary
+
+```python step1_dictionary.py
+import asyncio
+from unpod import AsyncClient
+
+DOMAIN = "acme-homes"
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        doc = await client.domain_dictionaries.upsert(
+            DOMAIN,
+            # heard as -> what it means
+            vocabulary={
+                "huawei": "Powai",
+                "hawai": "Powai",
+                "thane a": "Thane",
+                "3 bhk": "3BHK",
+                "Hiranandani": "",          # boost only
+            },
+            # written -> how to say it
+            pronunciation={
+                "3BHK": "three B H K",
+                "Powai": "pa-why",
+            },
+            # language -> filler phrases, one per line
+            fillers={
+                "en": "One moment...\nLet me check that for you...",
+                "hi": "Ek second...\nMain check karti hoon...",
+            },
+        )
+        print(f"domain        = {doc.domain}")
+        print(f"vocabulary    = {len(doc.vocabulary)} rows")
+        print(f"pronunciation = {len(doc.pronunciation)} rows")
+        print(f"resolved_key  = {doc.resolved_key}")
+
+asyncio.run(main())
+```
+
+```text Output
+domain        = acme-homes
+vocabulary    = 5 rows
+pronunciation = 2 rows
+resolved_key  = None
+```
+
+`resolved_key = None` means this is a custom domain with only your rows
+(see [Bundled dictionaries](#bundled-dictionaries)).
+
+Both halves of every vocabulary row are sent to the recognizer as keyterms,
+correct terms first. The list is capped on the server (50 terms for
+Deepgram), so keep the dictionary focused on words that actually go wrong.
+
+<Warning>
+`upsert()` **replaces** your rows for that domain - it does not merge. To
+add one term, read the dictionary, edit the list, and send the whole list
+back (see [Add a term later](#add-a-term-later)).
+</Warning>
+
+## Step 2 - Tag the agent
+
+A dictionary does nothing until an agent is tagged with it. The tag on the
+agent is what the call reads:
+
+```python step2_tag.py
+import asyncio
+from unpod import AsyncClient
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        await client.agents.update("my-support", domain="acme-homes")
+
+        doc = await client.domain_dictionaries.get("acme-homes")
+        print(f"agents using it = {doc.agent_ids}")
+
+asyncio.run(main())
+```
+
+```text Output
+agents using it = ['my-support']
+```
+
+You can also tag at creation time:
+`client.agents.voice.create(..., domain="acme-homes")`.
+
+An agent has **one** dictionary. Tagging it with a new domain moves it out
+of the old one. To remove the tag:
+
+```python
+await client.agents.update("my-support", domain="")
+```
+
+The next call uses the dictionary - no redeploy.
+
+## Bundled dictionaries
+
+Three domains ship with ready-made rows: `banking`, `real_estate`,
+`hospital`. Tag an agent with one and it works with no rows of your own:
+
+```python
+await client.agents.update("my-support", domain="real_estate")
+```
+
+Rows you `upsert()` under that name are layered **on top** of the bundled
+rows; yours win when the same key appears in both. `get()` shows the
+merged result in `vocabulary`, and the bundled half on its own in
+`seed_vocabulary`.
+
+`resolved_key` tells you whether a name maps to a bundled dictionary:
+`None` means it is a custom domain with only your rows.
+
+<Warning>
+Domain names are matched loosely: a name that **contains** words such as
+`realty`, `property`, `bank`, `loan`, `insurance`, `health` or `clinic`
+maps to the matching bundled dictionary. `acme-realty` gets the
+`real_estate` rows underneath yours. Check `resolved_key` after your first
+`upsert()` if you want a dictionary with only your own rows.
+</Warning>
+
+To start a custom domain from a bundled one:
+
+```python
+await client.domain_dictionaries.clone("real_estate", "acme-homes")
+```
+
+## Add a term later
+
+```python
+doc = await client.domain_dictionaries.get("acme-homes")
+
+# Keep only your own rows - the bundled ones apply underneath anyway.
+seed = {row.key for row in doc.seed_vocabulary}
+vocabulary = {r.key: r.value for r in doc.vocabulary if r.key not in seed}
+vocabulary["andheri east"] = "Andheri East"
+
+await client.domain_dictionaries.upsert(
+    "acme-homes",
+    vocabulary=vocabulary,
+    pronunciation={r.key: r.value for r in doc.pronunciation},
+    fillers={r.key: r.value for r in doc.fillers},
+)
+```
+
+Send every section back - a section you leave out is cleared.
+
+## Method reference
+
+| Call | Returns | Notes |
+|---|---|---|
+| `domain_dictionaries.list()` | `list[DomainListItem]` | Every domain: bundled plus yours |
+| `domain_dictionaries.get(domain)` | `DomainDictionary` | Merged rows - what the call will use |
+| `domain_dictionaries.upsert(domain, *, vocabulary=, pronunciation=, fillers=, settings=)` | `DomainDictionary` | **Replaces** your rows for the domain |
+| `domain_dictionaries.clone(source, new_domain)` | `DomainDictionary` | `409` if `new_domain` already has rows |
+| `domain_dictionaries.delete(domain)` | `None` | Bundled domain: resets to bundled rows. Custom domain: deleted, and its agents are untagged |
+| `agents.update(agent_id, domain=)` | `Agent` | Tags the agent - the step that makes a dictionary apply |
+
+Each section accepts a `dict` (`{"key": "value"}`) or a list of
+`{"key": ..., "value": ...}` rows - the shape `get()` returns.
+
+## Troubleshooting
+
+- **No change on calls** - the agent is not tagged. Check
+  `(await client.agents.get("my-support")).voices[0].domain`.
+- **Some terms are still misheard** - the keyterm list may be over the
+  cap. Remove rows that are not causing problems.
+- **Rows I never wrote show up in `get()`** - the domain name matched a
+  bundled dictionary. Check `resolved_key`.
+- **A term I added disappeared** - `upsert()` replaced the domain with a
+  list that did not include it. Read, edit, write back.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Configure an agent" icon="sliders-horizontal" href="/speech-stack/agent-settings">
+    Voice, number, background sound, noise cancellation.
+  </Card>
+  <Card title="Voice profiles" icon="audio-lines" href="/speech-stack/voice-profiles">
+    Pick the STT and TTS stack the dictionary feeds.
+  </Card>
+</CardGroup>

@@ -69,7 +69,7 @@ async def main():
             "support-bot",                                  # agent_id
             brain=Prompt("You are a concise support assistant."),
             name="Support Bot",                             # defaults to agent_id
-            voice_profile="vp_en_female_hd",                # from voice_profiles.list()
+            voice_profile="Riya",                           # name or profile_id from voice_profiles.list()
             greeting="Hi! How can I help you today?",       # the opening line
             recording=True,
             max_call_duration_s=600,
@@ -86,12 +86,23 @@ asyncio.run(main())
 | `agent_id` | `str` | required | Positional. Your own id - the rendezvous key for runners, numbers, and calls |
 | `brain` | `Brain` | required | Exactly one of `Playbook` / `Prompt` / `Runner` / `Endpoint` |
 | `name` | `str \| None` | `agent_id` | Display name for the agent |
-| `voice_profile` | `str \| None` | `None` | Voice profile id (`vp_...`) or catalog name |
+| `voice_profile` | `str \| None` | `None` | Voice profile name (case-insensitive) or `profile_id` |
 | `greeting` | `str \| None` | `None` | What the agent opens the call with |
 | `recording` | `bool` | `False` | Enable call recording |
 | `max_call_duration_s` | `int` | `3600` | Hard cap in seconds |
 | `max_concurrent` | `int` | `1` | Concurrent calls this agent accepts |
-| `brain_execution` | `str \| None` | `"bridge"` (server default) | Where the brain runs |
+| `brain_execution` | `str \| None` | set by the server | Where the brain runs - leave unset |
+| `domain` | `str \| None` | `None` | [Domain dictionary](/speech-stack/domain-dictionaries) tag |
+| `background_sound` | `BackgroundSound \| str \| None` | `None` | Ambience room - see [Configure an agent](/speech-stack/agent-settings#background-sound) |
+| `background_sound_enabled` | `bool \| None` | `None` | Ambience on/off |
+| `background_sound_volume` | `float \| None` | `None` | Ambience gain, 0.0-1.0 |
+| `noise_cancellation` | `NoiseCancellation \| str \| None` | `None` | Caller-audio canceller - see [Configure an agent](/speech-stack/agent-settings#noise-cancellation) |
+
+<Note>
+Re-running `create()` with an existing `agent_id` and the **same** brain is
+safe. With a **different** brain it returns `409 Conflict` - an agent has
+one brain. Change it with `agents.update(agent_id, brain=...)`.
+</Note>
 
 <Tip>
 Swap `brain=Prompt(...)` for `brain=Runner()` and the same call configures an
@@ -193,6 +204,18 @@ model - one brain, N voices - but it means an update is never scoped to a single
 language.
 </Warning>
 
+`update()` changes much more than the brain - voice, phone number, background
+sound, noise cancellation, muting, limits, model, tools. Every argument, with
+examples: [Configure an agent](/speech-stack/agent-settings).
+
+To change one voice only (its greeting, or which voice is the default), use
+`agents.voice.update()`:
+
+```python
+await client.agents.voice.update("support-bot", "<voice_profile_id>",
+                                 greeting="Hello again!", make_default=True)
+```
+
 ---
 
 ## Deleting an Agent
@@ -219,6 +242,14 @@ async def main():
 asyncio.run(main())
 ```
 
+To move a number from one of your agents to another, no detach is needed:
+
+```python
+await client.agents.update("billing-bot", number="+14155550101")
+# or, without touching any other setting:
+await client.numbers.agent.change("+14155550101", "billing-bot")
+```
+
 `attach()` also takes `number_id=` (the upstream id), plus
 `inbound_trunk_id=` / `outbound_trunk_id=`. Pass the real `number_id` when you
 have it: on the upsert branch the path id is stored as the cross-plane
@@ -243,12 +274,14 @@ For the number lifecycle itself - provisioning, syncing, trunks - see
 | `agents.create(agent_id, brain=..., **kw)` | `AgentVoice` | Alias for the above, kept for older examples |
 | `agents.list()` | `list[Agent]` | Every agent in the project, each with all its voices |
 | `agents.get(agent_id)` | `Agent` | Brain plus every voice |
-| `agents.update(agent_id, brain=, name=, greeting=, brain_execution=, **fields)` | `Agent` | A brain change reaches every voice |
+| `agents.update(agent_id, brain=, name=, greeting=, voice_profile=, number=, ...)` | `Agent` | Agent-wide; full list in [Configure an agent](/speech-stack/agent-settings#all-update-arguments) |
 | `agents.delete(agent_id)` | `None` | The agent and every voice |
 | `agents.voice.add(agent_id, voice_profile=, greeting=)` | `AgentVoice` | Inherits the brain unchanged |
+| `agents.voice.update(agent_id, voice_profile_id, greeting=, make_default=)` | `AgentVoice` | Edits one voice only |
 | `agents.voice.remove(agent_id, voice_profile_id)` | `None` | Keeps the other voices |
 | `agents.numbers.attach(agent_id, number, ...)` | `dict` | Routes a number to the agent |
 | `agents.numbers.detach(number_id)` | `dict` | Releases whatever agent holds it |
+| `numbers.agent.change(number, agent_id)` | `dict` | Moves an attached number to another of your agents |
 
 ---
 

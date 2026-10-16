@@ -37,19 +37,25 @@ Support for Twilio, Telnyx, and Plivo numbers is coming soon - you will be able 
 
 Numbers provisioned through Unpod are immediately available in your account. You can browse and acquire them from the dashboard under **Dev Platform -> Numbers**.
 
-Once provisioned, list them via the SDK:
+Once provisioned, list them via the SDK. To see which numbers are free to
+attach, use the telephony listing - its `status` is `not_assigned` only when
+a number can actually be attached:
 
 ```python
 import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
-        numbers = await client.numbers.list()
-        for n in numbers:
-            print(n.number_id, n.number, n.status, n.pipe_id or "unattached")
+    async with AsyncClient() as client:  # reads credentials from .env
+        for n in await client.telephony.numbers.list():
+            print(n.number, n.status)   # not_assigned | assigned | closed
 
 asyncio.run(main())
+```
+
+```text Output
++918071539102 not_assigned
++918071539118 assigned
 ```
 
 ---
@@ -118,12 +124,17 @@ One-time provisioning end to end (profile, agent, number, env vars):
 
 ## Listing Numbers
 
+`client.numbers.list()` returns your organization's number records with
+their ids, trunk and country - use it when you need `number_id` or
+filters. To find a **free** number, use `client.telephony.numbers.list()`
+as shown above.
+
 ```python
 import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:  # reads credentials from .env
         # All numbers
         numbers = await client.numbers.list()
 
@@ -161,7 +172,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:  # reads credentials from .env
         number = await client.numbers.attach("num_...", "support-bot")
         print("Attached:", number.number, "-> agent support-bot")
 
@@ -194,7 +205,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
+    async with AsyncClient() as client:  # reads credentials from .env
         number = await client.numbers.detach("num_...")
         print("Detached:", number.number)
 
@@ -212,16 +223,46 @@ import asyncio
 from unpod import AsyncClient
 
 async def attach_first_free(agent_id: str) -> None:
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
-        numbers = await client.numbers.list(status="active")
-        free = [n for n in numbers if n.pipe_id is None]
+    async with AsyncClient() as client:  # reads credentials from .env
+        numbers = await client.telephony.numbers.list()
+        free = [n.number for n in numbers if n.status == "not_assigned"]
         if not free:
             raise RuntimeError("No free numbers available")
-        await client.numbers.attach(free[0].number_id, agent_id)
-        print("Attached", free[0].number)
+        result = await client.agents.numbers.attach(agent_id, free[0])
+        print(f"number={result.get('number')} agent_id={result.get('agent_id')} "
+              f"status={result.get('status')}")
 
 asyncio.run(attach_first_free("support-bot"))
 ```
+
+```text Output
+number=<attached_phone_number> agent_id=support-bot status=assigned
+```
+
+### Move a number to another agent
+
+A number already attached to one of your agents moves in one call - no
+detach first. Inbound calls follow it immediately.
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads credentials from .env
+        # Either: as part of an agent update
+        await client.agents.update("sales-bot", number="+918071539102")
+
+        # Or: only the number
+        await client.numbers.agent.change("+918071539102", "sales-bot")
+
+asyncio.run(main())
+```
+
+Only your organization's numbers can be moved (`404` otherwise). A free
+number that was never attached returns `409 not_attached` from
+`numbers.agent.change()` - attach it first, or use
+`agents.update(number=)`, which attaches a free number for you.
 
 ### Rotate numbers across agents
 
@@ -230,12 +271,12 @@ import asyncio
 from unpod import AsyncClient
 
 async def rotate(numbers: list[str], agents: list[str]) -> None:
-    async with AsyncClient() as client:  # reads UNPOD_API_KEY
-        for num_id, agent_id in zip(numbers, agents):
-            await client.numbers.attach(num_id, agent_id)
-            print(f"{num_id} -> {agent_id}")
+    async with AsyncClient() as client:  # reads credentials from .env
+        for number, agent_id in zip(numbers, agents):
+            await client.agents.update(agent_id, number=number)
+            print(f"{number} -> {agent_id}")
 
-asyncio.run(rotate(["num_a", "num_b"], ["support-bot", "sales-bot"]))
+asyncio.run(rotate(["+918071539102", "+918071539118"], ["support-bot", "sales-bot"]))
 ```
 
 ---
