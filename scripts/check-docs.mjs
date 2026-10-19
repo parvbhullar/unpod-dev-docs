@@ -98,6 +98,8 @@ const RETIRED = [
   "served at your inference endpoint", // no per-org SLM serving exists
   "5 lakh", // proof figure is now 10+ lakh interactions/month
   "Speech is solved", // contradicts the deck: channels are a hard layer
+  "calling infrastructure", // retired positioning; platform/ is exempt
+  "Communication infra",
 ];
 const retiredHits = [];
 for (const rel of onDisk) {

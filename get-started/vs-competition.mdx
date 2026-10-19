@@ -1,14 +1,50 @@
 ---
-title: 'Unpod vs Pipecat vs LiveKit'
+title: 'Unpod vs the DIY stack'
 icon: 'git-compare'
-description: 'How Unpod compares to audio frameworks on time to production and what you own.'
+description: 'Everyone sells a piece. Unpod is the backend - and the real competitor is stitching six vendors together.'
 ---
 
-## TL;DR
+## Everyone sells a piece
+
+A team building an app that talks does not shop for a dialer. It compares
+Unpod with stitching six vendors together: channels from one, media from
+another, an agent framework, a vector database, a workflow engine and a CRM
+schema of its own.
+
+Each of those vendors owns one primitive and forgets the user when the
+session ends. Unpod is built so that channels, agents and context are one
+system, and every interaction writes into the context the next one reads.
+**The real competitor is the DIY stack.**
+
+<div className="uq-quadrant" role="img" aria-label="Positioning. Full backend with persistent context: Unpod. Single primitive with persistence: memory stores. Single primitive, stateless: channel and speech vendors. Full backend, stateless: agent platforms and do-it-yourself stacks.">
+  <div className="uq-cell">
+    <span className="uq-cell__k">Single primitive · persistent</span>
+    <div className="uq-item"><span className="uq-item__t">Mem0 · Pinecone · Zep</span><span className="uq-item__s">Memory only - no channels, no agents</span></div>
+  </div>
+  <div className="uq-cell">
+    <span className="uq-cell__k">Full backend · persistent</span>
+    <div className="uq-item is-brand"><span className="uq-item__t">Unpod</span><span className="uq-item__s">One system, one SDK</span></div>
+  </div>
+  <div className="uq-cell">
+    <span className="uq-cell__k">Single primitive · stateless</span>
+    <div className="uq-item"><span className="uq-item__t">Twilio · Bird · LiveKit</span><span className="uq-item__s">Session ends, state gone</span></div>
+    <div className="uq-item"><span className="uq-item__t">Deepgram · ElevenLabs</span><span className="uq-item__s">One leg of the loop</span></div>
+  </div>
+  <div className="uq-cell">
+    <span className="uq-cell__k">Full backend · stateless</span>
+    <div className="uq-item"><span className="uq-item__t">LangGraph · Sierra · Decagon</span><span className="uq-item__s">Rent every layer beneath</span></div>
+    <div className="uq-item"><span className="uq-item__t">Build it yourself</span><span className="uq-item__s">Six vendors + glue</span></div>
+  </div>
+</div>
+
+## vs voice frameworks
+
+If you are choosing a voice framework rather than a backend, this is how
+Unpod compares with LiveKit and Pipecat.
 
 | | Unpod | LiveKit | Pipecat |
 |---|---|---|---|
-| **What it is** | Communication infra for AI agents | Real-time audio infrastructure + agent framework | Open-source voice pipeline framework |
+| **What it is** | Agentic backend for conversational apps | Real-time audio infrastructure + agent framework | Open-source voice pipeline framework |
 | **You own** | Your agent logic | Everything | Everything |
 | **They manage** | Phone numbers, STT/TTS, VAD, orchestration | WebRTC rooms (self-hosted or cloud) | Nothing - it's a library |
 | **Phone numbers** | Built-in, no carrier account | Bring your own SIP trunk | Bring your own |
@@ -24,7 +60,7 @@ description: 'How Unpod compares to audio frameworks on time to production and w
 
 LiveKit and Pipecat are **audio frameworks**. They give you building blocks to construct a voice pipeline. You choose and wire every component - STT provider, TTS provider, VAD, transport, endpointing. Then you deploy it, scale it, and keep it running.
 
-Unpod is **calling infrastructure**. You bring the agent. We give it a phone number and handle all the audio plumbing.
+Unpod is the **backend**. You design the conversation; Unpod runs the number, the audio, the agent runtime and the memory behind it.
 
 ---
 
