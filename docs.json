@@ -65,7 +65,7 @@
               "core-engine/entities",
               "core-engine/conversations",
               "core-engine/outcomes",
-              "core-engine/context-graph"
+              "core-engine/context-engine"
             ]
           },
           {
@@ -615,6 +615,10 @@
     {
       "source": "/superdialog/playground",
       "destination": "/playbook/playground"
+    },
+    {
+      "source": "/core-engine/context-graph",
+      "destination": "/core-engine/context-engine"
     }
   ]
 }

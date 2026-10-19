@@ -32,7 +32,7 @@ copied: your own conversation history.
 Blocks read interactions, outcomes, and context; they never touch the audio
 path. What a block produces is written back to communication state - onto the
 [outcome](/core-engine/outcomes) it analyzed or into the
-[Context Graph](/core-engine/context-graph) - so downstream blocks and agents
+[Context Engine](/core-engine/context-engine) - so downstream blocks and agents
 read it as ordinary state, not as a side channel. Each insight written emits
 an event, like any other change on the spine.
 
@@ -63,7 +63,7 @@ surface you configure.
   <Card title="Outcomes" icon="target" href="/core-engine/outcomes">
     The structured records blocks read from and write back to.
   </Card>
-  <Card title="Context Graph" icon="waypoints" href="/core-engine/context-graph">
+  <Card title="Context Engine" icon="waypoints" href="/core-engine/context-engine">
     Where insights persist as retrievable communication memory.
   </Card>
   <Card title="SuperDialog evals" icon="list-checks" href="/superdialog/evals">

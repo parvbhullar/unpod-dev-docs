@@ -33,7 +33,7 @@ Teams and Policies govern it.
 
 | Layer | Unpod primitives | Role |
 |---|---|---|
-| Communication state | Entities, Conversations, Context Graph, Outcomes | The durable system of record |
+| Communication state | Entities, Conversations, Context Engine, Outcomes | The durable system of record |
 | Execution | Flows, Journeys, Agent Workforce | Decides and performs what happens next |
 | Transport | Calling Engine, WhatsApp, Email, other Channels | Reaches the human |
 | Control | Teams, Policies, Events, Observability | Governs, secures and exposes execution |
@@ -49,14 +49,14 @@ mental model listed here.
 | [Channels](/core-engine/channels) | Every channel writes to the same record | messages, identities, connectors, routing |
 | [Agent Workforce](/core-engine/agent-workforce) | Workers that communicate and act | agents, tools, policies, handoffs |
 | [Flows](/core-engine/flows-journeys) | Durable communication workflows | flows, steps, journeys, waits, signals |
-| [Context Graph](/core-engine/context-graph) | Persistent communication memory | facts, relationships, summaries, retrieval |
+| [Context Engine](/core-engine/context-engine) | Persistent communication memory | facts, relationships, summaries, retrieval |
 | [Entities](/core-engine/entities) | System-of-record identity | people, organizations, identities |
 | [Teams](/core-engine/teams-policies) | Multi-tenant authorization boundary | projects, teams, roles, service accounts |
 | [Events](/core-engine/events) | Everything that happened, once | event stream, webhooks, subscriptions, replay |
 
 Statuses vary by component: the Calling Engine, Agent Workforce, Outcomes,
 and Teams & Policies carry production traffic today; Conversations and
-Flows & Journeys are in build; the Context Graph is early access. Each
+Flows & Journeys are in build; the Context Engine is early access. Each
 linked page carries its own status line.
 
 The rest of this page is the speech stack - the Calling Engine's developer

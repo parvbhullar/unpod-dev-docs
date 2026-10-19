@@ -93,6 +93,8 @@ const RETIRED = [
   "one communication API", // no messages resource exists
   "live via provider",     // WhatsApp agent engine is on feature branches
   "partner access",        // LinkedIn: no implementation found
+  "Context Graph", // renamed: Context Engine
+  "core-engine/context-graph", // file renamed; link the new path
 ];
 const retiredHits = [];
 for (const rel of onDisk) {

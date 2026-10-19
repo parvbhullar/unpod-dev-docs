@@ -1,0 +1,113 @@
+---
+title: 'Context Engine'
+description: 'Every conversation makes the next one better - one memory per customer, from the live turn to outcome history.'
+---
+
+Start with the person, not the request. Someone reaches out; Unpod knows who
+they are and what happened before; the agent picks up from there; and the
+outcome is remembered for next time. The Context Engine is that memory.
+
+Context is the one input a competitor cannot buy, scrape or copy - and you
+keep it. It comes in five tiers, from hot and fast at the top to persistent
+and compounding at the bottom:
+
+<div className="ce-pyramid" role="img" aria-label="Five context tiers and their status: live turn, session memory, customer context, organisation knowledge, outcome history.">
+  <div className="ce-tier" style={{"--w": "46%", "--bg": "#b14af0"}}>
+    <span className="ce-tier__t">Live turn</span>
+    <span className="ce-tier__s">This call, right now</span>
+    <span className="ce-tier__chips"><span className="st-chip on-color">Production</span></span>
+  </div>
+  <div className="ce-tier" style={{"--w": "62%", "--bg": "#7c6cff"}}>
+    <span className="ce-tier__t">Session memory</span>
+    <span className="ce-tier__s">Active context across the conversation</span>
+    <span className="ce-tier__chips"><span className="st-chip on-color">Production</span></span>
+  </div>
+  <div className="ce-tier" style={{"--w": "76%", "--bg": "#6a3df0"}}>
+    <span className="ce-tier__t">Customer context</span>
+    <span className="ce-tier__s">Every touch with this person</span>
+    <span className="ce-tier__chips"><span className="st-chip on-color">Per call: production</span><span className="st-chip on-color">Cross-channel: in build</span></span>
+  </div>
+  <div className="ce-tier" style={{"--w": "88%", "--bg": "#4535d0"}}>
+    <span className="ce-tier__t">Organisation knowledge</span>
+    <span className="ce-tier__s">Products, policies, FAQs</span>
+    <span className="ce-tier__chips"><span className="st-chip on-color">Production</span></span>
+  </div>
+  <div className="ce-tier" style={{"--w": "100%", "--bg": "#15103a"}}>
+    <span className="ce-tier__t">Outcome history</span>
+    <span className="ce-tier__s">Every result, kept</span>
+    <span className="ce-tier__chips"><span className="st-chip on-color">As data: production</span><span className="st-chip on-color">As memory: in build</span></span>
+  </div>
+</div>
+<div className="ce-axis"><span>↑ Hot · fast</span><span>Persistent · compounding ↓</span></div>
+
+## Use it today
+
+| Tier | How you use it today |
+|---|---|
+| Live turn, session memory | Automatic: the runtime carries turn history through the conversation. A bring-your-own brain keeps its own history in its adapter. |
+| Customer context | Pass what you know as call data (below), or as Space People columns. Turn on **Enable Memory** (Agent Studio → Advanced) and the agent recalls past calls with the same number - per agent, per number, voice only. |
+| Organisation knowledge | Upload documents to a [knowledge base](/platform/studio-view/knowledge-base) and attach it to the agent; the agent retrieves from it mid-call. |
+| Outcome history | Every completed call produces structured [post-call data](/api/post-call-data), by webhook or API. SDK agents read [analytics blocks](/speech-stack/analytics) with `client.analytics.for_call(call_id)`. |
+
+```python call_with_context.py
+import asyncio
+from unpod import AsyncClient
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        call = await client.calls.create(
+            agent_id="my-support",
+            to_number="+9188473xxxxx",
+            data={"name": "Priya", "plan": "Gold", "last_order": "ORD-1042"},
+        )
+        print(call.call_id, call.status)
+
+asyncio.run(main())
+```
+
+## In build
+
+- Cross-channel identity, and one timeline per person across call, WhatsApp,
+  SMS and email.
+- Facts with provenance, validity windows and sensitivity levels, retrieved
+  by tenant, permission and purpose - with export and erase APIs.
+- Outcome history read back as memory by the next interaction, on any
+  channel.
+
+## On the spine
+
+Context underlies the spine from entity through outcome. The Context Engine
+reads entity records, conversation history and structured outcomes, and the
+next interaction reads it before the agent speaks. Each interaction's outcome
+feeds the next one.
+
+## What stays hidden
+
+The embedding and vector implementation. Which models embed what, how the
+index is built and how similarity is scored are internals we tune and swap
+freely. You work with call data, knowledge, memory and outcomes - never with
+vectors.
+
+## Status
+
+**Production** for everything inside one channel: live turn, session memory,
+per-call customer context with memory of past calls, knowledge-base
+retrieval, and post-call outcomes. **In build:** cross-channel context, the
+facts layer with provenance, and outcome history as memory.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Knowledge Base" icon="book-open" href="/platform/studio-view/knowledge-base">
+    Organisation knowledge, attached to an agent.
+  </Card>
+  <Card title="Post-call data" icon="file-text" href="/api/post-call-data">
+    The structured outcome of every call.
+  </Card>
+  <Card title="People & identity" icon="users" href="/core-engine/entities">
+    The record context attaches to.
+  </Card>
+  <Card title="Own your model" icon="brain" href="/core-engine/intelligence">
+    Where outcome history goes next.
+  </Card>
+</CardGroup>
