@@ -75,6 +75,7 @@
               "core-engine/agent-workforce",
               "core-engine/agent-harness",
               "core-engine/flows-journeys",
+              "core-engine/actions",
               "core-engine/intelligence"
             ]
           },

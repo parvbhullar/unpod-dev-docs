@@ -1,0 +1,66 @@
+---
+title: 'Actions'
+description: 'Your APIs are the actions - call them mid-conversation, or push every outcome to the systems that act on it.'
+---
+
+An agent that only talks is half an app. Actions are how a conversation
+changes something: a booking held, a lead created, a row updated, a ticket
+opened. In Unpod your own APIs are the actions. The agent calls them
+mid-conversation, and every outcome is pushed to the systems that act on it
+after the call.
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| In-call actions | HTTP tools the agent calls mid-conversation | Production - [playbook tools](/superdialog/tools), or Agent Studio → Persona → Tools |
+| After-call actions | The post-call webhook delivers the transcript and structured outcome to your endpoint | Production - [post-call data](/api/post-call-data) |
+| Google Sheets sync | Two-way: each call's row lands in the sheet, and a new row triggers a call | Production - Agent Studio → Integration → Google Sheet Sync |
+| In-call SMS | A template SMS sent during the call, to Indian numbers | Production, narrow |
+| Ready-made connectors | CRM, payment, booking and helpdesk connectors | Not yet - use an in-call HTTP tool or the post-call webhook |
+
+```yaml playbook.yaml (excerpt)
+tools:
+  - id: create_lead
+    type: http
+    method: POST
+    url: "{{ env.CRM_BASE_URL }}/leads"
+    headers: {Authorization: "Bearer {{ env.CRM_TOKEN }}"}
+    body: {name: "{{ slots.name }}", budget: "{{ slots.budget }}"}
+    store_response_as: lead
+    run_once: true
+```
+
+## On the spine
+
+An action is part of the interaction that ran it. An in-call tool's result
+is recorded on the interaction, and the outcome that reaches your webhook is
+the same outcome the [Context Engine](/core-engine/context-engine) keeps.
+
+## What stays hidden
+
+Delivery mechanics: webhook retries and redelivery, Sheets polling, and SMS
+carrier routing.
+
+## Status
+
+**Production:** HTTP tools, the post-call webhook, two-way Google Sheets
+sync, and in-call SMS. **In build:** a helpdesk connector for messaging
+journeys. **Not yet:** ready-made CRM, payment and booking connectors.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Tools" icon="wrench" href="/superdialog/tools">
+    Declare HTTP tools in a playbook.
+  </Card>
+  <Card title="Post-call data" icon="file-text" href="/api/post-call-data">
+    The payload your webhook receives.
+  </Card>
+  <Card title="Agent Harness" icon="shield-check" href="/core-engine/agent-harness">
+    Retries and fallbacks around every tool call.
+  </Card>
+  <Card title="Flows & Journeys" icon="route" href="/core-engine/flows-journeys">
+    Workflows that decide which action comes next.
+  </Card>
+</CardGroup>
