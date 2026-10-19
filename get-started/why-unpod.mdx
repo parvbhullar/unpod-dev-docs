@@ -1,130 +1,106 @@
 ---
 title: 'Why Unpod'
 icon: 'sparkles'
-description: 'The communication backend for agentic apps.'
+description: 'The agentic backend for conversational AI - apps that talk, remember and act.'
 ---
 
-**Unpod is the communication backend for agentic apps.** One SDK to build
-agents that call, message, email, remember context, run durable workflows,
-and react to every customer interaction in real time.
+import Architecture from '/snippets/architecture.mdx';
 
-Supabase made database, auth, storage and realtime feel like one backend —
-Unpod does the same for software that talks to people.
+**Unpod is the agentic backend for conversational AI.** Apps that talk,
+remember and act: voice, messaging, agents and workflows in one SDK, on a
+Context Engine that remembers every customer across every channel.
 
-## One backend problem
+Build the app. Unpod runs everything behind the conversation. Supabase
+simplified the backend for traditional apps; Unpod is the backend for apps
+that communicate, remember and act.
 
-The moment an agent's job is a human conversation, it inherits questions no
-model answers and no channel API solves: who is this person across channels?
-What happened before? Which channel right now? What happens when they reply
-tomorrow? Did it produce the outcome? Teams answer them by stitching together
-a channel API, a workflow engine, an agent framework, a database, a CRM, a
-vector store, and an observability stack. Those are not seven integration
-problems — they are one backend problem.
-
-## Four layers, one substrate
-
-Unpod answers it with four layers over a single substrate of communication
-state. The Calling Engine is the trusted anchor, but it is one Transport
-channel — an app can live on WhatsApp and email without placing a call.
-
-| Layer | Unpod primitives | Role |
-|---|---|---|
-| Communication state | Entities, Conversations, Context Engine, Outcomes | The durable system of record |
-| Execution | Flows, Journeys, Agent Workforce | Decides and performs what happens next |
-| Transport | Calling Engine, WhatsApp, Email, other Channels | Reaches the human |
-| Control | Teams, Policies, Events, Observability | Governs, secures and exposes execution |
-
-**Status:** the Calling Engine (~5 lakh calls a month on owned voice rails),
-Agent Workforce, Outcomes, and Teams carry production traffic today;
-Conversations, Flows & Journeys, and the unified event stream are in build.
-The [Core Engine overview](/core-engine/overview) walks the full map, with
-an honest status per component.
-
-## Why Execution and Transport are the hard layers
-
-Speech is solved. Telephony is solved. The layers that run the conversation
-are where projects stall.
-
-<CardGroup cols={1}>
-  <Card title="Prompts lose the plot" icon="triangle-alert" horizontal>
-    Every top model drops ~39% from single-turn to multi-turn - mostly
-    unreliability, not capability. Take a wrong turn and the conversation
-    never recovers. Prompt-tuning plateaus around 85%: nothing in a
-    100-page prompt is addressable, so nothing is testable.
-  </Card>
-  <Card title="Big models miss the beat" icon="timer" horizontal>
-    Humans swap turns in ~200ms; past ~700ms a caller hears a machine. The
-    LLM is ~70% of that budget, and frontier models spend 1.1-1.4s before
-    their first token - the whole budget, on one hop.
-  </Card>
-</CardGroup>
-
-## What Unpod runs
-
-This is why Unpod owns the runtime instead of wrapping a model:
-
-<CardGroup cols={1}>
-  <Card title="Playbooks" icon="git-branch" horizontal>
-    Conversations as checkpoints and outcomes, not prose. Every step is
-    addressable - so it can be simulated, fixed, and regression-tested.
-  </Card>
-  <Card title="Context layer" icon="layers" horizontal>
-    Each turn gets only the context it needs - so the agent stays fast on a
-    third-party model, or - in early access - faster on a fine-tuned ~1B SLM
-    trained on your workflows ([Intelligence](/core-engine/intelligence)).
-    Swap either way without touching the conversation.
-  </Card>
-  <Card title="Sessions" icon="repeat" horizontal>
-    Pass a session id and the agent keeps its state - across turns, and
-    across calls.
-  </Card>
-</CardGroup>
-
-## Quickstarts
-
-The fastest path is the [Quickstart](/get-started/quickstart) - a real call
-placed and read back in six SDK calls. Or use a trained agent like a model:
-
-| Surface | I/O | Live in |
-|---|---|---|
-| [Chat](/get-started/chat) | text in, text out | 1 URL swap |
-| [Realtime](/get-started/realtime) | audio in, audio out | 1 WebSocket |
-| [Phone](/get-started/phone) | a phone number | 1 click |
-
-Same trained agent, three ways in. Your orchestration, speech, and transport
-stay where they are.
-
-<div className="ul-stack" role="img" aria-label="Layer diagram: agent platforms use Unpod, which builds on raw telephony providers.">
-  <div className="ul-stack__title">Where Unpod sits</div>
-
+<div className="ul-stack" role="img" aria-label="Three layers: Act - agents and workflows; Remember - the Context Engine; Talk - telephony, channels and speech.">
   <div className="ul-layer">
-    <span className="ul-layer__tag">Layer 3</span>
+    <span className="ul-layer__tag">Act</span>
     <div className="ul-layer__card">
-      <span className="ul-layer__name">Agent platforms</span>
-      <span className="ul-layer__vendors">Vapi / Retell / Bland</span>
+      <span className="ul-layer__name">Agents and workflows</span>
+      <span className="ul-layer__vendors">Harness · flows · actions</span>
     </div>
   </div>
-
-  <div className="ul-link"><span className="ul-link__lbl">used by</span></div>
-
+  <div className="ul-link"></div>
   <div className="ul-layer is-brand">
-    <span className="ul-layer__tag">Layer 2</span>
+    <span className="ul-layer__tag">Remember</span>
     <div className="ul-layer__card">
-      <span className="ul-layer__name">Unpod</span>
-      <span className="ul-layer__vendors">Communication infra</span>
+      <span className="ul-layer__name">Context Engine</span>
+      <span className="ul-layer__vendors">People · history · knowledge · outcomes</span>
     </div>
   </div>
-
-  <div className="ul-link is-down"><span className="ul-link__lbl">builds on</span></div>
-
+  <div className="ul-link"></div>
   <div className="ul-layer">
-    <span className="ul-layer__tag">Layer 1</span>
+    <span className="ul-layer__tag">Talk</span>
     <div className="ul-layer__card">
-      <span className="ul-layer__name">Raw telephony</span>
-      <span className="ul-layer__vendors">Twilio / Plivo / Bandwidth</span>
+      <span className="ul-layer__name">Telephony · channels · speech</span>
+      <span className="ul-layer__vendors">Numbers · call · chat · STT/TTS</span>
     </div>
   </div>
 </div>
+
+## A conversational backend is not a normal app backend
+
+Every team building an app that talks assembles three hard layers from
+separate systems, then runs them for every user.
+
+<CardGroup cols={3}>
+  <Card title="Channels you don't own" icon="radio-tower">
+    Each channel has its own carrier, policy and approval rules. Call,
+    WhatsApp, SMS and email each have to be built and kept compliant
+    separately.
+  </Card>
+  <Card title="The agent harness" icon="shield-check">
+    Running an agent in production means tool calls, guardrails, retries,
+    human handoff and evals - all in real time.
+  </Card>
+  <Card title="Context that compounds" icon="layers">
+    One identity and one memory per customer, across every channel and
+    session, ready before the agent speaks.
+  </Card>
+</CardGroup>
+
+<Note>
+**Then replicate it for every user.** A consumer app has millions of users;
+a SaaS product, thousands of accounts. For a small team, this layer alone is
+a distributed-systems problem. Unpod ships it as one system.
+</Note>
+
+## One backend, every layer
+
+Every layer shares one model of the person and the conversation. Start with
+the person, not the request:
+
+<Architecture />
+
+## What runs today
+
+Voice is in production on Unpod's own rails: agents and the
+[agent harness](/core-engine/agent-harness), per-call customer context with
+memory of past calls, and a structured outcome after every call. WhatsApp,
+SMS and email conversations, cross-channel context, and journeys are in
+build. Every [Core Engine](/core-engine/overview) page prints its own status.
+
+<div className="ux-stats">
+  <div className="ux-stat"><span className="ux-stat__num">10+ lakh</span><span className="ux-stat__lbl">Interactions / month</span></div>
+  <div className="ux-stat"><span className="ux-stat__num">~400 ms</span><span className="ux-stat__lbl">Call latency</span></div>
+  <div className="ux-stat"><span className="ux-stat__num">99.94%</span><span className="ux-stat__lbl">Reliability</span></div>
+  <div className="ux-stat"><span className="ux-stat__num">MIT</span><span className="ux-stat__lbl">Open source</span></div>
+</div>
+
+## What you can build
+
+<CardGroup cols={2}>
+  <Card title="Apps on Unpod" icon="layout-grid" href="/apps/overview">
+    One backend, many apps: a contact center, a personal assistant, an
+    email-first agent - and our own platform.
+  </Card>
+  <Card title="Who it's for" icon="users" href="/get-started/who-its-for">
+    Conversation-first startups, SaaS platforms, contact centers and
+    regulated enterprises.
+  </Card>
+</CardGroup>
 
 ## Start building
 

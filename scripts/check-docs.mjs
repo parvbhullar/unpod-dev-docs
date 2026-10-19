@@ -96,6 +96,8 @@ const RETIRED = [
   "Context Graph", // renamed: Context Engine
   "core-engine/context-graph", // file renamed; link the new path
   "served at your inference endpoint", // no per-org SLM serving exists
+  "5 lakh", // proof figure is now 10+ lakh interactions/month
+  "Speech is solved", // contradicts the deck: channels are a hard layer
 ];
 const retiredHits = [];
 for (const rel of onDisk) {
