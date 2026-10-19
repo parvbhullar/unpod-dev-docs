@@ -43,7 +43,7 @@ and what its outcome means for the next step.
 
 A journey is attached to one entity. It reads the entity's
 [context](/core-engine/context-engine) when choosing a branch, dispatches
-interactions through Transport as tasks, and consumes the structured
+interactions through the Talk layer as tasks, and consumes the structured
 [outcome](/core-engine/outcomes) each interaction produces to decide the next
 step. Every journey transition - started, step completed, waiting, signaled,
 exited - emits an [event](/core-engine/events), so the rest of your system can

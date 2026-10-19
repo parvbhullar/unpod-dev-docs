@@ -9,7 +9,7 @@ gateway, multi-vendor STT and TTS with automatic failover, voice profiles,
 VAD and barge-in. It carries production traffic on Unpod's own voice rails.
 
 It is Unpod's distribution wedge and its trusted infrastructure anchor - and
-it is exactly one Transport channel of the [Core Engine](/core-engine/overview),
+it is exactly one channel in the Talk layer of the [Core Engine](/core-engine/overview),
 not the substrate. The durable record of who was called and what happened
 lives in communication state; the Calling Engine's job is to reach the human
 and hand the conversation to your code as text. Your agent sees text in, text
@@ -32,7 +32,7 @@ The developer surface for all of this today is the
 
 ## On the spine
 
-The Calling Engine sits in the Transport layer: it reaches the human. A call
+The Calling Engine sits in the Talk layer: it reaches the human. A call
 arrives on a number (or a stream opens from an app), the engine resolves who
 is on the line, and the conversation runs as one interaction. When the call
 ends, the engine writes the transcript, recording, and metrics, and the

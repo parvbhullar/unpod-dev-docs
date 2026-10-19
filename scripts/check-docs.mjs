@@ -100,6 +100,10 @@ const RETIRED = [
   "Speech is solved", // contradicts the deck: channels are a hard layer
   "calling infrastructure", // retired positioning; platform/ is exempt
   "Communication infra",
+  "Transport layer", // layers are now Talk / Remember / Act
+  "Execution layer",
+  "Control layer",
+  "four layers",
 ];
 const retiredHits = [];
 for (const rel of onDisk) {

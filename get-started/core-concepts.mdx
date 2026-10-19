@@ -4,11 +4,19 @@ icon: 'book-open'
 description: 'The single source of truth for Unpod terminology - every term defined once, with deep links.'
 ---
 
+import Architecture from '/snippets/architecture.mdx';
+
 This page defines every Unpod term once. Other pages link here instead of
 redefining things. If a definition seems to conflict elsewhere, this page wins.
 
-Unpod is the communication backend for agentic apps. Everything in it hangs
-off one data plane - the spine.
+Unpod is the agentic backend for conversational AI: apps that talk,
+remember and act. This is how the pieces fit.
+
+## The architecture
+
+<Architecture />
+
+The data model under all of it is the spine.
 
 ## The Spine
 
@@ -29,35 +37,25 @@ each interaction produces a structured outcome; every change emits an event.
 Context underlies entity through outcome. Agents and Flows act on the spine;
 Teams and Policies govern it.
 
-## The Four Layers
+## Talk, remember, act
 
-| Layer | Unpod primitives | Role |
-|---|---|---|
-| Communication state | Entities, Conversations, Context Engine, Outcomes | The durable system of record |
-| Execution | Flows, Journeys, Agent Workforce | Decides and performs what happens next |
-| Transport | Calling Engine, WhatsApp, Email, other Channels | Reaches the human |
-| Control | Teams, Policies, Events, Observability | Governs, secures and exposes execution |
-
-## The Components
-
-Each component has its own page under Core Engine, opening with the same
-mental model listed here.
-
-| Component | Mental model | Public primitives |
-|---|---|---|
-| [Calling Engine](/core-engine/calling-engine) | Programmable realtime voice runtime | calls, numbers, SIP, transfers, streams |
-| [Channels](/core-engine/channels) | Every channel writes to the same record | messages, identities, connectors, routing |
-| [Agent Workforce](/core-engine/agent-workforce) | Workers that communicate and act | agents, tools, policies, handoffs |
-| [Flows](/core-engine/flows-journeys) | Durable communication workflows | flows, steps, journeys, waits, signals |
-| [Context Engine](/core-engine/context-engine) | Persistent communication memory | facts, relationships, summaries, retrieval |
-| [Entities](/core-engine/entities) | System-of-record identity | people, organizations, identities |
-| [Teams](/core-engine/teams-policies) | Multi-tenant authorization boundary | projects, teams, roles, service accounts |
-| [Events](/core-engine/events) | Everything that happened, once | event stream, webhooks, subscriptions, replay |
-
-Statuses vary by component: the Calling Engine, Agent Workforce, Outcomes,
-and Teams & Policies carry production traffic today; Conversations and
-Flows & Journeys are in build; the Context Engine is early access. Each
-linked page carries its own status line.
+| Verb | Component | Mental model | Status |
+|---|---|---|---|
+| Talk | [Calling Engine](/core-engine/calling-engine) | Programmable realtime voice runtime | Production |
+| Talk | [Channels](/core-engine/channels) | Every channel writes to the same record | Voice, chat: production · messaging: in build |
+| Talk | [Models & Router](/core-engine/models-router) | Real-time STT, TTS and LLM with failover | Production |
+| Remember | [Context Engine](/core-engine/context-engine) | One memory per customer | Per call: production · cross-channel: in build |
+| Remember | [People & identity](/core-engine/entities) | System-of-record identity | People: production · cross-channel: in build |
+| Remember | [Conversations](/core-engine/conversations) | Channel-neutral threads | In build |
+| Remember | [Outcomes](/core-engine/outcomes) | The structured result of every interaction | Production |
+| Remember | [Permissions & tenancy](/core-engine/teams-policies) | Multi-tenant authorization boundary | Production |
+| Remember | [Own your model](/core-engine/intelligence) | Blocks today, your own model later | Blocks: production |
+| Act | [Agents](/core-engine/agent-workforce) | Workers that communicate and act | Production |
+| Act | [Agent Harness](/core-engine/agent-harness) | Everything around the brain in production | Production |
+| Act | [Flows & Journeys](/core-engine/flows-journeys) | Durable communication workflows | Flows: production · journeys: in build |
+| Act | [Actions](/core-engine/actions) | Your APIs as the agent's hands | Production |
+| Act | [Events](/core-engine/events) | Everything that happened, once | Post-call webhook: production · stream: in build |
+| Act | [Observability](/core-engine/observability) | Logs, recordings, transcripts, traces | Production |
 
 The rest of this page is the speech stack - the Calling Engine's developer
 surface, and the part of Unpod a Python dev builds against first. The rule
@@ -70,10 +68,8 @@ still governs everything the speech stack hands your code: text in, text out.
 
 ## Use It Like a Model
 
-Train an agent on your use case, then use it like a model - a playbook + any
-third-party model, or - in early access - a small model trained on your
-workflows ([Intelligence](/core-engine/intelligence)), over whichever surface
-fits your stack:
+Train an agent on your use case, then use it like a model - a playbook plus any
+third-party model, over whichever surface fits your stack:
 
 | Surface | I/O | Live in |
 |---|---|---|
@@ -85,7 +81,7 @@ Not sure which? [Getting Started](/get-started/getting-started).
 
 ## Architecture at a Glance
 
-A single inbound call, end to end - the Transport layer's voice path, as the
+A single inbound call, end to end - the Talk layer's voice path, as the
 speech stack exposes it:
 
 <Frame>
@@ -303,15 +299,15 @@ terms precisely.
 | **SuperDialog** | The optional dialog framework (`superdialog` package): flow graphs, tools, and state for structured conversations. One choice of brain - not required. |
 | **Platform** | The hosted UI and self-hostable stack: dashboard, agent studio, spaces, analytics, and telephony management on top of the Speech Stack. |
 
-In the docs, **Core Engine** names the communication backend as a whole - the
-spine and the components at the top of this page. Start at the
+In the docs, **Core Engine** names the backend as a whole - the architecture,
+the spine, and the components at the top of this page. Start at the
 [Core Engine overview](/core-engine/overview).
 
 ## Next Steps
 
 <CardGroup cols={2}>
   <Card title="Core Engine" icon="network" href="/core-engine/overview">
-    The spine, the four layers, and every component's page.
+    The architecture, talk / remember / act, and every component's page.
   </Card>
   <Card title="Run Your Own Brain" icon="phone" href="/get-started/first-phone-call">
     Wire a number, an agent, and a runner end to end.

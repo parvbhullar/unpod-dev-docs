@@ -1,114 +1,75 @@
 ---
-title: 'One backend, channels in, outcomes out'
+title: 'One backend: talk, remember, act'
 sidebarTitle: 'Overview'
-description: 'The Core Engine at a glance - communication state, execution, transport, and control as one backend for agentic apps.'
+description: 'The Core Engine at a glance - six layers under three verbs, with an honest status on every component.'
 ---
 
-**Unpod is the communication backend for agentic apps.** One SDK to build
-agents that call, message, email, remember context, run durable workflows, and
-react to every customer interaction in real time.
+import BackendStack from '/snippets/backend-stack.mdx';
 
-Supabase made database, auth, storage and realtime feel like one backend —
-Unpod does the same for software that talks to people.
+**Unpod is the agentic backend for conversational AI.** Apps that talk,
+remember and act: voice, messaging, agents and workflows in one SDK, on a
+Context Engine that remembers every customer across every channel.
 
-## The one backend problem
+Every team building an app that talks assembles these layers from six
+vendors. Unpod ships them as one system. Build the product, not the
+plumbing.
 
-The moment an agent's job is a human conversation, it inherits questions no
-model answers and no channel API solves: who is this person across channels?
-What happened before? Which channel right now? What happens when they reply
-tomorrow? Did it produce the outcome? Teams stitch together a channel API, a
-workflow engine, an agent framework, a database, a CRM, a vector store, and an
-observability stack. Those are not seven integration problems — they are one
-backend problem.
+<BackendStack />
 
-## The spine
+## Talk
 
-The data plane every component reads from and writes to:
+How the backend reaches the human.
 
-```
-             Agents         Flows
-                \             /
-                 v           v
-CHANNELS ---> ENTITY -> CONVERSATION -> INTERACTION -> OUTCOME ---> EVENTS
-                  |                                |
-                  +--------- CONTEXT --------------+
-                 ^           ^
-              Teams       Policies
-```
+- [Calling Engine](/core-engine/calling-engine) - programmable realtime
+  voice: numbers, calls, SIP, transfers, streams.
+- [Channels](/core-engine/channels) - voice and chat today; WhatsApp, SMS
+  and email in build.
+- [Models & Router](/core-engine/models-router) - STT, TTS and LLM for
+  real-time turns, with automatic failover.
 
-Channels deliver to an entity; every touch belongs to a channel-neutral
-conversation; each call, message, or email is an interaction that produces a
-structured outcome, and every change emits an event. Context underlies the
-spine from entity through outcome. Agents and Flows act on the spine; Teams
-and Policies govern it.
+## Remember
 
-## Four layers
+The Context Engine: what survives every call, message and model swap.
 
-| Layer | Unpod primitives | Role |
-|---|---|---|
-| Communication state | Entities, Conversations, Context Engine, Outcomes | The durable system of record |
-| Execution | Flows, Journeys, Agent Workforce | Decides and performs what happens next |
-| Transport | Calling Engine, WhatsApp, Email, other Channels | Reaches the human |
-| Control | Teams, Policies, Events, Observability | Governs, secures and exposes execution |
+- [Context Engine](/core-engine/context-engine) - one memory per customer,
+  from the live turn to outcome history.
+- [People & identity](/core-engine/entities) - the record every touch
+  resolves to.
+- [Conversations](/core-engine/conversations) - channel-neutral threads.
+- [Outcomes](/core-engine/outcomes) - the structured result of every
+  interaction.
+- [Permissions & tenancy](/core-engine/teams-policies) - who can see and do
+  what, per space and team.
+- [Own your model](/core-engine/intelligence) - blocks that turn
+  conversations into structure, and where that memory goes next.
 
-## Communication state
+## Act
 
-The substrate is communication state, not any single channel. This layer is
-what survives every call, message, and model swap.
+What decides and performs the next step.
 
-- [Entities](/core-engine/entities) — system-of-record identity: people,
-  organizations, and their channel identities.
-- [Conversations](/core-engine/conversations) — channel-neutral threads that
-  hold every touch with an entity.
-- [Outcomes](/core-engine/outcomes) — the structured, versioned result each
-  interaction produces.
-- [Context Engine](/core-engine/context-engine) — persistent communication
-  memory: facts, relationships, summaries, retrieval.
-
-## Execution
-
-What decides and performs the next step — spun up per task, durable across
-days.
-
-- [Agent Workforce](/core-engine/agent-workforce) — workers that communicate
-  and act: agents, tools, policies, handoffs.
-- [Flows & Journeys](/core-engine/flows-journeys) — durable communication
-  workflows: steps, waits, signals, outcome branching.
-- [Intelligence](/core-engine/intelligence) — definable blocks that extract,
-  score, and summarize what interactions produced.
-
-## Transport
-
-How the backend reaches the human. The Calling Engine is the wedge and the
-trusted infrastructure anchor, but it is one channel — an application can live
-on WhatsApp and email without ever placing a call.
-
-- [Calling Engine](/core-engine/calling-engine) — programmable realtime voice
-  runtime: calls, numbers, SIP, transfers, streams.
-- [Channels](/core-engine/channels) — voice and chat today; WhatsApp, SMS and
-  email in build.
-
-## Control
-
-What governs, secures, and exposes everything above.
-
-- [Teams & Policies](/core-engine/teams-policies) — the multi-tenant
-  authorization boundary: projects, teams, roles, service accounts.
-- [Events](/core-engine/events) — everything that happened, once: event
-  stream, webhooks, subscriptions, replay.
-- [Observability](/core-engine/observability) — call logs, recordings,
-  transcripts, and the correlated journey trace.
+- [Agents](/core-engine/agent-workforce) - workers that communicate and act,
+  spun up per task.
+- [Agent Harness](/core-engine/agent-harness) - tools, retries, guardrails,
+  human handoff, evals and observability around every agent.
+- [Flows & Journeys](/core-engine/flows-journeys) - durable workflows:
+  steps, waits, outcome branching.
+- [Actions](/core-engine/actions) - your APIs, called mid-conversation or
+  fed every outcome.
+- [Events](/core-engine/events) - everything that happened, once.
+- [Observability](/core-engine/observability) - call logs, recordings,
+  transcripts and traces.
 
 ## Status
 
-Every Core Engine page carries a status line. **Production** means it carries
-production traffic today. **In build** means it is shipping in the open.
-**Early access** means it is available to early partners. Statuses are printed
-honestly, as of September 2026 — where an API is callable today, the page
-links the real doc where it lives now.
+Every Core Engine page carries a status line. **Production** means it
+carries production traffic today. **In build** means it is shipping in the
+open. **Early access** means it is open to early partners. In graphics, a
+**Planned** chip marks part of the design that no one can use yet. Statuses
+are as of October 2026; where an API is callable today, the page links the
+doc where it lives now.
 
 ## The adoption path
 
-First call → one channel → one entity → one agent → one flow → a reply wakes
-the journey → persistent context. Start with the first call:
-[Quickstart](/get-started/quickstart).
+First call → one agent → memory of past calls → one more channel → one flow
+→ a reply wakes the journey → context across every channel. Start with the
+first call: [Quickstart](/get-started/quickstart).
