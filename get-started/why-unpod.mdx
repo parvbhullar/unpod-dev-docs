@@ -10,6 +10,9 @@ import Architecture from '/snippets/architecture.mdx';
 remember and act: voice, messaging, agents and workflows in one SDK, on a
 Context Engine that remembers every customer across every channel.
 
+Today, voice and the Chat API run in production, and voice agents remember
+past calls; WhatsApp, SMS, email and cross-channel memory are in build.
+
 Build the app. Unpod runs everything behind the conversation. Supabase
 simplified the backend for traditional apps; Unpod is the backend for apps
 that communicate, remember and act.
@@ -53,7 +56,7 @@ separate systems, then runs them for every user.
   </Card>
   <Card title="The agent harness" icon="shield-check">
     Running an agent in production means tool calls, guardrails, retries,
-    human handoff and evals - all in real time.
+    human handoff and evals - during and after every call.
   </Card>
   <Card title="Context that compounds" icon="layers">
     One identity and one memory per customer, across every channel and
@@ -64,7 +67,8 @@ separate systems, then runs them for every user.
 <Note>
 **Then replicate it for every user.** A consumer app has millions of users;
 a SaaS product, thousands of accounts. For a small team, this layer alone is
-a distributed-systems problem. Unpod ships it as one system.
+a distributed-systems problem. Unpod is built to be that one system - see
+what runs today, below.
 </Note>
 
 ## One backend, every layer
@@ -120,6 +124,6 @@ build. Every [Core Engine](/core-engine/overview) page prints its own status.
     <span className="pg-card__desc">Build and hear an agent in the browser. No account needed.</span>
   </a>
   <Card title="GitHub" icon="github" href="https://github.com/unpod-ai/unpod">
-    Open source, MIT. Self-host the full stack.
+    Open source, MIT. Self-host the platform; voice deploys separately.
   </Card>
 </CardGroup>

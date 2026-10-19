@@ -34,7 +34,7 @@ ENTITY -> CONVERSATION -> INTERACTION -> OUTCOME ---> EVENTS
 
 Events sit at the end of the spine and read all of it: every write to an
 entity, conversation, interaction, or outcome emits an event. They write
-nothing back to communication state - the stream is an append-only record
+nothing back to the Context Engine - the stream is an append-only record
 of what already happened. In the other direction, events are the input
 side of Execution: an inbound message or reply lands as an event, and
 [Flows & Journeys](/core-engine/flows-journeys) waiting on that signal

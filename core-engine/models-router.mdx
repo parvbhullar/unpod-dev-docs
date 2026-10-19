@@ -5,9 +5,10 @@ description: 'STT, TTS and LLM served for real-time turns, with automatic failov
 
 Models are the speech and language layer under every live turn:
 speech-to-text, the LLM, and text-to-speech. The router is what keeps a turn
-alive. Each of the three has a standby, and Unpod fails over to it
-automatically - before the greeting or mid-call - so a provider outage is
-not a dropped call.
+alive. On Agent Studio agents each of the three has a standby, and Unpod fails
+over to it automatically - before the greeting or mid-call - so a provider
+outage is not a dropped call. On SDK agents, STT and TTS fail over when the
+session starts.
 
 Model choice is yours. A **voice profile** fixes the speech pair for a
 language; the agent's **brain** fixes the LLM. The router keeps that choice
@@ -19,7 +20,7 @@ running. It does not swap in a cheaper model behind your back.
 |---|---|---|
 | Voice profiles | A benchmarked STT + TTS pairing for a language, with its measured cost and latency | `client.voice_profiles.list(language=...)` - production |
 | LLM | The model behind the agent's brain | Prompt or Playbook brain on the hosted runtime; an `Endpoint` brain to bring your own OpenAI-compatible model - production |
-| Failover | A standby per modality, switched in automatically | Built in for STT, LLM and TTS - production |
+| Failover | A standby per modality, switched in automatically | STT, LLM and TTS, mid-call, on Agent Studio agents; STT and TTS at session start on SDK agents - production |
 | Routing | How LLM traffic reaches the model: gateway, managed host, or direct | Decided per model, internally - production |
 
 ```python step1_voices.py
@@ -54,7 +55,8 @@ turn is Unpod's problem.
 ## Status
 
 - **Production:** multi-vendor STT, TTS and LLM; voice profiles; automatic
-  failover for all three, mid-call; LLM routing.
+  failover for all three, mid-call, on Agent Studio agents (STT and TTS at
+  session start on SDK agents); LLM routing.
 - **In build:** Unpod-served speech and language models.
 - **Not offered:** picking a model per request by cost or latency. Choose the
   profile and model you want; the router keeps them running.

@@ -3,12 +3,12 @@ title: 'Own your model'
 description: 'Definable blocks turn every conversation into structure today - and that memory is where your own model comes from.'
 ---
 
-Intelligence is **definable blocks**: a block takes communication in and
-writes structure out - extraction, qualification & scoring, summarization,
-sentiment & intent, evaluation, or a custom block you define. Today blocks
-run on call outcomes; where the system is headed is placement anywhere in
-the pipeline - attached to a single step, a conversation, or the whole
-stream (in build). Every insight lands back in communication state, where
+Own your model starts with **definable blocks**: a block takes communication
+in and writes structure out - extraction, qualification & scoring,
+summarization, sentiment & intent, evaluation, or a custom block you define.
+Today blocks run on call outcomes; where the system is headed is placement
+anywhere in the pipeline - attached to a single step, a conversation, or the
+whole stream (in build). Every insight lands back in the Context Engine, where
 the next block - and the next agent - can read it.
 
 That loop is where this goes. Because outcomes accumulate in one durable
@@ -41,14 +41,14 @@ production today; the rest is planned.
 | Primitive | What it is | Where it lives today |
 |---|---|---|
 | Blocks | A defined unit of analysis (extraction, scoring, summarization, sentiment & intent, evaluation, custom) attached to a step, a conversation, or the stream | Extraction, scoring, and summarization run on call outcomes - see [Post-call data](/api/post-call-data) |
-| Datasets | Outcome history from communication state, assembled by the dataset builder into training data | Not available yet |
+| Datasets | Outcome history, assembled by the dataset builder into training data | Not available yet |
 | Evaluations | Blocks that score whether a conversation did its job, per turn or per outcome | [SuperDialog evals](/superdialog/evals) is the callable surface today |
 | Trained models | A per-org SLM (~1B) trained on your outcomes | Not available yet |
 
 ## On the spine
 
 Blocks read interactions, outcomes, and context; they never touch the audio
-path. What a block produces is written back to communication state - onto the
+path. What a block produces is written back to the spine - onto the
 [outcome](/core-engine/outcomes) it analyzed or into the
 [Context Engine](/core-engine/context-engine) - so downstream blocks and agents
 read it as ordinary state, not as a side channel. Each insight written emits
@@ -80,7 +80,7 @@ training pipeline ships, its internals stay hidden the same way.
     The structured records blocks read from and write back to.
   </Card>
   <Card title="Context Engine" icon="waypoints" href="/core-engine/context-engine">
-    Where insights persist as retrievable communication memory.
+    Where insights persist as retrievable memory.
   </Card>
   <Card title="SuperDialog evals" icon="list-checks" href="/superdialog/evals">
     Score conversations against ratified expectations.

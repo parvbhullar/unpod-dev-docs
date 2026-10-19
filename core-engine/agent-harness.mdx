@@ -7,7 +7,9 @@ The brain decides what to say. The harness is everything around it that
 makes an agent safe to put in front of customers: the runtime that runs each
 turn, the tools it calls, retries when a tool fails, guardrails on what it
 may say, a handoff to a human when it should stop, evals that score it, and
-the logs that show what happened. All of it runs in real time, on every call.
+the logs that show what happened. The runtime, tools, retries, `never_say`
+guardrails and handoff run in real time on every call; evals score the call
+after it ends.
 
 ## The primitives
 
@@ -18,7 +20,7 @@ the logs that show what happened. All of it runs in real time, on every call.
 | Retries | A capped retry, then a fallback route, when a tool fails | Production - `failed: {retry: N, on_exhaust: ...}` in a playbook pipeline |
 | Guardrails | Hard limits on what the agent may say | Production - `never_say` and hard gates per [playbook](/superdialog/playbooks) checkpoint. A policy layer: in build |
 | Human handoff | Transfer to a person mid-call | Production - Agent Studio → Advanced → **Enable Handover** |
-| Evals | Score a conversation against what good looks like | Production - the Realtime Evaluations toggle, [Playground Optimize](/playbook/optimize), [`superdialog eval`](/superdialog/evals) |
+| Evals | Score a conversation against what good looks like | Production - the Realtime Evaluations toggle (scored after the call), [Playground Optimize](/playbook/optimize), [`superdialog eval`](/superdialog/evals) |
 | Observability | What happened on every call | Production - call logs, recordings, transcripts and [analytics](/speech-stack/analytics) |
 
 Most of the harness is declared in the playbook:

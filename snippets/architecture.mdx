@@ -8,12 +8,13 @@
   </div>
   <div className="ua-row"><span className="ua-t">Models + router</span><span className="ua-s">STT · TTS · LLM · automatic failover</span></div>
   <div className="ua-row"><span className="ua-t">Channels</span><span className="ua-s">Call · chat · WhatsApp · SMS · email</span></div>
-  <div className="ua-row"><span className="ua-t">Telephony</span><span className="ua-s">Unpod's own rails · your SIP trunk (beta)</span></div>
+  <div className="ua-row"><span className="ua-t">Telephony</span><span className="ua-s">Unpod's own rails · your SIP trunk (in build)</span></div>
 </div>
 
 <Steps>
   <Step title="A channel event resolves to a person">
     Someone calls or writes; Unpod finds who they are and what happened before.
+    <span className="st-chip is-prod">Calls, same number: production</span> <span className="st-chip is-build">Messages, cross-channel: in build</span>
   </Step>
   <Step title="The harness loads context">
     It picks the agent and its tools and applies the guardrails.
@@ -23,5 +24,6 @@
   </Step>
   <Step title="The outcome is written back">
     The next interaction starts informed.
+    <span className="st-chip is-prod">Next call, same number: production</span> <span className="st-chip is-build">Any channel: in build</span>
   </Step>
 </Steps>

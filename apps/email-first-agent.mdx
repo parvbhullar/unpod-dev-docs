@@ -42,7 +42,7 @@ unpod.flows.start("renewal-follow-up", person_id=person.id)
 
 | Piece | Status | Where |
 |---|---|---|
-| Email in the SDK | In build | [Channels](/core-engine/channels) |
+| Email conversations (Gmail-connected flows; no SDK resource yet) | In build | [Channels](/core-engine/channels) |
 | Conversations API | In build | [Conversations](/core-engine/conversations) |
 | Journeys: waits and outcome branching | In build | [Flows & Journeys](/core-engine/flows-journeys) |
 
@@ -54,8 +54,9 @@ your own stack and puts the voice step on Unpod:
 1. Your system sends and receives the email.
 2. When a thread needs a voice, your system places a call and passes the
    thread summary as call data.
-3. The [post-call webhook](/api/post-call-data) returns the outcome, and
-   your system writes it back to the thread.
+3. Attach an [analytics block](/speech-stack/analytics) to the agent, read
+   the outcome with `client.analytics.for_call(call.call_id)`, and write it
+   back to the thread.
 
 ```python call_from_thread.py
 import asyncio

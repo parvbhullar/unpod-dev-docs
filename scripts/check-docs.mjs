@@ -98,15 +98,18 @@ const RETIRED = [
   "served at your inference endpoint", // no per-org SLM serving exists
   "5 lakh", // proof figure is now 10+ lakh interactions/month
   "Speech is solved", // contradicts the deck: channels are a hard layer
-  "calling infrastructure", // retired positioning; platform/ is exempt
+  "calling infra",          // retired positioning (also catches "calling infrastructure"); platform/ is exempt
   "Communication infra",
   "Transport layer", // layers are now Talk / Remember / Act
   "Execution layer",
   "Control layer",
   "four layers",
+  "communication backend", // retired tagline: agentic backend for conversational AI
 ];
 const retiredHits = [];
-for (const rel of onDisk) {
+// snippets/ is skipped by the nav walk but renders inside pages, so scan it too.
+const scanned = [...onDisk, ...readdirSync(join(ROOT, "snippets")).filter((n) => n.endsWith(".mdx")).map((n) => `snippets/${n.slice(0, -4)}`)];
+for (const rel of scanned) {
   if (rel.startsWith("platform/")) continue;
   readFileSync(join(ROOT, `${rel}.mdx`), "utf8").split("\n").forEach((line, i) => {
     const lower = line.toLowerCase();

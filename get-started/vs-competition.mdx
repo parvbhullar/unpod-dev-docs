@@ -51,8 +51,8 @@ Unpod compares with LiveKit and Pipecat.
 | **STT/TTS** | Fully managed, automatic failover | You configure and run providers | You configure and run providers |
 | **Time to first call** | ~2 hours | ~4 months | ~4 months |
 | **Scaling** | Automatic | You manage workers | You manage processes |
-| **Your agent format** | Webhook, SDK, LangChain, MCP (preview) | LangChain, custom | LangChain, custom |
-| **Best for** | Teams that want calling infra handled | Teams needing full audio control | Teams wanting pipeline flexibility |
+| **Your agent format** | Webhook, SDK, LangChain, MCP (in build) | LangChain, custom | LangChain, custom |
+| **Best for** | Teams that want the backend behind the conversation handled | Teams needing full audio control | Teams wanting pipeline flexibility |
 
 ---
 
@@ -112,10 +112,10 @@ You configure every provider. You deploy and manage the LiveKit server (or pay f
 
 ## Unpod
 
-You bring the agent. Unpod gives it a phone number and handles every audio layer:
+Unpod runs the backend under your agent: the number, the audio, the runtime and the memory of past calls.
 
 ```python
-# Unpod - you write the logic, we handle the communication stack
+# Unpod - you write the logic; Unpod runs the backend
 async def handle_call(ctx: CallContext) -> None:
     ctx.session.dialog_machine = DialogMachine("support.yaml", llm="anthropic/claude-haiku-4-5")
     await ctx.session.run()
@@ -137,7 +137,7 @@ You can also point Unpod at an existing HTTP endpoint or LangChain agent without
 - You want phone numbers without a carrier account or SIP trunk
 - You have an existing agent and want to give it voice in hours - not months
 - You do not want to manage STT/TTS provider accounts, failover, or audio infrastructure
-- Your core value is the agent logic - not the communication stack
+- Your core value is the agent logic - not the backend behind it
 
 ### Choose LiveKit when:
 - You need granular WebRTC control (custom ICE, codec requirements)
@@ -162,7 +162,7 @@ You can also point Unpod at an existing HTTP endpoint or LangChain agent without
 | SIP trunk required | No | Yes | Yes |
 | Inbound calls | Yes | Yes (with SIP) | Requires setup |
 | Outbound calls | Yes (SDK) | Yes (with SIP) | Requires setup |
-| BYON (bring your own number) | Yes | Yes | Yes |
+| BYON (bring your own number) | In build | Yes | Yes |
 
 ### Voice Processing
 
@@ -191,8 +191,8 @@ You can also point Unpod at an existing HTTP endpoint or LangChain agent without
 
 ## Open Source
 
-All three are open source. Unpod's core components - `unpod`, `supervoice`, `superdialog` - are on GitHub. You can self-host the full stack or use Unpod's managed cloud.
+All three are open source. Unpod's core components - `unpod`, `supervoice`, `superdialog` - are on GitHub. You can self-host the open-source platform - `supervoice` is not part of self-hosting yet (add the voice executor from `apps/super/deployment`; it trails the hosted product) or use Unpod's managed cloud.
 
 <Card title="Self-hosting Unpod" icon="server" href="/platform/self-hosting/quickstart">
-  Run the full Unpod communication stack on your own infrastructure.
+  Run the open-source Unpod stack on your own infrastructure.
 </Card>

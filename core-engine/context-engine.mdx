@@ -12,12 +12,12 @@ keep it. It comes in five tiers, from hot and fast at the top to persistent
 and compounding at the bottom:
 
 <div className="ce-pyramid" role="img" aria-label="Five context tiers and their status: live turn, session memory, customer context, organisation knowledge, outcome history.">
-  <div className="ce-tier" style={{"--w": "46%", "--bg": "#b14af0"}}>
+  <div className="ce-tier" style={{"--w": "46%", "--bg": "#9333ea"}}>
     <span className="ce-tier__t">Live turn</span>
     <span className="ce-tier__s">This call, right now</span>
     <span className="ce-tier__chips"><span className="st-chip on-color">Production</span></span>
   </div>
-  <div className="ce-tier" style={{"--w": "62%", "--bg": "#7c6cff"}}>
+  <div className="ce-tier" style={{"--w": "62%", "--bg": "#5a4fff"}}>
     <span className="ce-tier__t">Session memory</span>
     <span className="ce-tier__s">Active context across the conversation</span>
     <span className="ce-tier__chips"><span className="st-chip on-color">Production</span></span>
@@ -45,7 +45,7 @@ and compounding at the bottom:
 | Tier | How you use it today |
 |---|---|
 | Live turn, session memory | Automatic: the runtime carries turn history through the conversation. A bring-your-own brain keeps its own history in its adapter. |
-| Customer context | Pass what you know as call data (below), or as Space People columns. Turn on **Enable Memory** (Agent Studio → Advanced) and the agent recalls past calls with the same number - per agent, per number, voice only. |
+| Customer context | Pass what you know as call data (below), or as Space People columns. Turn on **Enable Memory** (Agent Studio → Advanced) and the agent recalls past calls with the same number - per agent, per number, voice only. Enable Memory applies to Agent Studio agents; SDK agents dialed with `client.calls.create` cannot turn on past-call memory yet (in build). |
 | Organisation knowledge | Upload documents to a [knowledge base](/platform/studio-view/knowledge-base) and attach it to the agent; the agent retrieves from it mid-call. |
 | Outcome history | Every completed call produces structured [post-call data](/api/post-call-data), by webhook or API. SDK agents read [analytics blocks](/speech-stack/analytics) with `client.analytics.for_call(call_id)`. |
 
@@ -69,8 +69,8 @@ asyncio.run(main())
 
 - Cross-channel identity, and one timeline per person across call, WhatsApp,
   SMS and email.
-- Facts with provenance, validity windows and sensitivity levels, retrieved
-  by tenant, permission and purpose - with export and erase APIs.
+- Facts with provenance, a time-to-live and sensitivity levels, scoped per
+  organisation, with organisation-level erase.
 - Outcome history read back as memory by the next interaction, on any
   channel.
 
@@ -90,8 +90,8 @@ vectors.
 
 ## Status
 
-**Production** for everything inside one channel: live turn, session memory,
-per-call customer context with memory of past calls, knowledge-base
+**Production** on voice: live turn, session memory, per-call customer
+context with memory of past calls on Agent Studio agents, knowledge-base
 retrieval, and post-call outcomes. **In build:** cross-channel context, the
 facts layer with provenance, and outcome history as memory.
 

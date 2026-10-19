@@ -828,7 +828,7 @@ div:has(svg[aria-roledescription^="flowchart"]) > [class*="ontrol"] {
 .st-chip.on-color, .dark .st-chip.on-color {
   color: #fff;
   border-color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 /* ---- .ul-stack.is-compact — the deck's banded six-layer stack ---- */
@@ -922,7 +922,7 @@ div:has(svg[aria-roledescription^="flowchart"]) > [class*="ontrol"] {
   background: var(--bg, #5a4fff);
 }
 .ce-tier__t { font-size: 0.82rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-.ce-tier__s { font-size: 0.8rem; opacity: 0.88; }
+.ce-tier__s { font-size: 0.8rem; }
 .ce-tier__chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 4px; }
 .ce-axis {
   display: flex;

@@ -15,7 +15,7 @@ and takes minutes.
 | Talk to an agent in the browser | [Realtime](/get-started/realtime) | A browser - runs in the hosted Playground |
 | Publish an agent to a number, no code | [Phone](/get-started/phone) | A [Playground](https://superdialog.unpod.ai/playground) account |
 | Run my own Python brain on calls | [Run Your Own Brain](/get-started/first-phone-call) | SDK key + a number |
-| Call a trained agent like a model, over REST | [Chat API](/playbook/api) | Endpoint key |
+| Call your agent like a model, over REST | [Chat API](/playbook/api) | Endpoint key |
 
 Not sure? Take the **Quickstart** - it is the shortest path to something
 real: your phone rings, an agent speaks, and the transcript comes back in
@@ -29,7 +29,7 @@ Unpod's credentials are not interchangeable:
 |---|---|---|---|
 | **Python SDK REST** (agents, numbers, calls) | `unpod.ai` | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | [Quickstart → Prerequisites](/get-started/quickstart#prerequisites) |
 | **AgentRunner** (your own brain) | the orchestrator | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | [Quickstart → Prerequisites](/get-started/quickstart#prerequisites) |
-| **Chat API** (trained agent as a model) | `inference.unpod.ai` | `Authorization: Bearer` endpoint key | Playground → Deploy as Endpoint |
+| **Chat API** (your agent as a model) | `inference.unpod.ai` | `Authorization: Bearer` endpoint key | Playground → Deploy as Endpoint |
 
 The SDK reads all of it from the environment; token auth wins over the API
 key when both are present. Set whichever matches the path you are on.
@@ -38,7 +38,7 @@ key when both are present. Set whichever matches the path you are on.
 
 <CardGroup cols={2}>
   <Card title="Why Unpod" icon="compass" href="/get-started/why-unpod">
-    The communication backend for agentic apps - the case in two minutes.
+    The agentic backend for conversational AI - the case in two minutes.
   </Card>
   <Card title="How Unpod fits together" icon="network" href="/get-started/core-concepts">
     The architecture, talk / remember / act, and every term defined once.

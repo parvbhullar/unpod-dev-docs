@@ -75,6 +75,7 @@
                   "telephony/quickstart",
                   {
                     "group": "Integrations",
+                    "icon": "blocks",
                     "pages": [
                       "telephony/integrations/overview",
                       {
@@ -117,12 +118,14 @@
                   },
                   {
                     "group": "Numbers",
+                    "icon": "hash",
                     "pages": [
                       "telephony/numbers/list-numbers"
                     ]
                   },
                   {
                     "group": "Trunks",
+                    "icon": "git-branch",
                     "pages": [
                       "telephony/trunks/list-trunks",
                       "telephony/trunks/create-trunk",
@@ -134,6 +137,7 @@
                   },
                   {
                     "group": "Calls",
+                    "icon": "phone",
                     "pages": [
                       "telephony/calls/overview",
                       "telephony/calls/call-logs"
@@ -264,6 +268,7 @@
             "pages": [
               {
                 "group": "Overview",
+                "icon": "book-open",
                 "expanded": false,
                 "pages": [
                   "speech-stack/introduction",
@@ -272,6 +277,7 @@
               },
               {
                 "group": "Speech Infrastructure",
+                "icon": "audio-lines",
                 "expanded": false,
                 "pages": [
                   "speech-stack/agents",
@@ -285,6 +291,7 @@
               },
               {
                 "group": "Connect Your Agent",
+                "icon": "blocks",
                 "expanded": false,
                 "pages": [
                   "speech-stack/websocket",
@@ -295,6 +302,7 @@
               },
               {
                 "group": "Call Runtime",
+                "icon": "activity",
                 "expanded": false,
                 "pages": [
                   "speech-stack/agent-runner",
@@ -305,6 +313,7 @@
               },
               {
                 "group": "Operate",
+                "icon": "server",
                 "expanded": false,
                 "pages": [
                   "speech-stack/recordings-transcripts",
