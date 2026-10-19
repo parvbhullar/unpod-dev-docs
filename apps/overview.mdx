@@ -1,0 +1,52 @@
+---
+title: 'One backend, many apps'
+sidebarTitle: 'Gallery'
+icon: 'layout-grid'
+description: 'Apps built on Unpod - each one uses the same six layers underneath.'
+---
+
+import BackendStack from '/snippets/backend-stack.mdx';
+
+Unpod is infrastructure, so the products built on it differ: a contact
+center, a personal assistant, an email-first agent. Underneath, every one
+of them uses the same six layers.
+
+<BackendStack />
+
+## The gallery
+
+<CardGroup cols={2}>
+  <Card title="Unpod Platform" icon="app-window" href="/platform/introduction">
+    Our own product - Studio, Spaces, calls and analytics - built on this
+    backend. App number one.
+  </Card>
+  <Card title="Contact center" icon="headset" href="/apps/contact-center">
+    **Runnable today.** One prompt, fifty calls, one report - with a handoff
+    to a human when it matters.
+  </Card>
+  <Card title="Personal assistant" icon="user-round" href="/apps/personal-assistant">
+    **Illustrative.** The agent is the interface, and it remembers the user
+    from last time.
+  </Card>
+  <Card title="Email-first agent" icon="mail" href="/apps/email-first-agent">
+    **Illustrative.** An agent that lives in the inbox and calls when a
+    conversation needs a voice.
+  </Card>
+</CardGroup>
+
+**Runnable** means every step on the page works today. **Illustrative**
+means the page shows the design; it lists what the app waits on and what
+you can build today instead.
+
+## Which layers each app uses
+
+| Layer | Contact center | Personal assistant | Email-first agent |
+|---|---|---|---|
+| Telephony | Yes | Yes | For the call step |
+| Channels | Voice | Voice, chat, WhatsApp\* | Email\*, voice |
+| Models | Yes | Yes | Yes |
+| Context Engine | Per call | Across channels\* | Across channels\* |
+| Agents | Yes | Yes | Yes |
+| Actions | Sheets, webhooks | Your APIs | Your APIs |
+
+\* In build - each app page says what it waits on.

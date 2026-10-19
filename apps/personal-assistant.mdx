@@ -1,0 +1,67 @@
+---
+title: 'Personal assistant'
+icon: 'user-round'
+description: 'Illustrative: an assistant where the agent is the interface and it remembers each user. What runs today, and what it waits on.'
+---
+
+**Illustrative.** An assistant where the agent is the interface: a user
+calls or chats, and it knows them from last time - their name, their last
+request, what they prefer. Built by conversation-first startups.
+
+## How it would work
+
+<Steps>
+  <Step title="A message arrives">
+    The user calls, chats, or sends a WhatsApp message.
+  </Step>
+  <Step title="Unpod knows who it is">
+    The channel handle resolves to one person, with every past conversation.
+  </Step>
+  <Step title="The agent picks up from there">
+    It answers with that context, and acts through your APIs.
+  </Step>
+  <Step title="The outcome is remembered">
+    The next conversation, on any channel, starts informed.
+  </Step>
+</Steps>
+
+## The shape
+
+```python Illustrative - not callable today
+person = unpod.entities.upsert(
+    identities=[{"channel": "whatsapp", "value": "+91981..."}],
+)
+conversation = unpod.conversations.latest(person_id=person.id)
+unpod.messages.send(
+    conversation_id=conversation.id,
+    channel="whatsapp",
+    text="Booked: a table for two at 8 tonight.",
+)
+```
+
+## What it waits on
+
+| Piece | Status | Where |
+|---|---|---|
+| Messaging in the SDK (WhatsApp, SMS) | In build | [Channels](/core-engine/channels) |
+| Conversations API | In build | [Conversations](/core-engine/conversations) |
+| Cross-channel identity | In build | [People & identity](/core-engine/entities) |
+
+## Build it today
+
+A voice-and-chat version runs now, with two separate memories:
+
+- **Voice:** a voice agent with **Enable Memory** on (Agent Studio →
+  Advanced) recalls past calls from the same number.
+- **Chat:** the [Chat API](/get-started/chat) keeps a conversation stateful
+  when you pass the same `user` id - use your own user's id.
+
+```bash
+curl -X POST "https://inference.unpod.ai/v1/chat/completions" \
+  -H "Authorization: Bearer $UNPOD_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"public:PB_...","messages":[{"role":"user","content":"Book my usual table"}],"user":"user_42"}'
+```
+
+The two memories are not joined yet. Joining them is what cross-channel
+identity in the [Context Engine](/core-engine/context-engine) is for.

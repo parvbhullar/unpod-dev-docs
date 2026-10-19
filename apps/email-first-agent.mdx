@@ -1,0 +1,74 @@
+---
+title: 'Email-first agent'
+icon: 'mail'
+description: 'Illustrative: an agent that lives in the inbox and calls when a conversation needs a voice. What runs today, and what it waits on.'
+---
+
+**Illustrative.** An agent that lives in the inbox: it answers inbound
+email, follows up on its own schedule, and places a call when a
+conversation needs a voice. Built by SaaS teams and support operations.
+
+## How it would work
+
+<Steps>
+  <Step title="An email arrives">
+    It resolves to a person and to their open thread.
+  </Step>
+  <Step title="The agent replies, or waits">
+    It answers now, or schedules a follow-up.
+  </Step>
+  <Step title="No reply in two days">
+    The flow places a call, with the thread as context.
+  </Step>
+  <Step title="The outcome is written back">
+    The thread, and the person, carry what happened on the call.
+  </Step>
+</Steps>
+
+## The shape
+
+```python Illustrative - not callable today
+thread = unpod.conversations.latest(person_id=person.id, channel="email")
+unpod.messages.send(
+    conversation_id=thread.id,
+    channel="email",
+    subject="Your renewal",
+    text="Your plan renews on the 30th. Reply here to change it.",
+)
+unpod.flows.start("renewal-follow-up", person_id=person.id)
+```
+
+## What it waits on
+
+| Piece | Status | Where |
+|---|---|---|
+| Email in the SDK | In build | [Channels](/core-engine/channels) |
+| Conversations API | In build | [Conversations](/core-engine/conversations) |
+| Journeys: waits and outcome branching | In build | [Flows & Journeys](/core-engine/flows-journeys) |
+
+## Build it today
+
+Nothing email-native ships yet. The closest working version keeps email in
+your own stack and puts the voice step on Unpod:
+
+1. Your system sends and receives the email.
+2. When a thread needs a voice, your system places a call and passes the
+   thread summary as call data.
+3. The [post-call webhook](/api/post-call-data) returns the outcome, and
+   your system writes it back to the thread.
+
+```python call_from_thread.py
+import asyncio
+from unpod import AsyncClient
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        call = await client.calls.create(
+            agent_id="renewals",
+            to_number="+9198xxxxxx01",
+            data={"thread_summary": "Asked about the renewal price twice; no reply since Monday."},
+        )
+        print(call.call_id, call.status)
+
+asyncio.run(main())
+```

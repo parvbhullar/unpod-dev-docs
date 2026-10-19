@@ -1,0 +1,105 @@
+---
+title: 'Contact center'
+icon: 'headset'
+description: 'Runnable today: agents that call and answer at scale, hand off to a human, and report back after every batch.'
+---
+
+**Runnable today.** An AI-first contact center: agents that call and answer
+at scale, hand the call to a person when it matters, and report back after
+every batch. Built by contact centers, BPOs and BFSI teams.
+
+<div className="uf-flow">
+  <div className="uf-node">
+    <span className="uf-ic">💬</span>
+    <span className="uf-t">One prompt</span>
+    <span className="uf-s">"Call these leads, qualify for budget"</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">dial</span></div>
+  <div className="uf-node is-accent">
+    <span className="uf-ic">📞</span>
+    <span className="uf-t">Fifty calls</span>
+    <span className="uf-s">Parallel, in the caller's language</span>
+  </div>
+  <div className="uf-arrow"><span className="uf-lbl">report</span></div>
+  <div className="uf-node">
+    <span className="uf-ic">📊</span>
+    <span className="uf-t">One report</span>
+    <span className="uf-s">Who qualified, and why</span>
+  </div>
+</div>
+
+## Layers it uses
+
+| Layer | What it does here | Status |
+|---|---|---|
+| Telephony | Unpod numbers, outbound and inbound | Production |
+| Channels | Voice | Production |
+| Models | Hindi and English voice profiles, with failover | Production |
+| Context Engine | Per-contact data, memory of past calls, post-call outcomes | Production |
+| Agents | A playbook agent with handoff to a human | Production |
+| Actions | Google Sheets sync; the post-call webhook to your CRM | Production |
+
+## Build it today
+
+<Steps>
+  <Step title="Build the agent">
+    Create a voice agent in [Agent Studio](/playbook/build-an-agent) with a
+    playbook for the qualification script. Pick a Hindi or English voice
+    profile, and set the calling days and hours.
+  </Step>
+  <Step title="Turn on handoff">
+    Agent Studio → Advanced → **Enable Handover**, with the numbers of the
+    people who take escalations. It is a warm transfer: the caller hears hold
+    music while the person hears an announcement.
+  </Step>
+  <Step title="Load the contacts">
+    Add your leads to a Space. Upload them, or connect a Google Sheet (Agent
+    Studio → Integration) so that new rows trigger calls.
+  </Step>
+  <Step title="Launch the batch">
+    From the Space, select the contacts and call - or use the
+    [Task API](/api/execution/create-task):
+
+    ```bash
+    curl -X POST "https://unpod.ai/api/v2/platform/spaces/$SPACE_TOKEN/tasks/" \
+      -H "Authorization: Token $UNPOD_API_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"pilot": "my-sales-agent",
+           "documents": [{"name": "Asha", "contact_number": "+9198xxxxxx01"},
+                         {"name": "Ravi", "contact_number": "+9198xxxxxx02"}]}'
+    ```
+  </Step>
+  <Step title="Read the report">
+    Export the run from the Space as CSV, or read the Analytics tab. Each row
+    carries the structured outcome you defined: qualified, budget, next step.
+  </Step>
+</Steps>
+
+From the SDK instead, loop over `calls.create` with an SDK agent (see the
+[Quickstart](/get-started/quickstart)). Raise the agent's `max_concurrent`
+first; it defaults to 1.
+
+```python batch_calls.py
+import asyncio
+from unpod import AsyncClient
+
+LEADS = ["+9198xxxxxx01", "+9198xxxxxx02", "+9198xxxxxx03"]
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        for number in LEADS:
+            call = await client.calls.create(agent_id="my-sales", to_number=number)
+            print(number, call.call_id, call.status)
+
+asyncio.run(main())
+```
+
+## Not yet
+
+- **Human seats and queues.** Escalations go to a phone number, not an agent
+  desktop; there is no supervisor monitoring.
+- **DND registry scrubbing.** Keep your own suppression list and remove
+  numbers before you dial. Calling-hours windows are enforced automatically.
+- **Ready-made CRM connectors.** Push outcomes with the post-call webhook.
+- **Large campaigns.** Concurrency is capped per account; ask us to raise it
+  before a big batch.

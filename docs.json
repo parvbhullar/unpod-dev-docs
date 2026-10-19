@@ -330,6 +330,21 @@
         ]
       },
       {
+        "tab": "Apps",
+        "groups": [
+          {
+            "group": "Apps",
+            "icon": "layout-grid",
+            "pages": [
+              "apps/overview",
+              "apps/contact-center",
+              "apps/personal-assistant",
+              "apps/email-first-agent"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "Platform",
         "groups": [
           {
