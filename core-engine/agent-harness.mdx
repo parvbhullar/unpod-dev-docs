@@ -1,0 +1,97 @@
+---
+title: 'Agent Harness'
+description: 'Everything that runs around an agent in production - tools, retries, guardrails, human handoff, evals and observability.'
+---
+
+The brain decides what to say. The harness is everything around it that
+makes an agent safe to put in front of customers: the runtime that runs each
+turn, the tools it calls, retries when a tool fails, guardrails on what it
+may say, a handoff to a human when it should stop, evals that score it, and
+the logs that show what happened. All of it runs in real time, on every call.
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| Runtime | Runs each turn: your brain, the speech pair, the call | Production - Agent Studio agents ([build one](/playbook/build-an-agent)), or SDK agents via `client.agents.voice.create()` |
+| Tools | HTTP calls the agent makes mid-conversation | Production - [playbook tools](/superdialog/tools), or Agent Studio → Persona → Tools. MCP tools: in build |
+| Retries | A capped retry, then a fallback route, when a tool fails | Production - `failed: {retry: N, on_exhaust: ...}` in a playbook pipeline |
+| Guardrails | Hard limits on what the agent may say | Production - `never_say` and hard gates per [playbook](/superdialog/playbooks) checkpoint. A policy layer: in build |
+| Human handoff | Transfer to a person mid-call | Production - Agent Studio → Advanced → **Enable Handover** |
+| Evals | Score a conversation against what good looks like | Production - the Realtime Evaluations toggle, [Playground Optimize](/playbook/optimize), [`superdialog eval`](/superdialog/evals) |
+| Observability | What happened on every call | Production - call logs, recordings, transcripts and [analytics](/speech-stack/analytics) |
+
+Most of the harness is declared in the playbook:
+
+```yaml playbook.yaml (excerpt)
+journeys:
+  booking:
+    checkpoints:
+      - id: collect
+        goal: "Have city and date"
+        never_say: ["our systems are slow"]   # guardrail
+        on_failure: booking.handoff            # route to the escalation checkpoint
+      - id: confirm
+        pipeline: confirm_and_hold
+      - id: handoff
+        terminal: true
+        outcome: escalated
+
+tools:
+  - id: hold_slot                               # a tool
+    type: http
+    method: POST
+    url: "{{ env.API_BASE_URL }}/slots/hold"
+
+pipelines:
+  - id: confirm_and_hold
+    steps:
+      - tool: hold_slot
+        on:
+          ok: continue
+          failed: {retry: 2, on_exhaust: booking.collect}   # retry, then fall back
+```
+
+## Good to know
+
+- **Two runtimes, two dial paths.** Agents built in Agent Studio are dialed
+  with the [Task API](/api/execution/task-make-call-overview). Agents
+  created with the SDK are dialed with `client.calls.create()`. Do not mix
+  them.
+- **Handoff is a warm transfer** on Agent Studio agents: the caller hears
+  hold music while the person hears an announcement. The transcript is not
+  passed to the person.
+
+## On the spine
+
+The harness wraps every interaction. It reads context and the entity before
+the first turn, and it records tool calls, handoffs and the evaluation score
+on the interaction's outcome.
+
+## What stays hidden
+
+Prompt assembly, which provider served a turn, retry timers and failover.
+You declare tools, gates and handoff numbers; the harness runs them.
+
+## Status
+
+**Production:** the runtime, HTTP tools, retries, `never_say` guardrails,
+human handoff, evals, and call-level observability. **In build:** MCP tools,
+and a policy layer for guardrails beyond the playbook.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Tools" icon="wrench" href="/superdialog/tools">
+    Declare HTTP and Python tools in a playbook.
+  </Card>
+  <Card title="Playbooks" icon="book-open" href="/superdialog/playbooks">
+    Checkpoints, gates and `never_say`.
+  </Card>
+  <Card title="Evals" icon="list-checks" href="/superdialog/evals">
+    Score conversations before and after launch.
+  </Card>
+  <Card title="Agents" icon="bot" href="/core-engine/agent-workforce">
+    The workers the harness runs.
+  </Card>
+</CardGroup>

@@ -73,6 +73,7 @@
             "icon": "workflow",
             "pages": [
               "core-engine/agent-workforce",
+              "core-engine/agent-harness",
               "core-engine/flows-journeys",
               "core-engine/intelligence"
             ]
