@@ -12,7 +12,7 @@ production as an API. The messaging channels are in build - see
 [Status](#status).
 
 Two kinds of connector, and the distinction matters. **Channel connectors**
-(WhatsApp, email, SMS, web chat, LinkedIn) carry conversations - they deliver
+(WhatsApp, email, SMS, web chat) carry conversations - they deliver
 interactions to an entity and back. **System connectors** (Google Sheets
 and Shopify today) push and pull rows - they sync records with communication
 state but never carry a conversation. A Sheets sync updates rows; a
@@ -24,7 +24,7 @@ WhatsApp message extends a conversation. Same backend, different verbs.
 |---|---|---|
 | Messages | One unit of content on any channel - a WhatsApp message, an email, an SMS, a chat turn | Web chat via the [Chat API](/get-started/chat); WhatsApp, SMS and email in build |
 | Identities | The per-channel addresses (phone number, email address, WhatsApp ID) that resolve to one entity | [Entities](/core-engine/entities) |
-| Connectors | The bindings to each channel provider - and to systems like CRMs, which sync rows rather than carry conversations | Per channel; see [Status](#status) |
+| Connectors | The bindings to each channel provider - and to systems like Google Sheets and Shopify, which sync rows rather than carry conversations | Per channel; see [Status](#status) |
 | Routing | Which channel, which identity, which agent handles the next touch | Voice routing in [Telephony](/telephony/introduction); cross-channel routing in build with [Conversations](/core-engine/conversations) |
 
 Voice is a channel too - the largest one. It has its own component page
@@ -45,10 +45,11 @@ completed call.
 
 Provider quirks, wherever normalization is safe. WhatsApp template approval
 mechanics, email bounce classification, per-carrier SMS segmentation, chat
-transport details - these differ per provider and change under you. The API
-gives you a message with a status; the connector absorbs the rest. Where a
-channel has semantics you genuinely need (WhatsApp's 24-hour session window,
-for one), they surface as explicit fields, not leaked provider payloads.
+transport details - these differ per provider and change under you. The
+messages API will give you a message with a status; the connector absorbs
+the rest. Where a channel has semantics you genuinely need (WhatsApp's
+24-hour session window, for one), they surface as explicit fields, not
+leaked provider payloads.
 
 ## Status
 

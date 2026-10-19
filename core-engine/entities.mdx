@@ -12,7 +12,8 @@ number on the call, a WhatsApp ID on the message, an address on the email.
 Without a shared identity layer, your agent treats each as a stranger and
 your data splits three ways. Entities collapse those handles into one
 record, so every touch on every channel resolves to the same person before
-your agent sees it.
+your agent sees it. Today that works for phone numbers; cross-channel
+resolution is in build.
 
 People and organizations are both first-class. In an enterprise sale the
 customer is the company - individual contacts roll up to it. In a consumer
@@ -21,9 +22,9 @@ table is the working copy your agents read and write in real time.
 
 Upsert a person once with their known identities, and every future
 interaction on any of those channels resolves to them. This is the shape
-the unified SDK takes:
+the unified SDK will take:
 
-```python
+```python Illustrative - not callable today
 entity = unpod.entities.upsert(
     name="Priya Sharma",
     identities=[
