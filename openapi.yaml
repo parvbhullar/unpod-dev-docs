@@ -194,6 +194,131 @@ paths:
                     modified: "2026-02-07T06:02:35Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createTask
+      summary: Create a Task - Make Voice AI Call
+      tags: [Tasks]
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: space_token
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "8KZAMRAHSXXXXXXMAYNASMJC"
+        - $ref: '#/components/parameters/OrgHandle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pilot
+                - documents
+              properties:
+                pilot:
+                  type: string
+                  description: Agent/pilot handle to assign the task
+                  example: "space-agent-f1o3qjm1y7q1avvuynv4vprb1"
+                documents:
+                  type: array
+                  description: Array of contact/document objects
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: "John Doe"
+                      email:
+                        type: string
+                        example: "john@example.com"
+                      contact_number:
+                        type: string
+                        example: "1234567890"
+                      alternate_number:
+                        type: string
+                        example: "+919876543210"
+                      occupation:
+                        type: string
+                        example: "Sales Manager"
+                      company_name:
+                        type: string
+                        example: "Acme Corp"
+                      address:
+                        type: string
+                        example: "123 Main St, Mumbai"
+                      about:
+                        type: string
+                        example: "Warm lead from webinar"
+                      context:
+                        type: string
+                        example: "Follow up on proposal sent last week"
+                      labels:
+                        type: array
+                        items:
+                          type: string
+                        example: ["warm-lead", "webinar"]
+                      title:
+                        type: string
+                        example: "Q1 Outreach"
+                      description:
+                        type: string
+                        example: "Lead from Q1 campaign"
+                      document_id:
+                        type: string
+                        example: "6902fb5840a736e125e80ebc"
+                context:
+                  type: string
+                  description: Additional context for the task
+                  example: "Call the lead and discuss the project requirements."
+                schedule:
+                  type: object
+                  description: Schedule configuration
+                  example:
+                    type: "now"
+            example:
+              pilot: "space-agent-f1o3qjm1y7q1avvuynv4vprb1"
+              context: "Call the lead and discuss the project requirements."
+              schedule:
+                type: "now"
+              documents:
+                - name: "John Doe"
+                  email: "john@example.com"
+                  contact_number: "1234567890"
+                  alternate_number: "+919876543210"
+                  occupation: "Sales Manager"
+                  company_name: "Acme Corp"
+                  address: "123 Main St, Mumbai"
+                  about: "Warm lead from webinar"
+                  context: "Follow up on proposal sent last week"
+                  labels: ["warm-lead", "webinar"]
+                  title: "Q1 Outreach"
+                  description: "Lead from Q1 campaign"
+                  document_id: "6902fb5840a736e125e80ebc"
+      responses:
+        '200':
+          description: Task created successfully
+          content:
+            application/json:
+              example:
+                status_code: 200
+                message: "Task Created Successfully"
+                data:
+                  run_id: "R74802366fe9011f0878d43cd8a99e069"
+                  task_ids:
+                    - "T74802367fe9011f0878d43cd8a99e069"
+                  status: "pending"
+        '206':
+          description: Partial Content - Business logic error
+          content:
+            application/json:
+              example:
+                message: "Task creation failed"
+                errors: "Detailed error description"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   # ─── Agents ──────────────────────────────────────────────────
   /api/v2/platform/agents/:
@@ -518,134 +643,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
-  # ─── Tasks / Make Call ────────────────────────────────────────
-  /api/v2/platform/spaces/{space_token}/tasks/create/:
-    post:
-      operationId: createTask
-      summary: Create a Task - Make Voice AI Call
-      tags: [Tasks]
-      security:
-        - TokenAuth: []
-      parameters:
-        - name: space_token
-          in: path
-          required: true
-          schema:
-            type: string
-            example: "8KZAMRAHSXXXXXXMAYNASMJC"
-        - $ref: '#/components/parameters/OrgHandle'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - pilot
-                - documents
-              properties:
-                pilot:
-                  type: string
-                  description: Agent/pilot handle to assign the task
-                  example: "space-agent-f1o3qjm1y7q1avvuynv4vprb1"
-                documents:
-                  type: array
-                  description: Array of contact/document objects
-                  items:
-                    type: object
-                    properties:
-                      name:
-                        type: string
-                        example: "John Doe"
-                      email:
-                        type: string
-                        example: "john@example.com"
-                      contact_number:
-                        type: string
-                        example: "1234567890"
-                      alternate_number:
-                        type: string
-                        example: "+919876543210"
-                      occupation:
-                        type: string
-                        example: "Sales Manager"
-                      company_name:
-                        type: string
-                        example: "Acme Corp"
-                      address:
-                        type: string
-                        example: "123 Main St, Mumbai"
-                      about:
-                        type: string
-                        example: "Warm lead from webinar"
-                      context:
-                        type: string
-                        example: "Follow up on proposal sent last week"
-                      labels:
-                        type: array
-                        items:
-                          type: string
-                        example: ["warm-lead", "webinar"]
-                      title:
-                        type: string
-                        example: "Q1 Outreach"
-                      description:
-                        type: string
-                        example: "Lead from Q1 campaign"
-                      document_id:
-                        type: string
-                        example: "6902fb5840a736e125e80ebc"
-                context:
-                  type: string
-                  description: Additional context for the task
-                  example: "Call the lead and discuss the project requirements."
-                schedule:
-                  type: object
-                  description: Schedule configuration
-                  example:
-                    type: "now"
-            example:
-              pilot: "space-agent-f1o3qjm1y7q1avvuynv4vprb1"
-              context: "Call the lead and discuss the project requirements."
-              schedule:
-                type: "now"
-              documents:
-                - name: "John Doe"
-                  email: "john@example.com"
-                  contact_number: "1234567890"
-                  alternate_number: "+919876543210"
-                  occupation: "Sales Manager"
-                  company_name: "Acme Corp"
-                  address: "123 Main St, Mumbai"
-                  about: "Warm lead from webinar"
-                  context: "Follow up on proposal sent last week"
-                  labels: ["warm-lead", "webinar"]
-                  title: "Q1 Outreach"
-                  description: "Lead from Q1 campaign"
-                  document_id: "6902fb5840a736e125e80ebc"
-      responses:
-        '200':
-          description: Task created successfully
-          content:
-            application/json:
-              example:
-                status_code: 200
-                message: "Task Created Successfully"
-                data:
-                  run_id: "R74802366fe9011f0878d43cd8a99e069"
-                  task_ids:
-                    - "T74802367fe9011f0878d43cd8a99e069"
-                  status: "pending"
-        '206':
-          description: Partial Content - Business logic error
-          content:
-            application/json:
-              example:
-                message: "Task creation failed"
-                errors: "Detailed error description"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
 
   # ─── Runs ─────────────────────────────────────────────────────
   /api/v2/platform/spaces/{space_token}/runs/:

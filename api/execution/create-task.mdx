@@ -2,14 +2,14 @@
 title: 'Create a Task - Make Voice AI Call'
 icon: 'circle-plus'
 description: 'Create a new task in a space to trigger a Voice AI outbound call'
-openapi: 'POST /api/v2/platform/spaces/{space_token}/tasks/create/'
+openapi: 'POST /api/v2/platform/spaces/{space_token}/tasks/'
 ---
 
 <RequestExample>
 
 ```bash cURL
 curl --request POST \
-  --url https://unpod.ai/api/v2/platform/spaces/{space_token}/tasks/create/ \
+  --url https://unpod.ai/api/v2/platform/spaces/{space_token}/tasks/ \
   --header 'Authorization: Token <api-key>' \
   --header 'Content-Type: application/json' \
   --header 'Org-Handle: <org-handle>' \
@@ -75,7 +75,7 @@ Create a new task inside a given space using the space's public token. You can a
 ### Endpoint
 
 ```
-POST /api/v2/platform/spaces/{space_token}/tasks/create/
+POST /api/v2/platform/spaces/{space_token}/tasks/
 ```
 
 ### Path Parameters
@@ -208,7 +208,7 @@ const headers = {
 // Create a task to make a Voice AI call
 const createTask = async (spaceToken, pilot, documents, context) => {
   const response = await axios.post(
-    `https://unpod.ai/api/v2/platform/spaces/${spaceToken}/tasks/create/`,
+    `https://unpod.ai/api/v2/platform/spaces/${spaceToken}/tasks/`,
     {
       pilot,
       documents,
@@ -248,7 +248,7 @@ headers = {
 
 def create_task(space_token: str, pilot: str, documents: list, context: str):
     """Create a Voice AI call task in a space"""
-    url = f'https://unpod.ai/api/v2/platform/spaces/{space_token}/tasks/create/'
+    url = f'https://unpod.ai/api/v2/platform/spaces/{space_token}/tasks/'
     payload = {
         'pilot': pilot,
         'documents': documents,
@@ -279,7 +279,7 @@ create_task(
 
 ```bash cURL
 # Create a task to trigger a Voice AI call
-curl -X POST "https://unpod.ai/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/create/" \
+curl -X POST "https://unpod.ai/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/" \
   -H "Authorization: Token your-api-token" \
   -H "Content-Type: application/json" \
   -d '{

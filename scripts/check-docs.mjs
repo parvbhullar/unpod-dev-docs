@@ -82,9 +82,27 @@ for (const rel of onDisk) {
 if (pyErrors.length) console.error("PYTHON SNIPPET ERRORS:\n  " + pyErrors.join("\n  "));
 if (pyWarnings.length) console.warn(`note: ${pyWarnings.length} snippet(s) hardcode an sk_ key; prefer AsyncClient() reading UNPOD_API_KEY`);
 
+// --- Retired claims ---------------------------------------------------------
+// Phrases the docs must not say again: retired positioning, and claims the
+// product does not back. platform/ is frozen and exempt.
+const RETIRED = [
+  "tasks/create/",
+];
+const retiredHits = [];
+for (const rel of onDisk) {
+  if (rel.startsWith("platform/")) continue;
+  readFileSync(join(ROOT, `${rel}.mdx`), "utf8").split("\n").forEach((line, i) => {
+    const lower = line.toLowerCase();
+    for (const phrase of RETIRED) {
+      if (lower.includes(phrase.toLowerCase())) retiredHits.push(`${rel}.mdx:${i + 1} "${phrase}"`);
+    }
+  });
+}
+if (retiredHits.length) console.error("RETIRED CLAIMS:\n  " + retiredHits.join("\n  "));
+
 if (missing.length) console.error("MISSING (in docs.json, not on disk):\n  " + missing.join("\n  "));
 if (orphans.length) console.error("ORPHANS (on disk, not in nav or allowlist):\n  " + orphans.join("\n  "));
 if (staleAllow.length) console.error("STALE ALLOWLIST (file no longer exists):\n  " + staleAllow.join("\n  "));
 if (allowlist.length) console.warn(`note: ${allowlist.length} file(s) on allowlist pending absorption`);
-if (missing.length || orphans.length || staleAllow.length || pyErrors.length) process.exit(1);
+if (missing.length || orphans.length || staleAllow.length || pyErrors.length || retiredHits.length) process.exit(1);
 console.log(`OK: ${pages.length} nav pages, 0 missing, 0 unexplained orphans, all python fences parse.`);

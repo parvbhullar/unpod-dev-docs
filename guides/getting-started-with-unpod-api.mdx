@@ -129,7 +129,7 @@ Note the `handle` field of the agent (pilot) you want to use for calls.
 A **Task** triggers an outbound voice call from your AI agent to one or more contacts. Tasks are created inside a space; the request body takes the agent `pilot` handle and a `documents` array of contacts.
 
 ```bash
-curl -X POST "https://unpod.ai/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/create/" \
+curl -X POST "https://unpod.ai/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/" \
   -H "Authorization: Token YOUR_API_KEY" \
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \
