@@ -5,8 +5,8 @@ description: 'A programmable realtime voice runtime - owned voice rails that tur
 
 The Calling Engine is a programmable realtime voice runtime. It owns the
 rails nobody sane builds twice: phone numbers, SIP/PSTN carriage, the media
-gateway, STT routing, in-house TTS, the voice model router, voice profiles,
-VAD and barge-in. It runs in production at roughly 5 lakh calls a month.
+gateway, multi-vendor STT and TTS with automatic failover, voice profiles,
+VAD and barge-in. It carries production traffic on Unpod's own voice rails.
 
 It is Unpod's distribution wedge and its trusted infrastructure anchor - and
 it is exactly one Transport channel of the [Core Engine](/core-engine/overview),
@@ -43,7 +43,7 @@ of your system - and yours alone - reacts to what happened. See
 ## What stays hidden
 
 You never see STT/TTS routing internals or the RTP/media topology. Which
-recognition provider handled a given utterance, how the voice model router
+recognition provider handled a given utterance, how the failover chain
 failed over mid-call, where media servers sit and how packets move between
 them - these change constantly as the rails improve, and exposing them would
 turn every upgrade into your migration. You pick a
@@ -51,7 +51,7 @@ turn every upgrade into your migration. You pick a
 
 ## Status
 
-**Production.** Owned voice rails carrying roughly 5 lakh calls a month.
+**Production.** Owned voice rails carry production traffic every day.
 Numbers, inbound and outbound calls, transfers, recordings and transcripts,
 and post-call webhooks all carry production traffic today. Browser/app
 streams run via the hosted Playground; the embeddable Web SDK is not yet

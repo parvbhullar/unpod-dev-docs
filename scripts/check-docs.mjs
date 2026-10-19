@@ -87,6 +87,12 @@ if (pyWarnings.length) console.warn(`note: ${pyWarnings.length} snippet(s) hardc
 // product does not back. platform/ is frozen and exempt.
 const RETIRED = [
   "tasks/create/",
+  "in-house TTS",          // not on prod; speech is third-party
+  "voice model router",    // the "router" is failover, not model selection
+  "AWS SES",               // SES sends platform notifications, not agent email
+  "one communication API", // no messages resource exists
+  "live via provider",     // WhatsApp agent engine is on feature branches
+  "partner access",        // LinkedIn: no implementation found
 ];
 const retiredHits = [];
 for (const rel of onDisk) {

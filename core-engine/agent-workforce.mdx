@@ -13,9 +13,11 @@ between customers; state lives on the spine, workers are disposable.
 **Tasks are the unit of work.** A task says: run this agent, with this
 instruction set, for this entity, now. Calling already runs this way - every
 outbound call is a task dispatched to a voice agent - through the
-[Task API](/api/execution/task-make-call-overview). Guardrails and human
-handoff are built in: a worker that hits a policy boundary or an escalation
-condition hands the conversation to a person instead of improvising.
+[Task API](/api/execution/task-make-call-overview).
+Human handoff is built in: an agent that hits an escalation condition
+transfers the call to a person instead of improvising. Guardrails today are
+playbook-level - `never_say` lists and hard gates - and a policy layer is in
+build.
 
 You build these workers with [SuperDialog](/superdialog/introduction), the
 open-source agent framework, and a
@@ -30,8 +32,8 @@ the same playbook drive a phone call, a chat thread, or a browser session.
 |---|---|---|
 | Agents | A worker built on SuperDialog, spun up per task | [Build an agent](/playbook/build-an-agent) |
 | Tools | Actions a worker can take mid-conversation | [SuperDialog tools](/superdialog/tools) |
-| Policies | Guardrails on what a worker may say and do | [Teams & Policies](/core-engine/teams-policies) |
-| Handoffs | Escalation from a worker to a human, mid-interaction | [Call lifecycle](/speech-stack/call-lifecycle) (voice) |
+| Policies | Guardrails on what a worker may say and do | `never_say` and gates in [playbooks](/superdialog/playbooks); policy layer in build |
+| Handoffs | Escalation to a human, or to another agent, mid-interaction | [Call lifecycle](/speech-stack/call-lifecycle) (voice) |
 
 ## On the spine
 
@@ -51,10 +53,9 @@ them. A provider outage is Unpod's problem, not a change to your agent.
 
 ## Status
 
-Production. Voice and action agents carry production traffic today, spun
-up per task with guardrails and human handoff. Browser agents are in
-build. Chat runs through the same workers via the
-[Chat API](/get-started/chat).
+Production. Voice agents carry production traffic today, spun up per task,
+with human handoff. Browser agents are in build. Chat runs through the same
+workers via the [Chat API](/get-started/chat).
 
 ## Go deeper
 

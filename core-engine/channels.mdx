@@ -1,27 +1,28 @@
 ---
 title: 'Channels'
-description: 'One communication API - adding a channel changes routing, not architecture.'
+description: 'Every channel writes to the same customer record - voice and chat in production today, messaging channels in build.'
 ---
 
-Channels are one communication API. Voice, WhatsApp, email, SMS, web chat:
-each is a different way to reach the same human, and every one of them writes
-the same spine - entity, conversation, interaction, outcome, event. That is
-the whole design. Adding a channel to your application changes routing, not
-architecture, because nothing downstream of Transport knows or cares which
-wire the message rode in on.
+Voice, chat, WhatsApp, SMS and email are different ways to reach the same
+human. The design goal is that every one of them writes the same spine -
+entity, conversation, interaction, outcome, event - so adding a channel
+changes routing, not architecture. Voice gets there first: it is in
+production on the [Calling Engine](/core-engine/calling-engine). Chat is in
+production as an API. The messaging channels are in build - see
+[Status](#status).
 
 Two kinds of connector, and the distinction matters. **Channel connectors**
 (WhatsApp, email, SMS, web chat, LinkedIn) carry conversations - they deliver
-interactions to an entity and back. **System connectors** (CRM, Sheets,
-Shopify, HubSpot) push and pull rows - they sync records with communication
-state but never carry a conversation. A HubSpot sync updates an entity; a
+interactions to an entity and back. **System connectors** (Google Sheets
+and Shopify today) push and pull rows - they sync records with communication
+state but never carry a conversation. A Sheets sync updates rows; a
 WhatsApp message extends a conversation. Same backend, different verbs.
 
 ## The primitives
 
 | Primitive | What it is | Where it lives today |
 |---|---|---|
-| Messages | One unit of content on any channel - a WhatsApp message, an email, an SMS, a chat turn | Web chat via the [Chat API](/get-started/chat); WhatsApp live via provider; email and SMS in build |
+| Messages | One unit of content on any channel - a WhatsApp message, an email, an SMS, a chat turn | Web chat via the [Chat API](/get-started/chat); WhatsApp, SMS and email in build |
 | Identities | The per-channel addresses (phone number, email address, WhatsApp ID) that resolve to one entity | [Entities](/core-engine/entities) |
 | Connectors | The bindings to each channel provider - and to systems like CRMs, which sync rows rather than carry conversations | Per channel; see [Status](#status) |
 | Routing | Which channel, which identity, which agent handles the next touch | Voice routing in [Telephony](/telephony/introduction); cross-channel routing in build with [Conversations](/core-engine/conversations) |
@@ -43,7 +44,7 @@ completed call.
 ## What stays hidden
 
 Provider quirks, wherever normalization is safe. WhatsApp template approval
-mechanics, SES bounce classification, per-carrier SMS segmentation, chat
+mechanics, email bounce classification, per-carrier SMS segmentation, chat
 transport details - these differ per provider and change under you. The API
 gives you a message with a status; the connector absorbs the rest. Where a
 channel has semantics you genuinely need (WhatsApp's 24-hour session window,
@@ -53,16 +54,19 @@ for one), they surface as explicit fields, not leaked provider payloads.
 
 Per channel, honestly:
 
-- **Voice** - production, via the
-  [Calling Engine](/core-engine/calling-engine) (~5 lakh calls/month).
-- **WhatsApp** - live via provider.
-- **Email (AWS SES)** - in build.
-- **SMS** - in build.
-- **LinkedIn** - partner access.
-- **Web chat** - today via the [Chat API](/get-started/chat).
+- **Voice** - production, via the [Calling Engine](/core-engine/calling-engine).
+- **Web chat** - production as an API: the [Chat API](/get-started/chat)
+  (text in, text out; you render the UI). No embeddable widget yet.
+- **WhatsApp** - in build. Two-way agent conversations over the Meta Cloud
+  API are coded end to end, but not generally available.
+- **Email** - in build, through Gmail-connected flows. Unpod's own email
+  sends platform notifications only.
+- **SMS** - in build for conversations. A narrow in-call action (a template
+  SMS to Indian numbers) is in production.
+- **LinkedIn** - not available.
 
-The unified messages surface described above is the shape channels converge
-on; today each channel is reached through the paths linked here.
+There is no SDK messages resource yet. Until there is, each channel is
+reached through the paths linked here.
 
 ## Go deeper
 

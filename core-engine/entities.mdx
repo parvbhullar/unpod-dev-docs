@@ -43,7 +43,7 @@ and the [Space APIs](/api/space/organizations).
 |---|---|---|
 | People | A human the system knows - the record every channel resolves to | [People](/platform/space-view/people) - production |
 | Organizations | A company as a first-class customer; contacts roll up to it | [Organizations API](/api/space/organizations) - in build |
-| Identities | Channel handles (phone, WhatsApp, email) attached to a person | Managed with [People](/platform/space-view/people) - production |
+| Identities | Channel handles (phone, WhatsApp, email) attached to a person | Phone identity on [People](/platform/space-view/people) - production. Cross-channel identities and merge - in build |
 
 ## On the spine
 
@@ -56,15 +56,15 @@ facts and history off the entity record.
 
 ## What stays hidden
 
-Matching and dedup implementation. How a raw phone number or email is
-normalized, scored, and resolved to an existing entity - and how duplicate
-records get merged - is Unpod's job. You upsert identities and read one
-record; the resolution machinery is not a public surface.
+Matching and dedup. As cross-channel resolution ships, how a raw phone
+number or email is normalized, scored, and merged into an existing record
+stays Unpod's job: you upsert identities and read one record. The
+resolution machinery is not a public surface.
 
 ## Status
 
-People and identities: production. Companies (organizations): in build -
-domain rollup and dedupe are shipping in the open.
+People with a phone identity: production. Cross-channel identity
+resolution and merge: in build. Companies (organizations): in build.
 
 ## Go deeper
 
