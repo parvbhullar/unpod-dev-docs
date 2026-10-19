@@ -1,0 +1,77 @@
+---
+title: 'Models & Router'
+description: 'STT, TTS and LLM served for real-time turns, with automatic failover - choose a voice profile, bring your own model, or both.'
+---
+
+Models are the speech and language layer under every live turn:
+speech-to-text, the LLM, and text-to-speech. The router is what keeps a turn
+alive. Each of the three has a standby, and Unpod fails over to it
+automatically - before the greeting or mid-call - so a provider outage is
+not a dropped call.
+
+Model choice is yours. A **voice profile** fixes the speech pair for a
+language; the agent's **brain** fixes the LLM. The router keeps that choice
+running. It does not swap in a cheaper model behind your back.
+
+## The primitives
+
+| Primitive | What it is | Where it lives today |
+|---|---|---|
+| Voice profiles | A benchmarked STT + TTS pairing for a language, with its measured cost and latency | `client.voice_profiles.list(language=...)` - production |
+| LLM | The model behind the agent's brain | Prompt or Playbook brain on the hosted runtime; an `Endpoint` brain to bring your own OpenAI-compatible model - production |
+| Failover | A standby per modality, switched in automatically | Built in for STT, LLM and TTS - production |
+| Routing | How LLM traffic reaches the model: gateway, managed host, or direct | Decided per model, internally - production |
+
+```python step1_voices.py
+import asyncio
+from unpod import AsyncClient
+
+async def main() -> None:
+    async with AsyncClient() as client:
+        profiles = await client.voice_profiles.list(language="hi")
+        for p in profiles:
+            print(p.name, p.profile_id)
+
+asyncio.run(main())
+```
+
+Pass the profile name to `client.agents.voice.create()` - see the
+[Quickstart](/get-started/quickstart). To bring your own LLM, use an
+`Endpoint` brain - see [Which brain](/get-started/quickstart#which-brain).
+
+## On the spine
+
+Models sit in the Talk layer, under every interaction. They read the live
+audio and the agent's reply text, and write nothing to the spine
+themselves - the interaction's transcript and outcome are what persist.
+
+## What stays hidden
+
+Which vendor served an utterance, the order of standbys, timeouts and health
+probes. You choose a profile and a brain; which provider carries a given
+turn is Unpod's problem.
+
+## Status
+
+- **Production:** multi-vendor STT, TTS and LLM; voice profiles; automatic
+  failover for all three, mid-call; LLM routing.
+- **In build:** Unpod-served speech and language models.
+- **Not offered:** picking a model per request by cost or latency. Choose the
+  profile and model you want; the router keeps them running.
+
+## Go deeper
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/get-started/quickstart">
+    Pick a voice profile and place a call in six SDK calls.
+  </Card>
+  <Card title="Voice profiles" icon="audio-lines" href="/speech-stack/voice-profiles">
+    What a profile pins, and how to choose one.
+  </Card>
+  <Card title="Calling Engine" icon="phone" href="/core-engine/calling-engine">
+    The voice runtime the models serve.
+  </Card>
+  <Card title="Agents" icon="bot" href="/core-engine/agent-workforce">
+    The brains that use the LLM.
+  </Card>
+</CardGroup>

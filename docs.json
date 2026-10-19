@@ -82,7 +82,8 @@
             "icon": "phone-outgoing",
             "pages": [
               "core-engine/calling-engine",
-              "core-engine/channels"
+              "core-engine/channels",
+              "core-engine/models-router"
             ]
           },
           {
