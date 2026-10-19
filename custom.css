@@ -798,3 +798,168 @@ div:has(svg[aria-roledescription^="flowchart"]) > [class*="ontrol"] {
 .feedback-toolbar {
   display: none !important;
 }
+
+/* ============================================================
+   Deck graphics — status chip, compact layer stack, proof tiles,
+   architecture, context pyramid, positioning quadrant.
+   Theme-aware via .dark; all collapse to one column on phones.
+   ============================================================ */
+
+/* ---- .st-chip.is-prod | .is-build | .is-planned (+ .on-color on fills) ---- */
+.st-chip {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.st-chip.is-prod    { color: #047857; background: rgba(4, 120, 87, 0.08); }
+.st-chip.is-build   { color: #b45309; background: rgba(180, 83, 9, 0.08); }
+.st-chip.is-planned { color: #71717a; background: transparent; border-style: dashed; }
+.dark .st-chip.is-prod    { color: #34d399; }
+.dark .st-chip.is-build   { color: #fbbf24; }
+.dark .st-chip.is-planned { color: #a1a1aa; }
+/* on a filled background the status is carried by the text, not the colour */
+.st-chip.on-color, .dark .st-chip.on-color {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ---- .ul-stack.is-compact — the deck's banded six-layer stack ---- */
+.ul-stack.is-compact { gap: 6px; }
+.ul-stack.is-compact .ul-layer { padding: 0; border-radius: 12px; }
+.ul-stack.is-compact .ul-layer__card {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 14px 18px;
+  border: 0;
+  background: transparent;
+}
+.ul-stack.is-compact .ul-layer__name { font-size: 0.85rem; }
+.ul-stack.is-compact .ul-layer__vendors { text-align: right; text-transform: none; letter-spacing: 0.02em; }
+@media (max-width: 640px) {
+  .ul-stack.is-compact .ul-layer__card { flex-direction: column; align-items: flex-start; }
+  .ul-stack.is-compact .ul-layer__vendors { text-align: left; }
+}
+
+/* ---- .ux-stats — proof tiles ---- */
+.ux-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 1.6rem 0;
+}
+.ux-stat {
+  padding: 22px 18px 16px;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(150deg, #796cff, #5a4fff);
+}
+.ux-stat:nth-child(even) { background: linear-gradient(150deg, #1d1747, #120d33); }
+.ux-stat__num { display: block; font-size: 1.9rem; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+.ux-stat__lbl {
+  display: block;
+  margin-top: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.82;
+}
+
+/* ---- .ua-arch — app → SDK → engine → models → channels → telephony ---- */
+.ua-arch { display: flex; flex-direction: column; gap: 8px; margin: 1.9rem 0 1.6rem; }
+.ua-row, .ua-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(121, 108, 255, 0.28);
+  background: var(--ua-panel, #ffffff);
+}
+.dark .ua-row, .dark .ua-box { --ua-panel: #0b0b10; border-color: rgba(154, 144, 255, 0.22); }
+.ua-row { flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: baseline; }
+.ua-row.is-app { justify-content: center; border-style: dashed; background: transparent; }
+.ua-row.is-sdk { justify-content: center; border: 2px solid #796cff; }
+.ua-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ua-box.is-brand { border-color: #5a4fff; background: linear-gradient(150deg, #796cff, #5a4fff); }
+.ua-t {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #5a4fff;
+}
+.dark .ua-t { color: #9a90ff; }
+.ua-s { font-size: 0.8rem; line-height: 1.4; color: #52525b; }
+.dark .ua-s { color: #a1a1aa; }
+.ua-box.is-brand .ua-t, .ua-box.is-brand .ua-s { color: #fff; }
+@media (max-width: 640px) { .ua-cols { grid-template-columns: 1fr; } }
+
+/* ---- .ce-pyramid — context tiers, hot (top) to compounding (bottom) ---- */
+.ce-pyramid { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 1.9rem 0 0.5rem; }
+.ce-tier {
+  width: min(100%, max(var(--w, 100%), 260px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  text-align: center;
+  color: #fff;
+  background: var(--bg, #5a4fff);
+}
+.ce-tier__t { font-size: 0.82rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.ce-tier__s { font-size: 0.8rem; opacity: 0.88; }
+.ce-tier__chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 4px; }
+.ce-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1.6rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8b8b96;
+}
+
+/* ---- .uq-quadrant — positioning 2×2, cells in DOM order TL TR BL BR ---- */
+.uq-quadrant { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 1.9rem 0 1.6rem; }
+.uq-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 130px;
+  padding: 16px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(121, 108, 255, 0.2);
+  background: var(--uq-panel, #fbfbff);
+}
+.dark .uq-cell { --uq-panel: #0b0b10; border-color: rgba(154, 144, 255, 0.18); }
+.uq-cell__k {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8b8b96;
+}
+.uq-item { text-align: center; }
+.uq-item__t { display: block; font-size: 0.86rem; font-weight: 700; color: #18181b; }
+.dark .uq-item__t { color: #f4f4f5; }
+.uq-item__s { display: block; font-size: 0.72rem; color: #8b8b96; }
+.uq-item.is-brand { padding: 10px 18px; border-radius: 10px; background: linear-gradient(150deg, #796cff, #5a4fff); }
+.uq-item.is-brand .uq-item__t, .uq-item.is-brand .uq-item__s { color: #fff; }

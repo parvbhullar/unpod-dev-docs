@@ -1,0 +1,27 @@
+<div className="ua-arch" role="img" aria-label="Your application calls the Unpod SDK. Under it the Context Engine, Agent Harness and Execution share one model of the person; below them sit models and router, channels, and telephony.">
+  <div className="ua-row is-app"><span className="ua-t">Your application</span></div>
+  <div className="ua-row is-sdk"><span className="ua-t">Unpod SDK / API</span></div>
+  <div className="ua-cols">
+    <div className="ua-box is-brand"><span className="ua-t">Context Engine</span><span className="ua-s">People · identity · conversations · knowledge · outcomes · permissions</span></div>
+    <div className="ua-box"><span className="ua-t">Agent Harness</span><span className="ua-s">Runtime · tools · memory · guardrails · evals · observability</span></div>
+    <div className="ua-box"><span className="ua-t">Execution</span><span className="ua-s">Agents · flows · tasks · human handoffs</span></div>
+  </div>
+  <div className="ua-row"><span className="ua-t">Models + router</span><span className="ua-s">STT · TTS · LLM · automatic failover</span></div>
+  <div className="ua-row"><span className="ua-t">Channels</span><span className="ua-s">Call · chat · WhatsApp · SMS · email</span></div>
+  <div className="ua-row"><span className="ua-t">Telephony</span><span className="ua-s">Unpod's own rails · your SIP trunk (beta)</span></div>
+</div>
+
+<Steps>
+  <Step title="A channel event resolves to a person">
+    Someone calls or writes; Unpod finds who they are and what happened before.
+  </Step>
+  <Step title="The harness loads context">
+    It picks the agent and its tools and applies the guardrails.
+  </Step>
+  <Step title="The flow advances">
+    An agent - or a human - takes the next step.
+  </Step>
+  <Step title="The outcome is written back">
+    The next interaction starts informed.
+  </Step>
+</Steps>
