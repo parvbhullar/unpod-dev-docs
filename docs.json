@@ -34,7 +34,8 @@
               "get-started/why-unpod",
               "get-started/who-its-for",
               "get-started/getting-started",
-              "get-started/core-concepts"
+              "get-started/core-concepts",
+              "get-started/vs-competition"
             ]
           },
           {
@@ -44,8 +45,7 @@
               "get-started/quickstart",
               "get-started/realtime",
               "get-started/phone",
-              "get-started/first-phone-call",
-              "get-started/vs-competition"
+              "get-started/first-phone-call"
             ]
           }
         ]
@@ -60,40 +60,109 @@
             ]
           },
           {
-            "group": "Communication State",
-            "icon": "database",
+            "group": "Talk",
+            "icon": "audio-lines",
             "pages": [
-              "core-engine/entities",
-              "core-engine/conversations",
-              "core-engine/outcomes",
-              "core-engine/context-engine"
+              "core-engine/calling-engine",
+              "core-engine/channels",
+              "core-engine/models-router",
+              {
+                "group": "Telephony",
+                "icon": "network",
+                "expanded": false,
+                "pages": [
+                  "telephony/introduction",
+                  "telephony/quickstart",
+                  {
+                    "group": "Integrations",
+                    "pages": [
+                      "telephony/integrations/overview",
+                      {
+                        "group": "Vapi",
+                        "pages": [
+                          "telephony/integrations/vapi/dashboard",
+                          "telephony/integrations/vapi/api"
+                        ]
+                      },
+                      {
+                        "group": "LiveKit",
+                        "pages": [
+                          "telephony/integrations/livekit/dashboard",
+                          "telephony/integrations/livekit/api"
+                        ]
+                      },
+                      {
+                        "group": "ElevenLabs",
+                        "pages": [
+                          "telephony/integrations/elevenlabs/dashboard",
+                          "telephony/integrations/elevenlabs/api"
+                        ]
+                      },
+                      {
+                        "group": "Daily",
+                        "pages": [
+                          "telephony/integrations/daily/dashboard",
+                          "telephony/integrations/daily/api"
+                        ]
+                      },
+                      {
+                        "group": "Ultravox",
+                        "pages": [
+                          "telephony/integrations/ultravox/dashboard",
+                          "telephony/integrations/ultravox/api"
+                        ]
+                      },
+                      "telephony/integrations/websockets"
+                    ]
+                  },
+                  {
+                    "group": "Numbers",
+                    "pages": [
+                      "telephony/numbers/list-numbers"
+                    ]
+                  },
+                  {
+                    "group": "Trunks",
+                    "pages": [
+                      "telephony/trunks/list-trunks",
+                      "telephony/trunks/create-trunk",
+                      "telephony/trunks/get-trunk",
+                      "telephony/trunks/attach-numbers",
+                      "telephony/trunks/detach-numbers",
+                      "telephony/trunks/delete-trunk"
+                    ]
+                  },
+                  {
+                    "group": "Calls",
+                    "pages": [
+                      "telephony/calls/overview",
+                      "telephony/calls/call-logs"
+                    ]
+                  }
+                ]
+              }
             ]
           },
           {
-            "group": "Execution",
-            "icon": "workflow",
+            "group": "Remember",
+            "icon": "brain",
+            "pages": [
+              "core-engine/context-engine",
+              "core-engine/entities",
+              "core-engine/conversations",
+              "core-engine/outcomes",
+              "core-engine/teams-policies",
+              "core-engine/intelligence"
+            ]
+          },
+          {
+            "group": "Act",
+            "icon": "zap",
             "pages": [
               "core-engine/agent-workforce",
               "core-engine/agent-harness",
               "core-engine/flows-journeys",
               "core-engine/actions",
-              "core-engine/intelligence"
-            ]
-          },
-          {
-            "group": "Transport",
-            "icon": "phone-outgoing",
-            "pages": [
-              "core-engine/calling-engine",
-              "core-engine/channels",
-              "core-engine/models-router"
-            ]
-          },
-          {
-            "group": "Control",
-            "icon": "shield-check",
-            "pages": [
-              "core-engine/teams-policies",
               "core-engine/events",
               "core-engine/observability"
             ]
@@ -101,7 +170,7 @@
         ]
       },
       {
-        "tab": "Build Agents",
+        "tab": "Build",
         "groups": [
           {
             "group": "Agent Studio",
@@ -188,144 +257,72 @@
               "superdialog/embedding-guides/fastapi",
               "superdialog/embedding-guides/unpod-voice"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Run Agents",
-        "groups": [
-          {
-            "group": "Overview",
-            "icon": "book-open",
-            "pages": [
-              "speech-stack/introduction",
-              "speech-stack/setup-checklist"
-            ]
           },
           {
-            "group": "Speech Infrastructure",
+            "group": "Speech runtime",
             "icon": "audio-lines",
             "pages": [
-              "speech-stack/agents",
-              "speech-stack/agent-settings",
-              "speech-stack/agent-tools",
-              "speech-stack/domain-dictionaries",
-              "speech-stack/pipes",
-              "speech-stack/numbers",
-              "speech-stack/voice-profiles"
-            ]
-          },
-          {
-            "group": "Connect Your Agent",
-            "icon": "blocks",
-            "pages": [
-              "speech-stack/websocket",
-              "speech-stack/bring-your-agent",
-              "speech-stack/adapters",
-              "speech-stack/level-up-superdialog"
-            ]
-          },
-          {
-            "group": "Call Runtime",
-            "icon": "activity",
-            "pages": [
-              "speech-stack/agent-runner",
-              "speech-stack/call-lifecycle",
-              "speech-stack/hooks-events",
-              "speech-stack/outbound-calls"
-            ]
-          },
-          {
-            "group": "Operate",
-            "icon": "server",
-            "pages": [
-              "speech-stack/recordings-transcripts",
-              "speech-stack/analytics",
-              "speech-stack/observability",
-              "speech-stack/deploy"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Telephony",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "icon": "book-open",
-            "pages": [
-              "telephony/introduction",
-              "telephony/quickstart"
-            ]
-          },
-          {
-            "group": "Integrations",
-            "icon": "blocks",
-            "pages": [
-              "telephony/integrations/overview",
               {
-                "group": "Vapi",
+                "group": "Overview",
+                "expanded": false,
                 "pages": [
-                  "telephony/integrations/vapi/dashboard",
-                  "telephony/integrations/vapi/api"
+                  "speech-stack/introduction",
+                  "speech-stack/setup-checklist"
                 ]
               },
               {
-                "group": "LiveKit",
+                "group": "Speech Infrastructure",
+                "expanded": false,
                 "pages": [
-                  "telephony/integrations/livekit/dashboard",
-                  "telephony/integrations/livekit/api"
+                  "speech-stack/agents",
+                  "speech-stack/agent-settings",
+                  "speech-stack/agent-tools",
+                  "speech-stack/domain-dictionaries",
+                  "speech-stack/pipes",
+                  "speech-stack/numbers",
+                  "speech-stack/voice-profiles"
                 ]
               },
               {
-                "group": "ElevenLabs",
+                "group": "Connect Your Agent",
+                "expanded": false,
                 "pages": [
-                  "telephony/integrations/elevenlabs/dashboard",
-                  "telephony/integrations/elevenlabs/api"
+                  "speech-stack/websocket",
+                  "speech-stack/bring-your-agent",
+                  "speech-stack/adapters",
+                  "speech-stack/level-up-superdialog"
                 ]
               },
               {
-                "group": "Daily",
+                "group": "Call Runtime",
+                "expanded": false,
                 "pages": [
-                  "telephony/integrations/daily/dashboard",
-                  "telephony/integrations/daily/api"
+                  "speech-stack/agent-runner",
+                  "speech-stack/call-lifecycle",
+                  "speech-stack/hooks-events",
+                  "speech-stack/outbound-calls"
                 ]
               },
               {
-                "group": "Ultravox",
+                "group": "Operate",
+                "expanded": false,
                 "pages": [
-                  "telephony/integrations/ultravox/dashboard",
-                  "telephony/integrations/ultravox/api"
+                  "speech-stack/recordings-transcripts",
+                  "speech-stack/analytics",
+                  "speech-stack/observability",
+                  "speech-stack/deploy"
                 ]
-              },
-              "telephony/integrations/websockets"
+              }
             ]
           },
           {
-            "group": "Numbers",
-            "icon": "hash",
+            "group": "Guides",
+            "icon": "newspaper",
             "pages": [
-              "telephony/numbers/list-numbers"
-            ]
-          },
-          {
-            "group": "Trunks",
-            "icon": "git-branch",
-            "pages": [
-              "telephony/trunks/list-trunks",
-              "telephony/trunks/create-trunk",
-              "telephony/trunks/get-trunk",
-              "telephony/trunks/attach-numbers",
-              "telephony/trunks/detach-numbers",
-              "telephony/trunks/delete-trunk"
-            ]
-          },
-          {
-            "group": "Calls",
-            "icon": "phone",
-            "pages": [
-              "telephony/calls/overview",
-              "telephony/calls/call-logs"
+              "guides/index",
+              "guides/getting-started-with-unpod-api",
+              "guides/self-hosting-unpod",
+              "guides/understanding-telephony"
             ]
           }
         ]
@@ -546,23 +543,6 @@
                   "api/billing&usage/get-billing"
                 ]
               }
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Guides",
-        "groups": [
-          {
-            "group": "Guides",
-            "icon": "newspaper",
-            "pages": [
-              "guides/index",
-              "guides/getting-started-with-unpod-api",
-              "platform/build-an-agent",
-              "guides/self-hosting-unpod",
-              "guides/understanding-telephony",
-              "api/post-call-data"
             ]
           }
         ]
