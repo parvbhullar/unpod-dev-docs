@@ -32,6 +32,7 @@
             "icon": "flag",
             "pages": [
               "get-started/why-unpod",
+              "get-started/who-its-for",
               "get-started/getting-started",
               "get-started/core-concepts"
             ]
