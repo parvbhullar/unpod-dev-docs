@@ -1,6 +1,6 @@
 ---
-title: 'Intelligence'
-description: 'Definable intelligence blocks that turn conversations into structure - and the per-org model your communication state trains.'
+title: 'Own your model'
+description: 'Definable blocks turn every conversation into structure today - and that memory is where your own model comes from.'
 ---
 
 Intelligence is **definable blocks**: a block takes communication in and
@@ -11,21 +11,39 @@ the pipeline - attached to a single step, a conversation, or the whole
 stream (in build). Every insight lands back in communication state, where
 the next block - and the next agent - can read it.
 
-That loop is the point. Because outcomes accumulate in one durable system of
-record, the memory can become a model: outcomes feed a dataset builder, the
-dataset drives RL simulation, and the result is a per-org SLM (~1B) served at
-your inference endpoint. You keep the trained model. A competitor arriving
-later starts at zero on the one input that cannot be bought, scraped, or
-copied: your own conversation history.
+That loop is where this goes. Because outcomes accumulate in one durable
+system of record, the memory can become a model - one only you can train,
+because no one else has your conversations. The first two steps run in
+production today; the rest is planned.
+
+<Steps>
+  <Step title="Blocks run on every interaction">
+    Extraction, scoring and summary blocks turn each call into structure.
+    <span className="st-chip is-prod">Production</span>
+  </Step>
+  <Step title="Outcomes land in state">
+    Every completed call writes a structured outcome you can read back.
+    <span className="st-chip is-prod">Production</span>
+  </Step>
+  <Step title="A dataset builder turns history into training data">
+    <span className="st-chip is-planned">Planned</span>
+  </Step>
+  <Step title="RL simulation plays the workflow against caller personas">
+    <span className="st-chip is-planned">Planned</span>
+  </Step>
+  <Step title="A per-org SLM (~1B) is trained on your outcomes">
+    <span className="st-chip is-planned">Planned</span>
+  </Step>
+</Steps>
 
 ## The primitives
 
 | Primitive | What it is | Where it lives today |
 |---|---|---|
 | Blocks | A defined unit of analysis (extraction, scoring, summarization, sentiment & intent, evaluation, custom) attached to a step, a conversation, or the stream | Extraction, scoring, and summarization run on call outcomes - see [Post-call data](/api/post-call-data) |
-| Datasets | Outcome history from communication state, assembled by the dataset builder into training data | Early access, with SLM training |
+| Datasets | Outcome history from communication state, assembled by the dataset builder into training data | Not available yet |
 | Evaluations | Blocks that score whether a conversation did its job, per turn or per outcome | [SuperDialog evals](/superdialog/evals) is the callable surface today |
-| Trained models | The per-org SLM (~1B) trained on your outcomes and served at your inference endpoint | Early access |
+| Trained models | A per-org SLM (~1B) trained on your outcomes | Not available yet |
 
 ## On the spine
 
@@ -38,11 +56,9 @@ an event, like any other change on the spine.
 
 ## What stays hidden
 
-The training pipeline internals: how the dataset builder samples and labels
-outcomes, the RL simulation environment, and the fine-tuning stack behind the
-per-org SLM. You define blocks, ratify evaluations, and call the inference
-endpoint; how the model gets from your outcomes to that endpoint is not a
-surface you configure.
+How a block is prompted and scored. You define blocks and ratify
+evaluations; how a block runs is not a surface you configure. When the
+training pipeline ships, its internals stay hidden the same way.
 
 ## Status
 
@@ -51,8 +67,8 @@ surface you configure.
   placement on arbitrary steps and streams is in build.
 - Evaluations: conversation-level evals callable today through
   [SuperDialog evals](/superdialog/evals).
-- Per-org SLM training (datasets, RL simulation, trained models): early
-  access.
+- Per-org SLM training (dataset builder, RL simulation, trained models):
+  planned - not available yet.
 
 ## Go deeper
 

@@ -95,6 +95,7 @@ const RETIRED = [
   "partner access",        // LinkedIn: no implementation found
   "Context Graph", // renamed: Context Engine
   "core-engine/context-graph", // file renamed; link the new path
+  "served at your inference endpoint", // no per-org SLM serving exists
 ];
 const retiredHits = [];
 for (const rel of onDisk) {
