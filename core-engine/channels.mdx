@@ -1,6 +1,6 @@
 ---
 title: 'Channels'
-description: 'Every channel writes to the same customer record - voice and chat in production today, messaging channels in build.'
+description: 'Every channel is built to write the same customer record - voice and chat in production today, messaging channels in build.'
 ---
 
 Voice, chat, WhatsApp, SMS and email are different ways to reach the same
@@ -46,10 +46,10 @@ completed call.
 Provider quirks, wherever normalization is safe. WhatsApp template approval
 mechanics, email bounce classification, per-carrier SMS segmentation, chat
 transport details - these differ per provider and change under you. The
-messages API will give you a message with a status; the connector absorbs
-the rest. Where a channel has semantics you genuinely need (WhatsApp's
-24-hour session window, for one), they surface as explicit fields, not
-leaked provider payloads.
+goal is a message with a status, with the connector absorbing the rest.
+Where a channel has semantics you genuinely need (WhatsApp's 24-hour session
+window, for one), they are meant to surface as explicit fields, not leaked
+provider payloads.
 
 ## Status
 
