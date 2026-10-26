@@ -65,86 +65,7 @@
             "pages": [
               "core-engine/calling-engine",
               "core-engine/channels",
-              "core-engine/models-router",
-              {
-                "group": "Telephony",
-                "icon": "network",
-                "expanded": false,
-                "pages": [
-                  "telephony/introduction",
-                  "telephony/quickstart",
-                  {
-                    "group": "Integrations",
-                    "icon": "blocks",
-                    "pages": [
-                      "telephony/integrations/overview",
-                      {
-                        "group": "Vapi",
-                        "pages": [
-                          "telephony/integrations/vapi/dashboard",
-                          "telephony/integrations/vapi/api"
-                        ]
-                      },
-                      {
-                        "group": "LiveKit",
-                        "pages": [
-                          "telephony/integrations/livekit/dashboard",
-                          "telephony/integrations/livekit/api"
-                        ]
-                      },
-                      {
-                        "group": "ElevenLabs",
-                        "pages": [
-                          "telephony/integrations/elevenlabs/dashboard",
-                          "telephony/integrations/elevenlabs/api"
-                        ]
-                      },
-                      {
-                        "group": "Daily",
-                        "pages": [
-                          "telephony/integrations/daily/dashboard",
-                          "telephony/integrations/daily/api"
-                        ]
-                      },
-                      {
-                        "group": "Ultravox",
-                        "pages": [
-                          "telephony/integrations/ultravox/dashboard",
-                          "telephony/integrations/ultravox/api"
-                        ]
-                      },
-                      "telephony/integrations/websockets"
-                    ]
-                  },
-                  {
-                    "group": "Numbers",
-                    "icon": "hash",
-                    "pages": [
-                      "telephony/numbers/list-numbers"
-                    ]
-                  },
-                  {
-                    "group": "Trunks",
-                    "icon": "git-branch",
-                    "pages": [
-                      "telephony/trunks/list-trunks",
-                      "telephony/trunks/create-trunk",
-                      "telephony/trunks/get-trunk",
-                      "telephony/trunks/attach-numbers",
-                      "telephony/trunks/detach-numbers",
-                      "telephony/trunks/delete-trunk"
-                    ]
-                  },
-                  {
-                    "group": "Calls",
-                    "icon": "phone",
-                    "pages": [
-                      "telephony/calls/overview",
-                      "telephony/calls/call-logs"
-                    ]
-                  }
-                ]
-              }
+              "core-engine/models-router"
             ]
           },
           {
@@ -323,16 +244,6 @@
                 ]
               }
             ]
-          },
-          {
-            "group": "Guides",
-            "icon": "newspaper",
-            "pages": [
-              "guides/index",
-              "guides/getting-started-with-unpod-api",
-              "guides/self-hosting-unpod",
-              "guides/understanding-telephony"
-            ]
           }
         ]
       },
@@ -422,6 +333,89 @@
               "platform/self-hosting/quickstart",
               "platform/self-hosting/configuration",
               "platform/self-hosting/architecture"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Telephony",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "icon": "book-open",
+            "pages": [
+              "telephony/introduction",
+              "telephony/quickstart"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "icon": "blocks",
+            "pages": [
+              "telephony/integrations/overview",
+              {
+                "group": "Vapi",
+                "pages": [
+                  "telephony/integrations/vapi/dashboard",
+                  "telephony/integrations/vapi/api"
+                ]
+              },
+              {
+                "group": "LiveKit",
+                "pages": [
+                  "telephony/integrations/livekit/dashboard",
+                  "telephony/integrations/livekit/api"
+                ]
+              },
+              {
+                "group": "ElevenLabs",
+                "pages": [
+                  "telephony/integrations/elevenlabs/dashboard",
+                  "telephony/integrations/elevenlabs/api"
+                ]
+              },
+              {
+                "group": "Daily",
+                "pages": [
+                  "telephony/integrations/daily/dashboard",
+                  "telephony/integrations/daily/api"
+                ]
+              },
+              {
+                "group": "Ultravox",
+                "pages": [
+                  "telephony/integrations/ultravox/dashboard",
+                  "telephony/integrations/ultravox/api"
+                ]
+              },
+              "telephony/integrations/websockets"
+            ]
+          },
+          {
+            "group": "Numbers",
+            "icon": "hash",
+            "pages": [
+              "telephony/numbers/list-numbers"
+            ]
+          },
+          {
+            "group": "Trunks",
+            "icon": "git-branch",
+            "pages": [
+              "telephony/trunks/list-trunks",
+              "telephony/trunks/create-trunk",
+              "telephony/trunks/get-trunk",
+              "telephony/trunks/attach-numbers",
+              "telephony/trunks/detach-numbers",
+              "telephony/trunks/delete-trunk"
+            ]
+          },
+          {
+            "group": "Calls",
+            "icon": "phone",
+            "pages": [
+              "telephony/calls/overview",
+              "telephony/calls/call-logs"
             ]
           }
         ]
@@ -552,6 +546,21 @@
                   "api/billing&usage/get-billing"
                 ]
               }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Guides",
+            "icon": "newspaper",
+            "pages": [
+              "guides/index",
+              "guides/getting-started-with-unpod-api",
+              "guides/self-hosting-unpod",
+              "guides/understanding-telephony"
             ]
           }
         ]
