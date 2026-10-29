@@ -354,6 +354,12 @@
             "pages": [
               "telephony/integrations/overview",
               {
+                "group": "Unpod",
+                "pages": [
+                  "telephony/integrations/unpod/dashboard"
+                ]
+              },
+              {
                 "group": "Vapi",
                 "pages": [
                   "telephony/integrations/vapi/dashboard",

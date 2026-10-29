@@ -70,10 +70,12 @@ flowchart LR
   </Step>
 </Steps>
 
-There is one primary termination path:
+A number can end up in one of these places:
 
-| Path | What it does | Endpoint |
-|------|--------------|----------|
+| Path | What it does | How |
+|------|--------------|-----|
+| **Unpod number → Unpod agent** | A number from the Unpod pool, answered by your Unpod agent. No carrier or trunk. | [Make your first phone call](/get-started/first-phone-call) |
+| **Unpod number → SIP trunk** | A number from the Unpod pool, with an auto-created outbound trunk and an inbound trunk you point at your SIP URI. | [Connect an Unpod Number](/telephony/integrations/unpod/dashboard) |
 | **Leg A - BYO carrier** | Map a number to your SIP trunk; the carrier sends inbound calls to your origin endpoint. | [Attach Numbers to Trunk](/telephony/trunks/attach-numbers) |
 
 ## Key concepts
@@ -84,6 +86,11 @@ There is one primary termination path:
 - **Bridge** - the routing entity numbers attach onto. It is **auto-resolved and hidden** on the Connectivity surface - you never manage it directly here.
 - **Partial success** - attach/detach operate on a list; each number reports `ok`/`error` independently.
 
-<Card title="Get started in 5 minutes" icon="rocket" href="/telephony/quickstart">
-  Create a trunk, map a number, and confirm the lifecycle - step by step.
-</Card>
+<CardGroup cols={2}>
+  <Card title="Use an Unpod number" icon="phone-forwarded" href="/telephony/integrations/unpod/dashboard">
+    Pick a number from the pool and connect it to a SIP trunk - from the dashboard.
+  </Card>
+  <Card title="Bring your own carrier" icon="rocket" href="/telephony/quickstart">
+    Create a trunk, map a number, and confirm the lifecycle - step by step.
+  </Card>
+</CardGroup>
