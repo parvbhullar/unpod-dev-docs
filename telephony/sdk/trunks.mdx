@@ -1,0 +1,178 @@
+---
+title: 'Numbers & Trunks'
+icon: 'git-branch'
+description: 'Claim Unpod numbers, create SIP trunks and map numbers to them from the Python SDK'
+---
+
+Your numbers are the caller IDs you dial from and the DIDs that receive inbound calls. Get
+them two ways: claim a number from the **Unpod pool**, or bring your own carrier with a
+**SIP trunk**.
+
+```python
+from unpod import AsyncClient
+
+async with AsyncClient() as client:      # UNPOD_BASE_URL, UNPOD_PLATFORM_TOKEN, UNPOD_ORG_HANDLE
+    tel = client.telephony
+```
+
+Setup: [Unpod SDK Quickstart](/telephony/sdk/quickstart#authenticate).
+
+## Unpod numbers
+
+### List
+
+```python
+numbers = await tel.numbers.list()
+# [Number(number='+919000000001', status='assigned'),
+#  Number(number='+919000000004', status='not_assigned'), ...]
+```
+
+Returns the claimable pool **plus** your org's own numbers. `status`:
+
+| Status | Meaning |
+| --- | --- |
+| `not_assigned` | Free - you can attach it |
+| `assigned` | Already attached to your org |
+| `closed` | Not available |
+
+### Attach
+
+```python
+result = await tel.numbers.attach("+919000000004", attach_type="human_call")
+for r in result.numbers:                  # one result per number - partial success
+    print(r.number, r.number_id, r.ok, r.connection_state, r.error)
+```
+
+Pass one E.164 number or a list. Numbers must be strict E.164 (`+` and country code).
+
+| Argument | Meaning |
+| --- | --- |
+| `attach_type="human_call"` | Route the number for call control, no agent. Omit `agent_id` |
+| `agent_id="..."` | Put an Unpod agent on the number (`attach_type="agent"`, the default) |
+| `attach_type="pipeline"`, `pipe_id="..."` | Route the number to a pipeline |
+
+### Detach
+
+```python
+await tel.numbers.detach("+919000000004")   # released back, not deleted
+```
+
+### Overview
+
+Per-number state - use it to check a caller ID before you dial, and to get a `number_id`
+for trunk mapping:
+
+```python
+for o in await tel.overview():
+    print(o.number, o.number_id, o.connection_state, o.termination_kind,
+          o.agent_id, o.sync_state, o.in_sync)
+```
+
+## SIP trunks
+
+<Badge color="orange">Beta</Badge> A trunk is your carrier credential. Map numbers to it and
+Unpod returns the **origin endpoint** - where your carrier sends inbound calls.
+
+```mermaid
+flowchart LR
+  A["📞<br/><b>Your carrier</b>"] e1@==> B["📡<br/><b>Unpod SIP trunk</b>"]
+  B e2@==> C["🔢<br/><b>Your numbers</b>"]
+
+  e1@{ animate: true }
+  e2@{ animate: true }
+
+  classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
+  classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
+  class A,C ep;
+  class B pp;
+  linkStyle default stroke:#9a90ff,stroke-width:2.5px;
+```
+
+<Steps>
+  <Step title="Create the trunk">
+    ```python
+    trunk = await tel.trunks.create(
+        "My Carrier Trunk",
+        "sip:carrier.example.com",
+        username="<sip-username>",
+        password="<sip-password>",
+        transport="tcp",
+        port="5060",
+        source_ips=["203.0.113.10", "198.51.100.0/24"],
+    )
+    print(trunk.id, trunk.name, trunk.sip_url)
+    ```
+
+    | Argument | Required | Meaning |
+    | --- | --- | --- |
+    | `name` | Yes | Display name |
+    | `sip_url` | Yes | Carrier SIP URL / host |
+    | `username`, `password` | No | SIP auth credentials. The password is masked on every read |
+    | `transport` | No | `tcp` (default), `udp` or `tls` |
+    | `port` | No | SIP port (default `5060`) |
+    | `source_ips` | No | Carrier IPs allowed in. CIDR ranges allowed |
+  </Step>
+
+  <Step title="Map numbers to it">
+    `attach_numbers` takes number **ids**. Read them from `overview()` (or from the
+    `number_id` in an `attach` result):
+
+    ```python
+    overview = await tel.overview()
+    ids = [o.number_id for o in overview if o.number in {"+919000000001", "+919000000002"}]
+
+    mapped = await tel.trunks.attach_numbers(trunk.id, ids)
+    print(mapped.origin_endpoint.ingress)              # SBC ingress host for your carrier
+    print(mapped.origin_endpoint.dids)                 # DIDs now on this trunk
+    print(mapped.origin_endpoint.accepted_source_ips)
+    for r in mapped.numbers:
+        print(r.number, r.ok, r.error)
+    ```
+  </Step>
+
+  <Step title="Point your carrier at the origin endpoint">
+    In your carrier's console, send inbound traffic for those DIDs to
+    `origin_endpoint.ingress`, from one of the `accepted_source_ips`.
+  </Step>
+
+  <Step title="Make a call">
+    Any mapped number now works as a caller ID:
+
+    ```python
+    call = await tel.calls.create("+919000000001", "+919000000002")
+    ```
+
+    See [Make an outbound call](/telephony/sdk/quickstart#make-an-outbound-call).
+  </Step>
+</Steps>
+
+### Manage trunks
+
+```python
+trunks = await tel.trunks.list()                       # secrets masked
+trunk = await tel.trunks.get(21)
+await tel.trunks.detach_numbers(21, [501])             # unmap numbers
+await tel.trunks.delete(21)                            # detach numbers first
+```
+
+| Method | Returns |
+| --- | --- |
+| `trunks.list()` | `list[Trunk]` |
+| `trunks.create(name, sip_url, *, username, password, transport, port, source_ips)` | `Trunk` |
+| `trunks.get(trunk_id)` | `Trunk` |
+| `trunks.attach_numbers(trunk_id, number_ids, *, bridge_slug, region)` | `AttachResult` (`trunk_id`, `origin_endpoint`, `numbers`) |
+| `trunks.detach_numbers(trunk_id, number_ids)` | `DetachResult` |
+| `trunks.delete(trunk_id)` | `None` |
+
+The REST equivalents are under [Trunks](/telephony/trunks/list-trunks).
+
+### Inbound config for a whole trunk
+
+Set an answer URL once for every DID on a trunk. A per-DID config overrides it field by field:
+
+```python
+await tel.inbound.set_trunk("my-trunk", {"answer_url": "https://your-app.example.com/answer"})
+cfg = await tel.inbound.get_trunk("my-trunk")
+```
+
+See [Incoming Calls](/telephony/sdk/inbound-calls).

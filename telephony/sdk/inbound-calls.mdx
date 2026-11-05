@@ -1,0 +1,135 @@
+---
+title: 'Incoming Calls'
+icon: 'phone-incoming'
+description: 'Point a number or trunk at your answer URL and control inbound calls with XML or JSON'
+---
+
+When someone calls your number, Unpod posts the call to your **answer URL** and runs the
+instructions you reply with.
+
+## Configure the answer URL
+
+Set it per number (DID) or once for a whole trunk. A DID config overrides the trunk config
+field by field.
+
+```python
+from unpod import AsyncClient
+from unpod.telephony import InboundConfig
+
+async with AsyncClient() as client:
+    tel = client.telephony
+
+    await tel.inbound.set_did("+919000000001", InboundConfig(
+        answer_url="https://your-app.example.com/incoming",
+        answer_method="POST",
+        answer_fallback="reject_503",            # or "static_routing" (default) if your app is down
+        status_callback_url="https://your-app.example.com/incoming",
+        record=True,
+    ))
+
+    cfg = await tel.inbound.get_did("+919000000001")   # effective config (DID over trunk)
+
+    await tel.inbound.set_trunk("my-trunk", {"answer_url": "https://your-app.example.com/incoming"})
+```
+
+<Info>
+Inbound configuration through the SDK is rolling out. If `set_did` returns `405` or `401`,
+ask the Unpod team to set the answer URL on your number for now.
+</Info>
+
+### `InboundConfig` fields
+
+| Field | Meaning |
+| --- | --- |
+| `answer_url` / `answer_method` | Where Unpod posts new inbound calls (`POST` or `GET`) |
+| `answer_timeout_ms` | 500-10000. How long to wait for your reply |
+| `answer_fallback` | `static_routing` (default) or `reject_503` when your app does not answer |
+| `status_callback_url` / `_method` / `_format` | Where call events go, and how |
+| `recording_callback_url` | Where the recording event goes |
+| `record` | Record inbound calls |
+| `tts_voice`, `tts_language` | Defaults for `Speak` |
+
+A DID must be one of your org's numbers, otherwise `404`.
+
+## What your answer URL receives
+
+| `ev.event` | `ev.call_status` | When |
+| --- | --- | --- |
+| `StartApp` | `ringing` | A new call. Reply with instructions |
+| `Hangup` | `completed`, `busy`, `no-answer`, `failed` | The call ended. Also carries `Duration`, `StartTime`, `EndTime` |
+| `RecordStop` | - | Recording ready at `ev.recording_url` |
+
+Each `StartApp` also carries `CallUUID` (`ev.leg_id`), `From` (`ev.from_`), `To`,
+`Direction=inbound` and `SessionStart` (`ev.raw["SessionStart"]`).
+
+## Reply with XML or JSON
+
+Plivo-style XML:
+
+```xml
+<Response>
+    <Record/>
+    <Dial><Number>+919000000003</Number></Dial>
+</Response>
+```
+
+```xml
+<Response>
+    <Speak>All our agents are busy.</Speak>
+    <Hangup/>
+</Response>
+```
+
+Or JSON:
+
+```json
+{"actions": [{"type": "record"}, {"type": "dial", "number": "+919000000003"}]}
+```
+
+| Verb | Does |
+| --- | --- |
+| `dial` | Connect the caller to a number |
+| `play` | Play an https audio URL |
+| `speak` | Text-to-speech |
+| `wait` | Pause |
+| `record` | Record the call |
+| `hangup` | End the call |
+
+An empty 2xx body means "continue with static routing".
+
+## Example: route to a free agent
+
+```python
+import os
+from fastapi import FastAPI, HTTPException, Request, Response
+from unpod.telephony import WebhookSignatureError, parse_call_event
+
+SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
+AGENTS = ["+919000000003", "+919000000005"]
+busy: set[str] = set()
+app = FastAPI()
+
+
+@app.post("/incoming")
+async def incoming(request: Request):
+    try:
+        ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
+    except WebhookSignatureError:
+        raise HTTPException(401)
+
+    if ev.event == "StartApp":
+        free = next((a for a in AGENTS if a not in busy), None)
+        if free:
+            xml = f"<Response><Record/><Dial><Number>{free}</Number></Dial></Response>"
+        else:
+            xml = "<Response><Speak>All our agents are busy.</Speak><Hangup/></Response>"
+        return Response(xml, media_type="application/xml")
+
+    if ev.event == "Hangup":
+        print(ev.leg_id, ev.call_status, ev.duration)
+    elif ev.event == "RecordStop":
+        print("recording:", ev.recording_url)
+    return Response(status_code=200)
+```
+
+Verify and parse every request - see [Webhooks](/telephony/sdk/webhooks).

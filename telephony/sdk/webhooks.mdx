@@ -1,0 +1,107 @@
+---
+title: 'Webhooks'
+icon: 'webhook'
+description: 'Verify and parse signed call, recording and inbound events with parse_call_event'
+---
+
+Unpod sends three kinds of events to your app:
+
+| Event type | Goes to |
+| --- | --- |
+| Call events (leg lifecycle, audio, DTMF) | `status_callback_url` |
+| Recording events | `recording_callback_url` |
+| Inbound events | Your answer URL |
+
+Every event is signed with your org's secret. Verify and parse each one with
+`parse_call_event`.
+
+## Get the secret
+
+```python
+s = await client.telephony.webhook_secret.rotate()    # org owner / admin only
+print(s.version, s.pushed_to_sbc)                      # pushed_to_sbc must be True
+SECRET = s.secret                                       # full secret, shown only here
+
+await client.telephony.webhook_secret.get()            # masked, e.g. '****ab12'
+```
+
+Each `rotate()` creates a new version and invalidates the previous one.
+
+## Verify and parse
+
+```python
+from fastapi import FastAPI, HTTPException, Request
+from unpod.telephony import WebhookSignatureError, parse_call_event
+
+app = FastAPI()
+seen: set[str] = set()
+
+
+@app.post("/call-status")
+async def call_status(request: Request):
+    try:
+        ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
+    except WebhookSignatureError:
+        raise HTTPException(401)            # unsigned, wrong secret, or older than 300 s
+
+    if ev.event_id in seen:                 # events can arrive more than once
+        return {"ok": True}
+    seen.add(ev.event_id)
+
+    if ev.event == "Answered":
+        print(ev.call_id, ev.leg_id, ev.role, "answered")
+    elif ev.event == "Hangup":
+        print(ev.hangup_cause, ev.sip_code, ev.duration)
+    return {"ok": True}                     # any 2xx acknowledges
+```
+
+Rules:
+
+- Pass the **raw body** exactly as received. Re-encoding it breaks the signature.
+- `Content-Type` decides form or JSON; `parse_call_event` reads both.
+- Unpod **retries** until it gets a 2xx. De-duplicate on `ev.event_id`, and pass an
+  `idempotency_key` when an event triggers `add_participant`.
+- Return 2xx for events you don't need, so they aren't retried.
+- `tolerance` (default 300 s) rejects replays. `verify=False` is for local tests only.
+
+The signature header is `X-Webhook-Signature: t=<unix ts>,v1=<hex HMAC-SHA256(secret, "<ts>.<raw body>")>`.
+
+## Events
+
+| `ev.event` | When |
+| --- | --- |
+| `Initiated`, `Ringing`, `Answered`, `Hangup` | Leg lifecycle (`Incoming` for inbound legs) |
+| `PlayStarted`, `PlayStopped` | Audio or speech on a leg (`ev.play_id`) |
+| `DTMF` | A key was pressed (`ev.digit`) |
+| `Hold`, `Unhold` | Hold changes |
+| `RecordingCompleted` | Recording ready (`ev.recording_url`, `ev.recording_duration`) |
+| `StartApp`, `Hangup`, `RecordStop` | Answer-URL (inbound) events, with `ev.call_status` |
+
+## `CallEvent` fields
+
+| Field | Wire name |
+| --- | --- |
+| `event` | `EventName` or `Event` / `event_name` |
+| `call_id` | `MPCUUID` / `call_id` |
+| `leg_id` | `CallUUID` / `leg_id` |
+| `role`, `direction`, `call_status` | `Role`, `Direction`, `CallStatus` |
+| `from_`, `to` | `From`, `To` |
+| `start_time`, `answer_time`, `end_time`, `timestamp` | Unix seconds |
+| `initiation_time`, `hangup_time`, `duration` | `InitiationTime`, `HangupTime`, `Duration` |
+| `hangup_cause`, `hangup_by`, `sip_code` | `PlivoHangupCause` / `HangupCause`, `HangupBy`, `SipCode` |
+| `digit`, `play_id` | `Digit`, `PlayId` |
+| `sequence`, `event_id` | `Sequence` (per leg, from 1), `EventId` (stable, for de-duplication) |
+| `recording_url`, `recording_duration`, `record_file` | `RecordingURL` / `RecordUrl`, `RecordingDuration`, `RecordFile` |
+| `metadata` | `Metadata` - what you passed to `create` |
+| `raw` | Every field exactly as received |
+
+## Hangup causes
+
+| `ev.hangup_cause` | `ev.sip_code` | Typical action |
+| --- | --- | --- |
+| `"Busy Line"` | 486 | End the call or retry later |
+| `"Ring Timeout Reached"` | - | End the call |
+| `"No Answer"` | 480 | Sent for an unanswered leg - treat like a ring timeout |
+| Anything else (`"Normal Hangup"`, ...) | - | Informational |
+
+The strings are exact. Prefer `ev.sip_code` when you need a strict rule.

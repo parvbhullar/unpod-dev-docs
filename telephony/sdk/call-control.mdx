@@ -1,0 +1,203 @@
+---
+title: 'Call Control'
+icon: 'sliders-horizontal'
+description: 'Dial, bridge two people, play audio, speak, transfer, send DTMF and record - from Python'
+---
+
+`client.telephony.calls` places and controls calls on the Unpod SBC. A **call** (`call_id`)
+holds up to two **legs** (`leg_id`) - one per participant.
+
+```python
+from unpod import AsyncClient
+
+async with AsyncClient() as client:
+    calls = client.telephony.calls
+```
+
+Every method raises `TelephonyAPIError` on an error response - see [Errors](#errors).
+
+## Make a call
+
+`create` dials the **first participant** (leg A). It returns at once with state `initiated`;
+progress arrives as [webhooks](/telephony/sdk/webhooks).
+
+```python
+call = await calls.create(
+    "+919000000001",                       # from_: one of your org's numbers
+    "+919000000002",                       # to: E.164 number or SIP URI
+    role="agent",                          # free label, echoed back on events
+    ring_timeout=30,
+    status_callback_url="https://your-app.example.com/call-status?call_ref=abc",
+    recording_callback_url="https://your-app.example.com/recording",
+    record=True,
+    metadata={"call_ref": "abc"},          # echoed back on every event
+)
+print(call.call_id, call.state, call.legs[0].leg_id)
+```
+
+### Options
+
+The same options apply to `create` and `add_participant`.
+
+| Option | Type | Meaning |
+| --- | --- | --- |
+| `role` | `str` | Label for this leg (`agent`, `customer`, ...), sent back as `Role` |
+| `caller_name` | `str` | Caller name shown where supported |
+| `friendly_name` | `str` | Your label for the leg |
+| `ring_timeout` | `int` 1-120 | Seconds to ring before giving up (default 30) |
+| `dial_music` | `str` | `"none"` (lowercase) or an https audio URL played while this leg rings |
+| `status_callback_url` | `str` | Public https URL for this leg's events. Its query string is echoed back |
+| `status_callback_method` | `"POST"` \| `"GET"` | Default `POST` |
+| `status_callback_format` | `"form"` \| `"json"` | Default `form` (Plivo-style keys); `json` uses snake_case |
+| `recording_callback_url` | `str` | Public https URL for the recording event |
+| `record` | `bool` | Record the call |
+| `record_participant_track` | `bool` | Also keep per-participant tracks |
+| `answer_url` / `answer_method` | `str` / `"POST"` \| `"GET"` | Run an answer-URL app on this leg when it connects, instead of bridging it |
+| `metadata` | `dict[str, str]` | Echoed on every event as `ev.metadata` |
+| `idempotency_key` | `str` | A fresh key is sent by default. Pass your own when you retry, so the call is not dialed twice |
+
+<Warning>
+Every callback and audio URL must be **public https**. Anything else returns `400 invalid_url`.
+</Warning>
+
+## Bridge two people
+
+Add the second participant - usually after the first answers:
+
+```python
+customer = await calls.add_participant(
+    call.call_id, "+919000000001", "+919000000003",
+    role="customer",
+    dial_music="none",
+    status_callback_url="https://your-app.example.com/call-status?role=customer",
+    idempotency_key=f"{call.call_id}:customer",
+)
+
+await calls.remove_participant(call.call_id, customer.leg_id)   # drop one leg, keep the call
+```
+
+A call holds **at most two participants**. A third raises `409 participant_limit`.
+
+## Play audio and speak
+
+```python
+play = await calls.play_audio(call.call_id, url="https://cdn.example.com/hold.mp3",
+                              leg_id=agent_leg_id, loop=True)
+await calls.stop_audio(call.call_id, leg_id=agent_leg_id, play_id=play.play_id)  # that play only
+await calls.stop_audio(call.call_id)                                             # everything
+
+await calls.speak(call.call_id, "Please hold.", leg_id=agent_leg_id, language="en-IN")
+```
+
+| Method | Notes |
+| --- | --- |
+| `play_audio(call_id, *, url, leg_id, loop, interrupt_on_dtmf)` → `PlayResult` | `url` is a public https MP3/WAV. Omit `leg_id` to play to every leg |
+| `stop_audio(call_id, *, leg_id, play_id)` | Omit both to stop all audio on the call |
+| `speak(call_id, text, *, voice, language, leg_id, loop)` → `PlayResult` | Text-to-speech, up to 1000 characters. May return `not_supported` / `tts_unavailable` |
+
+The leg receives `PlayStarted` / `PlayStopped` events with the same `play_id`.
+
+## Transfer and DTMF
+
+```python
+await calls.transfer(call.call_id, "+919000000004")                       # blind (default)
+await calls.transfer(call.call_id, "+919000000004", type="attended", leg_id=leg)
+await calls.transfer_complete(call.call_id, consult_leg)                  # finish attended
+await calls.transfer_cancel(call.call_id, consult_leg)
+
+await calls.send_dtmf(call.call_id, "1234#", leg_id=leg)                  # 0-9 A-D * #
+```
+
+## Recording
+
+```python
+await calls.record(call.call_id)                       # start recording mid-call
+
+rec = await calls.get_recording(call.call_id)
+print(rec.available, rec.channels, rec.duration_secs, rec.url)
+```
+
+One **2-channel WAV** per call: leg A on the left, leg B on the right. `get_recording`
+returns `409 conflict` while the file is still being written - retry after the call ends.
+You also get it as a `RecordingCompleted` event at `recording_callback_url`.
+
+## Inspect and end calls
+
+```python
+await calls.get(call.call_id)                                   # TelephonyCall with legs
+page = await calls.list(status="talking", page_size=20)         # CallList: items, total
+await calls.hangup(call.call_id, reason="done", code=200)       # with a reason / SIP code
+await calls.end(call.call_id)                                   # end all legs
+```
+
+`list` filters: `page`, `page_size`, `status` (`ringing`, `talking`), `direction`
+(`inbound`, `outbound`), `caller`, `callee`, `number`, `since`. An ended call drops out of
+the list, and `get` / `end` then return `404 not_found` - treat that as done.
+
+## Full example: agent-first hotline
+
+Dial the agent, play hold music when they answer, then dial the customer:
+
+```python
+from unpod.telephony import parse_call_event
+
+FROM = "+919000000001"
+HOOKS = "https://your-app.example.com"
+END_CAUSES = {"Busy Line", "Ring Timeout Reached", "No Answer"}
+
+
+async def start_call(client, agent: str, customer: str) -> str:
+    call = await client.telephony.calls.create(
+        FROM, agent, role="agent", record=True,
+        status_callback_url=f"{HOOKS}/call-status",
+        recording_callback_url=f"{HOOKS}/recording",
+        metadata={"customer": customer},
+    )
+    return call.call_id
+
+
+async def on_call_status(client, body: bytes, headers, secret: str) -> None:
+    ev = parse_call_event(body, headers, secret)
+    calls = client.telephony.calls
+
+    if ev.event == "Answered" and ev.role == "agent":
+        await calls.play_audio(ev.call_id, url=f"{HOOKS}/hold.mp3", leg_id=ev.leg_id, loop=True)
+        await calls.add_participant(
+            ev.call_id, FROM, ev.metadata["customer"], role="customer", dial_music="none",
+            status_callback_url=f"{HOOKS}/call-status",
+            idempotency_key=f"{ev.call_id}:customer",
+        )
+    elif ev.event == "Answered" and ev.role == "customer":
+        await calls.stop_audio(ev.call_id)
+    elif ev.event == "Hangup" and ev.role == "customer" and ev.hangup_cause in END_CAUSES:
+        await calls.end(ev.call_id)
+```
+
+## Errors
+
+Branch on `.code`, not the message:
+
+```python
+from unpod.telephony import TelephonyAPIError
+
+try:
+    await calls.create("+919000000001", "+919000000002")
+except TelephonyAPIError as e:
+    print(e.status_code, e.code, e.message)
+```
+
+| Status / `code` | Meaning |
+| --- | --- |
+| 400 `organization_required` | `Org-Handle` missing, or you are not an active member |
+| 403 `call_api_disabled` | The Call API is not switched on for your org |
+| 400 `from_not_owned` | `from_` is not one of your org's numbers |
+| 400 `invalid_url` | A callback or audio URL is not public https, or `dial_music="NONE"` (use lowercase) |
+| 400 `bad_request` | Malformed body or unknown field |
+| 404 `not_found` | Unknown call, leg or DID, or one that belongs to another org |
+| 409 `participant_limit` | A third participant |
+| 409 `conflict` | Recording not finished yet |
+| 403 `forbidden` | `webhook_secret.rotate()` by a non-admin, or a caller ID not provisioned for your org |
+| `not_supported`, `tts_unavailable`, `rate_limited` | Feature not available, or throttled |
+
+The SDK raises `ValueError` before sending when `speak` text is over 1000 characters or
+`send_dtmf` digits fall outside `0-9 A-D * #`.
