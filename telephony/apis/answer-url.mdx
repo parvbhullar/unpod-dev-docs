@@ -1,57 +1,53 @@
 ---
-title: 'Incoming Calls'
-icon: 'phone-incoming'
-description: 'Point a number or trunk at your answer URL and control inbound calls with XML or JSON'
+title: 'Answer URL & XML'
+icon: 'file-code'
+description: 'Tell Unpod what to do when someone is connected - speak, play, dial, record'
 ---
 
-When someone calls your number, Unpod posts the call to your **answer URL** and runs the
-instructions you reply with.
+The answer URL is an https URL you host. When a person is connected, Unpod fetches it and
+runs the instructions you reply with, in XML or JSON. The format is the same for outbound
+and inbound calls.
 
-## Configure the answer URL
+## When Unpod calls your answer URL
 
-Set it per number (DID) or once for a whole trunk. A DID config overrides the trunk config
-field by field.
+| Call | Where you set the answer URL |
+| --- | --- |
+| Outbound | `answer_url` (and `answer_method`, `POST` or `GET`) on `create` or `add_participant` |
+| Inbound | The number's config. See [Incoming Calls](/telephony/apis/incoming-calls) |
 
-```python
-from unpod import AsyncClient
-from unpod.telephony import InboundConfig
+On an outbound leg, Unpod runs your instructions once that person connects, instead of
+just bridging them:
 
-async with AsyncClient() as client:
-    tel = client.telephony
+<CodeGroup>
+```python Python
+from unpod import Client
 
-    await tel.inbound.set_did("+919000000001", InboundConfig(
-        answer_url="https://your-app.example.com/incoming",
+with Client() as client:
+    call = client.telephony.calls.create(
+        "+919000000001",  # your Unpod number
+        "+919000000002",  # who to call
+        answer_url="https://your-app.example.com/answer",
         answer_method="POST",
-        answer_fallback="reject_503",            # or "static_routing" (default) if your app is down
-        status_callback_url="https://your-app.example.com/incoming",
-        record=True,
-    ))
-
-    cfg = await tel.inbound.get_did("+919000000001")   # effective config (DID over trunk)
-
-    await tel.inbound.set_trunk("my-trunk", {"answer_url": "https://your-app.example.com/incoming"})
+    )
+    print("calling", call.call_id)
 ```
 
-<Info>
-Inbound configuration through the SDK is rolling out. If `set_did` returns `405` or `401`,
-ask the Unpod team to set the answer URL on your number for now.
-</Info>
+```bash cURL
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
+  -d '{"from": "+919000000001", "to": "+919000000002",
+       "answer_url": "https://your-app.example.com/answer", "answer_method": "POST"}'
+```
+</CodeGroup>
 
-### `InboundConfig` fields
+The answer URL must be public https, or you get `400 invalid_url`.
 
-| Field | Meaning |
-| --- | --- |
-| `answer_url` / `answer_method` | Where Unpod posts new inbound calls (`POST` or `GET`) |
-| `answer_timeout_ms` | 500-10000. How long to wait for your reply |
-| `answer_fallback` | `static_routing` (default) or `reject_503` when your app does not answer |
-| `status_callback_url` / `_method` / `_format` | Where call events go, and how |
-| `recording_callback_url` | Where the recording event goes |
-| `record` | Record inbound calls |
-| `tts_voice`, `tts_language` | Defaults for `Speak` |
+{/* TODO(verify): which event and fields Unpod sends to an answer URL on an outbound leg - StartApp as on inbound, with Direction=outbound? */}
 
-A DID must be one of your org's numbers, otherwise `404`.
+## What Unpod sends
 
-## What your answer URL receives
+On an inbound call, your answer URL receives:
 
 | `ev.event` | `ev.call_status` | When |
 | --- | --- | --- |
@@ -61,6 +57,9 @@ A DID must be one of your org's numbers, otherwise `404`.
 
 Each `StartApp` also carries `CallUUID` (`ev.leg_id`), `From` (`ev.from_`), `To`,
 `Direction=inbound` and `SessionStart` (`ev.raw["SessionStart"]`).
+
+Every request is signed with your org's secret. Verify and parse it with
+`parse_call_event` - see [Webhooks](/telephony/apis/webhooks).
 
 ## Reply with XML or JSON
 
@@ -88,48 +87,84 @@ Or JSON:
 
 | Verb | Does |
 | --- | --- |
-| `dial` | Connect the caller to a number |
+| `dial` | Connect the person to a number |
 | `play` | Play an https audio URL |
 | `speak` | Text-to-speech |
 | `wait` | Pause |
 | `record` | Record the call |
 | `hangup` | End the call |
 
-An empty 2xx body means "continue with static routing".
+Every audio URL must be public https. An empty 2xx body means "continue with static
+routing".
 
-## Example: route to a free agent
+Pick the voice and language for one `Speak`:
 
-```python
+```xml
+<Response>
+    <Speak voice="VOICE_ID" language="LANGUAGE_CODE">Your order has shipped.</Speak>
+    <Hangup/>
+</Response>
+```
+
+{/* TODO(verify): XML attribute names - Speak voice/language, Play loop, Dial callerId/timeout, Wait length, Record options - and the platform voice ids */}
+
+On an inbound call, `tts_voice` and `tts_language` in the number's config set the defaults
+for `Speak`.
+
+## A minimal answer server
+
+```python app.py
 import os
 from fastapi import FastAPI, HTTPException, Request, Response
 from unpod.telephony import WebhookSignatureError, parse_call_event
 
 SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
-AGENTS = ["+919000000003", "+919000000005"]
-busy: set[str] = set()
+GREETING = "<Response><Speak>Hello from Unpod.</Speak><Hangup/></Response>"
 app = FastAPI()
 
 
-@app.post("/incoming")
-async def incoming(request: Request):
+@app.post("/answer")
+async def answer(request: Request):
     try:
         ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
     except WebhookSignatureError:
         raise HTTPException(401)
 
-    if ev.event == "StartApp":
-        free = next((a for a in AGENTS if a not in busy), None)
-        if free:
-            xml = f"<Response><Record/><Dial><Number>{free}</Number></Dial></Response>"
-        else:
-            xml = "<Response><Speak>All our agents are busy.</Speak><Hangup/></Response>"
-        return Response(xml, media_type="application/xml")
-
-    if ev.event == "Hangup":
-        print(ev.leg_id, ev.call_status, ev.duration)
-    elif ev.event == "RecordStop":
-        print("recording:", ev.recording_url)
-    return Response(status_code=200)
+    if ev.event == "StartApp":  # someone is connected: reply with instructions
+        return Response(GREETING, media_type="application/xml")
+    return Response(status_code=200)  # Hangup / RecordStop: acknowledge
 ```
 
-Verify and parse every request - see [Webhooks](/telephony/apis/webhooks).
+It rejects unsigned requests, speaks to every new call and returns 200 for every other
+event. Run and expose it as in the
+[Quick Start](/telephony/apis/quickstart#receive-your-first-call). To route callers to
+free agents, see [Incoming Calls](/telephony/apis/incoming-calls).
+
+## Timeouts and fallback
+
+Set these on the number's config ([Incoming Calls](/telephony/apis/incoming-calls)):
+
+| Field | Meaning |
+| --- | --- |
+| `answer_timeout_ms` | 500-10000. How long Unpod waits for your reply |
+| `answer_fallback` | `static_routing` (default) or `reject_503` when your app does not answer |
+
+An empty 2xx body is not a failure: Unpod continues with static routing.
+
+{/* TODO(verify): do answer_timeout_ms and answer_fallback apply to an outbound leg's answer_url? */}
+
+## Serve a static file
+
+No server needed: host a fixed XML file on any public https host, then pass
+`answer_url="https://cdn.example.com/greeting.xml"` and `answer_method="GET"` to `create`.
+Every call runs the same instructions, which suits
+[Call Blasting](/telephony/apis/call-blasting).
+
+```xml greeting.xml
+<Response>
+    <Speak>Hello! Your order has shipped.</Speak>
+    <Hangup/>
+</Response>
+```
+
+{/* TODO(verify): does a static .xml file served with answer_method="GET" work (content type, unsigned GET)? */}
