@@ -1,0 +1,269 @@
+---
+title: 'Call Blasting'
+icon: 'megaphone'
+description: 'Call a list of numbers and play the same message to each'
+---
+
+Send the same message to many people: appointment reminders, outage alerts, payment
+notices. You dial each number with `create` and give every call the same answer URL. When
+someone picks up, Unpod fetches it and plays your message. Host the message as a static XML
+file and you need no server to send the calls. Haven't made a call yet? Start with the
+[Quick Start](/telephony/apis/quickstart).
+
+## 1. Write the message
+
+Say it in a platform voice with `<Speak>`, or play a recording with `<Play>`:
+
+<CodeGroup>
+```xml Text to speech
+<Response>
+    <Speak>
+        Hello, this is a reminder that your appointment is tomorrow at 10 AM.
+    </Speak>
+    <Hangup/>
+</Response>
+```
+
+```xml Audio file
+<Response>
+    <Play>https://cdn.example.com/reminder.mp3</Play>
+    <Hangup/>
+</Response>
+```
+</CodeGroup>
+
+To pick a platform voice, add `voice` and `language` to `<Speak>` with real values. A
+made-up value can make the speech fail, and the call then ends right after it's answered.
+
+{/* TODO(verify): platform voice ids to list */}
+
+Save either one as `blast.xml`. The audio file is a public https MP3 or WAV, given as the
+text of `<Play>`. `<Hangup/>` is optional: Unpod hangs up when the last verb finishes. For
+every verb, see [Answer URL & XML](/telephony/apis/answer-url).
+
+Host `blast.xml` anywhere public over https that serves it without a redirect, such as
+object storage or a CDN: Unpod doesn't follow redirects. See
+[Serve a static file](/telephony/apis/answer-url#serve-a-static-file).
+
+{/* TODO(verify): static .xml file with answer_method="GET" - confirm live */}
+
+<Warning>
+If Unpod can't fetch the file within 3 seconds, or it's empty, nothing plays and the call
+stays connected in silence until the person hangs up or you end it. After 5 failed fetches
+in a row, Unpod skips the fetch for 30 s, so calls answered then are silent even after the
+file is back. Calls have no maximum length: end a stuck one with `calls.end` (see
+[Call Control](/telephony/apis/call-control#inspect-and-end-calls)). The script below checks
+the file once before dialing; also dial your own number first and listen.
+</Warning>
+
+## 2. Dial the list
+
+Put one E.164 number per line in `numbers.txt`, then run:
+
+<CodeGroup>
+```python Python
+import asyncio
+from pathlib import Path
+
+import httpx
+from unpod import AsyncClient
+from unpod.telephony import TelephonyAPIError
+
+FROM = "+919000000001"  # your Unpod number
+ANSWER_URL = "https://cdn.example.com/blast.xml"
+STATUS_URL = "https://your-app.example.com/blast-status"  # step 3, optional
+CAMPAIGN = "reminder-nov"
+PACE = 1.0  # seconds between creates: Unpod accepts 60 a minute per org
+
+
+async def dial(calls, to: str) -> str | None:
+    """None once Unpod accepts the call, else why it wasn't."""
+    for attempt in range(6):
+        try:
+            await calls.create(
+                FROM,
+                to,
+                answer_url=ANSWER_URL,
+                answer_method="GET",
+                status_callback_url=STATUS_URL,
+                metadata={"campaign": CAMPAIGN, "to": to},  # back on events
+                idempotency_key=f"{CAMPAIGN}:{to}",  # a retry won't dial twice
+            )
+            return None
+        except TelephonyAPIError as e:
+            if e.status_code != 429:  # a bad number doesn't stop the batch
+                return f"{e.status_code} {e.code}: {e.message}"
+        except httpx.HTTPError:
+            pass  # network error: the same idempotency key makes a retry safe
+        await asyncio.sleep(min(2**attempt, 30))  # 429 or network error: back off
+    return "gave up after retries"
+
+
+async def main() -> None:
+    r = httpx.get(ANSWER_URL, timeout=3)  # the file Unpod will fetch
+    r.raise_for_status()  # also fails on a redirect, which Unpod won't follow
+    assert "<Response" in r.text, "blast.xml is empty or not XML"
+
+    lines = Path("numbers.txt").read_text().splitlines()
+    numbers = list(dict.fromkeys(n.strip() for n in lines if n.strip()))  # no dupes
+    failed: dict[str, str] = {}
+    async with AsyncClient() as client:
+        calls = client.telephony.calls
+        for to in numbers:
+            reason = await dial(calls, to)
+            if reason:
+                failed[to] = reason
+            await asyncio.sleep(PACE)
+    print(f"accepted {len(numbers) - len(failed)} of {len(numbers)}")
+    for to, reason in failed.items():
+        print("failed", to, reason)
+
+
+asyncio.run(main())
+```
+
+```bash cURL
+# prints each number with the HTTP status: 202 accepted, anything else failed
+while read -r to || [ -n "$to" ]; do
+  to=${to%$'\r'}; [ -z "$to" ] && continue
+  curl -s -o /dev/null -w "$to %{http_code}\n" \
+    -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+    -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
+    -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+    -H "Idempotency-Key: reminder-nov:$to" -H "Content-Type: application/json" \
+    -d '{"from": "+919000000001", "to": "'"$to"'",
+         "answer_url": "https://cdn.example.com/blast.xml", "answer_method": "GET",
+         "status_callback_url": "https://your-app.example.com/blast-status",
+         "metadata": {"campaign": "reminder-nov", "to": "'"$to"'"}}'
+  sleep 1  # Unpod accepts 60 creates a minute per org
+done < numbers.txt
+```
+</CodeGroup>
+
+`create` returns as soon as Unpod accepts the call; it doesn't wait for the phone to ring.
+The script dials one number a second, because Unpod accepts at most **60 `create` and
+`add_participant` requests a minute per org** (3,600 numbers take about an hour). On a `429`
+(that limit, or your org's call cap) or a network error it backs off and tries again; any
+other error is listed at the end and the rest are still dialed. `gave up after retries`
+means the `429`s (or network errors) didn't stop: run the script again later to pick those
+numbers up. Fix the list and
+run the script again: thanks to the idempotency key `reminder-nov:<number>`, a
+re-run within 24 h doesn't dial the same number twice, unless Unpod restarts (keys live in
+memory). Use a new campaign name for a new blast.
+
+Leave out `status_callback_url` if you don't need step 3.
+
+## 3. Track results
+
+Unpod posts each call's events to `status_callback_url`, with your `metadata` on every one
+as `ev.metadata`. Outbound events don't carry the number in `ev.to`, so it comes back from
+the `"to"` you put in `metadata`. Record the outcome on `Hangup`. Create your
+[webhook secret](/telephony/apis/quickstart#receive-your-first-call) first: status callbacks
+are signed with it.
+
+```python app.py
+import os
+
+from fastapi import FastAPI, HTTPException, Request
+from unpod.telephony import WebhookSignatureError, parse_call_event
+
+SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
+OUTCOME = {
+    "Normal Hangup": "answered",
+    "Busy Line": "busy",
+    "Ring Timeout Reached": "no answer",
+    "No Answer": "no answer",
+    "Rejected": "declined",
+    "Cancelled": "cancelled",
+    "Service Unavailable": "not dialed",
+}
+# campaign -> {number: (outcome, seconds answered)}. In memory: use a DB.
+results: dict[str, dict[str, tuple[str, int | None]]] = {}
+app = FastAPI()
+
+
+@app.post("/blast-status")
+async def blast_status(request: Request):
+    try:
+        ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
+    except WebhookSignatureError:
+        raise HTTPException(401)
+
+    campaign, to = ev.metadata.get("campaign"), ev.metadata.get("to")
+    if ev.event == "Hangup" and campaign and to:
+        cause = ev.hangup_cause
+        outcome = OUTCOME.get(cause or "") or f"failed ({ev.sip_code or cause})"
+        results.setdefault(campaign, {})[to] = (outcome, ev.duration)  # overwrites
+        print(campaign, to, outcome, ev.duration)
+    return {"ok": True}  # always 2xx once signed, or Unpod retries
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+```
+
+Run it with `python app.py` and expose it as in the
+[Quick Start](/telephony/apis/quickstart#receive-your-first-call). Unpod retries an event
+that doesn't get a 2xx a few times over about a minute
+([Delivery and retries](/telephony/apis/webhooks#delivery-and-retries)), so the same
+`Hangup` can arrive twice; writing the outcome by number makes that harmless.
+
+If your server is down for the whole retry window (roughly 27-75 s), the event is dropped
+and that number never gets an outcome. A number missing from `results` is either still on
+a call or lost its `Hangup`: list the live calls with
+[`calls.list()`](/telephony/apis/call-control#inspect-and-end-calls) (every page, until
+one comes back empty) and check again
+later.
+
+| `ev.hangup_cause` | Outcome | What to do |
+| --- | --- | --- |
+| `Normal Hangup` | Answered | They picked up. `ev.duration` is how long, in seconds |
+| `Busy Line` | Busy | Retry later |
+| `Ring Timeout Reached`, `No Answer` | No answer | Retry later, or leave it |
+| `Rejected`, `Cancelled` | Declined, cancelled | `Rejected`: the person declined. `Cancelled`: the call was ended before it was answered. Retry later, or leave it |
+| `Service Unavailable` | Not dialed | Any 5xx in `ev.sip_code`: Unpod or the carrier had no capacity. Retry |
+| Anything else | Failed | Check `ev.sip_code`, e.g. an invalid number |
+
+`Normal Hangup` only means the call was answered. A duration shorter than your message
+means they didn't hear all of it. A voicemail that picks up, or a `<Speak>` or `<Play>`
+that Unpod skipped because the speech or the audio failed, also shows `Normal Hangup`.
+
+A burst of calls can pass the check in `create` (`202`) and still hit your org's limit
+while dialing. Those calls never ring and end with `Service Unavailable` (503).
+
+To retry the busy, unanswered and not-dialed numbers, put them in a new `numbers.txt` and
+run step 2 with a new campaign name, such as `reminder-nov-retry`.
+
+## Limits
+
+- The answer URL and `status_callback_url` must be public https, or `create` returns
+  `400 invalid_url`. A non-https audio URL inside `blast.xml` makes the reply fail, and
+  the call stays connected in silence. See [Answer URL & XML](/telephony/apis/answer-url).
+- `create` and `add_participant` together are limited to 60 requests a minute per org.
+  Over it, Unpod returns `429` with `detail` `Request was throttled. Expected available in N
+  seconds.` and dials nothing. `PACE` keeps the script under it. Each `create` returns right
+  away, so up to 60 new calls can be ringing each minute.
+- Unpod can also cap your org's concurrent calls. At the cap, `create` returns `429` and
+  dials nothing, and the script backs off and retries. A call accepted
+  right at the cap can still end with `Service Unavailable`.
+- A reply can be at most 64 KB, with up to 32 verbs and 4096 characters in each
+  `<Speak>`.
+
+{/* TODO(verify): org concurrent-call and rate limits */}
+{/* TODO(verify): concurrent-call cap defaults for platform orgs, how to raise the cap */}
+{/* TODO(verify): Idempotency-Key is kept for 24 h in memory on one SBC node - confirm a re-run behind the proxy hits the same node */}
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Number Masking" icon="venetian-mask" href="/telephony/apis/number-masking">
+    Connect two people without showing their numbers.
+  </Card>
+  <Card title="Answer URL & XML" icon="file-code" href="/telephony/apis/answer-url">
+    Every verb you can put in the message.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/telephony/apis/webhooks">
+    Verify events and read every field.
+  </Card>
+</CardGroup>

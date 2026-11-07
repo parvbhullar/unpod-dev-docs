@@ -963,3 +963,15 @@ div:has(svg[aria-roledescription^="flowchart"]) > [class*="ontrol"] {
 .uq-item__s { display: block; font-size: 0.72rem; color: #8b8b96; }
 .uq-item.is-brand { padding: 10px 18px; border-radius: 10px; background: linear-gradient(150deg, #796cff, #5a4fff); }
 .uq-item.is-brand .uq-item__t, .uq-item.is-brand .uq-item__s { color: #fff; }
+
+/* Reading width. Maple caps the column at 36-42rem and gives the right
+   "On this page" rail 19rem, leaving ~65 code characters on a laptop.
+   Widen the column and slim the rail; both side rails stay. */
+@media (min-width: 1024px) {
+  #content-container { padding-left: 2.5rem; }
+}
+@media (min-width: 1280px) {
+  #content-area { max-width: 52rem; width: calc(100% - 14rem); }
+  #table-of-contents-layout { width: 14rem; padding-left: 1.5rem; }
+  #table-of-contents { width: 12.5rem; }
+}

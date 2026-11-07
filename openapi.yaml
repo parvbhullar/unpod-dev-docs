@@ -1148,8 +1148,10 @@ paths:
       summary: Get Telephony Numbers
       tags: [Bridges]
       description: >
-        List telephony numbers. With Org-Handle: org's own numbers (any state) + pool
-        (NOT_ASSIGNED). Without Org-Handle: pool numbers only.
+        List telephony numbers. By default only unassigned numbers (NOT_ASSIGNED): the
+        shared pool, plus the org's own unassigned numbers when Org-Handle is sent. Add
+        include_assigned=true with Org-Handle to also return the org's own ASSIGNED
+        numbers. Another org's assigned numbers are never returned.
       security:
         - TokenAuth: []
       parameters:
@@ -1159,6 +1161,15 @@ paths:
           schema:
             type: string
           description: "Organization domain handle. Omit to list pool numbers only."
+        - name: include_assigned
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: >
+            Set true (with Org-Handle) to also return the org's own ASSIGNED numbers.
+            Without it, only NOT_ASSIGNED numbers are listed.
       responses:
         '200':
           description: List of telephony numbers
@@ -1480,8 +1491,11 @@ paths:
                     connection_state: "LINKED"
                     termination_kind: "sip"
                     agent_id: null
-                    sync_state: "synced"
+                    provider: "My Carrier"
+                    provider_credential_id: 21
+                    sync_state: "in_sync"
                     sync_detail: null
+                    in_sync: true
         '206':
           description: Business logic error (missing header / org not found)
           content:
@@ -1512,7 +1526,7 @@ paths:
                 data:
                   - id: 12
                     name: "Acme Primary Trunk"
-                    sip_url: "sip:sip.acme-voice.com"
+                    sip_url: "sip:carrier.example.com"
                     transport: "tcp"
                     port: "5060"
                     auth_username: null
@@ -1547,7 +1561,7 @@ paths:
                 sip_url:
                   type: string
                   description: "Carrier SIP URL / host."
-                  example: "sip:carrier.net"
+                  example: "sip:carrier.example.com"
                 auth_username:
                   type: string
                   example: "user"
@@ -1571,7 +1585,7 @@ paths:
                   example: ["1.2.3.4", "5.6.7.0/24"]
             example:
               name: "My Carrier Trunk"
-              sip_url: "sip:carrier.net"
+              sip_url: "sip:carrier.example.com"
               auth_username: "user"
               auth_password: "pass"
               transport: "tcp"
@@ -1588,7 +1602,7 @@ paths:
                 data:
                   id: 21
                   name: "My Carrier Trunk"
-                  sip_url: "sip:carrier.net"
+                  sip_url: "sip:carrier.example.com"
                   transport: "tcp"
                   port: "5060"
                   auth_username: "user"
@@ -1634,7 +1648,7 @@ paths:
                 data:
                   id: 12
                   name: "Acme Primary Trunk"
-                  sip_url: "sip:sip.acme-voice.com"
+                  sip_url: "sip:carrier.example.com"
                   transport: "tcp"
                   port: "5060"
                   auth_username: null
@@ -1694,7 +1708,6 @@ paths:
             type: integer
             example: 21
         - $ref: '#/components/parameters/OrgHandle'
-        - $ref: '#/components/parameters/ProductId'
       requestBody:
         required: true
         content:
@@ -1728,7 +1741,7 @@ paths:
                 data:
                   trunk_id: 21
                   origin_endpoint:
-                    ingress: "sip:sip.unpod.tel"
+                    ingress: "sip-lb1.unpod.tel"
                     dids: ["+15551234567"]
                     accepted_source_ips: ["1.2.3.4", "5.6.7.0/24"]
                     region: "us-east"
@@ -1747,14 +1760,14 @@ paths:
                 data:
                   trunk_id: 21
                   origin_endpoint:
-                    ingress: "sip:sip.unpod.tel"
+                    ingress: "sip-lb1.unpod.tel"
                     dids: []
                     accepted_source_ips: ["1.2.3.4", "5.6.7.0/24"]
                     region: null
                   numbers:
                     - number_id: 501
                       ok: false
-                      error: "Number not found or not available to this organization."
+                      error: "Failed to map number."
         '404':
           description: Trunk not found
           content:

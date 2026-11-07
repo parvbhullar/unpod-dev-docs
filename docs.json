@@ -344,8 +344,47 @@
             "group": "Getting Started",
             "icon": "book-open",
             "pages": [
-              "telephony/introduction",
-              "telephony/quickstart"
+              "telephony/introduction"
+            ]
+          },
+          {
+            "group": "Telephony APIs",
+            "icon": "phone-call",
+            "pages": [
+              "telephony/apis/quickstart",
+              "telephony/apis/multiple-participants",
+              "telephony/apis/answer-url",
+              "telephony/apis/incoming-calls",
+              "telephony/apis/call-blasting",
+              "telephony/apis/number-masking",
+              "telephony/apis/recording",
+              "telephony/apis/numbers",
+              "telephony/apis/call-control",
+              "telephony/apis/webhooks",
+              "telephony/calls/call-logs",
+              "telephony/apis/migrate-from-plivo"
+            ]
+          },
+          {
+            "group": "SIP Trunking",
+            "icon": "git-branch",
+            "pages": [
+              "telephony/quickstart",
+              "telephony/integrations/unpod/dashboard",
+              "telephony/sip-trunking/trunks",
+              {
+                "group": "API Reference",
+                "pages": [
+                  "telephony/numbers/list-numbers",
+                  "telephony/trunks/list-trunks",
+                  "telephony/trunks/create-trunk",
+                  "telephony/trunks/get-trunk",
+                  "telephony/trunks/attach-numbers",
+                  "telephony/trunks/detach-numbers",
+                  "telephony/trunks/delete-trunk",
+                  "telephony/calls/overview"
+                ]
+              }
             ]
           },
           {
@@ -353,12 +392,6 @@
             "icon": "blocks",
             "pages": [
               "telephony/integrations/overview",
-              {
-                "group": "Unpod",
-                "pages": [
-                  "telephony/integrations/unpod/dashboard"
-                ]
-              },
               {
                 "group": "Vapi",
                 "pages": [
@@ -395,33 +428,6 @@
                 ]
               },
               "telephony/integrations/websockets"
-            ]
-          },
-          {
-            "group": "Numbers",
-            "icon": "hash",
-            "pages": [
-              "telephony/numbers/list-numbers"
-            ]
-          },
-          {
-            "group": "Trunks",
-            "icon": "git-branch",
-            "pages": [
-              "telephony/trunks/list-trunks",
-              "telephony/trunks/create-trunk",
-              "telephony/trunks/get-trunk",
-              "telephony/trunks/attach-numbers",
-              "telephony/trunks/detach-numbers",
-              "telephony/trunks/delete-trunk"
-            ]
-          },
-          {
-            "group": "Calls",
-            "icon": "phone",
-            "pages": [
-              "telephony/calls/overview",
-              "telephony/calls/call-logs"
             ]
           }
         ]

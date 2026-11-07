@@ -1,0 +1,194 @@
+---
+title: 'Webhooks'
+icon: 'webhook'
+description: 'Verify and parse call, recording and inbound events with parse_call_event'
+---
+
+Unpod signs the requests it sends your app with one org-level key, the **webhook secret**.
+It's the same key for status callbacks and inbound answer-URL requests, with no secret per
+number or per call. Create it once with `rotate()` - the only call that returns it in
+full - and store it as `UNPOD_WEBHOOK_SECRET`. Then verify each request with
+`parse_call_event`.
+
+| Event type | Goes to |
+| --- | --- |
+| Call events (leg lifecycle, audio, DTMF) | `status_callback_url` |
+| Recording events | `recording_callback_url` |
+| Inbound events | Your answer URL |
+
+## Which requests are signed
+
+| Request | Signed? |
+| --- | --- |
+| Inbound answer-URL POST (`StartApp`, `Hangup`, `RecordStop`) | Yes |
+| Status callbacks, including `Incoming` | Yes |
+| Outbound answer-URL requests (`answer_url` on `create`) | Not yet |
+| Any GET answer-URL request | No: there's no body to sign |
+| Recording events (`MPCRecordingCompleted`, `ParticipantRecording...`) | Not yet |
+
+"Yes" applies once your org has a secret: until then every request goes out unsigned, so
+create it before you point anything at a server that verifies. `parse_call_event` rejects
+an unsigned request. Parse those with `verify=False` and trust only what the API returns,
+as [Recording](/telephony/apis/recording#recording-events) and
+[Number Masking](/telephony/apis/number-masking#handle-events) do.
+
+{/* TODO(verify): outbound answer-URL signing (UNPO-181) - sip_session.rs spawn_outbound_answer_url_hook passes `secret: None`; recording events too (recording_completed.rs `secret: None`) */}
+
+## Get the secret
+
+```python
+from unpod import Client
+
+with Client() as client:
+    s = client.telephony.webhook_secret.rotate()  # org owner or editor only
+    print(s.version, s.pushed_to_sbc)  # False: still syncing, Unpod retries it
+    print(s.secret)  # full secret, shown only here: store as UNPOD_WEBHOOK_SECRET
+
+    print(client.telephony.webhook_secret.get().secret)  # masked, e.g. '****ab12'
+```
+
+Each `rotate()` creates a new version and invalidates the previous one, so a server still
+verifying with the old key rejects every request until you give it the new one.
+`pushed_to_sbc` is `true` when the new key is already in use for signing. When it's `false`,
+Unpod keeps retrying the update in the background; until it lands, requests are still
+signed with the previous key (or unsigned, for your first secret). See
+[The webhook secret](/telephony/apis/incoming-calls#the-webhook-secret) for the cURL call.
+
+## Verify and parse
+
+```python
+import os
+
+from fastapi import FastAPI, HTTPException, Request
+from unpod.telephony import WebhookSignatureError, parse_call_event
+
+SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
+app = FastAPI()
+seen: set[str] = set()
+
+
+@app.post("/call-status")
+async def call_status(request: Request):
+    body = await request.body()
+    try:
+        ev = parse_call_event(body, request.headers, secret=SECRET)
+    except WebhookSignatureError:
+        raise HTTPException(401)  # unsigned, wrong secret, or older than 300 s
+
+    if ev.event_id:  # the same event can arrive more than once
+        if ev.event_id in seen:
+            return {"ok": True}
+        seen.add(ev.event_id)
+
+    if ev.event == "Answered":
+        print(ev.call_id, ev.leg_id, ev.role, "answered")
+    elif ev.event == "Hangup":
+        print(ev.hangup_cause, ev.sip_code, ev.duration)
+    return {"ok": True}  # any 2xx acknowledges
+```
+
+Rules:
+
+- Pass the **raw body** exactly as received. Re-encoding it breaks the signature.
+- `Content-Type` decides form or JSON; `parse_call_event` reads both.
+- The same event can arrive more than once (see
+  [Delivery and retries](#delivery-and-retries)). De-duplicate on `ev.event_id`, and pass
+  an `idempotency_key` when an event triggers `add_participant`.
+- Return 2xx for events you don't need, so they aren't retried.
+- `tolerance` (default 300 s) rejects replays. `verify=False` skips the check: use it only
+  for local tests and for the [unsigned requests](#which-requests-are-signed).
+
+The signature header is
+`X-Webhook-Signature: t=<unix ts>,v1=<hex HMAC-SHA256(secret, "<ts>.<raw body>")>`.
+
+## Delivery and retries
+
+Unpod POSTs each status callback and recording event and waits up to 10 s for a 2xx. Any
+other status, a timeout or a connection error is a failure, and Unpod tries again: 4
+attempts in all, about 1 s, 5 s and 30 s apart (each wait varies by up to 25%, so 27-45 s
+of waiting in all). Each attempt can take up to 10 s, so the window from the first attempt
+to the last is roughly 27-75 s. Then the event is marked failed and never sent again.
+
+- Events for one leg arrive in order (`ev.sequence`). While one is being retried, that
+  leg's later events wait behind it; other legs aren't held up.
+- An event queued before you call `rotate()` is retried signed with the old key, so a
+  server that already has the new key rejects it.
+- Return 2xx fast and do slow work afterwards. A reply slower than 10 s is a failure.
+- Make handlers idempotent: the same `ev.event_id` can arrive twice, for example when
+  your 2xx is lost.
+- A lost `Answered` or `Hangup` can leave someone on the line. As a backstop, sweep your
+  active calls with [`calls.list()`](/telephony/apis/call-control#inspect-and-end-calls)
+  every few minutes, walking every page until one comes back empty, and end any that
+  should be over.
+- Answer-URL requests aren't retried: a failed `StartApp` applies the
+  [fallback](/telephony/apis/answer-url#timeouts-and-fallback), and `Hangup` and
+  `RecordStop` are sent once.
+
+{/* TODO(verify): leg_delivery.rs DeliveryConfig::default (max_attempts 4, request_timeout 10 s) with processor.rs DEFAULT_BACKOFF_SCHEDULE [1s, 5s, 30s] ±25% jitter; server.rs starts the worker with Default::default() */}
+
+## Events
+
+| `ev.event` | When |
+| --- | --- |
+| `Incoming` | An inbound call arrived. Sent to the number's `status_callback_url`, first on the caller's leg |
+| `Initiated`, `Ringing`, `Answered`, `Hangup` | Leg lifecycle. Each leg gets its own `Hangup`. `Ringing` isn't always sent: on many mobile networks a leg goes straight from `Initiated` to `Answered` |
+| `PlayStarted`, `PlayStopped` | Audio or speech on a leg (`ev.play_id`) |
+| `DTMF` | A key was pressed (`ev.digit`) |
+| `Hold`, `Unhold` | Hold changes on an answered leg |
+| `MPCRecordingCompleted` | Recording ready, sent only to `recording_callback_url`. Unsigned, no `metadata`; `ev.recording_url` is a path inside Unpod, so fetch it with `get_recording(ev.call_id)`. See [Recording](/telephony/apis/recording#recording-events) |
+| `ParticipantRecordingInitiated`, `ParticipantRecordingCompleted` | Per leg, only with `record_participant_track=True`. Sent together after the call, with the leg's channel in `ev.metadata["channel"]` (`1` left, `2` right). Only `Completed` carries the recording, in `ev.metadata["recording_url"]` |
+| `StartApp`, `Hangup`, `RecordStop` | Answer-URL events, with `ev.call_status`. See [Answer URL & XML](/telephony/apis/answer-url#what-unpod-sends) |
+
+## `CallEvent` fields
+
+Form wire names are below; with `status_callback_format="json"` the same fields come in
+snake_case (`call_id`, `leg_id`, ...).
+
+| Field | Wire name | Notes |
+| --- | --- | --- |
+| `event` | `EventName` / `Event` | One of the [events](#events) above |
+| `call_id` | `MPCUUID` | The same on every event of a call, across all its legs |
+| `leg_id` | `CallUUID` | Differs per leg |
+| `role`, `direction`, `call_status` | `Role`, `Direction`, `CallStatus` | `role` is the label you set on the leg |
+| `from_`, `to` | `From`, `To` | Only on `Incoming` and answer-URL events. `None` on leg events, so outbound status callbacks never have them: put your own ids in `metadata` |
+| `start_time`, `answer_time`, `end_time`, `timestamp` | `StartTime`, ... | Unix seconds |
+| `initiation_time`, `hangup_time`, `duration` | `InitiationTime`, `HangupTime`, `Duration` | `duration` is answered seconds, `0` if never answered |
+| `hangup_cause`, `hangup_by`, `sip_code` | `HangupCause` / `PlivoHangupCause`, `HangupBy`, `SipCode` | `Hangup` only. See [Hangup causes](#hangup-causes) |
+| `digit`, `play_id` | `Digit`, `PlayId` | |
+| `sequence` | `Sequence` | Per leg, from 1 |
+| `event_id` | `EventId` | Stable across retries: de-duplicate on it |
+| `recording_url`, `recording_duration`, `record_file` | `RecordingURL` / `RecordUrl`, `RecordingDuration`, `RecordFile` | Recording and `RecordStop` events |
+| `metadata` | `Metadata` | The `metadata` you set on `create` or `add_participant`, echoed on the events of that leg (an `add_participant` leg without its own falls back to the call's). Inbound calls carry metadata only on `Incoming` |
+| `raw` | | Every field exactly as received |
+
+<Warning>
+`ev.metadata` works only with the default form format. With
+`status_callback_format="json"`, `parse_call_event` (SDK 0.6.2) leaves it empty because it
+reads only the form field `Metadata`. Keep the form format, or read
+`ev.raw["metadata"]`.
+</Warning>
+
+{/* TODO(verify): SDK 0.6.2 events.py _normalize reads raw.get("Metadata") only, while leg_delivery.rs encode_body sends JSON key "metadata" - drop this warning once the SDK reads both */}
+
+## Hangup causes
+
+| `ev.hangup_cause` | `ev.sip_code` | Meaning |
+| --- | --- | --- |
+| `"Normal Hangup"` | `None` | The leg was answered. `ev.hangup_by` says who hung up |
+| `"Busy Line"` | 486 or 600 | Busy. End the call or retry later |
+| `"No Answer"` | 408 or 480 | The far end reported no answer. Treat like a ring timeout |
+| `"Ring Timeout Reached"` | 487, or `None` | The leg rang for `ring_timeout` seconds without an answer |
+| `"Rejected"` | 603, or `None` | Declined, or the callee ended the leg before answering |
+| `"Cancelled"` | 487, or `None` | The caller (or your app) ended the leg before it was answered |
+| `"Invalid Destination Address"` | 404, 484 or 604 | The number doesn't exist or is incomplete |
+| `"Forbidden"` | 401, 403 or 407 | The carrier refused the call |
+| `"Service Unavailable"` | Any 5xx | The call couldn't be placed. At your org's cap, `create` and `add_participant` normally return `429` right away; a 503 hangup means a burst passed that check and hit the cap while dialing (see [Call Blasting](/telephony/apis/call-blasting#3-track-results)) |
+| `"Unknown"` | Any other code, or `None` | Anything else |
+
+The strings are exact. Match on `ev.hangup_cause` first. `ev.sip_code` is always set for
+`Busy Line`, `No Answer`, `Invalid Destination Address`, `Forbidden` and
+`Service Unavailable`. It's `None` on an answered leg, and can be `None` for `Rejected`,
+`Cancelled`, `Unknown` and `Ring Timeout Reached`. A ring timeout also reports the 487
+from cancelling the ringing leg, so 487 alone doesn't mean a cancel.
+
+{/* TODO(verify): full list from leg_lifecycle.rs hangup_cause(); sip_code is HangupFacts.sip_code filtered to unanswered legs */}

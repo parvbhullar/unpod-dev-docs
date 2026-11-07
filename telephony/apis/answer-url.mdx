@@ -1,0 +1,231 @@
+---
+title: 'Answer URL & XML'
+icon: 'file-code'
+description: 'Tell Unpod what to do when someone is connected - speak, play, dial, record'
+---
+
+The answer URL is an https URL you host. When a call starts on a leg, Unpod fetches it and
+runs the instructions you reply with, in XML or JSON. The format is the same for outbound
+and inbound calls.
+
+## When Unpod calls your answer URL
+
+| Call | Where you set the answer URL |
+| --- | --- |
+| Outbound | `answer_url` (and `answer_method`, `POST` or `GET`) on `create` or `add_participant` |
+| Inbound | The number's config. See [Incoming Calls](/telephony/apis/incoming-calls) |
+
+An inbound call is still ringing when Unpod fetches the URL, so a reply that starts with
+`<Hangup/>` rejects the call. On an outbound leg, Unpod runs your instructions once that
+person connects, instead of just bridging them:
+
+<CodeGroup>
+```python Python
+from unpod import Client
+
+with Client() as client:
+    call = client.telephony.calls.create(
+        "+919000000001",  # your Unpod number
+        "+919000000002",  # who to call
+        answer_url="https://your-app.example.com/outbound",
+        answer_method="POST",
+    )
+    print("calling", call.call_id)
+```
+
+```bash cURL
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
+  -d '{"from": "+919000000001", "to": "+919000000002",
+       "answer_url": "https://your-app.example.com/outbound", "answer_method": "POST"}'
+```
+</CodeGroup>
+
+The answer URL must be public https, or you get `400 invalid_url`.
+
+<Warning>
+Outbound answer-URL requests are not signed yet, so a route that rejects unsigned requests
+rejects them too. Serve outbound legs on a separate route (the
+[minimal server](#a-minimal-answer-server) below uses `/outbound`), or skip verification
+for them until signing ships. After 5 failures in a row, Unpod skips your URL for 30 s and
+applies the fallback, and inbound and outbound share that limit - so don't point outbound
+legs at the signed `/answer` route.
+</Warning>
+
+{/* TODO(verify): outbound answer-URL signing (UNPO-181) */}
+
+## What Unpod sends
+
+On an inbound call, your answer URL receives:
+
+| `ev.event` | `ev.call_status` | When |
+| --- | --- | --- |
+| `StartApp` | `ringing` | A new call. Reply with instructions |
+| `Hangup` | `completed`, `busy`, `no-answer`, `failed`, `cancel` | The call ended. Also carries `Duration`, `StartTime`, `EndTime` |
+| `RecordStop` | - | A `<Record>` reached its `maxLength`. Get the audio by `ev.call_id` after the call ([Recording](/telephony/apis/recording#recording-events)) |
+
+Each `StartApp` also carries:
+
+- `MPCUUID` (`ev.call_id`): the id you use with the call APIs
+- `CallUUID` (`ev.leg_id`), `From` (`ev.from_`), `To` and `Direction=inbound`
+- `SessionStart` (`ev.raw["SessionStart"]`)
+
+On an outbound leg the request is also a `StartApp`, sent once the person answers. It
+carries the same fields, with the fixed values `Direction=inbound` and
+`CallStatus=ringing`, so don't branch on `Direction`. Its `CallUUID` ends in `-caller`, so it
+doesn't match the `leg_id` that `create` returned: match outbound requests on `MPCUUID`
+(`ev.call_id`). When the call ends, the same URL also gets a `Hangup` with `Duration`,
+`StartTime`, `EndTime`, `AnswerTime` and `HangupCause`; reply `200` to it.
+
+Inbound POST requests are signed once your org has a webhook secret (create it as in the
+[Quick Start](/telephony/apis/quickstart#receive-your-first-call)). Verify and parse them
+with `parse_call_event` - see [Webhooks](/telephony/apis/webhooks). Outbound requests
+are not signed yet, and GET requests are not signed (there's no body to sign).
+
+## Reply with XML or JSON
+
+Reply with Plivo-style XML or JSON. Greet the caller, then connect them to an agent:
+
+```xml
+<Response>
+    <Speak>Connecting you to an agent.</Speak>
+    <Dial><Number>+919000000003</Number></Dial>
+</Response>
+```
+
+Turn the caller away:
+
+```xml
+<Response>
+    <Speak>All our agents are busy.</Speak>
+    <Hangup/>
+</Response>
+```
+
+The first reply as JSON:
+
+```json
+{"actions": [{"type": "speak", "text": "Connecting you to an agent."},
+             {"type": "dial", "number": "+919000000003"}]}
+```
+
+| XML | JSON `type` | XML attributes | Does |
+| --- | --- | --- | --- |
+| `<Speak>` | `speak` | `voice`, `language`, `loop` | Text-to-speech |
+| `<Play>` | `play` | `loop` | Play an https audio URL |
+| `<Wait>` | `wait` | `length` (seconds, default 1) | Pause |
+| `<Record>` | `record` | `maxLength` (seconds, default 300) | Record the call |
+| `<Dial>` | `dial` | - (just the `<Number>`) | Blind transfer to that number |
+| `<Hangup>` | `hangup` | `reason`, `code` | End the call |
+
+On `<Hangup>`, `reason` applies only when rejecting a ringing inbound call (`busy` sends
+486, anything else 603). `code` is a SIP status 400-699 and works before and after answer.
+JSON field names differ from XML attributes: `speak.text`, `play.url`, `wait.seconds`,
+`record.max_duration_secs`.
+
+{/* TODO(verify): attribute list from SBC source; confirm live; platform voice ids */}
+
+Only these verbs are supported. Any other element, such as `<GetDigits>`, `<Conference>`
+or `<Redirect>`, makes the whole reply fail and the
+[fallback](#timeouts-and-fallback) applies.
+
+Verbs run in order. When the last one finishes, Unpod hangs up; verbs after `<Dial>`
+don't run. A reply can be at most 64 KB with 32 verbs, and 4096 characters in each
+`<Speak>`. Every audio URL must be public https.
+
+Set the voice and language on `<Speak>` itself:
+
+```xml
+<Response>
+    <Speak voice="VOICE_ID" language="LANGUAGE_CODE">Your order has shipped.</Speak>
+    <Hangup/>
+</Response>
+```
+
+Whether a call is recorded follows the recording policy (set by the Unpod team);
+`record=True` on `create` doesn't override it today (see
+[Recording](/telephony/apis/recording)). Don't put `<Record/>` before `<Dial>`: it waits
+for the recording to finish (300 s by default) before dialing, and the caller hears
+silence.
+
+## A minimal answer server
+
+```python app.py
+import os
+from fastapi import FastAPI, HTTPException, Request, Response
+from unpod.telephony import WebhookSignatureError, parse_call_event
+
+SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
+GREETING = "<Response><Speak>Hello from Unpod.</Speak><Hangup/></Response>"
+app = FastAPI()
+
+
+@app.post("/answer")  # inbound: signed
+async def answer(request: Request):
+    try:
+        ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
+    except WebhookSignatureError:
+        raise HTTPException(401)
+
+    if ev.event == "StartApp":  # a new call is ringing
+        return Response(GREETING, media_type="application/xml")
+    return Response(status_code=200)  # Hangup / RecordStop: acknowledge
+
+
+@app.post("/outbound")  # outbound answer-URL requests are not signed yet
+async def outbound(request: Request):
+    ev = parse_call_event(await request.body(), request.headers, None, verify=False)
+    if ev.event == "StartApp":  # the person answered
+        return Response(GREETING, media_type="application/xml")
+    return Response(status_code=200)  # Hangup: acknowledge
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+```
+
+Run it with `python app.py` and expose it as in the
+[Quick Start](/telephony/apis/quickstart#receive-your-first-call). `/answer` rejects
+unsigned requests, greets every new inbound call and returns 200 for every other event.
+`/outbound` greets each outbound leg once it's answered and acknowledges its `Hangup`. To route callers to free agents, see
+[Incoming Calls](/telephony/apis/incoming-calls).
+
+## Timeouts and fallback
+
+**Inbound.** Set these on the number's config
+([Incoming Calls](/telephony/apis/incoming-calls)):
+
+| Field | Meaning |
+| --- | --- |
+| `answer_timeout_ms` | 500-10000 (default 3000). How long Unpod waits for your reply |
+| `answer_fallback` | `static_routing` (default) or `reject_503` when your app does not answer |
+
+The fallback applies on a timeout, a connection error, any non-2xx status (including your
+own 401), a reply that doesn't parse, or a reply containing an action URL that isn't
+public https. An empty 2xx body, `<Response/>` or `{"actions": []}` is not a failure:
+Unpod continues with static routing.
+
+**Outbound.** The timeout is fixed at 3000 ms. If your app fails or sends an empty reply,
+nothing runs and the leg stays connected until you end the call. A reply that starts with
+`<Hangup/>` ends it.
+
+## Serve a static file
+
+No server needed: host a fixed XML file on any public https host, then pass
+`answer_url="https://cdn.example.com/greeting.xml"` and `answer_method="GET"` to `create`.
+Every call runs the same instructions, which suits
+[Call Blasting](/telephony/apis/call-blasting).
+
+```xml greeting.xml
+<Response>
+    <Speak>Hello! Your order has shipped.</Speak>
+    <Hangup/>
+</Response>
+```
+
+A GET sends the call's fields as query parameters and is not signed. The URL must not
+redirect: Unpod doesn't follow redirects.
+
+{/* TODO(verify): static .xml file with answer_method="GET" - confirm live */}

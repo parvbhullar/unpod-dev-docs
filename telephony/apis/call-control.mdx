@@ -1,0 +1,246 @@
+---
+title: 'Call Control'
+icon: 'sliders-horizontal'
+description: 'Every call action in one place - play, speak, transfer, DTMF, hang up'
+---
+
+Look up any action on a call here. To place a call, start with the
+[Quick Start](/telephony/apis/quickstart#make-your-first-call); to connect two people, see
+[Multiple Participants](/telephony/apis/multiple-participants).
+
+The Python examples run inside `with Client() as client:` with
+`calls = client.telephony.calls`, where `call_id` is the id `create` returned. The cURL
+examples use your [credentials](/telephony/introduction#credentials) with `CALL_ID` set to
+that id. Every method raises `TelephonyAPIError` on an error response - see
+[Errors](#errors).
+
+| Method | Request, under `https://unpod.ai/api/v2/platform` |
+| --- | --- |
+| `create` / `list` | `POST` / `GET /sbc/v1/calls` |
+| `get` / `end` | `GET` / `DELETE /sbc/v1/calls/{call_id}` |
+| `hangup` | `POST /sbc/v1/calls/{call_id}/hangup` |
+| `add_participant` | `POST /sbc/v1/calls/{call_id}/participants` |
+| `remove_participant` | `DELETE /sbc/v1/calls/{call_id}/participants/{leg_id}` |
+| `play_audio` / `stop_audio` | `POST` / `DELETE /sbc/v1/calls/{call_id}/play` |
+| `speak` | `POST /sbc/v1/calls/{call_id}/speak` |
+| `transfer` | `POST /sbc/v1/calls/{call_id}/transfer` |
+| `transfer_complete` / `transfer_cancel` | `POST /sbc/v1/calls/{call_id}/transfer/complete` / `.../transfer/cancel` |
+| `send_dtmf` | `POST /sbc/v1/calls/{call_id}/dtmf` |
+| `record` / `get_recording` | `POST /sbc/v1/calls/{call_id}/record` / `GET .../recording` - see [Recording](/telephony/apis/recording) |
+
+Every request sends `Authorization: Token $UNPOD_PLATFORM_TOKEN` and
+`Org-Handle: $UNPOD_ORG_HANDLE`, plus `Content-Type: application/json` when it has a body.
+
+## Options
+
+`create` and `add_participant` take the same options. Over HTTP they are body fields of
+the same name (`from_` is `from`), and `idempotency_key` is the `Idempotency-Key` header.
+
+| Option | Type | Meaning |
+| --- | --- | --- |
+| `role` | `str` | Label for this leg (`agent`, `customer`, ...), sent back as `Role` |
+| `caller_name` | `str` | Caller name shown where supported |
+| `friendly_name` | `str` | Your label for the leg |
+| `ring_timeout` | `int` 1-120 | Seconds to ring before giving up (default 30) |
+| `dial_music` | `str` | Only `"none"` is accepted today; an audio URL is rejected as not supported. To play a sound while a leg rings, see [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
+| `status_callback_url` | `str` | Public https URL for this leg's events. Its query string is echoed back |
+| `status_callback_method` | `"POST"` \| `"GET"` | `POST` only today: status callbacks are always POSTed, and `GET` is ignored |
+| `status_callback_format` | `"form"` \| `"json"` | Default `form` (Plivo-style keys); `json` uses snake_case |
+| `recording_callback_url` | `str` | Public https URL for the recording event |
+| `record` | `bool` | Stored, but doesn't override the recording policy (set by the Unpod team) today. See [Recording](/telephony/apis/recording) |
+| `record_participant_track` | `bool` | Also send per-leg recording events. Needs `record=True` |
+| `answer_url` / `answer_method` | `str` / `"POST"` \| `"GET"` | Run an answer-URL app on this leg when it connects, instead of bridging it |
+| `metadata` | `dict[str, str]` | Echoed on every event as `ev.metadata` |
+| `idempotency_key` | `str` | A fresh key is sent by default. Pass your own when you retry, so the call is not dialed twice |
+
+<Warning>
+Every callback and audio URL (`status_callback_url`, `recording_callback_url`, `answer_url`
+and the `play_audio` URL) must be **public https**. Unpod checks this before the call reaches
+the SBC: anything else returns `400 invalid_url`.
+</Warning>
+
+## Play audio and speak
+
+<CodeGroup>
+```python Python
+play = calls.play_audio(call_id, url="https://cdn.example.com/hold.mp3", loop=True)
+calls.stop_audio(call_id, play_id=play.play_id)  # that play only
+calls.stop_audio(call_id)                        # all audio on the call
+
+calls.speak(call_id, "Please hold.", language="en-IN")
+```
+
+```bash cURL
+# play, looping -> 202 {"play_id": "play-..."}
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/play" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{"source": {"type": "url", "url": "https://cdn.example.com/hold.mp3"},
+       "loop": true}'
+
+# PLAY_ID=<play_id from above>
+
+# stop that play (drop the query to stop all audio) -> 202
+curl -s -X DELETE \
+  "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/play?play_id=$PLAY_ID" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+
+# speak -> 202 {"play_id": "play-..."}
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Please hold.", "language": "en-IN"}'
+```
+</CodeGroup>
+
+| Method | Notes |
+| --- | --- |
+| `play_audio(call_id, *, url, leg_id, loop, interrupt_on_dtmf)` → `PlayResult` | `url` is a public https MP3 or WAV. `loop` and `interrupt_on_dtmf` default to `false`. Answers `202` with a `play_id`. The SDK also accepts `file=`, but the API rejects it with `400 bad_request`: use `url` |
+| `stop_audio(call_id, *, leg_id, play_id)` | Stops one play, one leg's audio, or both omitted, all audio on the call. `202` even if nothing was playing |
+| `speak(call_id, text, *, voice, language, leg_id, loop)` → `PlayResult` | Text-to-speech, 1-1000 characters. `voice` and `language` default to the number's [`tts_voice` / `tts_language`](/telephony/apis/incoming-calls#inboundconfig-fields). Answers `202` with a `play_id` |
+
+`leg_id` is the `leg_id` from `create`, `add_participant` or an event (or `caller` /
+`callee`); omit it to play to everyone on the call. Each leg gets `PlayStarted` / `PlayStopped` events with the same
+`play_id`. `speak` answers `503 tts_unavailable` when speech can't be made (the call
+carries on) and `429 rate_limited` when your org sends too many at once.
+
+## Transfer and DTMF
+
+<Warning>
+**`transfer` doesn't work yet through the API - don't rely on it.** It answers `200`
+as soon as the request is queued, so a transfer that fails still looks like success. An attended transfer
+doesn't return the consult leg's id yet, so `transfer_complete` and `transfer_cancel` have
+nothing to act on.
+</Warning>
+
+{/* TODO(verify): blind transfer via the Call API, live. supersbc calls.rs transfer_call is fire-and-forget (dispatch_console_command), the adapter sends leg "<call_id>-callee" but sip_session.rs handle_transfer looks legs up as "callee" without canonical_leg_id, and pending_consult_leg_id is never set. */}
+
+<CodeGroup>
+```python Python
+calls.send_dtmf(call_id, "1234#")         # to the person you dialed
+calls.transfer(call_id, "+919000000004")  # not working yet - see the warning above
+```
+
+```bash cURL
+# DTMF -> 200 {"message": "dispatched"}
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/dtmf" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" -d '{"digits": "1234#"}'
+
+# blind transfer (not working yet - see the warning above)
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/transfer" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{"type": "blind", "target": "+919000000004"}'
+```
+</CodeGroup>
+
+| Method | Notes |
+| --- | --- |
+| `send_dtmf(call_id, digits, *, leg_id)` | `digits` from `0-9 A-D * #`. Omit `leg_id` to send to the person you dialed (outbound) or who called in (inbound) |
+| `transfer(call_id, target, *, type, leg_id)` | `target` is E.164 or a `sip:` / `sips:` URI. `type` is `"blind"` (default) or `"attended"`. `leg_id` defaults to `"callee"` |
+| `transfer_complete(call_id, consult_leg)` / `transfer_cancel(call_id, consult_leg)` | Finish or abandon an attended transfer. Body `{"consult_leg": ...}` |
+
+For DTMF and transfer, `leg_id` takes only `"caller"` or `"callee"` - not the `leg_id`
+from `create` or an event - and goes over HTTP as `leg`. Anything else returns
+`400 bad_request`.
+
+{/* TODO(verify): how to send DTMF to a participant added with add_participant (its dynamic leg_id is rejected) */}
+
+## Inspect and end calls
+
+<CodeGroup>
+```python Python
+call = calls.get(call_id)                          # state and legs
+page = calls.list(status="talking", page_size=20)  # page.items: your live calls
+calls.hangup(call_id, reason="by_system")          # a live call, with a reason
+calls.end(call_id)                                 # every leg; safe to repeat
+```
+
+```bash cURL
+# get -> call_id, state, legs
+curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+
+# list live calls -> items, page, page_size, total (your calls on this page)
+curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls?status=talking&page_size=20" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+
+# hang up with a reason -> 200 {"message": "dispatched"}
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/hangup" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" -d '{"reason": "by_system"}'
+
+# end every leg -> 202
+curl -s -X DELETE "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+```
+</CodeGroup>
+
+| Method | Notes |
+| --- | --- |
+| `get(call_id)` → `TelephonyCall` | `state` (`initiated`, `ringing`, `talking`) and `legs`. After the call ends: the recording summary, with no `state` |
+| `list(*, page, page_size, status, direction, caller, callee, number, since)` → `CallList` | Live calls only. Filters: `status` (`ringing` or `talking`), `direction` (`inbound` or `outbound`), `since` (RFC 3339). In the rows, `to` / `from` are SIP URIs, and a call you started with `create` can read `direction: "inbound"`, so don't rely on a row's `direction`. Pages are cut before Unpod filters them to your org, so a page can hold fewer than `page_size` of your calls (even none) while later pages hold more, and `total` counts only your calls on this page. To find every live call, request pages until one comes back empty |
+| `hangup(call_id, *, reason, code)` | Ends every leg of a live call; `404 not_found` once it's over. `reason` is recorded on the call: `by_caller`, `by_callee`, `by_system`, `no_answer`, `rejected`, `canceled` or `failed` (others are ignored). `code` is a SIP status |
+| `end(call_id)` | Ends every leg. A call that already ended answers `202` again; `409 conflict` while a call you just created is still being set up (retry) |
+
+Right after hangup, `get` and `end` can briefly answer `404 not_found` - treat it as done.
+To get a call's recording once it ends, see [Recording](/telephony/apis/recording).
+
+For a full production flow - dial an agent, connect the customer, end the call cleanly -
+see [Number Masking](/telephony/apis/number-masking).
+
+## Errors
+
+Branch on `.code`, not the message:
+
+<CodeGroup>
+```python Python
+from unpod import Client
+from unpod.telephony import TelephonyAPIError
+
+with Client() as client:
+    try:
+        client.telephony.calls.create("+919000000001", "+919000000002")
+    except TelephonyAPIError as e:
+        print(e.status_code, e.code, e.message)
+```
+
+```bash cURL
+# -w prints the HTTP status after the body
+curl -s -w '\n%{http_code}\n' -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
+  -d '{"from": "+919000000001", "to": "+919000000002"}'
+
+# an error body looks like one of these:
+# {"error": "call already has two participants", "code": "participant_limit"}
+# {"detail": "call_api_disabled"}
+```
+</CodeGroup>
+
+Over HTTP the code is in `code`, or in `detail` for checks Unpod makes before the call
+reaches the SBC (`call_api_disabled`, `from_not_owned`).
+
+| Status / `code` | Meaning |
+| --- | --- |
+| 400 `organization_required` | `Org-Handle` missing or unknown |
+| 403 | `You are not a member of this organization` (in `detail`): your token's user isn't in the `Org-Handle` org |
+| 403 `call_api_disabled` | The Call API is not switched on for your org |
+| 402 | `create` / `add_participant` while your org's access is suspended (billing) |
+| 400 `from_not_owned` | `from_` is not one of your org's numbers |
+| 400 `invalid_url` | A callback or audio URL is not public https |
+| 400 `bad_request` | Malformed body, unknown field, or a DTMF / transfer leg other than `caller` / `callee` |
+| 404 `not_found` | Unknown call, leg or number, one that belongs to another org, or a call that just ended |
+| 409 `participant_limit` | A third participant |
+| 409 `conflict` | Recording not finished yet, or `end` on a call that is still being set up |
+| 403 `forbidden` | `webhook_secret.rotate()` by someone who isn't an org owner or editor, or a caller ID not provisioned for your org |
+| 429 | `create` / `add_participant` over **60 per minute per org**. `detail` is `Request was throttled. Expected available in N seconds.`, so branch on `e.status_code == 429` |
+| 429 `rate_limited` | Too many `speak` requests |
+| 503 `tts_unavailable` | `speak` couldn't make speech; the call carries on |
+| 503 `webhook_secret_unavailable` | The webhook secret can't be made right now; retry later |
+| 503 `sbc_target_not_configured` | Your org's telephony routing isn't set up; ask the Unpod team |
+| `not_supported` | Feature not available yet, e.g. a `dial_music` URL |
+
+The SDK raises `ValueError` before sending when `speak` text is over 1000 characters or
+`send_dtmf` digits fall outside `0-9 A-D * #`.

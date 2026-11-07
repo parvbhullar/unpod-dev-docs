@@ -1,0 +1,206 @@
+---
+title: 'Migrate from Plivo'
+icon: 'arrow-right-left'
+description: 'Move a Plivo multi-party-call integration to the Unpod SDK, method by method'
+---
+
+The Unpod SDK replaces a Plivo multi-party-call (MPC) integration. Webhook field and event
+names follow Plivo, so most handler logic carries over. This page maps each Plivo call to
+the SDK, in call order.
+
+```python
+from unpod import AsyncClient
+from unpod.telephony import TelephonyAPIError, WebhookSignatureError, parse_call_event
+
+# reads UNPOD_BASE_URL, UNPOD_PLATFORM_TOKEN and UNPOD_ORG_HANDLE
+async with AsyncClient() as client:
+    calls = client.telephony.calls
+```
+
+**IDs:** Plivo `MPCUUID` is the SDK `call_id`. Plivo `CallUUID` is the SDK `leg_id`.
+
+## At a glance
+
+| Plivo | Unpod SDK | Returns |
+| --- | --- | --- |
+| `multiPartyCalls.addParticipant("Agent", …)` | `calls.create(from_, to, role="agent", …)` | `TelephonyCall` |
+| `multiPartyCalls.addParticipant("Customer", …)` | `calls.add_participant(call_id, from_, to, role="customer", …)` | `Leg` |
+| `multiPartyCalls.stop({ uuid })` | `calls.end(call_id)` | `None` |
+| `calls.playMusic(callUuid, url, { loop })` | `calls.play_audio(call_id, url=, leg_id=, loop=)` | `PlayResult` |
+| `calls.stopPlayingMusic(callUuid)` | `calls.stop_audio(call_id, leg_id=, play_id=)` | `None` |
+| `GET` on `RecordingURL` | `calls.get_recording(call_id).url`, then a `GET` with your auth headers and `Accept: audio/wav` ([Recording](/telephony/apis/recording#download-the-audio)) | `Recording` |
+| Call Status / Recording / Incoming webhooks | `parse_call_event(body, headers, secret)`. Recording events aren't signed yet: `verify=False` | `CallEvent` |
+| Number answer URL | `telephony.inbound.set_did(number, InboundConfig(answer_url=…))` | `InboundConfig` |
+| `X-Plivo-Signature-V3` | `X-Webhook-Signature`, checked by `parse_call_event` | - |
+| Search / buy / configure a number | `telephony.numbers.list()` / `attach()` from the Unpod pool | - |
+
+## 1. Dial the agent (leg 1)
+
+```python
+call = await calls.create(
+    "+919000000001",                 # from_: one of your org's numbers
+    "+919000000002",                 # to: agent phone (E.164 or SIP URI)
+    role="agent",
+    status_callback_url=(
+        "https://your-app.example.com/call-status?call_name=hotline-0003"
+    ),
+    status_callback_method="POST",
+    recording_callback_url="https://your-app.example.com/recording",
+    record=True,
+    record_participant_track=True,
+    friendly_name="hotline-0003",
+    caller_name="Hotline",
+    metadata={"call_name": "hotline-0003"},
+)
+call.call_id            # = MPCUUID - your key for every later step
+call.legs[0].leg_id     # = CallUUID of the agent leg
+```
+
+| Plivo parameter | SDK keyword |
+| --- | --- |
+| `role` | `role` |
+| `from` / `to` | positional `from_`, `to` |
+| `callStatusCallbackUrl` / `callStatusCallbackMethod` | `status_callback_url` / `status_callback_method` |
+| `recordingCallbackUrl` | `recording_callback_url` |
+| `record` / `recordParticipantTrack` | `record` / `record_participant_track` |
+| `friendlyName` / `callerName` | `friendly_name` / `caller_name` |
+| `ringTimeout` | `ring_timeout` (1-120 s, default 30) |
+| `dialMusic` | `dial_music` |
+| Values on the callback query string | Kept - the query string is echoed back. Or use `metadata={...}` |
+| - | `status_callback_format="form"` (default, Plivo keys) or `"json"` |
+| - | `idempotency_key` - pass your own when you retry |
+
+Dialing is asynchronous: `create` returns `initiated`; progress arrives as Call Status events.
+
+## 2. Dial the customer after the agent answers
+
+```python
+leg = await calls.add_participant(
+    ev.call_id, "+919000000001", "+919000000003",
+    role="customer",
+    dial_music="none",                        # lowercase
+    status_callback_url="https://your-app.example.com/call-status",
+    recording_callback_url="https://your-app.example.com/recording",
+    record=True, record_participant_track=True,
+    idempotency_key=f"{ev.call_id}:customer", # the webhook may be delivered twice
+)
+```
+
+| Plivo | Unpod SDK |
+| --- | --- |
+| `dialMusic: "NONE"` | `dial_music="none"` |
+| `dialMusic: <url>` | Not supported yet. Play the file with `play_audio(..., loop=True)` after `add_participant` and stop it when the leg answers - see [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
+| No participant limit | **At most two participants** per call. A third raises `409 participant_limit` |
+
+## 3. Play and stop audio
+
+```python
+play = await calls.play_audio(call_id, url="https://cdn.example.com/wait.mp3",
+                              leg_id=agent_leg_id, loop=True)    # loop=False: one-shot
+await calls.stop_audio(call_id, leg_id=agent_leg_id, play_id=play.play_id)
+await calls.stop_audio(call_id)                                   # all audio, all legs
+```
+
+| Difference | Detail |
+| --- | --- |
+| Target | Pass `leg_id=`; omit it to play to every leg |
+| Source | `url=` must be a public https MP3/WAV |
+| Stop | `play_id=` stops one play; omit it to stop everything on the leg |
+| Events | New: the leg gets `PlayStarted` / `PlayStopped` with `ev.play_id` |
+| Extra | `interrupt_on_dtmf=True` stops audio on a key press; `calls.speak()` adds TTS |
+
+## 4. End the call
+
+```python
+await calls.end(call_id)                          # all legs
+# or, instead of end - not both (the second gets 404 once the call is over):
+await calls.hangup(call_id, reason="by_system")  # all legs, with a reason
+```
+
+`end` on a call that already ended answers `202` again (a `404` only briefly right after
+hangup) - treat it as done.
+
+## 5. Webhooks
+
+Same three routes as Plivo. Swap Plivo's signature check for `parse_call_event`:
+
+```python
+try:
+    ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
+except WebhookSignatureError:
+    return Response(status_code=401)
+```
+
+The secret comes from `client.telephony.webhook_secret.rotate()`. See [Webhooks](/telephony/apis/webhooks).
+
+### Call Status
+
+| Plivo `EventName` | `ev.event` | Action |
+| --- | --- | --- |
+| `Initiated` | `Initiated` | Store `ev.initiation_time` |
+| `Ringing` | `Ringing` | Notify your app |
+| `Answered` | `Answered` | If `ev.role == "agent"`, `add_participant(...)` for the customer |
+| `Hangup` | `Hangup` | When the customer leg ends, for any cause (`Busy Line`, `Ring Timeout Reached`, `No Answer`, `Rejected`, or a hangup after talking), `calls.end(ev.call_id)`, as in [Number Masking](/telephony/apis/number-masking) |
+| - | `Incoming`, `PlayStarted`, `PlayStopped`, `DTMF`, `Hold`, `Unhold` | New. Ignore with a 2xx if you don't need them |
+
+| Plivo field | `CallEvent` field |
+| --- | --- |
+| `CallUUID` / `MPCUUID` | `leg_id` / `call_id` |
+| `EventName` | `event` |
+| `To` | Not sent on leg events (`ev.to` and `ev.from_` are `None`): pass the number in `metadata` |
+| `Role` | `role` |
+| `InitiationTime`, `HangupTime`, `Duration` | `initiation_time`, `hangup_time`, `duration` |
+| `PlivoHangupCause` | `hangup_cause` |
+| Anything else | `ev.raw["FieldName"]` |
+
+### Recording Callback
+
+| Plivo `EventName` | Unpod |
+| --- | --- |
+| `ParticipantRecordingInitiated` | Sent only with `record_participant_track=True`, together with `ParticipantRecordingCompleted` after the call. No recording URL; the leg's channel is in `ev.metadata["channel"]` (`1` left, `2` right) |
+| `ParticipantRecordingCompleted` | `ev.metadata["recording_url"]` and `ev.metadata["channel"]`: the same 2-channel WAV - split it if you need per-leg audio |
+| `MPCRecordingCompleted` | Same name, but unsigned and without `metadata`. `ev.recording_url` is a path inside Unpod: fetch with `get_recording(ev.call_id)` |
+
+One **2-channel WAV** per call: agent on the left, customer on the right. Whether a call
+is recorded follows the recording policy (set by the Unpod team): `record=True` doesn't
+override it today. See [Recording](/telephony/apis/recording).
+
+{/* TODO(verify): channel order on a live two-person call */}
+
+### Incoming Call
+
+```python
+from unpod.telephony import InboundConfig
+
+await client.telephony.inbound.set_did("+919000000001", InboundConfig(
+    answer_url="https://your-app.example.com/incoming",
+    status_callback_url="https://your-app.example.com/incoming",
+    record=True,  # stored, not applied yet: see Recording
+))
+```
+
+The `StartApp` / `Hangup` / `RecordStop` events and the reply XML are the same as Plivo's -
+see [Incoming Calls](/telephony/apis/incoming-calls).
+
+## 6. Hangup causes
+
+| Cause | `ev.sip_code` | Action |
+| --- | --- | --- |
+| `"Busy Line"` | 486 or 600 | End the call |
+| `"Ring Timeout Reached"` | 487, or `None` | End the call |
+| `"No Answer"` | 408 or 480 | **New** - Unpod sends this for an unanswered leg. Treat like Ring Timeout Reached |
+| `"Rejected"` | 603, or `None` | End the call |
+
+Any other cause on the customer leg also ends the call. For every cause and code, see
+[Hangup causes](/telephony/apis/webhooks#hangup-causes).
+
+## Known differences
+
+- **Per-participant recordings:** no per-participant files. One 2-channel WAV per call
+  (split it).
+- **Two participants** per call at most.
+- **Callback and audio URLs** must be public https.
+- **`speak`** depends on TTS being available for your org.
+- **Buying numbers** from a carrier is not in the SDK - use the Unpod pool, or [bring your own trunk](/telephony/sip-trunking/trunks#sip-trunks).
+
+Full hotline handler: [Number Masking](/telephony/apis/number-masking).

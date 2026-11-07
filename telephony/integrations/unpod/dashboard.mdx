@@ -1,6 +1,6 @@
 ---
-title: 'Unpod (Dashboard)'
-sidebarTitle: 'Dashboard'
+title: 'Connect an Unpod Number'
+sidebarTitle: 'Unpod Number → Your SIP'
 icon: 'layout-dashboard'
 description: 'Pick a number from the Unpod pool and connect it to a SIP trunk - no carrier account needed.'
 ---
@@ -46,11 +46,10 @@ for calls you receive.
 
 ```mermaid
 flowchart LR
-  A["🤖<br/><b>Your SIP client</b><br/>places the call"] e1@==> B["📡<br/><b>Unpod outbound trunk</b><br/>sip-lb1.unpod.tel"]
-  B e2@==> C["📞<br/><b>Customer's phone</b>"]
-
-  e1@{ animate: true }
-  e2@{ animate: true }
+  A["🤖<br/><b>Your SIP client</b><br/>places the call"]
+  B["📡<br/><b>Unpod outbound trunk</b><br/>sip-lb1.unpod.tel"]
+  A ==> B
+  B ==> C["📞<br/><b>Customer's phone</b>"]
 
   classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
   classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
@@ -87,11 +86,9 @@ manager, and blur them out before you share a screenshot.
 
 ```mermaid
 flowchart LR
-  A["📞<br/><b>Caller</b><br/>dials your Unpod number"] e1@==> B["📡<br/><b>Unpod inbound trunk</b>"]
-  B e2@==> C["🤖<br/><b>Your SIP URI</b><br/>answers the call"]
-
-  e1@{ animate: true }
-  e2@{ animate: true }
+  A["📞<br/><b>Caller</b><br/>dials your Unpod number"]
+  A ==> B["📡<br/><b>Unpod inbound trunk</b>"]
+  B ==> C["🤖<br/><b>Your SIP URI</b><br/>answers the call"]
 
   classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
   classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;

@@ -5,11 +5,9 @@ description: 'List the telephony numbers available to your organization'
 openapi: 'GET /api/v2/platform/telephony/numbers/'
 ---
 
-Returns the numbers available to you. Behavior depends on the `Org-Handle` header:
-
-- **With Org-Handle** — returns your organization's own numbers (any state) plus the shared
-  unassigned pool (`NOT_ASSIGNED`).
-- **Without Org-Handle** — returns only the shared unassigned pool.
+Returns the unassigned (`NOT_ASSIGNED`) numbers you can use: the shared pool plus, with
+`Org-Handle`, your organization's own. To also get your organization's assigned numbers, send `Org-Handle` and add the query parameter
+`include_assigned=true`. Another organization's assigned numbers are never returned.
 
 Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numbers).
 
@@ -23,6 +21,12 @@ Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numb
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | `Token <your-api-key>`          |
 | Org-Handle    | string | No       | Organization domain handle      |
+
+### Query parameters
+
+| Name             | Type    | Required | Description |
+|------------------|---------|----------|-------------|
+| include_assigned | boolean | No       | `true` also returns your organization's own assigned numbers (send `Org-Handle`). Without it, only unassigned pool numbers |
 
 ### Number object fields
 
@@ -40,7 +44,8 @@ Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numb
   "status_code": 200,
   "message": "Telephony numbers fetched successfully.",
   "data": [
-    { "id": 501, "number": "+15551234567", "state": "NOT_ASSIGNED", "active": true }
+    { "id": 501, "number": "+15551234567", "state": "NOT_ASSIGNED", "active": true },
+    { "id": 502, "number": "+15559876543", "state": "ASSIGNED", "active": true }
   ]
 }
 ```
@@ -48,7 +53,7 @@ Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numb
 </ResponseExample>
 
 ```bash cURL
-curl -s "https://unpod.ai/api/v2/platform/telephony/numbers/" \
+curl -s "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
   -H "Authorization: Token <your-api-key>" \
   -H "Org-Handle: <your-org-handle>"
 ```
