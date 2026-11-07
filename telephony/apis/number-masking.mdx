@@ -197,7 +197,9 @@ phone rings, also showing your Unpod number, and the two are connected.
 
 Every event for the call has the same `ev.call_id`; `ev.leg_id` tells the two legs apart and
 `ev.role` is the `role` you gave each one. Until it gets a 2xx, Unpod resends an event a
-few times over about 30 seconds, so every branch is safe to run twice: the
+few times over about 30 seconds
+([Delivery and retries](/telephony/apis/webhooks#delivery-and-retries)), so every branch
+is safe to run twice: the
 `idempotency_key` stops a resent `Answered` from dialing the customer again, and ending a
 call that's already over succeeds again (a `404` comes back only briefly right after
 hangup, and is logged and ignored). A rate limit or server error

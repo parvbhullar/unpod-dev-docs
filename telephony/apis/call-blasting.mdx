@@ -196,8 +196,9 @@ if __name__ == "__main__":
 
 Run it with `python app.py` and expose it as in the
 [Quick Start](/telephony/apis/quickstart#receive-your-first-call). Unpod retries an event
-until it gets a 2xx, so the same `Hangup` can arrive twice; writing the outcome by number
-makes that harmless.
+that doesn't get a 2xx a few times over about 30 seconds
+([Delivery and retries](/telephony/apis/webhooks#delivery-and-retries)), so the same
+`Hangup` can arrive twice; writing the outcome by number makes that harmless.
 
 | `ev.hangup_cause` | Outcome | What to do |
 | --- | --- | --- |

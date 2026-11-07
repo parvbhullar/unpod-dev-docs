@@ -158,8 +158,9 @@ rest.
 | `RecordStop` | A `<Record>` from your reply reached its `maxLength`. After the call, get the audio with `get_recording(ev.call_id)` ([Recording](/telephony/apis/recording)) |
 
 Point `status_callback_url` at the same route, as in the config above. Unpod sends the
-answer URL's `Hangup` only once, but retries status callbacks until it gets a 2xx, so a
-missed `Hangup` arrives again. The route then also receives call events, such as
+answer URL's `Hangup` only once, but retries a status callback a few times over about 30
+seconds ([Delivery and retries](/telephony/apis/webhooks#delivery-and-retries)), so a
+missed `Hangup` usually arrives again. The route then also receives call events, such as
 `Incoming`, `Ringing`, `Answered` and a `Hangup` per leg: return 200 for them. `Hangup` can
 arrive more than once, which `on_call.pop(ev.call_id, None)` below handles. Every event
 for a call carries the same `ev.call_id`; `ev.leg_id` differs per leg.

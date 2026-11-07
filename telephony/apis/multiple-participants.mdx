@@ -243,9 +243,11 @@ python -c 'import asyncio, app
 print(asyncio.run(app.start_call("+919000000002", "+919000000003")))'
 ```
 
-`ev.role` is the `role` you set on the leg. Unpod retries an event until it gets a 2xx, so
-the handler always returns one after a valid signature, and the `idempotency_key` keeps a
-retried `Answered` from dialing `second` twice. See [Webhooks](/telephony/apis/webhooks)
+`ev.role` is the `role` you set on the leg. Unpod retries an event that doesn't get a 2xx a
+few times over about 30 seconds
+([Delivery and retries](/telephony/apis/webhooks#delivery-and-retries)), so the handler
+always returns one after a valid signature, and the `idempotency_key` keeps a retried
+`Answered` from dialing `second` twice. See [Webhooks](/telephony/apis/webhooks)
 for signatures and every event, and [Number Masking](/telephony/apis/number-masking) for
 the full production flow.
 
