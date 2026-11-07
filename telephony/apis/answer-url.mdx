@@ -45,10 +45,12 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
 The answer URL must be public https, or you get `400 invalid_url`.
 
 <Warning>
-Outbound answer-URL requests are not signed yet. A route that rejects unsigned requests,
-like `/answer` in the [minimal server](#a-minimal-answer-server) below, rejects them too.
-Serve outbound legs on a separate route (its `/outbound`), or skip verification for them
-until signing ships.
+Outbound answer-URL requests are not signed yet, so a route that rejects unsigned requests
+rejects them too. Serve outbound legs on a separate route (the
+[minimal server](#a-minimal-answer-server) below uses `/outbound`), or skip verification
+for them until signing ships. After 5 failures in a row, Unpod skips your URL for 30 s and
+applies the fallback, and inbound and outbound share that limit - so don't point outbound
+legs at the signed `/answer` route.
 </Warning>
 
 {/* TODO(verify): outbound answer-URL signing (UNPO-181) */}
@@ -68,16 +70,16 @@ Each `StartApp` also carries:
 - `MPCUUID` (`ev.call_id`): the id you use with the call APIs
 - `CallUUID` (`ev.leg_id`), `From` (`ev.from_`), `To` and `Direction=inbound`
 - `SessionStart` (`ev.raw["SessionStart"]`)
-- `CallerName` (`ev.raw.get("CallerName")`), when the caller has one
 
-On an outbound leg the request is also a `StartApp`, but `Direction` and `CallStatus` are
-fixed values, so don't branch on `Direction`.
+On an outbound leg the request is also a `StartApp`, but it always carries the fixed
+values `Direction=inbound` and `CallStatus=ringing`, so don't branch on `Direction`.
 
 {/* TODO(verify): outbound StartApp fields - confirm live */}
 
-Inbound POST requests are signed with your org's secret. Verify and parse them with
-`parse_call_event` - see [Webhooks](/telephony/apis/webhooks). Outbound requests and GET
-requests are not signed yet.
+Inbound POST requests are signed once your org has a webhook secret (create it as in the
+[Quick Start](/telephony/apis/quickstart#receive-your-first-call)). Verify and parse them
+with `parse_call_event` - see [Webhooks](/telephony/apis/webhooks). Outbound requests and
+GET requests are not signed yet.
 
 ## Reply with XML or JSON
 
@@ -113,7 +115,12 @@ The first reply as JSON:
 | `<Wait>` | `wait` | `length` (seconds, default 1) | Pause |
 | `<Record>` | `record` | `maxLength` (seconds, default 300) | Record the call |
 | `<Dial>` | `dial` | - (just the `<Number>`) | Blind transfer to that number |
-| `<Hangup>` | `hangup` | `reason` | End the call |
+| `<Hangup>` | `hangup` | `reason`, `code` | End the call |
+
+On `<Hangup>`, `reason` applies only when rejecting a ringing inbound call (`busy` sends
+486, anything else 603). `code` is a SIP status 400-699 and works before and after answer.
+JSON field names differ from XML attributes: `speak.text`, `play.url`, `wait.seconds`,
+`record.max_duration_secs`.
 
 {/* TODO(verify): attribute list from SBC source; confirm live; platform voice ids */}
 
@@ -190,11 +197,13 @@ unsigned requests, greets every new inbound call and returns 200 for every other
 | `answer_fallback` | `static_routing` (default) or `reject_503` when your app does not answer |
 
 The fallback applies on a timeout, a connection error, any non-2xx status (including your
-own 401) or a reply that doesn't parse. An empty 2xx body, `<Response/>` or
-`{"actions": []}` is not a failure: Unpod continues with static routing.
+own 401), a reply that doesn't parse, or a reply containing an action URL that isn't
+public https. An empty 2xx body, `<Response/>` or `{"actions": []}` is not a failure:
+Unpod continues with static routing.
 
-**Outbound.** The timeout is fixed at 3000 ms. If your app fails, nothing runs and the leg
-stays connected until you end the call.
+**Outbound.** The timeout is fixed at 3000 ms. If your app fails or sends an empty reply,
+nothing runs and the leg stays connected until you end the call. A reply that starts with
+`<Hangup/>` ends it.
 
 ## Serve a static file
 
