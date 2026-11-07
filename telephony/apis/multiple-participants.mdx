@@ -190,8 +190,9 @@ Add this to your Quick Start `app.py` from
 [Receive your first call](/telephony/apis/quickstart#receive-your-first-call), keeping its
 `/answer` route. Paste it **above** the `if __name__ == "__main__":` block: below it,
 `uvicorn.run` starts before `/call-status` is registered and every event gets a 404. The
-client is created at import, so export `UNPOD_PLATFORM_TOKEN` and `UNPOD_ORG_HANDLE`
-before you start the server.
+client is created at import, so export all four variables (`UNPOD_BASE_URL`,
+`UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE`, `UNPOD_WEBHOOK_SECRET`) before you start the
+server.
 
 ```python app.py
 from unpod import AsyncClient
@@ -234,9 +235,9 @@ async def call_status(request: Request):
     return {"ok": True}  # always 2xx once signed, or Unpod retries
 ```
 
-Restart the server, then start a call from a second terminal, in the same directory and
-virtualenv as the server, with `UNPOD_BASE_URL`, `UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE`
-and `UNPOD_WEBHOOK_SECRET` exported:
+Restart the server, then start a call from another terminal (ngrok already holds the
+second one), in the same directory and virtualenv as the server, with `UNPOD_BASE_URL`,
+`UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE` and `UNPOD_WEBHOOK_SECRET` exported:
 
 ```bash
 python -c 'import asyncio, app
@@ -244,7 +245,7 @@ print(asyncio.run(app.start_call("+919000000002", "+919000000003")))'
 ```
 
 `ev.role` is the `role` you set on the leg. Unpod retries an event that doesn't get a 2xx a
-few times over about 30 seconds
+few times over about a minute
 ([Delivery and retries](/telephony/apis/webhooks#delivery-and-retries)), so the handler
 always returns one after a valid signature, and the `idempotency_key` keeps a retried
 `Answered` from dialing `second` twice. See [Webhooks](/telephony/apis/webhooks)

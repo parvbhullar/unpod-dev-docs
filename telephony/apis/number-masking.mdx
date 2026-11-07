@@ -183,10 +183,10 @@ if __name__ == "__main__":
 ```
 
 Run it with `python app.py` and expose it as in the
-[Quick Start](/telephony/apis/quickstart#receive-your-first-call). Then start a call from a
-second terminal, in the same directory and virtualenv, with all four variables
-(`UNPOD_BASE_URL`, `UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE`, `UNPOD_WEBHOOK_SECRET`)
-exported, since importing `app` reads them:
+[Quick Start](/telephony/apis/quickstart#receive-your-first-call). Then start a call from
+another terminal (ngrok already holds the second one), in the same directory and
+virtualenv, with all four variables (`UNPOD_BASE_URL`, `UNPOD_PLATFORM_TOKEN`,
+`UNPOD_ORG_HANDLE`, `UNPOD_WEBHOOK_SECRET`) exported, since importing `app` reads them:
 
 ```bash
 python -c 'import asyncio, app

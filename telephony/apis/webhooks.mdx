@@ -101,9 +101,9 @@ The signature header is
 
 Unpod POSTs each status callback and recording event and waits up to 10 s for a 2xx. Any
 other status, a timeout or a connection error is a failure, and Unpod tries again: 4
-attempts in all, about 1 s, 5 s and 30 s apart (each wait varies by up to 25%). Each
-attempt can take up to 10 s, so the window from the first attempt to the last is roughly
-36-66 s. Then the event is marked failed and never sent again.
+attempts in all, about 1 s, 5 s and 30 s apart (each wait varies by up to 25%, so 27-45 s
+of waiting in all). Each attempt can take up to 10 s, so the window from the first attempt
+to the last is roughly 27-75 s. Then the event is marked failed and never sent again.
 
 - Events for one leg arrive in order (`ev.sequence`). While one is being retried, that
   leg's later events wait behind it; other legs aren't held up.

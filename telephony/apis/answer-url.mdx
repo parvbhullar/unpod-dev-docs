@@ -129,8 +129,8 @@ or `<Redirect>`, makes the whole reply fail and the
 [fallback](#timeouts-and-fallback) applies.
 
 Verbs run in order. When the last one finishes, Unpod hangs up; verbs after `<Dial>`
-don't run. A reply can be at most 64 KB with 32 verbs, and 4096 characters of `Speak`
-text. Every audio URL must be public https.
+don't run. A reply can be at most 64 KB with 32 verbs, and 4096 characters in each
+`<Speak>`. Every audio URL must be public https.
 
 Set the voice and language on `<Speak>` itself:
 

@@ -107,8 +107,11 @@ answer URL on your number for now.
 
 ## The webhook secret
 
-Your org has one signing key for every request Unpod sends you: inbound answer-URL requests
-and status callbacks alike. Create it with `webhook_secret.rotate()` (org owner or admin).
+Your org has one signing key for every *signed* request Unpod sends you: inbound answer-URL
+requests and status callbacks alike. Outbound answer-URL requests and recording events
+aren't signed yet (see
+[Which requests are signed](/telephony/apis/webhooks#which-requests-are-signed)).
+Create the key with `webhook_secret.rotate()` (org owner or admin).
 The full secret is shown only in that response, so store it as `UNPOD_WEBHOOK_SECRET`.
 
 <CodeGroup>
@@ -152,8 +155,8 @@ rest.
 | `RecordStop` | A `<Record>` from your reply reached its `maxLength`. After the call, get the audio with `get_recording(ev.call_id)` ([Recording](/telephony/apis/recording)) |
 
 Point `status_callback_url` at the same route, as in the config above. Unpod sends the
-answer URL's `Hangup` only once, but retries a status callback a few times over about 30
-seconds ([Delivery and retries](/telephony/apis/webhooks#delivery-and-retries)), so a
+answer URL's `Hangup` only once, but retries a status callback a few times over about a
+minute ([Delivery and retries](/telephony/apis/webhooks#delivery-and-retries)), so a
 missed `Hangup` usually arrives again. The route then also receives call events, such as
 `Incoming`, `Ringing`, `Answered` and a `Hangup` per leg: return 200 for them. `Hangup` can
 arrive more than once, which `on_call.pop(ev.call_id, None)` below handles. Every event

@@ -67,12 +67,12 @@ it is unset, the SDK falls back to a legacy host that no longer resolves.
 | **Unpod number → Unpod agent** | A number from the Unpod pool, answered by your Unpod agent. No carrier or trunk. | [Incoming Calls](/telephony/apis/incoming-calls) |
 | **Unpod number → your app** | A number from the Unpod pool. Unpod posts each inbound call to your answer URL and runs the instructions you reply with. | [Incoming Calls](/telephony/apis/incoming-calls) |
 | **Unpod number → SIP trunk** | A number from the Unpod pool, with an auto-created outbound trunk and an inbound trunk you point at your SIP URI. | [Connect an Unpod Number](/telephony/integrations/unpod/dashboard) |
-| **Your carrier's number → Unpod (SIP trunk)** | Map a number to your SIP trunk; the carrier sends inbound calls to your origin endpoint. | [Attach Numbers to Trunk](/telephony/trunks/attach-numbers) |
+| **Your carrier's number → Unpod (SIP trunk)** | Map a number to your SIP trunk; the carrier sends inbound calls to your origin endpoint. | [SIP Trunking Quick Start](/telephony/quickstart) |
 
 ## Key concepts
 
 - **Number** - a phone number in E.164 format (e.g. `+15551234567`).
 - **Call and legs** - a call is made of legs, one per person. You dial the first with `create` and add the second with `add_participant`.
-- **Answer URL** - the https URL Unpod calls when a person is connected. You reply with XML or JSON telling Unpod what to do.
+- **Answer URL** - the https URL Unpod calls when a call starts on a leg (an inbound call is fetched while it's still ringing). You reply with XML or JSON telling Unpod what to do.
 - **Trunk** - a SIP carrier credential (`sip_url`, `transport`, `port`, auth, source-IP allow-list). Secrets are always masked in responses.
 - **Origin endpoint** - the shared SBC ingress (`sip:<host>`) the carrier sends inbound calls to, plus the accepted source IPs and mapped numbers.

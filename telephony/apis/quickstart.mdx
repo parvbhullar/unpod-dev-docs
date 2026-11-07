@@ -167,8 +167,9 @@ When someone calls your number, Unpod posts the call to your answer URL and runs
 reply with.
 
 <Info>
-Inbound configuration is rolling out. If `set_did` (or the `PUT` in step 4) returns `405` or
-`401`, ask the Unpod team to set the answer URL on your number for now.
+Inbound configuration is rolling out. If `set_did` (or the `PUT` in step 4) returns `405`,
+`401` or `403` (Call API not switched on), ask the Unpod team to switch it on or set the
+answer URL on your number for now.
 </Info>
 
 <Steps>
@@ -250,6 +251,9 @@ Inbound configuration is rolling out. If `set_did` (or the `PUT` in step 4) retu
   </Step>
 
   <Step title="Point your number at it">
+    Run this in another terminal (the server and ngrok hold the first two), with
+    `UNPOD_BASE_URL`, `UNPOD_PLATFORM_TOKEN` and `UNPOD_ORG_HANDLE` exported:
+
     <CodeGroup>
     ```python Python
     from unpod import Client

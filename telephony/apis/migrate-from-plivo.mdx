@@ -12,7 +12,8 @@ the SDK, in call order.
 from unpod import AsyncClient
 from unpod.telephony import TelephonyAPIError, WebhookSignatureError, parse_call_event
 
-async with AsyncClient() as client:          # UNPOD_BASE_URL, UNPOD_PLATFORM_TOKEN, UNPOD_ORG_HANDLE
+# reads UNPOD_BASE_URL, UNPOD_PLATFORM_TOKEN and UNPOD_ORG_HANDLE
+async with AsyncClient() as client:
     calls = client.telephony.calls
 ```
 
@@ -40,7 +41,9 @@ call = await calls.create(
     "+919000000001",                 # from_: one of your org's numbers
     "+919000000002",                 # to: agent phone (E.164 or SIP URI)
     role="agent",
-    status_callback_url="https://your-app.example.com/call-status?call_name=hotline-0003",
+    status_callback_url=(
+        "https://your-app.example.com/call-status?call_name=hotline-0003"
+    ),
     status_callback_method="POST",
     recording_callback_url="https://your-app.example.com/recording",
     record=True,
@@ -136,14 +139,15 @@ The secret comes from `client.telephony.webhook_secret.rotate()`. See [Webhooks]
 | `Initiated` | `Initiated` | Store `ev.initiation_time` |
 | `Ringing` | `Ringing` | Notify your app |
 | `Answered` | `Answered` | If `ev.role == "agent"`, `add_participant(...)` for the customer |
-| `Hangup` | `Hangup` | If the customer leg ends Busy Line / Ring Timeout Reached / No Answer, `calls.end(ev.call_id)` |
+| `Hangup` | `Hangup` | When the customer leg ends, for any cause (`Busy Line`, `Ring Timeout Reached`, `No Answer`, `Rejected`, or a hangup after talking), `calls.end(ev.call_id)`, as in [Number Masking](/telephony/apis/number-masking) |
 | - | `Incoming`, `PlayStarted`, `PlayStopped`, `DTMF`, `Hold`, `Unhold` | New. Ignore with a 2xx if you don't need them |
 
 | Plivo field | `CallEvent` field |
 | --- | --- |
 | `CallUUID` / `MPCUUID` | `leg_id` / `call_id` |
 | `EventName` | `event` |
-| `To`, `Role` | `to`, `role` |
+| `To` | Not sent on leg events (`ev.to` and `ev.from_` are `None`): pass the number in `metadata` |
+| `Role` | `role` |
 | `InitiationTime`, `HangupTime`, `Duration` | `initiation_time`, `hangup_time`, `duration` |
 | `PlivoHangupCause` | `hangup_cause` |
 | Anything else | `ev.raw["FieldName"]` |
@@ -179,11 +183,15 @@ see [Incoming Calls](/telephony/apis/incoming-calls).
 
 ## 6. Hangup causes
 
-| Cause | SIP | Action |
+| Cause | `ev.sip_code` | Action |
 | --- | --- | --- |
-| `"Busy Line"` | 486 | End the call |
-| `"Ring Timeout Reached"` | - | End the call |
-| `"No Answer"` | 480 | **New** - Unpod sends this for an unanswered leg. Treat like Ring Timeout Reached |
+| `"Busy Line"` | 486 or 600 | End the call |
+| `"Ring Timeout Reached"` | 487, or `None` | End the call |
+| `"No Answer"` | 408 or 480 | **New** - Unpod sends this for an unanswered leg. Treat like Ring Timeout Reached |
+| `"Rejected"` | 603, or `None` | End the call |
+
+Any other cause on the customer leg also ends the call. For every cause and code, see
+[Hangup causes](/telephony/apis/webhooks#hangup-causes).
 
 ## Known differences
 
