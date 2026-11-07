@@ -95,11 +95,14 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
             time.sleep(2)
             try:
                 new = calls.get(call.call_id).state
-                if new == "talking" and state != "talking":
-                    calls.speak(call.call_id, "Hello! This is your first call from Unpod.")
             except TelephonyAPIError as e:  # the call is gone: missed or hung up
                 print("ended:", e.status_code, e.message)
                 break
+            if new == "talking" and state != "talking":
+                try:
+                    calls.speak(call.call_id, "Hello! This is your first call from Unpod.")
+                except TelephonyAPIError as e:
+                    print("speak failed:", e.code, e.message)
             if new != state:
                 print("state:", new or "ended")
             state = new
