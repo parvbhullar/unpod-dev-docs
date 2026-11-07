@@ -44,11 +44,12 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
         if number is None:
             raise SystemExit("No unassigned pool number. Add one from the dashboard.")
         result = tel.numbers.attach(number, attach_type="human_call")
-        print(result.numbers[0].number, result.numbers[0].ok)
+        r = result.numbers[0]
+        print(r.number, r.ok, r.connection_state, r.error)
     ```
 
     ```bash cURL
-    # 1. list: pick a number whose "state" is "NOT_ASSIGNED"
+    # 1. list: pick a number whose "state" is "NOT_ASSIGNED" and "active" is true
     curl -s "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
@@ -171,6 +172,11 @@ Inbound configuration is rolling out. If `set_did` (or the `PUT` in step 4) retu
     One signing key for all call events in your org. Fetch it once (org owner or admin) and
     store it as `UNPOD_WEBHOOK_SECRET`:
 
+    <Warning>
+    Rotating invalidates the previous secret, so any server already verifying with it stops
+    working.
+    </Warning>
+
     <CodeGroup>
     ```python Python
     from unpod import Client
@@ -189,11 +195,6 @@ Inbound configuration is rolling out. If `set_did` (or the `PUT` in step 4) retu
     </CodeGroup>
 
     If `pushed_to_sbc` comes back false, ask the Unpod team before you go on.
-
-    <Warning>
-    Rotating invalidates the previous secret, so any server already verifying with it stops
-    working.
-    </Warning>
   </Step>
 
   <Step title="Run a server">
