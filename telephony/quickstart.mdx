@@ -1,94 +1,171 @@
 ---
-title: 'Quickstart'
+title: 'SIP Trunking Quick Start'
+sidebarTitle: 'Quick Start'
 icon: 'rocket'
-description: 'Bring your SIP carrier, map a number, and route a call in under 5 minutes'
+description: 'Connect your SIP carrier, map a number and receive calls through Unpod'
 ---
 
-This walkthrough takes you from zero to a number mapped onto your own SIP carrier. You'll
-need your **API Token** and **Org-Handle** - see [Authentication](/api/get-started/authentication).
+Bring your own carrier: create a trunk with your carrier's SIP details, map one of your
+numbers to it, and point the carrier at the Unpod origin endpoint.
 
 <Tip>
-No carrier of your own? Use a number from the Unpod pool instead - no trunk needed. See
-[Connect an Unpod Number](/telephony/integrations/unpod/dashboard).
+Only want to make calls? You don't need a trunk - see the
+[Telephony APIs Quick Start](/telephony/apis/quickstart).
 </Tip>
 
-<Tip>
-Prefer Python? Do all of this - plus make and receive calls - with the SDK. See
-[Unpod SDK Quickstart](/telephony/apis/quickstart).
-</Tip>
+```mermaid
+flowchart LR
+  A["📞<br/><b>Caller</b>"] ==> B["📡<br/><b>Your carrier</b>"]
+  B ==> C["🔗<br/><b>Unpod</b><br/>origin endpoint"]
+  C ==> D["🔢<br/><b>Your number</b>"]
+  D ==> E["🤖<br/><b>Your app or<br/>an Unpod agent</b>"]
+
+  classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
+  classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
+  class A,E ep;
+  class B,C,D pp;
+  linkStyle default stroke:#9a90ff,stroke-width:2.5px;
+```
 
 <Steps>
-  <Step title="Set your credentials">
-    Every request uses these two headers (writes also send `Content-Type: application/json`):
-
-    ```bash
-    export BASE="https://unpod.ai"
-    export AUTH="Authorization: Token <your-api-key>"
-    export ORG="Org-Handle: <your-org-handle>"
-    ```
-
-    <Tip>Get your `Org-Handle` from [Get All Organizations](/api/space/organizations) - the `domain_handle` field.</Tip>
+  <Step title="Credentials">
+    Export `UNPOD_BASE_URL`, `UNPOD_PLATFORM_TOKEN` and `UNPOD_ORG_HANDLE` as shown in
+    [Credentials](/telephony/introduction#credentials). For Python, install the SDK with
+    `pip install "unpod>=0.6.2"` (Python 3.12+).
   </Step>
 
-  <Step title="See the numbers available to you">
-    List the unassigned numbers in your org's pool. Note an `id` to use later.
+  <Step title="Create a trunk">
+    A trunk holds your carrier's SIP details. `source_ips` are the addresses your carrier
+    sends calls from (CIDR ranges allowed).
 
-    ```bash
-    curl -s "$BASE/api/v2/platform/telephony/numbers/" -H "$AUTH" -H "$ORG"
+    <CodeGroup>
+    ```python Python
+    from unpod import Client
+
+    with Client() as client:
+        trunk = client.telephony.trunks.create(
+            "my-trunk",
+            "sip:carrier.example.com",
+            username="<sip-username>",
+            password="<sip-password>",
+            transport="tcp",           # tcp (default), udp or tls
+            port="5060",
+            source_ips=["203.0.113.10", "198.51.100.0/24"],
+        )
+        print(trunk.id)
     ```
 
-    See [List Numbers](/telephony/numbers/list-numbers).
-  </Step>
-
-  <Step title="Create a trunk (your SIP carrier credential)">
-    ```bash
-    curl -s -X POST "$BASE/api/v2/platform/telephony/trunks/" \
-      -H "$AUTH" -H "$ORG" -H "Content-Type: application/json" \
+    ```bash cURL
+    curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/trunks/" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+      -H "Content-Type: application/json" \
       -d '{
-        "name": "My Carrier Trunk",
-        "sip_url": "sip:carrier.net",
-        "auth_username": "user",
-        "auth_password": "pass",
+        "name": "my-trunk",
+        "sip_url": "sip:carrier.example.com",
+        "auth_username": "<sip-username>",
+        "auth_password": "<sip-password>",
         "transport": "tcp",
         "port": "5060",
-        "source_ips": ["1.2.3.4", "5.6.7.0/24"]
+        "source_ips": ["203.0.113.10", "198.51.100.0/24"]
       }'
     ```
+    </CodeGroup>
 
-    The response returns the new trunk `id` (e.g. `21`). Copy it. See [Create Trunk](/telephony/trunks/create-trunk).
+    Copy the trunk id (`data.id` in the cURL response). See
+    [Create Trunk](/telephony/trunks/create-trunk) for every field.
   </Step>
 
   <Step title="Map a number to the trunk">
-    Replace `21` with your trunk id and `501` with a number id from Step 2.
+    Mapping takes the number's `number_id`, which the overview lists. Set `TRUNK_ID` to
+    the id from the last step and `NUMBER` to your number in E.164.
 
-    ```bash
-    curl -s -X POST "$BASE/api/v2/platform/telephony/trunks/21/attach-numbers/" \
-      -H "$AUTH" -H "$ORG" -H "Product-Id: unpod.dev" \
+    {/* TODO(verify): how a carrier-owned number first appears in the org's overview */}
+
+    <CodeGroup>
+    ```python Python
+    from unpod import Client
+
+    TRUNK_ID = 21            # from the last step
+    NUMBER = "+15551234567"  # your number
+
+    with Client() as client:
+        tel = client.telephony
+        number_id = next(
+            (o.number_id for o in tel.overview() if o.number == NUMBER), None
+        )
+        if number_id is None:
+            raise SystemExit(f"{NUMBER} is not in your org's overview.")
+        mapped = tel.trunks.attach_numbers(TRUNK_ID, [number_id])
+        print(mapped.origin_endpoint.ingress)
+        print(mapped.origin_endpoint.accepted_source_ips)
+        for r in mapped.numbers:
+            print(r.number, r.ok, r.error)
+    ```
+
+    ```bash cURL
+    # 1. find your number's "number_id"
+    curl -s "https://unpod.ai/api/v2/platform/telephony/overview/" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+
+    # 2. map it: 21 is your trunk id, 501 the number_id
+    curl -s -X POST \
+      "https://unpod.ai/api/v2/platform/telephony/trunks/21/attach-numbers/" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" \
       -d '{"number_ids": [501]}'
     ```
+    </CodeGroup>
 
-    The response includes the **origin endpoint** - the SBC ingress your carrier sends
-    inbound calls to, plus the accepted source IPs. See [Attach Numbers to Trunk](/telephony/trunks/attach-numbers).
+    The response has the **origin endpoint**: `ingress` is where your carrier sends calls,
+    and `accepted_source_ips` are the addresses Unpod accepts them from. Each number reports
+    `ok` and `error` on its own. See [Attach Numbers to Trunk](/telephony/trunks/attach-numbers).
   </Step>
 
-  <Step title="Confirm the lifecycle">
-    ```bash
-    curl -s "$BASE/api/v2/platform/telephony/overview/" -H "$AUTH" -H "$ORG"
+  <Step title="Point your carrier at the origin endpoint">
+    In your carrier's console, set the number's inbound destination to the `ingress` value.
+    Make sure the carrier sends from an address in `accepted_source_ips` - these are the
+    `source_ips` you gave the trunk.
+  </Step>
+
+  <Step title="Verify">
+    <CodeGroup>
+    ```python Python
+    from unpod import Client
+
+    with Client() as client:
+        for o in client.telephony.overview():
+            print(o.number, o.connection_state, o.termination_kind, o.sync_state)
     ```
 
-    Each number shows `connection_state`, termination kind, agent link, and `sync_state`.
-    See [Telephony Overview](/telephony/calls/overview).
+    ```bash cURL
+    curl -s "https://unpod.ai/api/v2/platform/telephony/overview/" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+    ```
+    </CodeGroup>
+
+    Your number's `connection_state` should read `LINKED`. `NOT_LINKED` or
+    `PENDING_VERIFY` means it isn't ready yet. See
+    [Telephony Overview](/telephony/calls/overview).
+
+    {/* TODO(verify): exact connection_state once a carrier is mapped, and what moves it from NOT_LINKED / PENDING_VERIFY to LINKED */}
   </Step>
 </Steps>
 
-## What next
+## Next
 
 <CardGroup cols={2}>
-  <Card title="Detach numbers" icon="unlink" href="/telephony/trunks/detach-numbers">
-    Step 1 - unmap numbers from the trunk, returning them to `NOT_ASSIGNED`.
+  <Card title="Answer calls on this trunk" icon="phone-incoming" href="/telephony/apis/incoming-calls#for-a-whole-sip-trunk">
+    Send every call on the trunk to your app - set once, by the trunk's name.
   </Card>
-  <Card title="Delete trunk" icon="trash-2" href="/telephony/trunks/delete-trunk">
-    Step 2 - remove the trunk and its credential once numbers are detached.
+  <Card title="Manage Trunks" icon="git-branch" href="/telephony/sip-trunking/trunks">
+    List, inspect and delete your trunks.
+  </Card>
+  <Card title="Unpod Number → Your SIP" icon="layout-dashboard" href="/telephony/integrations/unpod/dashboard">
+    No carrier? Connect a number from the Unpod pool to your SIP endpoint.
+  </Card>
+  <Card title="Detach numbers" icon="unlink" href="/telephony/trunks/detach-numbers">
+    Unmap numbers from the trunk.
   </Card>
 </CardGroup>
+
+Detach every number before you [delete the trunk](/telephony/trunks/delete-trunk).
