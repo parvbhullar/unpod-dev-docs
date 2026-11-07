@@ -14,6 +14,12 @@ and the number people dial to reach you. Add one from the Unpod pool in either o
 
 ## From the dashboard
 
+<Tip>
+Using the Telephony APIs ([Quick Start](/telephony/apis/quickstart))? Attach the number
+[from the API](#from-the-api) with `attach_type="human_call"`. The steps below connect it
+to a SIP trunk or an agent.
+</Tip>
+
 <Steps>
   <Step title="Open Telephony → Numbers and click +">
     The **+** button next to the **Telephony** heading opens the number pool.
@@ -41,14 +47,9 @@ and the number people dial to reach you. Add one from the Unpod pool in either o
     </Frame>
 
     {/* TODO(verify): which Connect to option matches attach_type="human_call" (your app controls calls with the Telephony APIs) */}
-
-    <Tip>
-    To control calls from your app with the Telephony APIs, you can also attach the
-    number [from the API](#from-the-api) with `attach_type="human_call"`.
-    </Tip>
   </Step>
 
-  <Step title="Ready">
+  <Step title="Ready (SIP Trunk)">
     After **Connect to → SIP Trunk**, the number turns **Linked** and shows its outbound
     trunk details.
 
@@ -134,6 +135,9 @@ cURL response).
 | `agent_id="…"` | An Unpod AI agent (`attach_type="agent"`, the default) |
 | `attach_type="pipeline"`, `pipe_id="…"` | An Unpod pipeline. `pipe_id` is required |
 
+To receive calls on a `human_call` number, point it at your app: see
+[Incoming Calls](/telephony/apis/incoming-calls).
+
 ### Check status
 
 The overview lists your org's numbers with their `connection_state` (see
@@ -145,7 +149,7 @@ from unpod import Client
 
 with Client() as client:
     for o in client.telephony.overview():
-        print(o.number, o.connection_state, o.termination_kind, o.sync_state)
+        print(o.number, o.connection_state)
 ```
 
 ```bash cURL
@@ -183,7 +187,7 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/numbers/detach/" \
 | `connection_state` | Meaning |
 | --- | --- |
 | `NOT_LINKED` | Not routed yet. Rejected as the `from` of a call |
-| `PENDING_VERIFY` | Worked as `from` in testing |
+| `PENDING_VERIFY` | Accepted as `from` (seen in testing) |
 | `LINKED` | Connected |
 
 {/* TODO(verify): which connection_state values can place calls */}
@@ -195,3 +199,4 @@ the `from` number isn't ready: check its `connection_state`.
 
 - [List Numbers](/telephony/numbers/list-numbers) - `GET /telephony/numbers/`
 - [Telephony Overview](/telephony/calls/overview) - `GET /telephony/overview/`
+- [Incoming Calls](/telephony/apis/incoming-calls) - answer calls on your number
