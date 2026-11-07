@@ -25,7 +25,7 @@ from unpod import Client
 from unpod.telephony import TelephonyAPIError
 
 FROM = "+919000000001"    # your Unpod number
-FIRST = "+919000000002"   # dialled first
+FIRST = "+919000000002"   # dialed first
 SECOND = "+919000000003"  # added once FIRST answers
 
 
@@ -53,7 +53,6 @@ with Client() as client:
         FROM,
         SECOND,
         role="customer",
-        dial_music="none",
         idempotency_key=f"{call.call_id}:customer",
     )
     print("adding", SECOND, "leg", leg.leg_id, leg.state)
@@ -77,8 +76,7 @@ curl -s -X POST \
   "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/participants" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Idempotency-Key: $CALL_ID:customer" -H "Content-Type: application/json" \
-  -d '{"from": "+919000000001", "to": "+919000000003", "role": "customer",
-       "dial_music": "none"}'
+  -d '{"from": "+919000000001", "to": "+919000000003", "role": "customer"}'
 ```
 </CodeGroup>
 
@@ -86,25 +84,39 @@ curl -s -X POST \
 rings; when they answer, Unpod connects the two and they can talk. Both see `FROM` as the
 caller. Keep `leg.leg_id` if you want to remove that person later.
 
+If `SECOND` doesn't pick up, `FIRST` stays on the line alone. End the call yourself:
+
+{/* TODO(verify): does a bridged call end by itself when one person hangs up? */}
+
+<CodeGroup>
+```python Python
+calls.end(call.call_id)  # hangs up everyone on the call
+```
+
+```bash cURL
+curl -s -X DELETE "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+```
+</CodeGroup>
+
 ## React to events instead of polling
 
 Polling suits a script. A server should react to events: create the call with a
-`status_callback_url`, and add the second person when Unpod reports that the first one
-answered. Get `UNPOD_WEBHOOK_SECRET` and a public URL as in
-[Receive your first call](/telephony/apis/quickstart#receive-your-first-call).
+`status_callback_url`, add the second person when the first one answers, and end the call
+if the second one hangs up or never answers.
+
+Add this to your Quick Start `app.py` from
+[Receive your first call](/telephony/apis/quickstart#receive-your-first-call), keeping its
+`/answer` route and `uvicorn` block. The client is created at import, so export
+`UNPOD_PLATFORM_TOKEN` and `UNPOD_ORG_HANDLE` before you start the server.
 
 ```python app.py
-import os
-from fastapi import FastAPI, HTTPException, Request
 from unpod import AsyncClient
-from unpod.telephony import WebhookSignatureError, parse_call_event
+from unpod.telephony import TelephonyAPIError
 
 FROM = "+919000000001"                         # your Unpod number
-HOOK = "https://abc123.ngrok.app/call-status"  # your public URL + /call-status
-SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
-
+HOOK = "https://abc123.ngrok.app/call-status"  # your ngrok URL + /call-status
 client = AsyncClient()  # one client, reused for every request
-app = FastAPI()
 
 
 async def start_call(first: str, second: str) -> str:
@@ -123,30 +135,50 @@ async def call_status(request: Request):
     except WebhookSignatureError:
         raise HTTPException(401)
 
-    if ev.event == "Answered" and ev.role == "agent":  # the first person answered
-        await client.telephony.calls.add_participant(
-            ev.call_id, FROM, ev.metadata["second"], role="customer",
-            dial_music="none", status_callback_url=HOOK,
-            idempotency_key=f"{ev.call_id}:customer",
-        )
-    return {"ok": True}  # any 2xx acknowledges
+    calls = client.telephony.calls
+    second = ev.metadata.get("second")
+    try:
+        if ev.event == "Answered" and ev.role == "agent" and second:
+            await calls.add_participant(
+                ev.call_id, FROM, second, role="customer",
+                status_callback_url=HOOK,  # so you hear when they hang up
+                idempotency_key=f"{ev.call_id}:customer",
+            )
+        elif ev.event == "Hangup" and ev.role == "customer":
+            await calls.end(ev.call_id)  # don't leave the first person alone
+    except TelephonyAPIError as e:  # e.g. the call is already gone
+        print(ev.call_id, e.status_code, e.message)
+    return {"ok": True}  # always 2xx once signed, or Unpod retries
+```
+
+Restart the server, then start a call from a second terminal with the same variables
+exported:
+
+```bash
+python -c 'import asyncio, app
+print(asyncio.run(app.start_call("+919000000002", "+919000000003")))'
 ```
 
 `ev.role` is the `role` you set on the leg. Unpod retries an event until it gets a 2xx, so
-the `idempotency_key` keeps a retried `Answered` from dialing `second` twice. See
-[Webhooks](/telephony/apis/webhooks) for signatures and every event, and
-[Number Masking](/telephony/apis/number-masking) for the full production flow.
+the handler always returns one after a valid signature, and the `idempotency_key` keeps a
+retried `Answered` from dialing `second` twice. See [Webhooks](/telephony/apis/webhooks)
+for signatures and every event, and [Number Masking](/telephony/apis/number-masking) for
+the full production flow.
+
+{/* TODO(verify): server behaviour for two in-flight requests with the same Idempotency-Key */}
 
 ## Remove a participant
 
-Hang up one person and keep the call up with the other.
+Drop one person and keep the call up with the other, for example to hang up the second
+person and add someone else in their place.
 
 <CodeGroup>
 ```python Python
-calls.remove_participant(call.call_id, leg.leg_id)  # inside the `with` block above
+calls.remove_participant(call.call_id, leg.leg_id)
 ```
 
 ```bash cURL
+# LEG_ID=<leg_id from step 3>
 curl -s -X DELETE \
   "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/participants/$LEG_ID" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
@@ -165,7 +197,10 @@ The `add_participant` options most people need:
 | `answer_url` | Run XML on this leg when it connects, instead of bridging it. See [Answer URL & XML](/telephony/apis/answer-url) |
 | `status_callback_url` | Public https URL for this leg's events |
 | `record` | `True` to record the call |
+| `metadata` | Dict of strings, echoed back on every event as `ev.metadata` |
 | `idempotency_key` | Retry-safe: the same key never dials twice |
+
+{/* TODO(verify): what the first person hears while the second rings when dial_music is omitted */}
 
 `create` takes the same options. Every URL must be public https, or you get
 `400 invalid_url`. Full list: [Call Control](/telephony/apis/call-control#options).
