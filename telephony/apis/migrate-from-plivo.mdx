@@ -151,13 +151,13 @@ The secret comes from `client.telephony.webhook_secret.rotate()`. See [Webhooks]
 
 | Plivo `EventName` | Unpod |
 | --- | --- |
-| `ParticipantRecordingInitiated` | Sent only with `record_participant_track=True`, together with `ParticipantRecordingCompleted` after the call |
-| `ParticipantRecordingCompleted` | Points at the same 2-channel WAV - split it if you need per-leg audio |
+| `ParticipantRecordingInitiated` | Sent only with `record_participant_track=True`, together with `ParticipantRecordingCompleted` after the call. No recording URL; the leg's channel is in `ev.metadata["channel"]` (`1` left, `2` right) |
+| `ParticipantRecordingCompleted` | `ev.metadata["recording_url"]` and `ev.metadata["channel"]`: the same 2-channel WAV - split it if you need per-leg audio |
 | `MPCRecordingCompleted` | Same name, but unsigned and without `metadata`. `ev.recording_url` is a path inside Unpod: fetch with `get_recording(ev.call_id)` |
 
 One **2-channel WAV** per call: agent on the left, customer on the right. Whether a call
-is recorded follows your org's recording policy: `record=True` doesn't override it today.
-See [Recording](/telephony/apis/recording).
+is recorded follows the recording policy (set by the Unpod team): `record=True` doesn't
+override it today. See [Recording](/telephony/apis/recording).
 
 {/* TODO(verify): channel order on a live two-person call */}
 
@@ -186,7 +186,8 @@ see [Incoming Calls](/telephony/apis/incoming-calls).
 
 ## Known differences
 
-- **Per-participant recordings:** none. One 2-channel WAV per call.
+- **Per-participant recordings:** no per-participant files. One 2-channel WAV per call
+  (split it).
 - **Two participants** per call at most.
 - **Callback and audio URLs** must be public https.
 - **`speak`** depends on TTS being available for your org.

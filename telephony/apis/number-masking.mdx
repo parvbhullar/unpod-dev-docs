@@ -26,7 +26,9 @@ either person is gone.
    When the agent's leg ends, Unpod already hangs up the customer; calling `end` again is
    harmless.
 4. On each `Hangup`, your app saves the outcome from `ev.role` and `ev.hangup_cause`.
-5. When the recording is ready, your app saves it.
+5. When the recording is ready, your app saves it. The recording event may not arrive for
+   a call started with `create`, so also call `get_recording` after the last `Hangup`
+   (see [Recording](/telephony/apis/recording#get-a-recording)).
 
 ```mermaid
 sequenceDiagram
@@ -113,8 +115,8 @@ Outbound events don't carry the phone numbers in `ev.to` or `ev.from_`, so the c
 number travels in `metadata`, which Unpod echoes on every event as `ev.metadata`.
 
 <Note>
-Whether a call is recorded follows your org's recording policy: `record=True` doesn't
-override it today. See [Recording](/telephony/apis/recording).
+Whether a call is recorded follows the recording policy (set by the Unpod team):
+`record=True` doesn't override it today. See [Recording](/telephony/apis/recording).
 </Note>
 
 {/* TODO(verify): record=true on POST /calls is stored but not read in the SBC source (feat/unpo-284-relay-bridge, recording_completed.rs "Not implemented"); whether a call is recorded follows the org's recording policy */}
@@ -224,7 +226,7 @@ it back unchanged. Save the `call_id` and duration; to download the audio, see
 | `Answered` | `customer` | They're talking. Optional: mark the call connected |
 | `Hangup` | `customer` | End the call. `Busy Line`, `Ring Timeout Reached`, `No Answer` or `Rejected`: the customer wasn't reached. `Cancelled`: the agent hung up while the customer's phone was ringing. `Normal Hangup`: they answered |
 | `Hangup` | `agent` | Unpod already hangs up the customer; ending the call again is harmless. Any cause but `Normal Hangup` means the agent never answered, so the customer was never dialed |
-| `MPCRecordingCompleted` | - | Arrives at `recording_callback_url` after the call. Fetch and save the recording |
+| `MPCRecordingCompleted` | - | Arrives at `recording_callback_url` after the call. Fetch and save the recording. It may not arrive for a call started with `create`: also call `get_recording` after the last `Hangup` ([Recording](/telephony/apis/recording#get-a-recording)) |
 
 Store any other cause (`Service Unavailable`, `Unknown`, ...) and `ev.sip_code` as it is;
 see [Hangup causes](/telephony/apis/webhooks#hangup-causes). A call holds at most two

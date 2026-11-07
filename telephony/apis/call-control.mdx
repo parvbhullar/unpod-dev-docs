@@ -50,7 +50,7 @@ The same options apply to `create` and `add_participant`.
 | `status_callback_method` | `"POST"` \| `"GET"` | Default `POST` |
 | `status_callback_format` | `"form"` \| `"json"` | Default `form` (Plivo-style keys); `json` uses snake_case |
 | `recording_callback_url` | `str` | Public https URL for the recording event |
-| `record` | `bool` | Stored, but doesn't override your org's recording policy today. See [Recording](/telephony/apis/recording) |
+| `record` | `bool` | Stored, but doesn't override the recording policy (set by the Unpod team) today. See [Recording](/telephony/apis/recording) |
 | `record_participant_track` | `bool` | Also send per-leg recording events. Needs `record=True` |
 | `answer_url` / `answer_method` | `str` / `"POST"` \| `"GET"` | Run an answer-URL app on this leg when it connects, instead of bridging it |
 | `metadata` | `dict[str, str]` | Echoed on every event as `ev.metadata` |
@@ -119,7 +119,9 @@ await calls.end(call.call_id)                                   # end all legs
 
 `list` filters: `page`, `page_size`, `status` (`ringing`, `talking`), `direction`
 (`inbound`, `outbound`), `caller`, `callee`, `number`, `since`. An ended call drops out of
-the list, and `get` / `end` then return `404 not_found` - treat that as done.
+the list. After a call ends, `get` returns the recording summary (no `state`), or
+`404 not_found` briefly right after hangup, and `end` returns `404 not_found` - treat both
+as done.
 
 To get a call's recording once it ends, see [Recording](/telephony/apis/recording).
 

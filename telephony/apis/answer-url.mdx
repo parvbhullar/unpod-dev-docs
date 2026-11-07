@@ -141,10 +141,11 @@ Set the voice and language on `<Speak>` itself:
 </Response>
 ```
 
-Whether a call is recorded follows your org's recording policy; `record=True` on `create`
-doesn't override it today (see [Recording](/telephony/apis/recording)). Don't put
-`<Record/>` before `<Dial>`: it waits for the recording to finish (300 s by default)
-before dialing, and the caller hears silence.
+Whether a call is recorded follows the recording policy (set by the Unpod team);
+`record=True` on `create` doesn't override it today (see
+[Recording](/telephony/apis/recording)). Don't put `<Record/>` before `<Dial>`: it waits
+for the recording to finish (300 s by default) before dialing, and the caller hears
+silence.
 
 ## A minimal answer server
 

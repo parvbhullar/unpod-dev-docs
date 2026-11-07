@@ -9,20 +9,21 @@ has ended, ask the API for the recording, then download the audio with the same
 credentials.
 
 <Note>
-Whether a call is recorded is set by your org's recording policy. To change it, ask the
-Unpod team. `record=True` on a call doesn't override the policy today, and the `record`
-setting in a number's inbound config is stored but not applied yet.
+Whether a call is recorded follows the recording policy (set by the Unpod team). To
+change it, ask them. `record=True` on a call doesn't override the policy today, and the
+`record` setting in a number's inbound config is stored but not applied yet.
 </Note>
 
 {/* TODO(verify): record=true on POST /calls is stored but doesn't force recording (create_call.rs, recording_completed.rs "Not implemented", UNPO-180) */}
-{/* TODO(verify): whether the org's policy also records inbound calls (call.rs apply_recording_policy filters by direction; InboundConfig.record is never read) */}
+{/* TODO(verify): whether the recording policy also records inbound calls (call.rs apply_recording_policy filters by direction; InboundConfig.record is never read) */}
 
 ## Get a recording
 
 Export your [credentials](/telephony/introduction#credentials) (`UNPOD_BASE_URL`,
 `UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE`). After the call ends, `get_recording` returns
-the recording's details. While the call is still going it raises `409`, so wait a few
-seconds and ask again:
+the recording's details. Until the recording is saved it raises `409` (the call is still
+going) or `404` (it has just ended), so wait a few seconds and ask again. A wrong
+`call_id` also returns `404`, so it only fails once the retries run out:
 
 <CodeGroup>
 ```python Python
@@ -34,12 +35,12 @@ from unpod.telephony import TelephonyAPIError
 CALL_ID = "..."  # from create, or ev.call_id on any event for the call
 
 with Client() as client:
-    for _ in range(10):
+    for _ in range(20):  # about a minute
         try:
             rec = client.telephony.calls.get_recording(CALL_ID)
             break
         except TelephonyAPIError as e:
-            if e.status_code != 409:  # 409: the call isn't over yet
+            if e.status_code not in (404, 409):  # 409 still going, 404 just ended
                 raise
             time.sleep(3)
     else:
@@ -57,7 +58,7 @@ curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/recording" \
 The response:
 
 ```json
-{"call_id": "...", "available": true,
+{"call_id": "...", "org_id": "...", "available": true,
  "url": "https://unpod.ai/api/v2/platform/sbc/v1/calls/<call_id>/recording",
  "duration_secs": 64, "format": "wav", "channels": 2}
 ```
@@ -93,10 +94,11 @@ headers = {
     "Org-Handle": os.environ["UNPOD_ORG_HANDLE"],
     "Accept": "audio/wav",
 }
-resp = httpx.get(rec.url, headers=headers, timeout=60)
-resp.raise_for_status()
-with open("call.wav", "wb") as f:
-    f.write(resp.content)
+with httpx.stream("GET", rec.url, headers=headers, timeout=60) as resp:
+    resp.raise_for_status()
+    with open("call.wav", "wb") as f:
+        for chunk in resp.iter_bytes():
+            f.write(chunk)
 ```
 
 ```bash cURL
@@ -116,11 +118,12 @@ browser.
 | Property | Value |
 | --- | --- |
 | File | WAV |
-| Audio | G.711 μ-law, 8-bit, 8000 Hz |
+| Audio | G.711 μ-law (A-law when the carrier negotiates it), 8-bit, 8000 Hz |
 | Channels | 2, one person on each |
 
 The first leg (A) is on the left channel and the second leg (B) on the right.
 
+{/* TODO(verify): codec per carrier */}
 {/* TODO(verify): channel order on a live two-person call (SDK Recording docstring and call_recording.rs say leg A left, leg B right) */}
 
 To get each person in their own file, split the channels with sox or ffmpeg:
@@ -133,12 +136,14 @@ sox call.wav second.wav remix 2
 
 ```bash ffmpeg
 ffmpeg -i call.wav -filter_complex "channelsplit=channel_layout=stereo[a][b]" \
-  -map "[a]" first.wav -map "[b]" second.wav
+  -map "[a]" -c:a pcm_mulaw first.wav -map "[b]" -c:a pcm_mulaw second.wav
 ```
 </CodeGroup>
 
-Python's `wave` module can't open μ-law WAV files (it fails with `unknown format: 7`), and
-`audioop` is gone from Python 3.13. If a tool needs 16-bit PCM, convert the file first:
+Both keep the μ-law encoding; for an A-law file, use `-c:a pcm_alaw` with ffmpeg (sox keeps
+the input encoding by itself). Python's `wave` module can't open G.711 WAV files (it fails
+with `unknown format: 7` for μ-law, `6` for A-law), and `audioop` is gone from Python
+3.13. If a tool needs 16-bit PCM, convert the file first with sox or ffmpeg:
 `sox call.wav -b 16 -e signed-integer call-pcm.wav`.
 
 ## Recording events
@@ -151,7 +156,7 @@ that the recording is ready:
 
 - It isn't signed yet, so `parse_call_event` with your secret rejects it. Parse it with
   `verify=False` and trust only what `get_recording` returns for `ev.call_id`.
-- It carries no `metadata`. Match it to your own records by `ev.call_id`.
+- It carries no `metadata`, so match it to your own records by `ev.call_id`.
 - `ev.recording_url` is a path inside Unpod, not a download link. Call
   `get_recording(ev.call_id)` for the `url`.
 - It may never arrive for a call started with `create`. The reliable way is to call
@@ -162,7 +167,10 @@ handles the event this way.
 
 With `record_participant_track=True` (which needs `record=True`), the same URL also gets
 `ParticipantRecordingInitiated` and `ParticipantRecordingCompleted` for each leg. Both
-arrive together after the call ends and point at the same 2-channel file.
+arrive together after the call ends, and both carry the leg's channel in
+`ev.metadata["channel"]`: `1` for the first leg (left), `2` for the second (right). Only
+`ParticipantRecordingCompleted` carries the recording, in `ev.metadata["recording_url"]`:
+the same 2-channel file, at the same path inside Unpod.
 
 {/* TODO(verify): recording events go out unsigned (recording_completed.rs `secret: None`, UNPO-181); REST-originated calls can miss the event when the report loses the PendingOriginate removal race (reporter.rs recording_callback_target) */}
 
@@ -196,7 +204,8 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/record" 
 
 It returns as soon as the request reaches the call, before recording starts, so it doesn't
 report whether recording started. A call that has ended returns `404 not_found`. A call
-your org's policy already records keeps that one recording. `transcribe=True` is accepted,
+the recording policy already records keeps that one recording. Whether `get_recording`
+returns a recording started this way isn't confirmed yet. `transcribe=True` is accepted,
 but no transcript is made yet.
 
 {/* TODO(verify): whether a recording started with calls.record is what get_recording returns (calls.rs record_call dispatches without waiting; sip_session start_recording fails with "Recording already active" when the policy recorder runs); transcribe only drops a marker file (calls.rs maybe_drop_transcribe_marker) */}
@@ -222,6 +231,6 @@ On a call you start with `create`,
 [`speak`](/telephony/apis/call-control#play-audio-and-speak) the same line when the leg
 sends `Answered`.
 
-If your org's policy records the call, you don't need `<Record/>`. Never put `<Record/>`
+If the recording policy records the call, you don't need `<Record/>`. Never put `<Record/>`
 before `<Dial>`: Unpod waits for the recording to reach its `maxLength` (300 s by default)
 before dialing, and the caller hears silence.

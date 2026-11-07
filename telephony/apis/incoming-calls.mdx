@@ -203,7 +203,7 @@ async def incoming(request: Request):
         on_call.pop(ev.call_id, None)  # the agent is free again; safe to repeat
         print(ev.call_id, ev.call_status, ev.duration)
     elif ev.event == "RecordStop":
-        print("recording:", ev.recording_url)
+        print("recorded:", ev.call_id)  # get the audio after the call: see Recording
     return Response(status_code=200)  # always 2xx once the signature checks out
 
 
@@ -225,10 +225,10 @@ callback (`ev.hangup_cause`).
 {/* TODO(verify): caller is hung up when the Dial target fails */}
 
 <Note>
-Whether inbound calls are recorded follows your org's recording policy, not the number's
-`record` setting (see [Recording](/telephony/apis/recording)). Don't put `<Record/>` before
-`<Dial>`: the caller waits in silence for the recording to finish (300 s by default) before
-Unpod dials.
+Whether inbound calls are recorded follows the recording policy (set by the Unpod team),
+not the number's `record` setting (see [Recording](/telephony/apis/recording)). Don't put
+`<Record/>` before `<Dial>`: the caller waits in silence for the recording to finish
+(300 s by default) before Unpod dials.
 </Note>
 
 {/* TODO(verify): InboundConfig.record is stored but no call path in the SBC source (feat/unpo-284-relay-bridge) reads it yet - confirm inbound calls get recorded */}

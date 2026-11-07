@@ -79,7 +79,7 @@ The signature header is `X-Webhook-Signature: t=<unix ts>,v1=<hex HMAC-SHA256(se
 | `DTMF` | A key was pressed (`ev.digit`) |
 | `Hold`, `Unhold` | Hold changes |
 | `MPCRecordingCompleted` | Recording ready, sent only to `recording_callback_url`. Unsigned, no `metadata`; `ev.recording_url` is a path inside Unpod, so fetch it with `get_recording(ev.call_id)`. See [Recording](/telephony/apis/recording#recording-events) |
-| `ParticipantRecordingInitiated`, `ParticipantRecordingCompleted` | Per leg, only with `record_participant_track=True`. Sent together after the call |
+| `ParticipantRecordingInitiated`, `ParticipantRecordingCompleted` | Per leg, only with `record_participant_track=True`. Sent together after the call, with the leg's channel in `ev.metadata["channel"]` (`1` left, `2` right). Only `Completed` carries the recording, in `ev.metadata["recording_url"]` |
 | `StartApp`, `Hangup`, `RecordStop` | Answer-URL (inbound) events, with `ev.call_status` |
 
 ## `CallEvent` fields
