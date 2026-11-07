@@ -172,7 +172,11 @@ the full production flow.
 
 ## Remove a participant
 
-Remove a participant and the call stays up with the other person.
+Remove a participant and the call stays up with the other person. If you also run the
+webhook server above, it ends the call on every `Hangup` event, which may include the leg
+you removed: track the removed `leg_id` and skip it in the handler to keep the call up.
+
+{/* TODO(verify): does remove_participant send a Hangup event for the removed leg? */}
 
 <CodeGroup>
 ```python Python
