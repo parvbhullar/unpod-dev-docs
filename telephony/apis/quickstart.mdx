@@ -22,40 +22,37 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
   </Step>
 
   <Step title="Install">
-    Python only; cURL needs nothing.
+    Python 3.12+ (`unpod` 0.6.2 requires it). cURL needs nothing.
 
     ```bash
-    pip install "unpod>=0.6.2"
+    python3 -m venv .venv && . .venv/bin/activate && pip install "unpod>=0.6.2"
     ```
   </Step>
 
   <Step title="Get a number">
-    Add one from the dashboard ([Get a Number](/telephony/apis/numbers)) or attach a free pool
-    number from code:
+    Add one from the dashboard ([Get a Number](/telephony/apis/numbers)) or run this once to
+    attach an unassigned pool number:
 
     <CodeGroup>
     ```python Python
-    import asyncio
-    from unpod import AsyncClient
+    from unpod import Client
 
-
-    async def main() -> None:
-        async with AsyncClient() as client:
-            tel = client.telephony
-            free = next(n.number for n in await tel.numbers.list() if n.status == "not_assigned")
-            result = await tel.numbers.attach(free, attach_type="human_call")
-            print(result.numbers[0].number, result.numbers[0].ok)
-            for o in await tel.overview():
-                print(o.number, o.connection_state)
-
-
-    asyncio.run(main())
+    with Client() as client:
+        tel = client.telephony
+        pool = tel.numbers.list()
+        number = next((n.number for n in pool if n.status == "not_assigned"), None)
+        if number is None:
+            raise SystemExit("No unassigned pool number. Add one from the dashboard.")
+        result = tel.numbers.attach(number, attach_type="human_call")
+        print(result.numbers[0].number, result.numbers[0].ok)
     ```
 
     ```bash cURL
+    # 1. list: pick a number whose "state" is "NOT_ASSIGNED"
     curl -s "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
+    # 2. attach it
     curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/numbers/attach/" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" \
@@ -65,53 +62,57 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
 
     `attach_type="human_call"` routes the number for call control, with no AI agent.
 
-    {/* TODO(verify): which connection_state values can place calls (PENDING_VERIFY worked; NOT_LINKED was rejected) */}
+    {/* TODO(verify): full list of connection_state values that can place calls (PENDING_VERIFY worked; NOT_LINKED was rejected) */}
 
     <Note>
-    Dial only from a number that shows as connected in `overview` (cURL: the same request as the
-    [credentials check](/telephony/introduction#credentials)). A `403 from is not a number
+    Dial from a number whose `connection_state` is not `NOT_LINKED` (for example
+    `PENDING_VERIFY` or `LINKED`). See it with the overview request from the
+    [credentials check](/telephony/introduction#credentials). A `403 from is not a number
     available to this organization` means the number isn't ready yet.
     </Note>
   </Step>
 
   <Step title="Call someone and speak">
-    Set `FROM` to your Unpod number and `TO` to a phone you can answer. Pick up when it rings.
+    Set `FROM` to your Unpod number and `TO` to a phone you can answer, both in E.164. Pick up
+    when it rings.
 
     <CodeGroup>
     ```python Python
-    import asyncio
-    from unpod import AsyncClient
+    import time
+    from unpod import Client
+    from unpod.telephony import TelephonyAPIError
 
     FROM = "+919000000001"  # your Unpod number
     TO = "+919000000002"    # who to call
 
+    with Client() as client:
+        calls = client.telephony.calls
+        call = calls.create(FROM, TO, ring_timeout=30)
+        print("calling", call.call_id)
 
-    async def main() -> None:
-        async with AsyncClient() as client:
-            calls = client.telephony.calls
-            call = await calls.create(FROM, TO, ring_timeout=30)
-            print("calling", call.call_id)
-
-            state = call.state
-            while state not in ("ended", None):  # an ended call comes back with no state
-                await asyncio.sleep(2)
-                new = (await calls.get(call.call_id)).state
+        state = call.state
+        while state not in ("ended", None):  # an ended call comes back with no state
+            time.sleep(2)
+            try:
+                new = calls.get(call.call_id).state
                 if new == "talking" and state != "talking":
-                    await calls.speak(call.call_id, "Hello! This is your first call from Unpod.")
-                if new != state:
-                    print("state:", new)
-                state = new
-
-
-    asyncio.run(main())
+                    calls.speak(call.call_id, "Hello! This is your first call from Unpod.")
+            except TelephonyAPIError as e:  # the call is gone: missed or hung up
+                print("ended:", e.status_code, e.message)
+                break
+            if new != state:
+                print("state:", new or "ended")
+            state = new
     ```
 
     ```bash cURL
-    # 1. dial
+    # 1. dial -> {"call_id": "...", "state": "initiated", ...}
     curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
       -d '{"from": "+919000000001", "to": "+919000000002", "ring_timeout": 30}'
+
+    # CALL_ID=<call_id from step 1>
 
     # 2. poll until "state": "talking"
     curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
@@ -124,8 +125,7 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     ```
     </CodeGroup>
 
-    For cURL, set `CALL_ID` to the `call_id` the dial returns. `speak` works once the call is
-    `talking` - no server needed.
+    `speak` works once the call is `talking` - no server needed.
   </Step>
 
   <Step title="What you get back">
@@ -138,12 +138,18 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     After hangup, `GET /sbc/v1/calls/{id}` returns the recording summary instead of a state:
 
     ```json
-    {"call_id": "...", "available": true, "url": "/api/v1/calls/<id>/recording", "duration_secs": 18, "format": "wav", "channels": 2}
+    {"call_id": "...", "org_id": "...", "available": true,
+     "url": "/api/v1/calls/<id>/recording", "duration_secs": 64,
+     "format": "wav", "channels": 2}
     ```
 
-    That is why the loop stops on `ended` or on no state.
+    {/* TODO(verify): GET after an unanswered call - summary or 404? */}
+    {/* TODO(verify): host and auth to download the recording url */}
 
-    <Tip>No ring? Check the `from` number is connected (step 3), then that the Call API is switched on.</Tip>
+    <Tip>
+    No ring? Check that `to` is E.164 (`+` and country code), that the `from` number isn't
+    `NOT_LINKED`, and that `ring_timeout` gives the phone long enough.
+    </Tip>
   </Step>
 </Steps>
 
@@ -152,25 +158,39 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
 When someone calls your number, Unpod posts the call to your answer URL and runs the XML you
 reply with.
 
+<Info>
+Inbound configuration is rolling out. If `set_did` (or the `PUT` in step 4) returns `405` or
+`401`, ask the Unpod team to set the answer URL on your number for now.
+</Info>
+
 <Steps>
   <Step title="Get your webhook secret">
-    One signing key for all call events in your org. Rotating replaces the old one. Fetch it
-    once (org owner or admin) and store it as `UNPOD_WEBHOOK_SECRET`:
+    One signing key for all call events in your org. Fetch it once (org owner or admin) and
+    store it as `UNPOD_WEBHOOK_SECRET`:
 
-    ```python
-    import asyncio
-    from unpod import AsyncClient
+    <CodeGroup>
+    ```python Python
+    from unpod import Client
 
-
-    async def main() -> None:
-        async with AsyncClient() as client:
-            s = await client.telephony.webhook_secret.rotate()
-            print(s.pushed_to_sbc)  # must be True
-            print(s.secret)         # shown in full only here
-
-
-    asyncio.run(main())
+    with Client() as client:
+        s = client.telephony.webhook_secret.rotate()
+        print(s.pushed_to_sbc)  # must be True
+        print(s.secret)         # shown in full only here
     ```
+
+    ```bash cURL
+    curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/webhook-secret/rotate" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+      -H "Content-Type: application/json" -d '{}'
+    ```
+    </CodeGroup>
+
+    If `pushed_to_sbc` comes back false, ask the Unpod team before you go on.
+
+    <Warning>
+    Rotating invalidates the previous secret, so any server already verifying with it stops
+    working.
+    </Warning>
   </Step>
 
   <Step title="Run a server">
@@ -195,14 +215,14 @@ reply with.
             raise HTTPException(401)
 
         if ev.event == "StartApp":               # a new inbound call is ringing
-            xml = "<Response><Speak>Hello! Thanks for calling.</Speak></Response>"
+            xml = "<Response><Speak>Hello! Thanks for calling.</Speak><Hangup/></Response>"
             return Response(xml, media_type="application/xml")
         return Response(status_code=200)         # Hangup / RecordStop: acknowledge
 
 
     if __name__ == "__main__":
         import uvicorn
-        uvicorn.run(app, host="0.0.0.0", port=8000)
+        uvicorn.run(app, host="127.0.0.1", port=8000)
     ```
 
     Run it with `python app.py`. It rejects unsigned requests, greets new calls and returns 200
@@ -210,7 +230,8 @@ reply with.
   </Step>
 
   <Step title="Expose it">
-    Unpod only calls public https URLs. In a second terminal:
+    Install ngrok and add your authtoken first. Unpod only calls public https URLs. In a second
+    terminal:
 
     ```bash
     ngrok http 8000
@@ -222,23 +243,17 @@ reply with.
   <Step title="Point your number at it">
     <CodeGroup>
     ```python Python
-    import asyncio
-    from unpod import AsyncClient
+    from unpod import Client
     from unpod.telephony import InboundConfig
 
     URL = "https://abc123.ngrok.app/answer"  # your ngrok URL + /answer
 
-
-    async def main() -> None:
-        async with AsyncClient() as client:
-            await client.telephony.inbound.set_did("+919000000001", InboundConfig(
-                answer_url=URL,
-                answer_method="POST",
-                status_callback_url=URL,
-            ))
-
-
-    asyncio.run(main())
+    with Client() as client:
+        client.telephony.inbound.set_did("+919000000001", InboundConfig(
+            answer_url=URL,
+            answer_method="POST",
+            status_callback_url=URL,
+        ))
     ```
 
     ```bash cURL
@@ -251,16 +266,11 @@ reply with.
     </CodeGroup>
 
     `set_did` sets the config for one number. In the URL, `+` becomes `%2B`.
-
-    <Info>
-    Inbound configuration through the SDK is rolling out. If `set_did` (or the `PUT`) returns
-    `405` or `401`, ask the Unpod team to set the answer URL on your number for now.
-    </Info>
   </Step>
 
   <Step title="Call your number">
-    Call your Unpod number from any phone. You hear "Hello! Thanks for calling." For the full
-    picture, see [Incoming Calls](/telephony/apis/incoming-calls).
+    Call your Unpod number from any phone. You hear "Hello! Thanks for calling." and the call
+    ends. For the full picture, see [Incoming Calls](/telephony/apis/incoming-calls).
   </Step>
 </Steps>
 
