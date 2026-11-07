@@ -3,6 +3,7 @@ title: 'Telephony APIs Quick Start'
 sidebarTitle: 'Quick Start'
 icon: 'rocket'
 description: 'Make your first call and receive your first call on an Unpod number'
+mode: "wide"
 ---
 
 Go from zero to a live call: first you call a phone, then a phone calls you.
@@ -25,7 +26,9 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     Python 3.12+ (`unpod` 0.6.2 requires it). cURL needs nothing.
 
     ```bash
-    python3 -m venv .venv && . .venv/bin/activate && pip install "unpod>=0.6.2"
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install "unpod>=0.6.2"
     ```
   </Step>
 
