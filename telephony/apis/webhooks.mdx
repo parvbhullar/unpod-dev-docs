@@ -1,7 +1,7 @@
 ---
 title: 'Webhooks'
 icon: 'webhook'
-description: 'Verify and parse signed call, recording and inbound events with parse_call_event'
+description: 'Verify and parse call, recording and inbound events with parse_call_event'
 ---
 
 Unpod sends three kinds of events to your app:
@@ -12,8 +12,11 @@ Unpod sends three kinds of events to your app:
 | Recording events | `recording_callback_url` |
 | Inbound events | Your answer URL |
 
-Every event is signed with your org's secret. Verify and parse each one with
-`parse_call_event`.
+Call events and inbound POST requests are signed with your org's secret. Verify and parse
+each one with `parse_call_event`. Recording events aren't signed yet, so verification
+fails for them: see [Recording events](/telephony/apis/recording#recording-events).
+Outbound answer-URL requests and GET requests aren't signed either (see
+[Answer URL & XML](/telephony/apis/answer-url#what-unpod-sends)).
 
 ## Get the secret
 
@@ -62,7 +65,8 @@ Rules:
 - Unpod **retries** until it gets a 2xx. De-duplicate on `ev.event_id`, and pass an
   `idempotency_key` when an event triggers `add_participant`.
 - Return 2xx for events you don't need, so they aren't retried.
-- `tolerance` (default 300 s) rejects replays. `verify=False` is for local tests only.
+- `tolerance` (default 300 s) rejects replays. `verify=False` skips the check: use it only
+  for local tests and for the unsigned recording events.
 
 The signature header is `X-Webhook-Signature: t=<unix ts>,v1=<hex HMAC-SHA256(secret, "<ts>.<raw body>")>`.
 
@@ -74,7 +78,8 @@ The signature header is `X-Webhook-Signature: t=<unix ts>,v1=<hex HMAC-SHA256(se
 | `PlayStarted`, `PlayStopped` | Audio or speech on a leg (`ev.play_id`) |
 | `DTMF` | A key was pressed (`ev.digit`) |
 | `Hold`, `Unhold` | Hold changes |
-| `RecordingCompleted` | Recording ready (`ev.recording_url`, `ev.recording_duration`) |
+| `MPCRecordingCompleted` | Recording ready, sent only to `recording_callback_url`. Unsigned, no `metadata`; `ev.recording_url` is a path inside Unpod, so fetch it with `get_recording(ev.call_id)`. See [Recording](/telephony/apis/recording#recording-events) |
+| `ParticipantRecordingInitiated`, `ParticipantRecordingCompleted` | Per leg, only with `record_participant_track=True`. Sent together after the call |
 | `StartApp`, `Hangup`, `RecordStop` | Answer-URL (inbound) events, with `ev.call_status` |
 
 ## `CallEvent` fields

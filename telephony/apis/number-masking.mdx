@@ -113,8 +113,8 @@ Outbound events don't carry the phone numbers in `ev.to` or `ev.from_`, so the c
 number travels in `metadata`, which Unpod echoes on every event as `ev.metadata`.
 
 <Note>
-Whether a call is recorded follows your org's recording policy: `record=True` alone may not
-record it. Inbound calls aren't recorded yet. See [Recording](/telephony/apis/recording).
+Whether a call is recorded follows your org's recording policy: `record=True` doesn't
+override it today. See [Recording](/telephony/apis/recording).
 </Note>
 
 {/* TODO(verify): record=true on POST /calls is stored but not read in the SBC source (feat/unpo-284-relay-bridge, recording_completed.rs "Not implemented"); whether a call is recorded follows the org's recording policy */}
@@ -229,8 +229,6 @@ it back unchanged. Save the `call_id` and duration; to download the audio, see
 Store any other cause (`Service Unavailable`, `Unknown`, ...) and `ev.sip_code` as it is;
 see [Hangup causes](/telephony/apis/webhooks#hangup-causes). A call holds at most two
 people, so a masked call is always one agent and one customer.
-
-{/* TODO(verify): Webhooks page lists the recording event as RecordingCompleted; the SBC source (recording_completed.rs) sends MPCRecordingCompleted */}
 
 ## Customer calls the masked number
 

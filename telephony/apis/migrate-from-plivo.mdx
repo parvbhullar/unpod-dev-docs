@@ -27,8 +27,8 @@ async with AsyncClient() as client:          # UNPOD_BASE_URL, UNPOD_PLATFORM_TO
 | `multiPartyCalls.stop({ uuid })` | `calls.end(call_id)` | `None` |
 | `calls.playMusic(callUuid, url, { loop })` | `calls.play_audio(call_id, url=, leg_id=, loop=)` | `PlayResult` |
 | `calls.stopPlayingMusic(callUuid)` | `calls.stop_audio(call_id, leg_id=, play_id=)` | `None` |
-| `GET` on `RecordingURL` | `calls.get_recording(call_id).url`, then a plain `GET` | `Recording` |
-| Call Status / Recording / Incoming webhooks | `parse_call_event(body, headers, secret)` | `CallEvent` |
+| `GET` on `RecordingURL` | `calls.get_recording(call_id).url`, then a `GET` with your auth headers and `Accept: audio/wav` ([Recording](/telephony/apis/recording#download-the-audio)) | `Recording` |
+| Call Status / Recording / Incoming webhooks | `parse_call_event(body, headers, secret)`. Recording events aren't signed yet: `verify=False` | `CallEvent` |
 | Number answer URL | `telephony.inbound.set_did(number, InboundConfig(answer_url=…))` | `InboundConfig` |
 | `X-Plivo-Signature-V3` | `X-Webhook-Signature`, checked by `parse_call_event` | - |
 | Search / buy / configure a number | `telephony.numbers.list()` / `attach()` from the Unpod pool | - |
@@ -151,11 +151,15 @@ The secret comes from `client.telephony.webhook_secret.rotate()`. See [Webhooks]
 
 | Plivo `EventName` | Unpod |
 | --- | --- |
-| `ParticipantRecordingInitiated` | Not sent - drop that branch |
-| `ParticipantRecordingCompleted` | Not sent - split the 2-channel WAV if you need per-leg audio |
-| `MPCRecordingCompleted` | `RecordingCompleted` - save `ev.recording_url` |
+| `ParticipantRecordingInitiated` | Sent only with `record_participant_track=True`, together with `ParticipantRecordingCompleted` after the call |
+| `ParticipantRecordingCompleted` | Points at the same 2-channel WAV - split it if you need per-leg audio |
+| `MPCRecordingCompleted` | Same name, but unsigned and without `metadata`. `ev.recording_url` is a path inside Unpod: fetch with `get_recording(ev.call_id)` |
 
-One **2-channel WAV** per call: agent on the left, customer on the right.
+One **2-channel WAV** per call: agent on the left, customer on the right. Whether a call
+is recorded follows your org's recording policy: `record=True` doesn't override it today.
+See [Recording](/telephony/apis/recording).
+
+{/* TODO(verify): channel order on a live two-person call */}
 
 ### Incoming Call
 
@@ -165,7 +169,7 @@ from unpod.telephony import InboundConfig
 await client.telephony.inbound.set_did("+919000000001", InboundConfig(
     answer_url="https://your-app.example.com/incoming",
     status_callback_url="https://your-app.example.com/incoming",
-    record=True,
+    record=True,  # stored, not applied yet: see Recording
 ))
 ```
 

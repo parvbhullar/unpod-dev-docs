@@ -155,7 +155,7 @@ rest.
 | --- | --- |
 | `StartApp` | A new call, still ringing (`ev.call_status` is `ringing`). Reply with XML. Reply `<Hangup/>` first to reject it (`reason="busy"` sends 486, anything else 603), or `<Speak>…</Speak><Hangup/>` to tell the caller you're busy |
 | `Hangup` | The call ended. Log `ev.duration` and `ev.call_status`: `completed`, `busy`, `no-answer`, `failed` or `cancel` |
-| `RecordStop` | A `<Record>` from your reply finished. Save `ev.recording_url` |
+| `RecordStop` | A `<Record>` from your reply reached its `maxLength`. After the call, get the audio with `get_recording(ev.call_id)` ([Recording](/telephony/apis/recording)) |
 
 Point `status_callback_url` at the same route, as in the config above. Unpod sends the
 answer URL's `Hangup` only once, but retries status callbacks until it gets a 2xx, so a
@@ -225,9 +225,10 @@ callback (`ev.hangup_cause`).
 {/* TODO(verify): caller is hung up when the Dial target fails */}
 
 <Note>
-Recording inbound calls from the number's config is rolling out (see
-[Recording](/telephony/apis/recording)). For now, don't put `<Record/>` before `<Dial>`: the
-caller waits in silence for the recording to finish (300 s by default) before Unpod dials.
+Whether inbound calls are recorded follows your org's recording policy, not the number's
+`record` setting (see [Recording](/telephony/apis/recording)). Don't put `<Record/>` before
+`<Dial>`: the caller waits in silence for the recording to finish (300 s by default) before
+Unpod dials.
 </Note>
 
 {/* TODO(verify): InboundConfig.record is stored but no call path in the SBC source (feat/unpo-284-relay-bridge) reads it yet - confirm inbound calls get recorded */}

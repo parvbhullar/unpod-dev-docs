@@ -63,7 +63,7 @@ On an inbound call, your answer URL receives:
 | --- | --- | --- |
 | `StartApp` | `ringing` | A new call. Reply with instructions |
 | `Hangup` | `completed`, `busy`, `no-answer`, `failed`, `cancel` | The call ended. Also carries `Duration`, `StartTime`, `EndTime` |
-| `RecordStop` | - | Recording ready at `ev.recording_url` |
+| `RecordStop` | - | A `<Record>` reached its `maxLength`. Get the audio by `ev.call_id` after the call ([Recording](/telephony/apis/recording#recording-events)) |
 
 Each `StartApp` also carries:
 
@@ -141,11 +141,10 @@ Set the voice and language on `<Speak>` itself:
 </Response>
 ```
 
-To record an outbound call, set `record=True` on `create`. Recording inbound calls from the
-number's config is rolling out (see [Recording](/telephony/apis/recording)). Don't put
-`<Record/>` before `<Dial>`: it waits
-for the recording to finish (300 s by default) before dialing, and the caller hears
-silence.
+Whether a call is recorded follows your org's recording policy; `record=True` on `create`
+doesn't override it today (see [Recording](/telephony/apis/recording)). Don't put
+`<Record/>` before `<Dial>`: it waits for the recording to finish (300 s by default)
+before dialing, and the caller hears silence.
 
 ## A minimal answer server
 

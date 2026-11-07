@@ -283,7 +283,7 @@ The `add_participant` options most people need:
 | `ring_timeout` | Seconds to ring before giving up, 1-120 (default 30) |
 | `answer_url` | Run XML on this leg when it connects, instead of bridging it. See [Answer URL & XML](/telephony/apis/answer-url) |
 | `status_callback_url` | Public https URL for this leg's events |
-| `record` | `True` to record the call |
+| `record` | Doesn't override your org's recording policy today. See [Recording](/telephony/apis/recording) |
 | `metadata` | Dict of strings, echoed back on every event as `ev.metadata` |
 | `idempotency_key` | Retry-safe: the same key never dials twice |
 

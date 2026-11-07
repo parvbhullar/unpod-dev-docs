@@ -1,7 +1,7 @@
 ---
 title: 'Call Control'
 icon: 'sliders-horizontal'
-description: 'Dial, bridge two people, play audio, speak, transfer, send DTMF and record - from Python'
+description: 'Dial, bridge two people, play audio, speak, transfer and send DTMF - from Python'
 ---
 
 `client.telephony.calls` places and controls calls on the Unpod SBC. A **call** (`call_id`)
@@ -50,8 +50,8 @@ The same options apply to `create` and `add_participant`.
 | `status_callback_method` | `"POST"` \| `"GET"` | Default `POST` |
 | `status_callback_format` | `"form"` \| `"json"` | Default `form` (Plivo-style keys); `json` uses snake_case |
 | `recording_callback_url` | `str` | Public https URL for the recording event |
-| `record` | `bool` | Record the call |
-| `record_participant_track` | `bool` | Also keep per-participant tracks |
+| `record` | `bool` | Stored, but doesn't override your org's recording policy today. See [Recording](/telephony/apis/recording) |
+| `record_participant_track` | `bool` | Also send per-leg recording events. Needs `record=True` |
 | `answer_url` / `answer_method` | `str` / `"POST"` \| `"GET"` | Run an answer-URL app on this leg when it connects, instead of bridging it |
 | `metadata` | `dict[str, str]` | Echoed on every event as `ev.metadata` |
 | `idempotency_key` | `str` | A fresh key is sent by default. Pass your own when you retry, so the call is not dialed twice |
@@ -108,19 +108,6 @@ await calls.transfer_cancel(call.call_id, consult_leg)
 await calls.send_dtmf(call.call_id, "1234#", leg_id=leg)                  # 0-9 A-D * #
 ```
 
-## Recording
-
-```python
-await calls.record(call.call_id)                       # start recording mid-call
-
-rec = await calls.get_recording(call.call_id)
-print(rec.available, rec.channels, rec.duration_secs, rec.url)
-```
-
-One **2-channel WAV** per call: leg A on the left, leg B on the right. `get_recording`
-returns `409 conflict` while the file is still being written - retry after the call ends.
-You also get it as a `RecordingCompleted` event at `recording_callback_url`.
-
 ## Inspect and end calls
 
 ```python
@@ -133,6 +120,8 @@ await calls.end(call.call_id)                                   # end all legs
 `list` filters: `page`, `page_size`, `status` (`ringing`, `talking`), `direction`
 (`inbound`, `outbound`), `caller`, `callee`, `number`, `since`. An ended call drops out of
 the list, and `get` / `end` then return `404 not_found` - treat that as done.
+
+To get a call's recording once it ends, see [Recording](/telephony/apis/recording).
 
 ## Full example: agent-first hotline
 
@@ -193,7 +182,7 @@ except TelephonyAPIError as e:
 | 400 `from_not_owned` | `from_` is not one of your org's numbers |
 | 400 `invalid_url` | A callback or audio URL is not public https |
 | 400 `bad_request` | Malformed body or unknown field |
-| 404 `not_found` | Unknown call, leg or DID, or one that belongs to another org |
+| 404 `not_found` | Unknown call, leg or number, or one that belongs to another org |
 | 409 `participant_limit` | A third participant |
 | 409 `conflict` | Recording not finished yet |
 | 403 `forbidden` | `webhook_secret.rotate()` by a non-admin, or a caller ID not provisioned for your org |
