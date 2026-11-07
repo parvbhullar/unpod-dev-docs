@@ -43,6 +43,8 @@ For your app to answer, attach the number with `attach_type="human_call"` (see t
 AI agent, the agent always answers: your answer URL can only reject the call (a reply that
 starts with `<Hangup/>`), and no `Hangup` event reaches the answer URL.
 
+{/* TODO(verify): agent-attached numbers take the external-bridge route */}
+
 ## Point your number at your app
 
 **Dashboard:** open the number in the [Unpod dashboard](https://unpod.ai/) and set its
@@ -159,7 +161,8 @@ Point `status_callback_url` at the same route, as in the config above. Unpod sen
 answer URL's `Hangup` only once, but retries status callbacks until it gets a 2xx, so a
 missed `Hangup` arrives again. The route then also receives call events, such as
 `Incoming`, `Ringing`, `Answered` and a `Hangup` per leg: return 200 for them. `Hangup` can
-arrive more than once, which `on_call.pop(ev.call_id, None)` below handles.
+arrive more than once, which `on_call.pop(ev.call_id, None)` below handles. Every event
+for a call carries the same `ev.call_id`; `ev.leg_id` differs per leg.
 
 This server routes each caller to a free agent's phone, or tells them everyone is busy:
 
@@ -214,8 +217,12 @@ always returns 2xx: Unpod treats any other status as a failure and may
 [fall back](#when-your-server-is-down).
 
 `<Dial><Number>` is a blind transfer: Unpod hands the call to that number and runs nothing
-after it. If the chosen agent doesn't pick up or is busy, the call ends with `no-answer` or
-`busy`. Unpod doesn't try the next agent, and the server frees the agent on `Hangup`.
+after it. If the chosen agent doesn't pick up or is busy, Unpod doesn't try the next agent.
+Unpod answered the caller before dialing, so the answer URL's `Hangup` reports
+`completed`; the agent's busy or no-answer cause comes on its leg's `Hangup` status
+callback (`ev.hangup_cause`).
+
+{/* TODO(verify): caller is hung up when the Dial target fails */}
 
 <Note>
 Recording inbound calls from the number's config is rolling out (see
