@@ -185,8 +185,9 @@ with a new campaign name, such as `reminder-nov-retry`.
 
 ## Limits
 
-- Every URL must be public https: the answer URL, the audio file and
-  `status_callback_url`. Otherwise `create` returns `400 invalid_url`.
+- The answer URL and `status_callback_url` must be public https, or `create` returns
+  `400 invalid_url`. A non-https audio URL inside `blast.xml` makes the reply fail, and
+  the call stays connected in silence. See [Answer URL & XML](/telephony/apis/answer-url).
 - `IN_FLIGHT` limits how many `create` requests run at once. Each returns right away, so
   the number of live calls can still grow to the size of your list.
 - Unpod can cap your org's concurrent calls and calls per second. At the cap, `create`
@@ -201,7 +202,7 @@ with a new campaign name, such as `reminder-nov-retry`.
 ## Next
 
 <CardGroup cols={2}>
-  <Card title="Number Masking" icon="user-secret" href="/telephony/apis/number-masking">
+  <Card title="Number Masking" icon="venetian-mask" href="/telephony/apis/number-masking">
     Connect two people without showing their numbers.
   </Card>
   <Card title="Answer URL & XML" icon="file-code" href="/telephony/apis/answer-url">
