@@ -37,6 +37,7 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
 
     <CodeGroup>
     ```python Python
+    import httpx
     from unpod import Client
 
     with Client() as client:
@@ -45,7 +46,10 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
         number = next((n.number for n in pool if n.status == "not_assigned"), None)
         if number is None:
             raise SystemExit("No unassigned pool number. Add one from the dashboard.")
-        result = tel.numbers.attach(number, attach_type="human_call")
+        try:
+            result = tel.numbers.attach(number, attach_type="human_call")
+        except httpx.HTTPStatusError as e:  # nothing attached: the body says why
+            raise SystemExit(e.response.text)
         r = result.numbers[0]
         print(r.number, r.ok, r.connection_state, r.error)
     ```
@@ -63,7 +67,9 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     ```
     </CodeGroup>
 
-    `attach_type="human_call"` routes the number for call control, with no AI agent.
+    `attach_type="human_call"` routes the number for call control, with no AI agent. A number
+    already attached to an AI agent can also be the `from` of an outbound call; `human_call`
+    matters for inbound calls, where it decides that your app answers instead of the agent.
 
     {/* TODO(verify): full list of connection_state values that can place calls (PENDING_VERIFY worked; NOT_LINKED was rejected) */}
 
@@ -71,7 +77,8 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     Dial from a number whose `connection_state` is not `NOT_LINKED` (for example
     `PENDING_VERIFY` or `LINKED`). See it with the overview request from the
     [credentials check](/telephony/introduction#credentials). A `403 forbidden: from is not
-    a number available to this organization` means the number isn't ready yet.
+    a number available to this organization` means the number isn't ready yet; a
+    `400 from_not_owned` means it isn't one of your org's numbers.
     </Note>
   </Step>
 
@@ -167,15 +174,14 @@ When someone calls your number, Unpod posts the call to your answer URL and runs
 reply with.
 
 <Info>
-Inbound configuration is rolling out. If `set_did` (or the `PUT` in step 4) returns `405`,
-`401` or `403` (Call API not switched on), ask the Unpod team to switch it on or set the
-answer URL on your number for now.
+Inbound configuration needs the Call API switched on for your org: until then `set_did` (or
+the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to switch it on.
 </Info>
 
 <Steps>
   <Step title="Get your webhook secret">
     One signing key for all call events in your org. Create it once with `rotate()` (org
-    owner or admin) - the only call that returns it in full - and store it as
+    owner or editor) - the only call that returns it in full - and store it as
     `UNPOD_WEBHOOK_SECRET`:
 
     <Warning>
@@ -189,7 +195,7 @@ answer URL on your number for now.
 
     with Client() as client:
         s = client.telephony.webhook_secret.rotate()
-        print(s.pushed_to_sbc)  # must be True
+        print(s.pushed_to_sbc)  # False: still syncing, Unpod retries it
         print(s.secret)         # shown in full only here
     ```
 
@@ -200,7 +206,9 @@ answer URL on your number for now.
     ```
     </CodeGroup>
 
-    If `pushed_to_sbc` comes back false, ask the Unpod team before you go on.
+    If `pushed_to_sbc` comes back `false`, Unpod retries the update in the background. Until it
+    lands, events aren't signed with the new secret and your server answers `401`, so wait a
+    minute before the test call.
   </Step>
 
   <Step title="Run a server">

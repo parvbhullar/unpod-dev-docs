@@ -54,10 +54,10 @@ the same name (`from_` is `from`), and `idempotency_key` is the `Idempotency-Key
 | `idempotency_key` | `str` | A fresh key is sent by default. Pass your own when you retry, so the call is not dialed twice |
 
 <Warning>
-Every callback and audio URL must be **public https**. Anything else returns `400 invalid_url`.
+Every callback and audio URL (`status_callback_url`, `recording_callback_url`, `answer_url`
+and the `play_audio` URL) must be **public https**. Unpod checks this before the call reaches
+the SBC: anything else returns `400 invalid_url`.
 </Warning>
-
-{/* TODO(verify): a non-https play url - the SBC answers 400 bad_request "audio url rejected"; does the proxy return invalid_url first? */}
 
 ## Play audio and speak
 
@@ -95,7 +95,7 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
 
 | Method | Notes |
 | --- | --- |
-| `play_audio(call_id, *, url, leg_id, loop, interrupt_on_dtmf)` → `PlayResult` | `url` is a public https MP3 or WAV. `loop` and `interrupt_on_dtmf` default to `false`. Answers `202` with a `play_id` |
+| `play_audio(call_id, *, url, leg_id, loop, interrupt_on_dtmf)` → `PlayResult` | `url` is a public https MP3 or WAV. `loop` and `interrupt_on_dtmf` default to `false`. Answers `202` with a `play_id`. The SDK also accepts `file=`, but the API rejects it with `400 bad_request`: use `url` |
 | `stop_audio(call_id, *, leg_id, play_id)` | Stops one play, one leg's audio, or both omitted, all audio on the call. `202` even if nothing was playing |
 | `speak(call_id, text, *, voice, language, leg_id, loop)` → `PlayResult` | Text-to-speech, 1-1000 characters. `voice` and `language` default to the number's [`tts_voice` / `tts_language`](/telephony/apis/incoming-calls#inboundconfig-fields). Answers `202` with a `play_id` |
 
@@ -131,7 +131,7 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/dtmf" \
 curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/transfer" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
-  -d '{"type": "blind", "target": "+919000000004", "leg": "callee"}'
+  -d '{"type": "blind", "target": "+919000000004"}'
 ```
 </CodeGroup>
 
@@ -152,7 +152,7 @@ from `create` or an event - and goes over HTTP as `leg`. Anything else returns
 <CodeGroup>
 ```python Python
 call = calls.get(call_id)                          # state and legs
-page = calls.list(status="talking", page_size=20)  # page.items, page.total
+page = calls.list(status="talking", page_size=20)  # page.items: your live calls
 calls.hangup(call_id, reason="by_system")          # a live call, with a reason
 calls.end(call_id)                                 # every leg; safe to repeat
 ```
@@ -162,7 +162,7 @@ calls.end(call_id)                                 # every leg; safe to repeat
 curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
-# list live calls -> items, page, page_size, total
+# list live calls -> items, page, page_size, total (your calls on this page)
 curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls?status=talking&page_size=20" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
@@ -180,7 +180,7 @@ curl -s -X DELETE "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
 | Method | Notes |
 | --- | --- |
 | `get(call_id)` → `TelephonyCall` | `state` (`initiated`, `ringing`, `talking`) and `legs`. After the call ends: the recording summary, with no `state` |
-| `list(*, page, page_size, status, direction, caller, callee, number, since)` → `CallList` | Live calls only. `status`: `ringing` or `talking`; `direction`: `inbound` or `outbound`; `since`: RFC 3339 |
+| `list(*, page, page_size, status, direction, caller, callee, number, since)` → `CallList` | Live calls only. Filters: `status` (`ringing` or `talking`), `direction` (`inbound` or `outbound`), `since` (RFC 3339). In the rows, `to` / `from` are SIP URIs, and a call you started with `create` can read `direction: "inbound"`, so don't rely on a row's `direction`. Pages are cut before Unpod filters them to your org, so a page can hold fewer than `page_size` of your calls (even none) while later pages hold more, and `total` counts only your calls on this page. To find every live call, request pages until one comes back empty |
 | `hangup(call_id, *, reason, code)` | Ends every leg of a live call; `404 not_found` once it's over. `reason` is recorded on the call: `by_caller`, `by_callee`, `by_system`, `no_answer`, `rejected`, `canceled` or `failed` (others are ignored). `code` is a SIP status |
 | `end(call_id)` | Ends every leg. A call that already ended answers `202` again; `409 conflict` while a call you just created is still being set up (retry) |
 
@@ -215,7 +215,7 @@ curl -s -w '\n%{http_code}\n' -X POST "https://unpod.ai/api/v2/platform/sbc/v1/c
 
 # an error body looks like one of these:
 # {"error": "call already has two participants", "code": "participant_limit"}
-# {"detail": "call_api_disabled", "message": "..."}
+# {"detail": "call_api_disabled"}
 ```
 </CodeGroup>
 
@@ -224,17 +224,22 @@ reaches the SBC (`call_api_disabled`, `from_not_owned`).
 
 | Status / `code` | Meaning |
 | --- | --- |
-| 400 `organization_required` | `Org-Handle` missing, or you are not an active member |
+| 400 `organization_required` | `Org-Handle` missing or unknown |
+| 403 | `You are not a member of this organization` (in `detail`): your token's user isn't in the `Org-Handle` org |
 | 403 `call_api_disabled` | The Call API is not switched on for your org |
+| 402 | `create` / `add_participant` while your org's access is suspended (billing) |
 | 400 `from_not_owned` | `from_` is not one of your org's numbers |
 | 400 `invalid_url` | A callback or audio URL is not public https |
 | 400 `bad_request` | Malformed body, unknown field, or a DTMF / transfer leg other than `caller` / `callee` |
 | 404 `not_found` | Unknown call, leg or number, one that belongs to another org, or a call that just ended |
 | 409 `participant_limit` | A third participant |
 | 409 `conflict` | Recording not finished yet, or `end` on a call that is still being set up |
-| 403 `forbidden` | `webhook_secret.rotate()` by a non-admin, or a caller ID not provisioned for your org |
+| 403 `forbidden` | `webhook_secret.rotate()` by someone who isn't an org owner or editor, or a caller ID not provisioned for your org |
+| 429 | `create` / `add_participant` over **60 per minute per org**. `detail` is `Request was throttled. Expected available in N seconds.`, so branch on `e.status_code == 429` |
 | 429 `rate_limited` | Too many `speak` requests |
 | 503 `tts_unavailable` | `speak` couldn't make speech; the call carries on |
+| 503 `webhook_secret_unavailable` | The webhook secret can't be made right now; retry later |
+| 503 `sbc_target_not_configured` | Your org's telephony routing isn't set up; ask the Unpod team |
 | `not_supported` | Feature not available yet, e.g. a `dial_music` URL |
 
 The SDK raises `ValueError` before sending when `speak` text is over 1000 characters or

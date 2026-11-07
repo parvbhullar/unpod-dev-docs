@@ -112,8 +112,9 @@ await calls.stop_audio(call_id)                                   # all audio, a
 ## 4. End the call
 
 ```python
-await calls.end(call_id)                                   # all legs
-await calls.hangup(call_id, reason="by_system", code=200)  # with a reason / SIP code
+await calls.end(call_id)                          # all legs
+# or, instead of end - not both (the second gets 404 once the call is over):
+await calls.hangup(call_id, reason="by_system")  # all legs, with a reason
 ```
 
 `end` on a call that already ended answers `202` again (a `404` only briefly right after

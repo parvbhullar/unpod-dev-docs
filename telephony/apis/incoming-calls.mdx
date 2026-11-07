@@ -30,7 +30,7 @@ flowchart LR
 | --- | --- | --- |
 | Unpod number | Your app | The number's answer URL ([below](#point-your-number-at-your-app)) |
 | Unpod number | An Unpod AI agent | [`numbers.attach(number, agent_id=…)`](/telephony/apis/numbers) - no code to host |
-| Your carrier's number | Your app or an agent | [SIP Trunking](/telephony/quickstart), then the trunk's inbound config ([below](#for-a-whole-sip-trunk)) |
+| Your carrier's number | Your app or an agent | [SIP Trunking](/telephony/quickstart), then each number's inbound config ([below](#for-a-whole-sip-trunk)) |
 
 For your app to answer, attach the number with `attach_type="human_call"` (see the
 [Quick Start](/telephony/apis/quickstart#make-your-first-call)). On a number attached to an
@@ -82,14 +82,14 @@ curl -s "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
 
 `set_did` sets the config for one number. In the URL, `+` becomes `%2B`. A `PUT` replaces
 the number's own config; fields you leave out come from its
-[trunk](#for-a-whole-sip-trunk). `get_did` returns the config in effect. The number must be
+trunk. `get_did` returns the config in effect. The number must be
 one of your org's numbers, otherwise `404`.
 
 <Info>
-Inbound configuration is rolling out and needs the Call API switched on for your org (see
-the [Quick Start](/telephony/apis/quickstart)). If `set_did` (or the `PUT`) returns `403`
-(Call API not switched on), `405` or `401`, ask the Unpod team to switch it on or set the
-answer URL on your number for now.
+Inbound configuration needs the Call API switched on for your org (see the
+[Quick Start](/telephony/apis/quickstart)): until then `set_did` (or the `PUT`) returns
+`403 call_api_disabled`. If the `PUT` returns a `5xx`, Unpod has saved your config and
+keeps retrying it in the background.
 </Info>
 
 ### `InboundConfig` fields
@@ -111,7 +111,7 @@ Your org has one signing key for every *signed* request Unpod sends you: inbound
 requests and status callbacks alike. Outbound answer-URL requests and recording events
 aren't signed yet (see
 [Which requests are signed](/telephony/apis/webhooks#which-requests-are-signed)).
-Create the key with `webhook_secret.rotate()` (org owner or admin).
+Create the key with `webhook_secret.rotate()` (org owner or editor).
 The full secret is shown only in that response, so store it as `UNPOD_WEBHOOK_SECRET`.
 
 <CodeGroup>
@@ -120,7 +120,7 @@ from unpod import Client
 
 with Client() as client:
     s = client.telephony.webhook_secret.rotate()
-    print(s.pushed_to_sbc)  # must be True
+    print(s.pushed_to_sbc)  # False: still syncing, Unpod retries it
     print(s.secret)         # shown in full only here
 ```
 
@@ -191,7 +191,9 @@ async def incoming(request: Request):
         raise HTTPException(401)
 
     if ev.event == "StartApp":  # a new call is ringing
-        free = next((a for a in AGENTS if a not in on_call.values()), None)
+        free = on_call.get(ev.call_id) or next(  # a resent StartApp keeps its agent
+            (a for a in AGENTS if a not in on_call.values()), None
+        )
         if free is None:
             return xml("<Speak>All our agents are busy.</Speak><Hangup/>")
         on_call[ev.call_id] = free
@@ -255,32 +257,46 @@ fallback straight away.
 
 ## For a whole SIP trunk
 
-Your carrier's numbers reach Unpod over a SIP trunk. Set the inbound config once on the trunk,
-by its name, and every number on it uses it. A number's own config wins field by field over
-its trunk's, so you can give one number a different `answer_url` and keep the rest.
+Your carrier's numbers reach Unpod over a SIP trunk. Set the same config on each number of
+the trunk with `set_did`:
 
 <CodeGroup>
 ```python Python
 from unpod import Client
 from unpod.telephony import InboundConfig
 
+NUMBERS = ["+15551234567", "+15559876543"]  # the numbers mapped to your trunk
+
 with Client() as client:
-    inbound = client.telephony.inbound
-    inbound.set_trunk("my-trunk", InboundConfig(
+    config = InboundConfig(
         answer_url="https://your-app.example.com/incoming",
         answer_fallback="reject_503",
-    ))
-    print(inbound.get_trunk("my-trunk"))
+    )
+    for number in NUMBERS:
+        client.telephony.inbound.set_did(number, config)
 ```
 
 ```bash cURL
-curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/trunks/my-trunk/inbound" \
-  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
-  -H "Content-Type: application/json" \
-  -d '{"answer_url": "https://your-app.example.com/incoming",
-       "answer_fallback": "reject_503"}'
+for N in %2B15551234567 %2B15559876543; do
+  curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/dids/$N/inbound" \
+    -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+    -H "Content-Type: application/json" \
+    -d '{"answer_url": "https://your-app.example.com/incoming",
+         "answer_fallback": "reject_503"}'
+done
 ```
 </CodeGroup>
 
-An unknown trunk name returns `404`. To create a trunk and attach numbers to it, see
+`set_did` returns `404` for a number that isn't one of your org's. The numbers mapped to a
+trunk are in `origin_endpoint.dids` of the
+[attach response](/telephony/sip-trunking/trunks#map-numbers-to-a-trunk).
+
+<Note>
+`inbound.set_trunk(name, ...)` / `PUT /sbc/v1/trunks/{name}/inbound` set one config for a
+whole trunk, but `name` is the trunk's internal Unpod name, which the trunk API doesn't
+return yet. The name you gave the trunk (for example `my-trunk`) returns `404`. Use
+`set_did` per number until then.
+</Note>
+
+To create a trunk and attach numbers to it, see
 [Manage Trunks](/telephony/sip-trunking/trunks).

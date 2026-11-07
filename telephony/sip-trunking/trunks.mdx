@@ -106,7 +106,7 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/trunks/" \
 
 | Python | API field | Required | Meaning |
 | --- | --- | --- | --- |
-| `name` | `name` | Yes | Trunk name. The [inbound config](#inbound-config-for-a-whole-trunk) is keyed by it |
+| `name` | `name` | Yes | Your label for the trunk |
 | `sip_url` | `sip_url` | Yes | Carrier SIP URL or host |
 | `username`, `password` | `auth_username`, `auth_password` | No | SIP auth credentials. The password is masked on every read |
 | `transport` | `transport` | No | `tcp` (default), `udp` or `tls` |
@@ -195,44 +195,49 @@ request fails with `400` (the SDK raises `httpx.HTTPStatusError`). See
 
 ## Inbound config for a whole trunk
 
-Set where calls go once, on the trunk, and every number on it uses it. The config is keyed
-by the trunk's **name**, not its id. A number's own config wins field by field over the
-trunk's, so one number can have its own `answer_url` while the rest share the trunk's.
+To send the trunk's inbound calls to your app, set the inbound config on each of its numbers
+with `set_did`. It needs the Call API switched on for your org (otherwise
+`403 call_api_disabled`).
 
 <CodeGroup>
 ```python Python
 from unpod import Client
 from unpod.telephony import InboundConfig
 
+NUMBERS = ["+15551234567"]  # the numbers mapped to the trunk (origin_endpoint.dids)
+
 with Client() as client:
     inbound = client.telephony.inbound
-    inbound.set_trunk("my-trunk", InboundConfig(
-        answer_url="https://your-app.example.com/incoming",
-    ))
-    print(inbound.get_trunk("my-trunk"))
+    for number in NUMBERS:
+        inbound.set_did(number, InboundConfig(
+            answer_url="https://your-app.example.com/incoming",
+        ))
+        print(inbound.get_did(number))
 ```
 
 ```bash cURL
-# set
-curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/trunks/my-trunk/inbound" \
+# set (+ becomes %2B in the URL)
+curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B15551234567/inbound" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"answer_url": "https://your-app.example.com/incoming"}'
 
 # read
-curl -s "https://unpod.ai/api/v2/platform/sbc/v1/trunks/my-trunk/inbound" \
+curl -s "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B15551234567/inbound" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
 
-An unknown trunk name returns `404`. For every config field and how to answer the call,
-see [For a whole SIP trunk](/telephony/apis/incoming-calls#for-a-whole-sip-trunk).
+A number that isn't one of your org's returns `404`. `set_trunk` / `PUT /sbc/v1/trunks/{name}/inbound`
+take the trunk's internal Unpod name, which this API doesn't return yet: the `name` you
+gave the trunk returns `404`. For every config field and how to answer the call, see
+[For a whole SIP trunk](/telephony/apis/incoming-calls#for-a-whole-sip-trunk).
 
 ## Delete a trunk
 
-Unmap every number first, then delete. Deleting removes the trunk's number mappings too,
-but unmapping first releases each number cleanly back to `NOT_ASSIGNED`. The sample only
-deletes once every number has unmapped. Running it again after a partial failure? Drop
+Delete detaches every number on the trunk back to `NOT_ASSIGNED` and removes the trunk, all
+or nothing: if one number fails, nothing changes. Unmapping first shows you which number
+failed and why, so the sample unmaps, then deletes only once every number has unmapped. Running it again after a partial failure? Drop
 the ids that already unmapped: they now report `ok: false`, and if none unmap the request
 fails with `400`.
 
@@ -270,4 +275,8 @@ curl -s -X DELETE "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/"
 ```
 </CodeGroup>
 
-Delete returns `204` with no body. See [Delete Trunk](/telephony/trunks/delete-trunk).
+Delete returns `204`, or `404` for a trunk that isn't your org's. If a number can't be
+detached it returns `400` (or `206`) with the reason in `message` and the trunk stays.
+`trunks.delete()` raises on the `400` but **not** on a `206`, so check with
+`trunks.get(TRUNK_ID)`: it raises `httpx.HTTPStatusError` with `404` once the trunk is gone. See
+[Delete Trunk](/telephony/trunks/delete-trunk).

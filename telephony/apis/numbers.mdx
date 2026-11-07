@@ -107,12 +107,16 @@ The response:
 
 <CodeGroup>
 ```python Python
+import httpx
 from unpod import Client
 
 NUMBER = "+919000000001"  # a not_assigned number from the list
 
 with Client() as client:
-    result = client.telephony.numbers.attach(NUMBER, attach_type="human_call")
+    try:
+        result = client.telephony.numbers.attach(NUMBER, attach_type="human_call")
+    except httpx.HTTPStatusError as e:  # nothing attached: the body says why
+        raise SystemExit(e.response.text)
     for r in result.numbers:  # one row per number
         print(r.number, r.ok, r.connection_state, r.error)
 ```
@@ -127,13 +131,15 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/numbers/attach/" \
 
 Pass one number or a list, in strict E.164 (`+` and the country code). Each number
 succeeds or fails on its own: check `ok` and `error` on every row (`data.numbers` in the
-cURL response).
+cURL response). If no number attaches, the whole request fails: `400`, `402` (no balance)
+or `206` (over your plan's channel quota). The SDK raises `httpx.HTTPStatusError` on `400`
+and `402`, but not on `206`, so still check `ok`.
 
 | Option | Who handles the calls |
 | --- | --- |
 | `attach_type="human_call"` | Your app, with the Telephony APIs. Leave out `agent_id` |
 | `agent_id="…"` | An Unpod AI agent (`attach_type="agent"`, the default) |
-| `attach_type="pipeline"`, `pipe_id="…"` | An Unpod pipeline. `pipe_id` is required |
+| `attach_type="pipeline"`, `pipe_id="…"` | An Unpod pipeline. `pipe_id` is required (over HTTP send `supervoice_agent_id`; `pipe_id` is an accepted alias) |
 
 To receive calls on a `human_call` number, point it at your app: see
 [Incoming Calls](/telephony/apis/incoming-calls).
@@ -160,7 +166,9 @@ curl -s "https://unpod.ai/api/v2/platform/telephony/overview/" \
 
 ### Detach a number
 
-Detach releases the number. It isn't deleted, and you can attach it again later.
+Detach releases the number back to `NOT_ASSIGNED`; it isn't deleted. A number your org
+owns stays yours to attach again. A number you took from the shared pool goes back to the
+pool, where another org can take it.
 
 <CodeGroup>
 ```python Python
@@ -187,13 +195,15 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/numbers/detach/" \
 | `connection_state` | Meaning |
 | --- | --- |
 | `NOT_LINKED` | Not routed yet. Rejected as the `from` of a call |
-| `PENDING_VERIFY` | Accepted as `from` |
-| `LINKED` | Connected |
+| `PENDING_VERIFY` | Routed, waiting for its first real inbound call. Accepted as `from` |
+| `LINKED` | A real inbound call has connected through it |
+| `ERROR` | Routing failed; Unpod retries it in the background |
 
 {/* TODO(verify): which connection_state values can place calls */}
 
-A `403 forbidden: from is not a number available to this organization` on a call means
-the `from` number isn't ready: check its `connection_state`.
+On a call, `400 from_not_owned` means `from` isn't one of your org's numbers at all. A
+`403 forbidden: from is not a number available to this organization` means it is yours but
+isn't ready: check its `connection_state`.
 
 ## Reference
 

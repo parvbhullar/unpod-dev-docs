@@ -20,15 +20,17 @@ numbers - like Plivo or Twilio - and **SIP Trunking** lets you bring your own ca
 
 ## Credentials
 
-Both paths use the same two credentials.
+Both paths use the same two credentials, and you get both from the Unpod dashboard.
 
-1. **API key** (the SDK calls it a platform token) - log in to the
-   [Unpod dashboard](https://unpod.ai/), click the **Key** icon (API Keys) in the left
-   sidebar, then **Generate New API Key**.
-   {/* TODO(verify): exact dashboard path and deep link for the API key page */}
-2. **Org handle** - in the dashboard, open **Studio View**, click the **Settings** icon in
-   the right sidebar, then **Copy Org Handle**.
-   {/* TODO(verify): /organizations/ returns 401 for a platform Token - no API returns the org handle for this key yet */}
+1. **API key** (the SDK calls it a platform token). Open
+   [Settings → Security → API keys](https://unpod.ai/settings/security/api-keys/) and click
+   **Generate New**. Copy the key from the list. It's a personal key: it acts as you, in any
+   org you're a member of, so keep it secret and generate a new one if it leaks.
+2. **Org handle**. Open
+   [Settings → Workspace → General](https://unpod.ai/settings/workspace/general/) and copy
+   the **Domain** value without the leading `@` (for example `acme`, not `@acme`). Org owners
+   and editors can also use **Copy Org Handle** in the menu at the top of the org page.
+   No API returns the handle for an API key yet, so copy it from the dashboard.
 
 Export them with the base URL:
 
@@ -52,7 +54,8 @@ curl -s https://unpod.ai/api/v2/platform/telephony/overview/ \
 
 `"status_code": 200` means both values are right (an empty `data` list just means you have
 no numbers yet). 401 means the key is wrong; 403 or "Organization not found" means the org
-handle is wrong.
+handle is wrong. Use cURL for this check: the SDK's `overview()` turns "Organization not
+found" into an empty list, which looks the same as having no numbers.
 
 <Warning>
 Use the dashboard API key with `Authorization: Token …` plus `Org-Handle`. An `sk_...` key
@@ -75,4 +78,4 @@ it is unset, the SDK falls back to a legacy host that no longer resolves.
 - **Call and legs** - a call is made of legs, one per person. You dial the first with `create` and add the second with `add_participant`.
 - **Answer URL** - the https URL Unpod calls when a call starts on a leg (an inbound call is fetched while it's still ringing). You reply with XML or JSON telling Unpod what to do.
 - **Trunk** - a SIP carrier credential (`sip_url`, `transport`, `port`, auth, source-IP allow-list). Secrets are always masked in responses.
-- **Origin endpoint** - the shared SBC ingress (`sip:<host>`) the carrier sends inbound calls to, plus the accepted source IPs and mapped numbers.
+- **Origin endpoint** - the shared SBC ingress host (for example `sip-lb1.unpod.tel`) the carrier sends inbound calls to, plus the accepted source IPs and mapped numbers.

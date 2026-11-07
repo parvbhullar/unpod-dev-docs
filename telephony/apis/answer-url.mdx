@@ -71,10 +71,12 @@ Each `StartApp` also carries:
 - `CallUUID` (`ev.leg_id`), `From` (`ev.from_`), `To` and `Direction=inbound`
 - `SessionStart` (`ev.raw["SessionStart"]`)
 
-On an outbound leg the request is also a `StartApp`, but it always carries the fixed
-values `Direction=inbound` and `CallStatus=ringing`, so don't branch on `Direction`.
-
-{/* TODO(verify): outbound StartApp fields - confirm live */}
+On an outbound leg the request is also a `StartApp`, sent once the person answers. It
+carries the same fields, with the fixed values `Direction=inbound` and
+`CallStatus=ringing`, so don't branch on `Direction`. Its `CallUUID` ends in `-caller`, so it
+doesn't match the `leg_id` that `create` returned: match outbound requests on `MPCUUID`
+(`ev.call_id`). When the call ends, the same URL also gets a `Hangup` with `Duration`,
+`StartTime`, `EndTime`, `AnswerTime` and `HangupCause`; reply `200` to it.
 
 Inbound POST requests are signed once your org has a webhook secret (create it as in the
 [Quick Start](/telephony/apis/quickstart#receive-your-first-call)). Verify and parse them
@@ -172,8 +174,11 @@ async def answer(request: Request):
 
 
 @app.post("/outbound")  # outbound answer-URL requests are not signed yet
-async def outbound():
-    return Response(GREETING, media_type="application/xml")
+async def outbound(request: Request):
+    ev = parse_call_event(await request.body(), request.headers, None, verify=False)
+    if ev.event == "StartApp":  # the person answered
+        return Response(GREETING, media_type="application/xml")
+    return Response(status_code=200)  # Hangup: acknowledge
 
 
 if __name__ == "__main__":
@@ -184,7 +189,7 @@ if __name__ == "__main__":
 Run it with `python app.py` and expose it as in the
 [Quick Start](/telephony/apis/quickstart#receive-your-first-call). `/answer` rejects
 unsigned requests, greets every new inbound call and returns 200 for every other event.
-`/outbound` greets outbound legs. To route callers to free agents, see
+`/outbound` greets each outbound leg once it's answered and acknowledges its `Hangup`. To route callers to free agents, see
 [Incoming Calls](/telephony/apis/incoming-calls).
 
 ## Timeouts and fallback

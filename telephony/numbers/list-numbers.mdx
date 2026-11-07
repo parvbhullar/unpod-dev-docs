@@ -5,8 +5,8 @@ description: 'List the telephony numbers available to your organization'
 openapi: 'GET /api/v2/platform/telephony/numbers/'
 ---
 
-Returns the shared pool of unassigned numbers (`NOT_ASSIGNED`). To also get your
-organization's own assigned numbers, send `Org-Handle` and add the query parameter
+Returns the unassigned (`NOT_ASSIGNED`) numbers you can use: the shared pool plus, with
+`Org-Handle`, your organization's own. To also get your organization's assigned numbers, send `Org-Handle` and add the query parameter
 `include_assigned=true`. Another organization's assigned numbers are never returned.
 
 Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numbers).

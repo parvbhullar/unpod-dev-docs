@@ -41,7 +41,7 @@ to receive inbound calls. The response masks `auth_password`.
   "data": {
     "id": 21,
     "name": "My Carrier Trunk",
-    "sip_url": "sip:carrier.net",
+    "sip_url": "sip:carrier.example.com",
     "transport": "tcp",
     "port": "5060",
     "auth_username": "user",
@@ -70,7 +70,7 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/trunks/" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "My Carrier Trunk",
-    "sip_url": "sip:carrier.net",
+    "sip_url": "sip:carrier.example.com",
     "auth_username": "user",
     "auth_password": "pass",
     "transport": "tcp",

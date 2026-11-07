@@ -73,32 +73,30 @@ FROM = "+919000000001"  # your Unpod number
 ANSWER_URL = "https://cdn.example.com/blast.xml"
 STATUS_URL = "https://your-app.example.com/blast-status"  # step 3, optional
 CAMPAIGN = "reminder-nov"
-IN_FLIGHT = asyncio.Semaphore(10)  # caps create requests at once, not live calls
+PACE = 1.0  # seconds between creates: Unpod accepts 60 a minute per org
 
 
-async def dial(calls, to: str, failed: dict[str, str]) -> None:
-    for attempt in range(10):
+async def dial(calls, to: str) -> str | None:
+    """None once Unpod accepts the call, else why it wasn't."""
+    for attempt in range(6):
         try:
-            async with IN_FLIGHT:
-                await calls.create(
-                    FROM,
-                    to,
-                    answer_url=ANSWER_URL,
-                    answer_method="GET",
-                    status_callback_url=STATUS_URL,
-                    metadata={"campaign": CAMPAIGN, "to": to},  # back on events
-                    idempotency_key=f"{CAMPAIGN}:{to}",  # a retry won't dial twice
-                )
-            return
+            await calls.create(
+                FROM,
+                to,
+                answer_url=ANSWER_URL,
+                answer_method="GET",
+                status_callback_url=STATUS_URL,
+                metadata={"campaign": CAMPAIGN, "to": to},  # back on events
+                idempotency_key=f"{CAMPAIGN}:{to}",  # a retry won't dial twice
+            )
+            return None
         except TelephonyAPIError as e:
             if e.status_code != 429:  # a bad number doesn't stop the batch
-                failed[to] = f"{e.status_code} {e.code}: {e.message}"
-                return
+                return f"{e.status_code} {e.code}: {e.message}"
         except httpx.HTTPError:
             pass  # network error: the same idempotency key makes a retry safe
-        if attempt < 9:  # 429 or network error: back off, unless that was the last try
-            await asyncio.sleep(min(2**attempt, 30))
-    failed[to] = "gave up after retries"
+        await asyncio.sleep(min(2**attempt, 30))  # 429 or network error: back off
+    return "gave up after retries"
 
 
 async def main() -> None:
@@ -111,7 +109,11 @@ async def main() -> None:
     failed: dict[str, str] = {}
     async with AsyncClient() as client:
         calls = client.telephony.calls
-        await asyncio.gather(*(dial(calls, to, failed) for to in numbers))
+        for to in numbers:
+            reason = await dial(calls, to)
+            if reason:
+                failed[to] = reason
+            await asyncio.sleep(PACE)
     print(f"accepted {len(numbers) - len(failed)} of {len(numbers)}")
     for to, reason in failed.items():
         print("failed", to, reason)
@@ -133,19 +135,21 @@ while read -r to || [ -n "$to" ]; do
          "answer_url": "https://cdn.example.com/blast.xml", "answer_method": "GET",
          "status_callback_url": "https://your-app.example.com/blast-status",
          "metadata": {"campaign": "reminder-nov", "to": "'"$to"'"}}'
+  sleep 1  # Unpod accepts 60 creates a minute per org
 done < numbers.txt
 ```
 </CodeGroup>
 
 `create` returns as soon as Unpod accepts the call; it doesn't wait for the phone to ring.
-On a `429` (your org is at its call limit) or a network error the script backs off and
-tries again; any other error is listed at the end and the rest are still dialed.
-`gave up after retries` means your org stayed at its cap (or the network kept failing)
-through every try: run the script again later to pick those numbers up. Fix the list and
+The script dials one number a second, because Unpod accepts at most **60 `create` and
+`add_participant` requests a minute per org** (3,600 numbers take about an hour). On a `429`
+(that limit, or your org's call cap) or a network error it backs off and tries again; any
+other error is listed at the end and the rest are still dialed. `gave up after retries`
+means the `429`s (or network errors) didn't stop: run the script again later to pick those
+numbers up. Fix the list and
 run the script again: thanks to the idempotency key `reminder-nov:<number>`, a
 re-run within 24 h doesn't dial the same number twice, unless Unpod restarts (keys live in
-memory). Use a new campaign name for a new blast. For a very large list, run it in chunks
-of a few thousand numbers.
+memory). Use a new campaign name for a new blast.
 
 Leave out `status_callback_url` if you don't need step 3.
 
@@ -208,7 +212,8 @@ that doesn't get a 2xx a few times over about a minute
 If your server is down for the whole retry window (roughly 27-75 s), the event is dropped
 and that number never gets an outcome. A number missing from `results` is either still on
 a call or lost its `Hangup`: list the live calls with
-[`calls.list()`](/telephony/apis/call-control#inspect-and-end-calls) and check again
+[`calls.list()`](/telephony/apis/call-control#inspect-and-end-calls) (every page, until
+one comes back empty) and check again
 later.
 
 | `ev.hangup_cause` | Outcome | What to do |
@@ -235,16 +240,18 @@ run step 2 with a new campaign name, such as `reminder-nov-retry`.
 - The answer URL and `status_callback_url` must be public https, or `create` returns
   `400 invalid_url`. A non-https audio URL inside `blast.xml` makes the reply fail, and
   the call stays connected in silence. See [Answer URL & XML](/telephony/apis/answer-url).
-- `IN_FLIGHT` limits how many `create` requests run at once. Each returns right away, so
-  the number of live calls can still grow to the size of your list.
-- Unpod can cap your org's concurrent calls and calls per second. At the cap, `create`
-  returns `429` and dials nothing, and the script backs off and retries. A call accepted
+- `create` and `add_participant` together are limited to 60 requests a minute per org.
+  Over it, Unpod returns `429` with `detail` `Request was throttled. Expected available in N
+  seconds.` and dials nothing. `PACE` keeps the script under it. Each `create` returns right
+  away, so up to 60 new calls can be ringing each minute.
+- Unpod can also cap your org's concurrent calls. At the cap, `create` returns `429` and
+  dials nothing, and the script backs off and retries. A call accepted
   right at the cap can still end with `Service Unavailable`.
 - A reply can be at most 64 KB, with up to 32 verbs and 4096 characters in each
   `<Speak>`.
 
 {/* TODO(verify): org concurrent-call and rate limits */}
-{/* TODO(verify): defaults for platform orgs, any throttling in the unpod.ai proxy, how to raise the cap */}
+{/* TODO(verify): concurrent-call cap defaults for platform orgs, how to raise the cap */}
 {/* TODO(verify): Idempotency-Key is kept for 24 h in memory on one SBC node - confirm a re-run behind the proxy hits the same node */}
 
 ## Next

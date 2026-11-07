@@ -40,15 +40,18 @@ as [Recording](/telephony/apis/recording#recording-events) and
 from unpod import Client
 
 with Client() as client:
-    s = client.telephony.webhook_secret.rotate()  # org owner or admin only
-    print(s.version, s.pushed_to_sbc)  # pushed_to_sbc must be True
+    s = client.telephony.webhook_secret.rotate()  # org owner or editor only
+    print(s.version, s.pushed_to_sbc)  # False: still syncing, Unpod retries it
     print(s.secret)  # full secret, shown only here: store as UNPOD_WEBHOOK_SECRET
 
     print(client.telephony.webhook_secret.get().secret)  # masked, e.g. '****ab12'
 ```
 
 Each `rotate()` creates a new version and invalidates the previous one, so a server still
-verifying with the old key rejects every request until you give it the new one. See
+verifying with the old key rejects every request until you give it the new one.
+`pushed_to_sbc` is `true` when the new key is already in use for signing. When it's `false`,
+Unpod keeps retrying the update in the background; until it lands, requests are still
+signed with the previous key (or unsigned, for your first secret). See
 [The webhook secret](/telephony/apis/incoming-calls#the-webhook-secret) for the cURL call.
 
 ## Verify and parse
@@ -72,9 +75,10 @@ async def call_status(request: Request):
     except WebhookSignatureError:
         raise HTTPException(401)  # unsigned, wrong secret, or older than 300 s
 
-    if ev.event_id in seen:  # the same event can arrive more than once
-        return {"ok": True}
-    seen.add(ev.event_id)
+    if ev.event_id:  # the same event can arrive more than once
+        if ev.event_id in seen:
+            return {"ok": True}
+        seen.add(ev.event_id)
 
     if ev.event == "Answered":
         print(ev.call_id, ev.leg_id, ev.role, "answered")
@@ -114,7 +118,8 @@ to the last is roughly 27-75 s. Then the event is marked failed and never sent a
   your 2xx is lost.
 - A lost `Answered` or `Hangup` can leave someone on the line. As a backstop, sweep your
   active calls with [`calls.list()`](/telephony/apis/call-control#inspect-and-end-calls)
-  every few minutes and end any that should be over.
+  every few minutes, walking every page until one comes back empty, and end any that
+  should be over.
 - Answer-URL requests aren't retried: a failed `StartApp` applies the
   [fallback](/telephony/apis/answer-url#timeouts-and-fallback), and `Hangup` and
   `RecordStop` are sent once.
@@ -126,7 +131,7 @@ to the last is roughly 27-75 s. Then the event is marked failed and never sent a
 | `ev.event` | When |
 | --- | --- |
 | `Incoming` | An inbound call arrived. Sent to the number's `status_callback_url`, first on the caller's leg |
-| `Initiated`, `Ringing`, `Answered`, `Hangup` | Leg lifecycle. Each leg gets its own `Hangup` |
+| `Initiated`, `Ringing`, `Answered`, `Hangup` | Leg lifecycle. Each leg gets its own `Hangup`. `Ringing` isn't always sent: on many mobile networks a leg goes straight from `Initiated` to `Answered` |
 | `PlayStarted`, `PlayStopped` | Audio or speech on a leg (`ev.play_id`) |
 | `DTMF` | A key was pressed (`ev.digit`) |
 | `Hold`, `Unhold` | Hold changes on an answered leg |

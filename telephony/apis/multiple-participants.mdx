@@ -113,10 +113,12 @@ def wait_for_leg(calls, call_id: str, leg_id: str, timeout: float = 60) -> str:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
-            legs = calls.get(call_id).legs
+            call = calls.get(call_id)
         except TelephonyAPIError:  # the whole call is gone
             return "hungup"
-        state = next((x.state for x in legs if x.leg_id == leg_id), None)
+        if call.state is None:  # the call ended: no state, no legs
+            return "hungup"
+        state = next((x.state for x in call.legs if x.leg_id == leg_id), None)
         if state in ("answered", "hungup"):
             return state
         time.sleep(1)
@@ -163,9 +165,8 @@ curl -s -X DELETE \
 With the webhook server below, start the sound after `add_participant` and stop it on the
 `Answered` event for the `customer` leg.
 
-{/* TODO(verify): play_audio on a call whose second leg is still ringing, live */}
-
-If `SECOND` doesn't pick up, `FIRST` stays on the line alone. End the call yourself:
+If `SECOND` doesn't pick up, `FIRST` stays on the line alone, and the same happens when you
+remove `SECOND` with `remove_participant`. End the call yourself:
 
 {/* TODO(verify): does a bridged call end by itself when one person hangs up, or while the other is still ringing? */}
 
@@ -258,9 +259,8 @@ the full production flow.
 
 Remove a participant and the call stays up with the other person. If you also run the
 webhook server above, it ends the call on every `Hangup` event, which may include the leg
-you removed: track the removed `leg_id` and skip it in the handler to keep the call up.
-
-{/* TODO(verify): does remove_participant send a Hangup event for the removed leg? */}
+you removed (it does: the removed leg gets a `Hangup` with `Normal Hangup`). Track the
+removed `leg_id` and skip it in the handler to keep the call up.
 
 <CodeGroup>
 ```python Python
@@ -288,7 +288,7 @@ The `add_participant` options most people need:
 | `status_callback_url` | Public https URL for this leg's events |
 | `record` | Doesn't override the recording policy (set by the Unpod team) today. See [Recording](/telephony/apis/recording) |
 | `metadata` | Dict of strings, echoed back on every event as `ev.metadata` |
-| `idempotency_key` | Retry-safe: the same key never dials twice |
+| `idempotency_key` | Retry-safe: a repeat with the same key returns the first result instead of dialing again (kept for 24 h, unless Unpod restarts) |
 
 `create` takes the same options. Every URL must be public https, or you get
 `400 invalid_url`. Full list: [Call Control](/telephony/apis/call-control#options).

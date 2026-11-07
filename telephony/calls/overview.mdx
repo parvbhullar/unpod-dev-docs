@@ -29,11 +29,14 @@ planes, so it stays fast and never errors on a missing projection. Secrets are m
 | number_id        | integer | Number id                                    |
 | number           | string  | E.164 number                                 |
 | bridge_slug      | string  | Bridge the number is on                      |
-| connection_state | string  | e.g. `LINKED`, `NOT_LINKED`                  |
-| termination_kind | string  | `sip` (carrier) or `agent`                   |
+| connection_state | string  | `NOT_LINKED`, `PENDING_VERIFY`, `LINKED` or `ERROR` ([Number states](/telephony/apis/numbers#number-states)) |
+| termination_kind | string  | `sip` (your SIP trunk or SIP endpoint), `livekit`, or `null`. Unpod pool numbers read `null`, including ones attached to an agent |
 | agent_id         | string  | Linked agent handle (null for carrier)       |
-| sync_state       | string  | Projection sync state                        |
-| sync_detail      | string  | Extra sync detail (nullable)                 |
+| provider         | string  | Provider name of the number's credential (nullable) |
+| provider_credential_id | integer | Id of that credential (nullable); secrets are never returned |
+| sync_state       | string  | `in_sync`, `out_of_sync` (a push failed; Unpod retries) or `drift` (not yet on every plane). Nullable |
+| sync_detail      | object  | Extra sync detail (nullable)                 |
+| in_sync          | boolean | `true` when `sync_state` is `in_sync`         |
 
 <ResponseExample>
 
@@ -49,8 +52,11 @@ planes, so it stays fast and never errors on a missing projection. Secrets are m
       "connection_state": "LINKED",
       "termination_kind": "sip",
       "agent_id": null,
-      "sync_state": "synced",
-      "sync_detail": null
+      "provider": "My Carrier",
+      "provider_credential_id": 21,
+      "sync_state": "in_sync",
+      "sync_detail": null,
+      "in_sync": true
     }
   ]
 }

@@ -143,11 +143,12 @@ flowchart LR
 
     If your number isn't in the list, it can't be mapped yet - ask the Unpod team.
 
-    The response has the **origin endpoint**: `ingress` is where your carrier sends calls,
-    and `accepted_source_ips` are the addresses Unpod accepts them from. If no id is an
-    active `NOT_ASSIGNED` number, the request fails with `400` (the SDK raises
-    `httpx.HTTPStatusError` before the loop runs). Otherwise each eligible number gets a
-    row with its own `ok` and `error`, and ineligible ids are left out. See
+    The response has the **origin endpoint**: `ingress` is the host your carrier sends
+    calls to (a bare host such as `sip-lb1.unpod.tel`, no `sip:` prefix), and
+    `accepted_source_ips` are the addresses Unpod accepts them from. Each eligible number
+    gets a row with its own `ok` and `error`, and ineligible ids are left out. If no id is
+    an active `NOT_ASSIGNED` number, or none of them maps, the request fails with `400`
+    (the SDK raises `httpx.HTTPStatusError` before the loop runs). See
     [Attach Numbers to Trunk](/telephony/trunks/attach-numbers).
   </Step>
 
@@ -176,22 +177,23 @@ flowchart LR
     ```
     </CodeGroup>
 
-    Your number's `connection_state` should read `LINKED` (connected). `NOT_LINKED` means
-    it isn't routed yet. See [Number states](/telephony/apis/numbers#number-states).
-
-    {/* TODO(verify): exact connection_state once a carrier is mapped */}
+    Right after mapping, your number's `connection_state` reads `PENDING_VERIFY`: it's routed
+    and waiting for its first real call. It turns `LINKED` once a real inbound call to it
+    connects.
+    `NOT_LINKED` means it isn't routed yet and `ERROR` that routing failed (Unpod retries).
+    See [Number states](/telephony/apis/numbers#number-states).
   </Step>
 </Steps>
 
-Calls to your number now reach Unpod. To answer them, set the trunk's inbound config by
-its name - `my-trunk`, the name you gave in step 2, is the key used there. See
+Calls to your number now reach Unpod. To answer them in your app, set an answer URL on
+each of the trunk's numbers. See
 [For a whole SIP trunk](/telephony/apis/incoming-calls#for-a-whole-sip-trunk).
 
 ## Next
 
 <CardGroup cols={2}>
   <Card title="Answer calls on this trunk" icon="phone-incoming" href="/telephony/apis/incoming-calls#for-a-whole-sip-trunk">
-    Send every call on the trunk to your app - set once, by the trunk's name.
+    Send the trunk's calls to your app with an answer URL per number.
   </Card>
   <Card title="Manage Trunks" icon="git-branch" href="/telephony/sip-trunking/trunks">
     List, inspect and delete your trunks.
