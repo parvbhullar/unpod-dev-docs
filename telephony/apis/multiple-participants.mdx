@@ -27,6 +27,7 @@ from unpod.telephony import TelephonyAPIError
 FROM = "+919000000001"    # your Unpod number
 FIRST = "+919000000002"   # dialed first
 SECOND = "+919000000003"  # added once FIRST answers
+RINGING = "https://cdn.example.com/ringing.mp3"  # FIRST hears this while SECOND rings
 
 
 def wait_for_answer(calls, call_id: str) -> bool:
@@ -53,6 +54,7 @@ with Client() as client:
         FROM,
         SECOND,
         role="customer",
+        dial_music=RINGING,
         idempotency_key=f"{call.call_id}:customer",
     )
     print("adding", SECOND, "leg", leg.leg_id, leg.state)
@@ -76,13 +78,29 @@ curl -s -X POST \
   "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/participants" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Idempotency-Key: $CALL_ID:customer" -H "Content-Type: application/json" \
-  -d '{"from": "+919000000001", "to": "+919000000003", "role": "customer"}'
+  -d '{"from": "+919000000001", "to": "+919000000003", "role": "customer",
+       "dial_music": "https://cdn.example.com/ringing.mp3"}'
 ```
 </CodeGroup>
 
 `add_participant` returns at once with the new leg in state `initiated`. `SECOND`'s phone
 rings; when they answer, Unpod connects the two and they can talk. Both see `FROM` as the
 caller. Keep `leg.leg_id` if you want to remove that person later.
+
+### Play a ringing sound while the second person rings
+
+`dial_music` sets what `FIRST` hears until `SECOND` picks up:
+
+| Value | `FIRST` hears |
+| --- | --- |
+| A public https MP3 or WAV URL | That audio, e.g. a ringing tone or hold music |
+| `"none"` (lowercase) | Silence |
+| Omitted | The default |
+
+Host your own ringing tone and pass its URL. `"NONE"` in capitals is read as a URL and
+refused with `400 invalid_url`.
+
+{/* TODO(verify): what FIRST hears when dial_music is omitted, and whether the audio loops until SECOND answers */}
 
 If `SECOND` doesn't pick up, `FIRST` stays on the line alone. End the call yourself:
 
@@ -198,15 +216,13 @@ The `add_participant` options most people need:
 | Option | Meaning |
 | --- | --- |
 | `role` | Free-text label for the leg, e.g. `agent` or `customer`. Returned on its events as `ev.role` |
-| `dial_music` | `"none"` (lowercase), or a public https audio URL played to the first person while the second rings |
+| `dial_music` | What the first person hears while the second rings: an https audio URL, or `"none"`. See [ringing sound](#play-a-ringing-sound-while-the-second-person-rings) |
 | `ring_timeout` | Seconds to ring before giving up, 1-120 (default 30) |
 | `answer_url` | Run XML on this leg when it connects, instead of bridging it. See [Answer URL & XML](/telephony/apis/answer-url) |
 | `status_callback_url` | Public https URL for this leg's events |
 | `record` | `True` to record the call |
 | `metadata` | Dict of strings, echoed back on every event as `ev.metadata` |
 | `idempotency_key` | Retry-safe: the same key never dials twice |
-
-{/* TODO(verify): what the first person hears while the second rings when dial_music is omitted */}
 
 `create` takes the same options. Every URL must be public https, or you get
 `400 invalid_url`. Full list: [Call Control](/telephony/apis/call-control#options).
