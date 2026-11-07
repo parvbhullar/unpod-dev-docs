@@ -1,0 +1,263 @@
+---
+title: 'Manage Trunks'
+icon: 'git-branch'
+description: 'Create, inspect and remove SIP trunks and their numbers'
+---
+
+## SIP trunks
+
+A trunk holds your carrier's SIP details: its SIP URL, credentials and the addresses it
+sends calls from. Map your numbers to a trunk and Unpod returns the **origin endpoint** -
+where your carrier sends calls for those numbers.
+
+```mermaid
+flowchart LR
+  A["📞<br/><b>Your carrier</b>"] ==> B["📡<br/><b>Unpod SIP trunk</b>"]
+  B ==> C["🔢<br/><b>Your numbers</b>"]
+
+  classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
+  classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
+  class A,C ep;
+  class B pp;
+  linkStyle default stroke:#9a90ff,stroke-width:2.5px;
+```
+
+Setting up your first trunk? Follow the [Quick Start](/telephony/quickstart). This page
+covers each operation on its own. The samples read your
+[credentials](/telephony/introduction#credentials) (`UNPOD_BASE_URL`,
+`UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE`) from the environment.
+
+## List trunks
+
+<CodeGroup>
+```python Python
+from unpod import Client
+
+with Client() as client:
+    for t in client.telephony.trunks.list():
+        print(t.id, t.name, t.sip_url, t.transport, t.active)
+```
+
+```bash cURL
+curl -s "https://unpod.ai/api/v2/platform/telephony/trunks/" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+```
+</CodeGroup>
+
+Returns your org's trunks, newest first. `auth_password` is masked. See
+[List Trunks](/telephony/trunks/list-trunks).
+
+## Get a trunk
+
+<CodeGroup>
+```python Python
+from unpod import Client
+
+TRUNK_ID = 21  # your trunk id
+
+with Client() as client:
+    trunk = client.telephony.trunks.get(TRUNK_ID)
+    print(trunk.name, trunk.sip_url, trunk.allowed_ips)
+```
+
+```bash cURL
+TRUNK_ID=21  # your trunk id
+curl -s "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+```
+</CodeGroup>
+
+A trunk your org doesn't own returns `404`. See [Get Trunk](/telephony/trunks/get-trunk).
+
+## Create a trunk
+
+<CodeGroup>
+```python Python
+from unpod import Client
+
+with Client() as client:
+    trunk = client.telephony.trunks.create(
+        "my-trunk",
+        "sip:carrier.example.com",
+        username="<sip-username>",
+        password="<sip-password>",
+        transport="tcp",
+        port="5060",
+        source_ips=["203.0.113.10", "198.51.100.0/24"],
+    )
+    print(trunk.id)
+```
+
+```bash cURL
+curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/trunks/" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-trunk",
+    "sip_url": "sip:carrier.example.com",
+    "auth_username": "<sip-username>",
+    "auth_password": "<sip-password>",
+    "transport": "tcp",
+    "port": "5060",
+    "source_ips": ["203.0.113.10", "198.51.100.0/24"]
+  }'
+```
+</CodeGroup>
+
+| Python | API field | Required | Meaning |
+| --- | --- | --- | --- |
+| `name` | `name` | Yes | Trunk name. The [inbound config](#inbound-config-for-a-whole-trunk) is keyed by it |
+| `sip_url` | `sip_url` | Yes | Carrier SIP URL or host |
+| `username`, `password` | `auth_username`, `auth_password` | No | SIP auth credentials. The password is masked on every read |
+| `transport` | `transport` | No | `tcp` (default), `udp` or `tls` |
+| `port` | `port` | No | SIP port as a string (default `5060`) |
+| `source_ips` | `source_ips` | No | Addresses your carrier sends calls from. CIDR ranges allowed. Read back as `allowed_ips` |
+
+Keep the returned `id` (`data.id` in the cURL response): you need it to map numbers, get
+or delete the trunk. The API has no call to update a trunk. See
+[Create Trunk](/telephony/trunks/create-trunk).
+
+## Map numbers to a trunk
+
+Mapping takes number **ids**, not E.164 numbers. Read each number's `id` from your org's
+number list, `GET /telephony/numbers/?include_assigned=true`. The SDK's
+`numbers.list()` doesn't return the id yet - step 3 of the
+[Quick Start](/telephony/quickstart) shows a Python lookup.
+
+{/* TODO(verify): expose Number.id in the SDK */}
+
+<CodeGroup>
+```python Python
+from unpod import Client
+
+TRUNK_ID = 21        # your trunk id
+NUMBER_IDS = [501]   # ids from your org's number list
+
+with Client() as client:
+    mapped = client.telephony.trunks.attach_numbers(TRUNK_ID, NUMBER_IDS)
+    print(mapped.origin_endpoint.ingress)
+    print(mapped.origin_endpoint.accepted_source_ips)
+    for r in mapped.numbers:
+        print(r.number_id, r.number, r.ok, r.error)
+```
+
+```bash cURL
+TRUNK_ID=21  # your trunk id
+curl -s -X POST \
+  "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/attach-numbers/" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{"number_ids": [501]}'
+```
+</CodeGroup>
+
+The response has the **origin endpoint**: `ingress` is where your carrier sends calls,
+`dids` lists the numbers now on the trunk, and `accepted_source_ips` are the addresses
+Unpod accepts them from. Each number reports `ok` and `error` on its own. If none map, the
+request fails with `400` (the SDK raises `httpx.HTTPStatusError`). See
+[Attach Numbers to Trunk](/telephony/trunks/attach-numbers).
+
+## Unmap numbers
+
+<CodeGroup>
+```python Python
+from unpod import Client
+
+TRUNK_ID = 21  # your trunk id
+
+with Client() as client:
+    result = client.telephony.trunks.detach_numbers(TRUNK_ID, [501])
+    for r in result.numbers:
+        print(r.number_id, r.ok, r.error)
+```
+
+```bash cURL
+TRUNK_ID=21  # your trunk id
+curl -s -X POST \
+  "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/detach-numbers/" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{"number_ids": [501]}'
+```
+</CodeGroup>
+
+Unmapping releases the number back to `NOT_ASSIGNED`. A number that isn't on this trunk
+reports `ok: false` with `Number is not mapped to this trunk.` See
+[Detach Numbers from Trunk](/telephony/trunks/detach-numbers).
+
+## Inbound config for a whole trunk
+
+Set where calls go once, on the trunk, and every number on it uses it. The config is keyed
+by the trunk's **name**, not its id. A number's own config wins field by field over the
+trunk's, so one number can have its own `answer_url` while the rest share the trunk's.
+
+<CodeGroup>
+```python Python
+from unpod import Client
+from unpod.telephony import InboundConfig
+
+with Client() as client:
+    inbound = client.telephony.inbound
+    inbound.set_trunk("my-trunk", InboundConfig(
+        answer_url="https://your-app.example.com/incoming",
+    ))
+    print(inbound.get_trunk("my-trunk"))
+```
+
+```bash cURL
+# set
+curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/trunks/my-trunk/inbound" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{"answer_url": "https://your-app.example.com/incoming"}'
+
+# read
+curl -s "https://unpod.ai/api/v2/platform/sbc/v1/trunks/my-trunk/inbound" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+```
+</CodeGroup>
+
+An unknown trunk name returns `404`. For every config field and how to answer the call,
+see [For a whole SIP trunk](/telephony/apis/incoming-calls#for-a-whole-sip-trunk).
+
+## Delete a trunk
+
+Unmap every number first, then delete. Deleting removes the trunk's number mappings too,
+but unmapping first releases each number cleanly back to `NOT_ASSIGNED`. The sample only
+deletes once every number has unmapped.
+
+{/* TODO(verify): no endpoint lists the numbers mapped to a trunk; keep the ids you mapped */}
+
+<CodeGroup>
+```python Python
+from unpod import Client
+
+TRUNK_ID = 21        # your trunk id
+NUMBER_IDS = [501]   # every number mapped to the trunk
+
+with Client() as client:
+    trunks = client.telephony.trunks
+    result = trunks.detach_numbers(TRUNK_ID, NUMBER_IDS)
+    if all(r.ok for r in result.numbers):
+        trunks.delete(TRUNK_ID)
+    else:
+        print([(r.number_id, r.error) for r in result.numbers if not r.ok])
+```
+
+```bash cURL
+TRUNK_ID=21  # your trunk id
+
+# 1. unmap every number on the trunk
+curl -s -X POST \
+  "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/detach-numbers/" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{"number_ids": [501]}'
+
+# 2. delete the trunk
+curl -s -X DELETE "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+```
+</CodeGroup>
+
+Delete returns `204` with no body. See [Delete Trunk](/telephony/trunks/delete-trunk).
