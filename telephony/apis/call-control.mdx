@@ -23,8 +23,10 @@ that id. Every method raises `TelephonyAPIError` on an error response - see
 | `remove_participant` | `DELETE /sbc/v1/calls/{call_id}/participants/{leg_id}` |
 | `play_audio` / `stop_audio` | `POST` / `DELETE /sbc/v1/calls/{call_id}/play` |
 | `speak` | `POST /sbc/v1/calls/{call_id}/speak` |
-| `transfer` | `POST /sbc/v1/calls/{call_id}/transfer` (`/complete`, `/cancel`) |
+| `transfer` | `POST /sbc/v1/calls/{call_id}/transfer` |
+| `transfer_complete` / `transfer_cancel` | `POST /sbc/v1/calls/{call_id}/transfer/complete` / `.../transfer/cancel` |
 | `send_dtmf` | `POST /sbc/v1/calls/{call_id}/dtmf` |
+| `record` / `get_recording` | `POST /sbc/v1/calls/{call_id}/record` / `GET .../recording` - see [Recording](/telephony/apis/recording) |
 
 Every request sends `Authorization: Token $UNPOD_PLATFORM_TOKEN` and
 `Org-Handle: $UNPOD_ORG_HANDLE`, plus `Content-Type: application/json` when it has a body.
@@ -97,16 +99,16 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
 | `stop_audio(call_id, *, leg_id, play_id)` | Stops one play, one leg's audio, or both omitted, all audio on the call. `202` even if nothing was playing |
 | `speak(call_id, text, *, voice, language, leg_id, loop)` → `PlayResult` | Text-to-speech, 1-1000 characters. `voice` and `language` default to the number's [`tts_voice` / `tts_language`](/telephony/apis/incoming-calls#inboundconfig-fields). Answers `202` with a `play_id` |
 
-`leg_id` is the `leg_id` from `create`, `add_participant` or an event; omit it to play to
-everyone on the call. Each leg gets `PlayStarted` / `PlayStopped` events with the same
+`leg_id` is the `leg_id` from `create`, `add_participant` or an event (or `caller` /
+`callee`); omit it to play to everyone on the call. Each leg gets `PlayStarted` / `PlayStopped` events with the same
 `play_id`. `speak` answers `503 tts_unavailable` when speech can't be made (the call
 carries on) and `429 rate_limited` when your org sends too many at once.
 
 ## Transfer and DTMF
 
 <Warning>
-**`transfer` isn't verified yet - don't rely on it.** It answers `200` as soon as the
-request is queued, so a transfer that fails still looks like success. An attended transfer
+**`transfer` doesn't work yet through the API - don't rely on it.** It answers `200`
+as soon as the request is queued, so a transfer that fails still looks like success. An attended transfer
 doesn't return the consult leg's id yet, so `transfer_complete` and `transfer_cancel` have
 nothing to act on.
 </Warning>
@@ -116,16 +118,16 @@ nothing to act on.
 <CodeGroup>
 ```python Python
 calls.send_dtmf(call_id, "1234#")         # to the person you dialed
-calls.transfer(call_id, "+919000000004")  # blind, moves the callee leg
+calls.transfer(call_id, "+919000000004")  # not working yet - see the warning above
 ```
 
 ```bash cURL
 # DTMF -> 200 {"message": "dispatched"}
 curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/dtmf" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
-  -H "Content-Type: application/json" -d '{"digits": "1234#", "leg": "callee"}'
+  -H "Content-Type: application/json" -d '{"digits": "1234#"}'
 
-# blind transfer -> 200 {"message": "dispatched"}
+# blind transfer (not working yet - see the warning above)
 curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/transfer" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \

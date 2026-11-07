@@ -109,11 +109,12 @@ await calls.stop_audio(call_id)                                   # all audio, a
 ## 4. End the call
 
 ```python
-await calls.end(call_id)                              # all legs
-await calls.hangup(call_id, reason="done", code=200)  # with a reason / SIP code
+await calls.end(call_id)                                   # all legs
+await calls.hangup(call_id, reason="by_system", code=200)  # with a reason / SIP code
 ```
 
-`end` on a call that already ended returns `404 not_found` - treat it as done.
+`end` on a call that already ended answers `202` again (a `404` only briefly right after
+hangup) - treat it as done.
 
 ## 5. Webhooks
 
