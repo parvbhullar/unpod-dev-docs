@@ -86,7 +86,7 @@ caller. Keep `leg.leg_id` if you want to remove that person later.
 
 If `SECOND` doesn't pick up, `FIRST` stays on the line alone. End the call yourself:
 
-{/* TODO(verify): does a bridged call end by itself when one person hangs up? */}
+{/* TODO(verify): does a bridged call end by itself when one person hangs up, or while the other is still ringing? */}
 
 <CodeGroup>
 ```python Python
@@ -103,12 +103,14 @@ curl -s -X DELETE "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
 
 Polling suits a script. A server should react to events: create the call with a
 `status_callback_url`, add the second person when the first one answers, and end the call
-if the second one hangs up or never answers.
+as soon as either person hangs up (or the second never answers).
 
 Add this to your Quick Start `app.py` from
 [Receive your first call](/telephony/apis/quickstart#receive-your-first-call), keeping its
-`/answer` route and `uvicorn` block. The client is created at import, so export
-`UNPOD_PLATFORM_TOKEN` and `UNPOD_ORG_HANDLE` before you start the server.
+`/answer` route. Paste it **above** the `if __name__ == "__main__":` block: below it,
+`uvicorn.run` starts before `/call-status` is registered and every event gets a 404. The
+client is created at import, so export `UNPOD_PLATFORM_TOKEN` and `UNPOD_ORG_HANDLE`
+before you start the server.
 
 ```python app.py
 from unpod import AsyncClient
@@ -144,15 +146,16 @@ async def call_status(request: Request):
                 status_callback_url=HOOK,  # so you hear when they hang up
                 idempotency_key=f"{ev.call_id}:customer",
             )
-        elif ev.event == "Hangup" and ev.role == "customer":
-            await calls.end(ev.call_id)  # don't leave the first person alone
+        elif ev.event == "Hangup":  # either person left, or never answered
+            await calls.end(ev.call_id)  # don't leave the other one alone
     except TelephonyAPIError as e:  # e.g. the call is already gone
         print(ev.call_id, e.status_code, e.message)
     return {"ok": True}  # always 2xx once signed, or Unpod retries
 ```
 
-Restart the server, then start a call from a second terminal with the same variables
-exported:
+Restart the server, then start a call from a second terminal, in the same directory and
+virtualenv as the server, with `UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE` and
+`UNPOD_WEBHOOK_SECRET` exported:
 
 ```bash
 python -c 'import asyncio, app
@@ -169,8 +172,7 @@ the full production flow.
 
 ## Remove a participant
 
-Drop one person and keep the call up with the other, for example to hang up the second
-person and add someone else in their place.
+Remove a participant and the call stays up with the other person.
 
 <CodeGroup>
 ```python Python
