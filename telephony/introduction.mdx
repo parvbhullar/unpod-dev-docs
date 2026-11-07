@@ -11,7 +11,7 @@ numbers - like Plivo or Twilio - and **SIP Trunking** lets you bring your own ca
 
 <CardGroup cols={2}>
   <Card title="Telephony APIs" icon="phone" href="/telephony/apis/quickstart">
-    Make, bridge, blast and receive calls on an Unpod number. No carrier, no trunk.
+    Make, connect, blast and receive calls on an Unpod number. No carrier, no trunk.
   </Card>
   <Card title="SIP Trunking" icon="git-branch" href="/telephony/quickstart">
     <Badge color="orange">Beta</Badge> Route your own carrier's numbers through Unpod.
@@ -22,8 +22,9 @@ numbers - like Plivo or Twilio - and **SIP Trunking** lets you bring your own ca
 
 Both paths use the same two credentials.
 
-1. **API key** - log in to the [Unpod dashboard](https://unpod.ai/), click the **Key** icon
-   (API Keys) in the left sidebar, then **Generate New API Key**.
+1. **API key** (the SDK calls it a platform token) - log in to the
+   [Unpod dashboard](https://unpod.ai/), click the **Key** icon (API Keys) in the left
+   sidebar, then **Generate New API Key**.
    {/* TODO(verify): exact dashboard path and deep link for the API key page */}
 2. **Org handle** - in the dashboard, open **Studio View**, click the **Settings** icon in
    the right sidebar, then **Copy Org Handle**. Or call
@@ -37,26 +38,39 @@ export UNPOD_PLATFORM_TOKEN=<your-api-key>
 export UNPOD_ORG_HANDLE=<your-org-handle>
 ```
 
-The Python SDK reads these three when you create a client with no arguments; cURL uses them
-as `Authorization: Token $UNPOD_PLATFORM_TOKEN` and `Org-Handle: $UNPOD_ORG_HANDLE` headers.
+The Python SDK reads all three when you create a client with no arguments. cURL samples call
+`https://unpod.ai/api/v2/platform/...` and send the token and org handle as
+`Authorization: Token $UNPOD_PLATFORM_TOKEN` and `Org-Handle: $UNPOD_ORG_HANDLE`.
+
+Check your key:
+
+```bash
+curl -s https://unpod.ai/api/v2/platform/organizations/ \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN"
+```
+
+It needs no org handle and lists your organizations - `domain_handle` is your org handle.
+{/* TODO(verify): openapi.yaml and api/space/organizations.mdx mark Org-Handle as required on this endpoint - confirm it works without one */}
 
 <Warning>
-Telephony takes `Authorization: Token <key>` plus an `Org-Handle` header - never a Bearer
-key. Always set `UNPOD_BASE_URL`: without it the SDK uses a legacy host.
+Use the dashboard API key with `Authorization: Token …` plus `Org-Handle`. An `sk_...` key
+(`UNPOD_API_KEY`) is a Bearer key and cannot reach telephony. Always set `UNPOD_BASE_URL`: if
+it is unset, the SDK falls back to a legacy host that no longer resolves.
 </Warning>
 
 ## Where a number can end up
 
-| Path | What it does | How |
+| Route | What it does | How |
 |------|--------------|-----|
-| **Unpod number → Unpod agent** | A number from the Unpod pool, answered by your Unpod agent. No carrier or trunk. | [Make your first phone call](/get-started/first-phone-call) |
+| **Unpod number → Unpod agent** | A number from the Unpod pool, answered by your Unpod agent. No carrier or trunk. | [Incoming Calls](/telephony/apis/incoming-calls) |
 | **Unpod number → your app** | A number from the Unpod pool. Unpod posts each inbound call to your Answer URL and runs the instructions you reply with. | [Incoming Calls](/telephony/apis/incoming-calls) |
 | **Unpod number → SIP trunk** | A number from the Unpod pool, with an auto-created outbound trunk and an inbound trunk you point at your SIP URI. | [Connect an Unpod Number](/telephony/integrations/unpod/dashboard) |
-| **Your carrier (SIP trunk)** | Map a number to your SIP trunk; the carrier sends inbound calls to your origin endpoint. | [Attach Numbers to Trunk](/telephony/trunks/attach-numbers) |
+| **Your carrier's number → Unpod (SIP trunk)** | Map a number to your SIP trunk; the carrier sends inbound calls to your origin endpoint. | [Attach Numbers to Trunk](/telephony/trunks/attach-numbers) |
 
 ## Key concepts
 
 - **Number** - a phone number in E.164 format (e.g. `+15551234567`).
 - **Trunk** - a SIP carrier credential (`sip_url`, `transport`, `port`, auth, source-IP allow-list). Secrets are always masked in responses.
 - **Origin endpoint** - the shared SBC ingress (`sip:<host>`) the carrier sends inbound calls to, plus the accepted source IPs and mapped numbers.
-- **Partial success** - attach/detach operate on a list; each number reports `ok`/`error` independently.
+- **Answer URL** - the https URL Unpod calls when a person is connected. You reply with XML or JSON telling Unpod what to do.
+- **Call and legs** - a call is made of legs, one per person. You dial the first with `create` and add the second with `add_participant`.
