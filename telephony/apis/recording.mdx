@@ -1,0 +1,227 @@
+---
+title: 'Recording'
+icon: 'circle-dot'
+description: 'Get call recordings and download the audio'
+---
+
+Unpod records a call as one WAV file, with each person on their own channel. Once the call
+has ended, ask the API for the recording, then download the audio with the same
+credentials.
+
+<Note>
+Whether a call is recorded is set by your org's recording policy. To change it, ask the
+Unpod team. `record=True` on a call doesn't override the policy today, and the `record`
+setting in a number's inbound config is stored but not applied yet.
+</Note>
+
+{/* TODO(verify): record=true on POST /calls is stored but doesn't force recording (create_call.rs, recording_completed.rs "Not implemented", UNPO-180) */}
+{/* TODO(verify): whether the org's policy also records inbound calls (call.rs apply_recording_policy filters by direction; InboundConfig.record is never read) */}
+
+## Get a recording
+
+Export your [credentials](/telephony/introduction#credentials) (`UNPOD_BASE_URL`,
+`UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE`). After the call ends, `get_recording` returns
+the recording's details. While the call is still going it raises `409`, so wait a few
+seconds and ask again:
+
+<CodeGroup>
+```python Python
+import time
+
+from unpod import Client
+from unpod.telephony import TelephonyAPIError
+
+CALL_ID = "..."  # from create, or ev.call_id on any event for the call
+
+with Client() as client:
+    for _ in range(10):
+        try:
+            rec = client.telephony.calls.get_recording(CALL_ID)
+            break
+        except TelephonyAPIError as e:
+            if e.status_code != 409:  # 409: the call isn't over yet
+                raise
+            time.sleep(3)
+    else:
+        raise SystemExit("Not ready yet. Try again later.")
+
+print(rec.available, rec.duration_secs)
+```
+
+```bash cURL
+curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/recording" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+```
+</CodeGroup>
+
+The response:
+
+```json
+{"call_id": "...", "available": true,
+ "url": "https://unpod.ai/api/v2/platform/sbc/v1/calls/<call_id>/recording",
+ "duration_secs": 64, "format": "wav", "channels": 2}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `available` | `true` when there's audio. `false` means the call wasn't recorded, and `url` and `duration_secs` are `null` |
+| `url` | Where to [download the audio](#download-the-audio). It needs your credentials |
+| `duration_secs` | Length in seconds |
+| `format`, `channels` | Always `wav` and `2` today |
+
+An unknown `call_id`, or one from another org, returns `404 not_found`. After hangup,
+`GET /sbc/v1/calls/{id}` returns the same details, but its `url` is a path inside Unpod:
+download from the `url` that `get_recording` returns.
+
+## Download the audio
+
+Request the same URL with the header `Accept: audio/wav`, plus the same `Authorization`
+and `Org-Handle` headers as every other API call. Without `Accept: audio/wav` you get the
+JSON above. The file is about 1 MB per minute of call.
+
+<CodeGroup>
+```python Python
+import os
+
+import httpx  # installed with the SDK
+
+if not rec.available:  # rec from get_recording above
+    raise SystemExit("This call wasn't recorded.")
+
+headers = {
+    "Authorization": f"Token {os.environ['UNPOD_PLATFORM_TOKEN']}",
+    "Org-Handle": os.environ["UNPOD_ORG_HANDLE"],
+    "Accept": "audio/wav",
+}
+resp = httpx.get(rec.url, headers=headers, timeout=60)
+resp.raise_for_status()
+with open("call.wav", "wb") as f:
+    f.write(resp.content)
+```
+
+```bash cURL
+curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/recording" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Accept: audio/wav" -o call.wav -w "%{http_code}\n"
+```
+</CodeGroup>
+
+A `200` means `call.wav` holds the audio. A call with no recording returns `404`, and
+`call.wav` then holds the error instead. The URL only works with your credentials, so
+download the file and serve it from your own storage rather than handing the URL to a
+browser.
+
+## Format
+
+| Property | Value |
+| --- | --- |
+| File | WAV |
+| Audio | G.711 μ-law, 8-bit, 8000 Hz |
+| Channels | 2, one person on each |
+
+The first leg (A) is on the left channel and the second leg (B) on the right.
+
+{/* TODO(verify): channel order on a live two-person call (SDK Recording docstring and call_recording.rs say leg A left, leg B right) */}
+
+To get each person in their own file, split the channels with sox or ffmpeg:
+
+<CodeGroup>
+```bash sox
+sox call.wav first.wav remix 1
+sox call.wav second.wav remix 2
+```
+
+```bash ffmpeg
+ffmpeg -i call.wav -filter_complex "channelsplit=channel_layout=stereo[a][b]" \
+  -map "[a]" first.wav -map "[b]" second.wav
+```
+</CodeGroup>
+
+Python's `wave` module can't open μ-law WAV files (it fails with `unknown format: 7`), and
+`audioop` is gone from Python 3.13. If a tool needs 16-bit PCM, convert the file first:
+`sox call.wav -b 16 -e signed-integer call-pcm.wav`.
+
+## Recording events
+
+When a recorded call ends, Unpod sends `MPCRecordingCompleted` to the call's
+`recording_callback_url` only, never to `status_callback_url`. Set it on `create`, or in a
+number's [inbound config](/telephony/apis/incoming-calls#inboundconfig-fields). The event
+carries `ev.call_id`, `ev.recording_url` and `ev.recording_duration`. Treat it as a hint
+that the recording is ready:
+
+- It isn't signed yet, so `parse_call_event` with your secret rejects it. Parse it with
+  `verify=False` and trust only what `get_recording` returns for `ev.call_id`.
+- It carries no `metadata`. Match it to your own records by `ev.call_id`.
+- `ev.recording_url` is a path inside Unpod, not a download link. Call
+  `get_recording(ev.call_id)` for the `url`.
+- It may never arrive for a call started with `create`. The reliable way is to call
+  `get_recording` after the call's `Hangup`, as [above](#get-a-recording).
+
+The `/recording` route in [Number Masking](/telephony/apis/number-masking#handle-events)
+handles the event this way.
+
+With `record_participant_track=True` (which needs `record=True`), the same URL also gets
+`ParticipantRecordingInitiated` and `ParticipantRecordingCompleted` for each leg. Both
+arrive together after the call ends and point at the same 2-channel file.
+
+{/* TODO(verify): recording events go out unsigned (recording_completed.rs `secret: None`, UNPO-181); REST-originated calls can miss the event when the report loses the PendingOriginate removal race (reporter.rs recording_callback_target) */}
+
+**Answer URL `<Record>`.** When a `<Record>` in your
+[answer-URL reply](/telephony/apis/answer-url) reaches its `maxLength` (300 s by default),
+Unpod sends `RecordStop` to your answer URL with `ev.recording_url`. That's the same path
+inside Unpod: once the call ends, get the audio with `get_recording(ev.call_id)`.
+
+{/* TODO(verify): answer_url.rs reports RecordStop at maxLength while the file keeps growing until hangup; whether <Record> on a call the policy already records does anything (sip_session start_recording: "Recording already active") */}
+
+## Record part of a call
+
+`calls.record` asks Unpod to start recording a call that's still going:
+
+<CodeGroup>
+```python Python
+from unpod import Client
+
+CALL_ID = "..."  # a call that's still going
+
+with Client() as client:
+    client.telephony.calls.record(CALL_ID)
+```
+
+```bash cURL
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/record" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" -d '{}'
+```
+</CodeGroup>
+
+It returns as soon as the request reaches the call, before recording starts, so it doesn't
+report whether recording started. A call that has ended returns `404 not_found`. A call
+your org's policy already records keeps that one recording. `transcribe=True` is accepted,
+but no transcript is made yet.
+
+{/* TODO(verify): whether a recording started with calls.record is what get_recording returns (calls.rs record_call dispatches without waiting; sip_session start_recording fails with "Recording already active" when the policy recorder runs); transcribe only drops a marker file (calls.rs maybe_drop_transcribe_marker) */}
+
+## Tell callers
+
+<Warning>
+Many places require you to tell people, and sometimes to get their consent, before you
+record a call. Check the rules where you and the people you call are.
+</Warning>
+
+Say it at the start of the call. On an inbound call, put a `<Speak>` first in your
+answer-URL reply:
+
+```xml
+<Response>
+    <Speak>This call is recorded.</Speak>
+    <Dial><Number>+919000000003</Number></Dial>
+</Response>
+```
+
+On a call you start with `create`,
+[`speak`](/telephony/apis/call-control#play-audio-and-speak) the same line when the leg
+sends `Answered`.
+
+If your org's policy records the call, you don't need `<Record/>`. Never put `<Record/>`
+before `<Dial>`: Unpod waits for the recording to reach its `maxLength` (300 s by default)
+before dialing, and the caller hears silence.
