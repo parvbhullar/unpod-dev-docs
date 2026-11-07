@@ -11,17 +11,11 @@ JSON you reply with.
 
 ```mermaid
 flowchart LR
-  A["📞<br/><b>Caller</b>"] e1@==> B["🔢<br/><b>Your Unpod number</b>"]
-  B e2@==> C["📡<br/><b>Unpod</b>"]
-  C e3@==> D["🌐<br/><b>Your answer URL</b><br/>StartApp, ringing"]
-  D e4@==> E["▶️<br/><b>Your XML or JSON reply</b><br/>Unpod runs it"]
-  E e5@==> F["📬<br/><b>status_callback_url</b><br/>call events"]
-
-  e1@{ animate: true }
-  e2@{ animate: true }
-  e3@{ animate: true }
-  e4@{ animate: true }
-  e5@{ animate: true }
+  A["📞<br/><b>Caller</b>"] ==> B["🔢<br/><b>Your Unpod number</b>"]
+  B ==> C["📡<br/><b>Unpod</b>"]
+  C ==> D["🌐<br/><b>Your answer URL</b><br/>StartApp, ringing"]
+  D ==> E["▶️<br/><b>Your XML or JSON reply</b><br/>Unpod runs it"]
+  E ==> F["📬<br/><b>status_callback_url</b><br/>call events"]
 
   classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
   classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;

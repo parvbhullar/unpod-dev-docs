@@ -18,7 +18,7 @@ flowchart LR
   A["📞<br/><b>Caller</b>"] ==> B["📡<br/><b>Your carrier</b>"]
   B ==> C["🔗<br/><b>Unpod</b><br/>origin endpoint"]
   C ==> D["🔢<br/><b>Your number</b>"]
-  D ==> E["🤖<br/><b>Your app or<br/>an Unpod agent</b>"]
+  D ==> E["🌐<br/><b>Your app</b><br/>(answer URL)"]
 
   classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
   classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
@@ -26,6 +26,8 @@ flowchart LR
   class B,C,D pp;
   linkStyle default stroke:#9a90ff,stroke-width:2.5px;
 ```
+
+{/* TODO(verify): the Unpod agent path for trunk numbers (not documented yet) */}
 
 <Steps>
   <Step title="Credentials">
@@ -71,31 +73,47 @@ flowchart LR
     ```
     </CodeGroup>
 
-    Copy the trunk id (`data.id` in the cURL response). See
-    [Create Trunk](/telephony/trunks/create-trunk) for every field.
+    Copy the trunk id (`data.id` in the cURL response) - the next step calls it
+    `TRUNK_ID`. See [Create Trunk](/telephony/trunks/create-trunk) for every field.
   </Step>
 
   <Step title="Map a number to the trunk">
-    Mapping takes the number's `number_id`, which the overview lists. Set `TRUNK_ID` to
-    the id from the last step and `NUMBER` to your number in E.164.
+    Mapping takes your number's `id` from the org's number list. Set `TRUNK_ID` to the
+    trunk id from step 2. In Python, set `NUMBER` to your number in E.164 and the sample
+    finds its id; in cURL, copy the `id` yourself as `NUMBER_ID`.
 
-    {/* TODO(verify): how a carrier-owned number first appears in the org's overview */}
+    The SDK doesn't expose the number id yet, so the Python sample reads the list over HTTP.
+
+    {/* TODO(verify): expose Number.id in the SDK */}
+    {/* TODO(verify): how a carrier-owned number first appears in the org's number list */}
 
     <CodeGroup>
     ```python Python
+    import os
+
+    import httpx
     from unpod import Client
 
-    TRUNK_ID = 21            # from the last step
-    NUMBER = "+15551234567"  # your number
+    TRUNK_ID = 21            # trunk id from step 2
+    NUMBER = "+15551234567"  # your number, E.164
+
+    resp = httpx.get(
+        "https://unpod.ai/api/v2/platform/telephony/numbers/",
+        params={"include_assigned": "true"},
+        headers={
+            "Authorization": f"Token {os.environ['UNPOD_PLATFORM_TOKEN']}",
+            "Org-Handle": os.environ["UNPOD_ORG_HANDLE"],
+        },
+    )
+    resp.raise_for_status()
+    number_id = next(
+        (n["id"] for n in resp.json()["data"] if n["number"] == NUMBER), None
+    )
+    if number_id is None:
+        raise SystemExit(f"{NUMBER} is not in your org's number list.")
 
     with Client() as client:
-        tel = client.telephony
-        number_id = next(
-            (o.number_id for o in tel.overview() if o.number == NUMBER), None
-        )
-        if number_id is None:
-            raise SystemExit(f"{NUMBER} is not in your org's overview.")
-        mapped = tel.trunks.attach_numbers(TRUNK_ID, [number_id])
+        mapped = client.telephony.trunks.attach_numbers(TRUNK_ID, [number_id])
         print(mapped.origin_endpoint.ingress)
         print(mapped.origin_endpoint.accepted_source_ips)
         for r in mapped.numbers:
@@ -103,28 +121,37 @@ flowchart LR
     ```
 
     ```bash cURL
-    # 1. find your number's "number_id"
-    curl -s "https://unpod.ai/api/v2/platform/telephony/overview/" \
+    # 1. list your numbers and copy your number's "id"
+    curl -s \
+      "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
-    # 2. map it: 21 is your trunk id, 501 the number_id
+    # TRUNK_ID=<id from step 2>
+    # NUMBER_ID=<id from the list>
+
+    # 2. map it to the trunk
     curl -s -X POST \
-      "https://unpod.ai/api/v2/platform/telephony/trunks/21/attach-numbers/" \
+      "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/attach-numbers/" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" \
-      -d '{"number_ids": [501]}'
+      -d "{\"number_ids\": [$NUMBER_ID]}"
     ```
     </CodeGroup>
 
     The response has the **origin endpoint**: `ingress` is where your carrier sends calls,
-    and `accepted_source_ips` are the addresses Unpod accepts them from. Each number reports
-    `ok` and `error` on its own. See [Attach Numbers to Trunk](/telephony/trunks/attach-numbers).
+    and `accepted_source_ips` are the addresses Unpod accepts them from. If no number maps,
+    the request fails with `400` (the SDK raises `httpx.HTTPStatusError` before the loop
+    runs). If some map, each number reports `ok` and `error` on its own. See
+    [Attach Numbers to Trunk](/telephony/trunks/attach-numbers).
   </Step>
 
   <Step title="Point your carrier at the origin endpoint">
     In your carrier's console, set the number's inbound destination to the `ingress` value.
     Make sure the carrier sends from an address in `accepted_source_ips` - these are the
-    `source_ips` you gave the trunk.
+    `source_ips` you gave the trunk. Your carrier may also ask for the SIP port, the
+    transport and the number format to put in the Request-URI; these aren't documented yet.
+
+    {/* TODO(verify): ingress port and transport, and the number format (E.164 with or without +) the Request-URI must carry */}
   </Step>
 
   <Step title="Verify">
@@ -143,13 +170,16 @@ flowchart LR
     ```
     </CodeGroup>
 
-    Your number's `connection_state` should read `LINKED`. `NOT_LINKED` or
-    `PENDING_VERIFY` means it isn't ready yet. See
-    [Telephony Overview](/telephony/calls/overview).
+    Your number's `connection_state` should read `LINKED` (connected). `NOT_LINKED` means
+    it isn't routed yet. See [Number states](/telephony/apis/numbers#number-states).
 
-    {/* TODO(verify): exact connection_state once a carrier is mapped, and what moves it from NOT_LINKED / PENDING_VERIFY to LINKED */}
+    {/* TODO(verify): exact connection_state once a carrier is mapped */}
   </Step>
 </Steps>
+
+Calls to your number now reach Unpod. To answer them, set the trunk's inbound config by
+its name - `my-trunk`, the name you gave in step 2, is the key used there. See
+[For a whole SIP trunk](/telephony/apis/incoming-calls#for-a-whole-sip-trunk).
 
 ## Next
 
