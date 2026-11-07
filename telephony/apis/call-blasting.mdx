@@ -1,0 +1,213 @@
+---
+title: 'Call Blasting'
+icon: 'megaphone'
+description: 'Call a list of numbers and play the same message to each'
+---
+
+Send the same message to many people: appointment reminders, outage alerts, payment
+notices. You dial each number with `create` and give every call the same answer URL. When
+someone picks up, Unpod fetches it and plays your message. Host the message as a static XML
+file and you need no server to send the calls. Haven't made a call yet? Start with the
+[Quick Start](/telephony/apis/quickstart).
+
+## 1. Write the message
+
+Say it in a platform voice with `<Speak>`, or play a recording with `<Play>`:
+
+<CodeGroup>
+```xml Text to speech
+<Response>
+    <Speak voice="VOICE_ID" language="LANGUAGE_CODE">
+        Hello, this is a reminder that your appointment is tomorrow at 10 AM.
+    </Speak>
+    <Hangup/>
+</Response>
+```
+
+```xml Audio file
+<Response>
+    <Play>https://cdn.example.com/reminder.mp3</Play>
+    <Hangup/>
+</Response>
+```
+</CodeGroup>
+
+{/* TODO(verify): platform voice ids to list */}
+
+Save either one as `blast.xml`. The audio file is a public https MP3 or WAV, given as the
+text of `<Play>`. `<Hangup/>` is optional: Unpod hangs up when the last verb finishes. For
+every verb, see [Answer URL & XML](/telephony/apis/answer-url).
+
+Host `blast.xml` anywhere public over https that serves it without a redirect, such as
+object storage or a CDN: Unpod doesn't follow redirects. See
+[Serve a static file](/telephony/apis/answer-url#serve-a-static-file).
+
+{/* TODO(verify): static .xml file with answer_method="GET" - confirm live */}
+
+<Warning>
+If Unpod can't fetch the file within 3 seconds, or it's empty, nothing plays and the call
+stays connected in silence until the person hangs up or you end it. Dial your own number
+first and listen.
+</Warning>
+
+## 2. Dial the list
+
+Put one E.164 number per line in `numbers.txt`, then run:
+
+<CodeGroup>
+```python Python
+import asyncio
+from pathlib import Path
+
+from unpod import AsyncClient
+from unpod.telephony import TelephonyAPIError
+
+FROM = "+919000000001"  # your Unpod number
+ANSWER_URL = "https://cdn.example.com/blast.xml"
+STATUS_URL = "https://your-app.example.com/blast-status"  # step 3, optional
+CAMPAIGN = "reminder-nov"
+IN_FLIGHT = asyncio.Semaphore(10)  # caps create requests at once, not live calls
+
+
+async def dial(calls, to: str, failed: dict[str, str]) -> None:
+    async with IN_FLIGHT:
+        try:
+            await calls.create(
+                FROM,
+                to,
+                answer_url=ANSWER_URL,
+                answer_method="GET",
+                status_callback_url=STATUS_URL,
+                metadata={"campaign": CAMPAIGN},
+                idempotency_key=f"{CAMPAIGN}:{to}",  # a re-run never dials twice
+            )
+        except TelephonyAPIError as e:  # one bad number doesn't stop the batch
+            failed[to] = f"{e.status_code} {e.code}: {e.message}"
+
+
+async def main() -> None:
+    text = Path("numbers.txt").read_text()
+    numbers = list(dict.fromkeys(text.split()))  # drop duplicates
+    failed: dict[str, str] = {}
+    async with AsyncClient() as client:
+        calls = client.telephony.calls
+        await asyncio.gather(*(dial(calls, to, failed) for to in numbers))
+    print(f"accepted {len(numbers) - len(failed)} of {len(numbers)}")
+    for to, reason in failed.items():
+        print("failed", to, reason)
+
+
+asyncio.run(main())
+```
+
+```bash cURL
+# prints each number with the HTTP status: 202 accepted, anything else failed
+while read -r to; do
+  curl -s -o /dev/null -w "$to %{http_code}\n" \
+    -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+    -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
+    -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+    -H "Idempotency-Key: reminder-nov:$to" -H "Content-Type: application/json" \
+    -d '{"from": "+919000000001", "to": "'"$to"'",
+         "answer_url": "https://cdn.example.com/blast.xml", "answer_method": "GET",
+         "status_callback_url": "https://your-app.example.com/blast-status",
+         "metadata": {"campaign": "reminder-nov"}}'
+done < numbers.txt
+```
+</CodeGroup>
+
+`create` returns as soon as Unpod accepts the call; it doesn't wait for the phone to ring.
+A failed number is listed at the end and the rest are still dialed. Fix the list and run
+the script again: for 24 hours, the idempotency key `reminder-nov:<number>` returns the
+first result for numbers already accepted instead of dialing them again. Use a new campaign
+name for a new blast.
+
+Leave out `status_callback_url` if you don't need step 3.
+
+## 3. Track results
+
+Unpod posts each call's events to `status_callback_url`, with your `metadata` on every one
+as `ev.metadata`. Record the outcome on `Hangup`. Create your
+[webhook secret](/telephony/apis/quickstart#receive-your-first-call) first: status callbacks
+are signed with it.
+
+```python app.py
+import os
+
+from fastapi import FastAPI, HTTPException, Request
+from unpod.telephony import WebhookSignatureError, parse_call_event
+
+SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
+OUTCOME = {
+    "Normal Hangup": "delivered",
+    "Busy Line": "busy",
+    "Ring Timeout Reached": "no answer",
+    "No Answer": "no answer",
+}
+results: dict[str, dict[str, str]] = {}  # campaign -> {number: outcome}; use a DB
+app = FastAPI()
+
+
+@app.post("/blast-status")
+async def blast_status(request: Request):
+    try:
+        ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
+    except WebhookSignatureError:
+        raise HTTPException(401)
+
+    campaign = ev.metadata.get("campaign")
+    if ev.event == "Hangup" and campaign and ev.to:
+        outcome = OUTCOME.get(ev.hangup_cause, f"failed ({ev.sip_code})")
+        results.setdefault(campaign, {})[ev.to] = outcome  # a retry overwrites
+        print(campaign, ev.to, outcome)
+    return {"ok": True}  # always 2xx once signed, or Unpod retries
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+```
+
+Run it with `python app.py` and expose it as in the
+[Quick Start](/telephony/apis/quickstart#receive-your-first-call). Unpod retries an event
+until it gets a 2xx, so the same `Hangup` can arrive twice; writing the outcome by number
+makes that harmless.
+
+| `ev.hangup_cause` | Outcome | What to do |
+| --- | --- | --- |
+| `Normal Hangup` | Delivered | They answered. Unpod sends this cause only for answered calls |
+| `Busy Line` | Busy | Retry later |
+| `Ring Timeout Reached`, `No Answer` | No answer | Retry later, or leave it |
+| Anything else | Failed | Check `ev.sip_code`, e.g. an invalid number |
+
+To retry the busy and unanswered numbers, put them in a new `numbers.txt` and run step 2
+with a new campaign name, such as `reminder-nov-retry`.
+
+## Limits
+
+- Every URL must be public https: the answer URL, the audio file and
+  `status_callback_url`. Otherwise `create` returns `400 invalid_url`.
+- `IN_FLIGHT` limits how many `create` requests run at once. Each returns right away, so
+  the number of live calls can still grow to the size of your list.
+- Unpod can cap your org's concurrent calls and calls per second. At the cap, `create`
+  returns `429` and dials nothing: run the script again later and only the numbers not yet
+  accepted are dialed. A call accepted right at the cap can still end in a `Hangup`.
+- A reply holds at most 32 verbs and 4096 characters of `<Speak>` text.
+
+{/* TODO(verify): org concurrent-call and rate limits */}
+{/* TODO(verify): defaults for platform orgs, any throttling in the unpod.ai proxy, how to raise the cap */}
+{/* TODO(verify): Idempotency-Key is kept for 24 h in memory on one SBC node - confirm a re-run behind the proxy hits the same node */}
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Number Masking" icon="user-secret" href="/telephony/apis/number-masking">
+    Connect two people without showing their numbers.
+  </Card>
+  <Card title="Answer URL & XML" icon="file-code" href="/telephony/apis/answer-url">
+    Every verb you can put in the message.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/telephony/apis/webhooks">
+    Verify events and read every field.
+  </Card>
+</CardGroup>
