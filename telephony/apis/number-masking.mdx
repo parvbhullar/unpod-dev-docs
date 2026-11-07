@@ -1,0 +1,219 @@
+---
+title: 'Number Masking'
+icon: 'venetian-mask'
+description: 'Connect an agent and a customer so each sees only your Unpod number'
+---
+
+Let two people talk without sharing their phone numbers: a delivery agent and a customer, a
+support agent and a caller, a driver and a rider. Unpod dials both from your Unpod number,
+so each one sees only that number, never the other's.
+
+A masked call is a call with two participants. If you haven't added a second person to a
+call yet, read [Multiple Participants](/telephony/apis/multiple-participants) first. This
+page is the production version: everything happens on events, and the call ends as soon as
+either person is gone.
+
+## The flow
+
+1. Your backend dials the **agent** with `create`, with `role="agent"`, `record=True`, a
+   `status_callback_url`, a `recording_callback_url` and the customer's number in
+   `metadata`.
+2. When the agent's leg sends `Answered`, your app adds the **customer** with
+   `add_participant`, taking the number from `ev.metadata`.
+3. When either leg sends `Hangup`, your app ends the call. If the customer's phone was busy
+   (`Busy Line`), rang out (`Ring Timeout Reached`, `No Answer`) or rejected the call
+   (`Rejected`), the agent would otherwise wait on the line alone; the same goes for either
+   person hanging up after they talk.
+4. On each `Hangup`, your app records the outcome from `ev.role` and `ev.hangup_cause`.
+5. When the recording is ready, your app saves it.
+
+```mermaid
+sequenceDiagram
+    participant App as Your app
+    participant U as Unpod
+    participant A as Agent's phone
+    participant C as Customer's phone
+
+    App->>U: calls.create(agent, role="agent")
+    U->>A: rings, showing your Unpod number
+    A-->>U: answers
+    U-->>App: Answered (role agent)
+    App->>U: calls.add_participant(customer)
+    U->>C: rings, showing your Unpod number
+    C-->>U: answers
+    Note over A,C: talking: each sees only your Unpod number
+    C-->>U: hangs up
+    U-->>App: Hangup (role customer)
+    App->>U: calls.end
+    U-->>App: recording event
+```
+
+## Start a masked call
+
+You need your [credentials](/telephony/introduction#credentials) and your
+[webhook secret](/telephony/apis/quickstart#receive-your-first-call) exported as
+`UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE` and `UNPOD_WEBHOOK_SECRET`, and a public https
+URL for your server (ngrok works, as in the Quick Start). Start `app.py` with:
+
+```python app.py
+import os
+
+from fastapi import FastAPI, HTTPException, Request
+from unpod import AsyncClient
+from unpod.telephony import TelephonyAPIError, WebhookSignatureError, parse_call_event
+
+FROM = "+919000000001"             # your Unpod number: all either person sees
+BASE = "https://abc123.ngrok.app"  # this server's public https URL
+SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
+client = AsyncClient()  # one client, reused for every request
+app = FastAPI()
+
+
+async def start_masked_call(agent: str, customer: str) -> str:
+    """Dial the agent; /call-status adds the customer once they answer."""
+    call = await client.telephony.calls.create(
+        FROM, agent, role="agent", record=True,
+        status_callback_url=f"{BASE}/call-status",
+        recording_callback_url=f"{BASE}/recording",
+        metadata={"customer": customer},  # comes back on every event
+    )
+    return call.call_id
+```
+
+`start_masked_call` is a plain function, not a route. Call it from your own backend, for
+example when an order is assigned to a delivery agent. A public route that starts calls
+would let anyone dial from your number.
+
+The same request over REST:
+
+```bash cURL
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
+  -d '{"from": "+919000000001", "to": "+919000000002", "role": "agent",
+       "record": true,
+       "status_callback_url": "https://abc123.ngrok.app/call-status",
+       "recording_callback_url": "https://abc123.ngrok.app/recording",
+       "metadata": {"customer": "+919000000003"}}'
+```
+
+Outbound events don't carry the phone numbers in `ev.to` or `ev.from_`, so the customer's
+number travels in `metadata`, which Unpod echoes on every event as `ev.metadata`.
+
+{/* TODO(verify): record=true on POST /calls is stored but not read in the SBC source (feat/unpo-284-relay-bridge, recording_completed.rs "Not implemented"); whether a call is recorded follows the org's recording policy */}
+
+## Handle events
+
+Add the two routes below to `app.py`:
+
+```python app.py
+@app.post("/call-status")
+async def call_status(request: Request):
+    try:
+        ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
+    except WebhookSignatureError:
+        raise HTTPException(401)
+
+    calls = client.telephony.calls
+    customer = ev.metadata.get("customer")
+    try:
+        if ev.event == "Answered" and ev.role == "agent" and customer:
+            await calls.add_participant(
+                ev.call_id, FROM, customer, role="customer",
+                status_callback_url=f"{BASE}/call-status",
+                idempotency_key=f"{ev.call_id}:customer",  # a retry never dials twice
+            )
+        elif ev.event == "Hangup":
+            # the outcome: save it with your record (see the event map below)
+            print(ev.call_id, ev.role, ev.hangup_cause, ev.duration)
+            await calls.end(ev.call_id)  # never leave the other person alone
+    except TelephonyAPIError as e:  # e.g. the call has already ended
+        print(ev.call_id, e.status_code, e.message)
+    return {"ok": True}  # always 2xx once signed, or Unpod retries
+
+
+@app.post("/recording")
+async def recording(request: Request):
+    # Recording events aren't signed yet: trust only what the API returns
+    ev = parse_call_event(await request.body(), request.headers, None, verify=False)
+    if ev.call_id:
+        try:
+            rec = await client.telephony.calls.get_recording(ev.call_id)
+            print("recording", rec.call_id, rec.url, rec.duration_secs)  # save it
+        except TelephonyAPIError as e:  # not one of your calls
+            print(ev.call_id, e.status_code, e.message)
+    return {"ok": True}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+```
+
+Run it with `python app.py` and expose it as in the
+[Quick Start](/telephony/apis/quickstart#receive-your-first-call). Then start a call from a
+second terminal, in the same directory and virtualenv, with all three variables
+(`UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE`, `UNPOD_WEBHOOK_SECRET`) exported, since
+importing `app` reads them:
+
+```bash
+python -c 'import asyncio, app
+print(asyncio.run(app.start_masked_call("+919000000002", "+919000000003")))'
+```
+
+The agent's phone rings first, showing your Unpod number. When they answer, the customer's
+phone rings, also showing your Unpod number, and the two are connected.
+
+Unpod retries an event until it gets a 2xx, so every branch is safe to run twice: the
+`idempotency_key` stops a retried `Answered` from dialing the customer again, and ending a
+call that's already over only raises a `TelephonyAPIError`, which the handler logs. Every
+event for the call has the same `ev.call_id`; `ev.leg_id` tells the two legs apart and
+`ev.role` is the `role` you gave each one.
+
+The `/recording` route doesn't check a signature, so it uses the event only to learn the
+`call_id` and asks the API for the recording with your credentials. To download the file,
+see [Recording](/telephony/apis/recording).
+
+{/* TODO(verify): recording events go out unsigned (recording_completed.rs `secret: None`); switch /recording to parse_call_event(..., secret=SECRET) once they are signed */}
+{/* TODO(verify): one recording event per leg's session (the customer's carries its own leg id as MPCUUID)? and the REST-originate removal race noted in reporter.rs */}
+{/* TODO(verify): download path for rec.url through https://unpod.ai */}
+
+## Event map
+
+| Event | Leg (`ev.role`) | What your app does |
+| --- | --- | --- |
+| `Initiated` | `agent`, later `customer` | The leg is being dialed. Optional: save `ev.leg_id` with your record |
+| `Ringing` | `agent` | Optional: show "calling the agent" in your app |
+| `Ringing` | `customer` | The agent hears the customer's phone ringing. `dial_music` plays nothing yet; to play your own sound, see [ringing sound](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
+| `Answered` | `agent` | Add the customer with `add_participant` |
+| `Answered` | `customer` | They're talking. Optional: mark the call connected |
+| `Hangup` | `customer` | End the call. `Busy Line`, `Ring Timeout Reached`, `No Answer` or `Rejected`: the customer wasn't reached. `Normal Hangup`: they answered |
+| `Hangup` | `agent` | End the call. Any cause but `Normal Hangup` means the agent never answered, so the customer was never dialed |
+| `MPCRecordingCompleted` | - | Arrives at `recording_callback_url` after the call. Fetch and save the recording |
+
+Store any other cause (`Service Unavailable`, `Cancelled`, `Unknown`, ...) and `ev.sip_code`
+as it is; see [Hangup causes](/telephony/apis/webhooks#hangup-causes). A call holds at most
+two people, so a masked call is always one agent and one customer.
+
+{/* TODO(verify): Webhooks page lists the recording event as RecordingCompleted; the SBC source (recording_completed.rs) sends MPCRecordingCompleted */}
+
+## Customer calls the masked number
+
+The other direction: the customer calls your Unpod number back and you connect them to
+their agent. Point the number's answer URL at your app (see
+[Incoming Calls](/telephony/apis/incoming-calls#point-your-number-at-your-app)), look up the
+agent from the caller's number (`ev.from_` on `StartApp`) in your own data, and reply:
+
+```xml
+<Response>
+    <Dial><Number>+919000000002</Number></Dial>
+</Response>
+```
+
+For the full server, with signature checks and a busy reply, see
+[Handle the call](/telephony/apis/incoming-calls#handle-the-call). The customer dialed your
+Unpod number, so that's all they see.
+
+{/* TODO(verify): caller ID the agent sees on an inbound <Dial> (Dial callerId is parsed but not applied in the SBC source) */}
+
+Porting a masking flow from Plivo? See [Migrate from Plivo](/telephony/apis/migrate-from-plivo).
