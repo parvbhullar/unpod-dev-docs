@@ -5,11 +5,11 @@ description: 'List the telephony numbers available to your organization'
 openapi: 'GET /api/v2/platform/telephony/numbers/'
 ---
 
-Returns the numbers available to you. Behavior depends on the `Org-Handle` header:
+Returns the shared pool of unassigned numbers (`NOT_ASSIGNED`). To also get your
+organization's own assigned numbers, send `Org-Handle` and add the query parameter
+`include_assigned=true`. Another organization's assigned numbers are never returned.
 
-- **With Org-Handle** — returns your organization's own numbers (any state) plus the shared
-  unassigned pool (`NOT_ASSIGNED`).
-- **Without Org-Handle** — returns only the shared unassigned pool.
+{/* TODO(verify): openapi.yaml still says Org-Handle alone returns the org's own numbers; the SDK (0.6.2) sends include_assigned=true for that */}
 
 Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numbers).
 
@@ -48,7 +48,7 @@ Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numb
 </ResponseExample>
 
 ```bash cURL
-curl -s "https://unpod.ai/api/v2/platform/telephony/numbers/" \
+curl -s "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
   -H "Authorization: Token <your-api-key>" \
   -H "Org-Handle: <your-org-handle>"
 ```

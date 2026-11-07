@@ -98,7 +98,7 @@ flowchart LR
     NUMBER = "+15551234567"  # your number, E.164
 
     resp = httpx.get(
-        "https://unpod.ai/api/v2/platform/telephony/numbers/",
+        f"{os.environ['UNPOD_BASE_URL']}/api/v2/platform/telephony/numbers/",
         params={"include_assigned": "true"},
         headers={
             "Authorization": f"Token {os.environ['UNPOD_PLATFORM_TOKEN']}",
@@ -126,8 +126,8 @@ flowchart LR
       "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
-    # TRUNK_ID=<id from step 2>
-    # NUMBER_ID=<id from the list>
+    TRUNK_ID=21   # your trunk id from step 2
+    NUMBER_ID=501  # your number's id from the list
 
     # 2. map it to the trunk
     curl -s -X POST \
@@ -137,6 +137,8 @@ flowchart LR
       -d "{\"number_ids\": [$NUMBER_ID]}"
     ```
     </CodeGroup>
+
+    If your number isn't in the list, it can't be mapped yet - ask the Unpod team.
 
     The response has the **origin endpoint**: `ingress` is where your carrier sends calls,
     and `accepted_source_ips` are the addresses Unpod accepts them from. If no number maps,
