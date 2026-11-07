@@ -11,7 +11,7 @@ SIP trunk, making your first outbound call, and receiving incoming calls - all f
 <Note>
 **Preview.** Call control (`client.telephony.calls`) is in preview. Method names follow the
 SDK; webhook field and event names follow Plivo, so existing Plivo handlers carry over.
-Coming from Plivo? See [Migrate from Plivo](/telephony/sdk/migrate-from-plivo).
+Coming from Plivo? See [Migrate from Plivo](/telephony/apis/migrate-from-plivo).
 </Note>
 
 ## Prerequisites
@@ -124,7 +124,7 @@ The caller ID you dial from must be one of your org's numbers. Pick the path tha
     print(mapped.origin_endpoint.accepted_source_ips)
     ```
 
-    Full trunk lifecycle: [Numbers & Trunks](/telephony/sdk/trunks).
+    Full trunk lifecycle: [Numbers & Trunks](/telephony/sip-trunking/trunks).
   </Tab>
 </Tabs>
 
@@ -357,21 +357,21 @@ await calls.add_participant(
 )
 ```
 
-A call holds at most **two participants**. Full walkthrough: [Call Control](/telephony/sdk/call-control).
+A call holds at most **two participants**. Full walkthrough: [Call Control](/telephony/apis/call-control).
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Call Control" icon="sliders-horizontal" href="/telephony/sdk/call-control">
+  <Card title="Call Control" icon="sliders-horizontal" href="/telephony/apis/call-control">
     Bridge, play audio, speak, transfer, DTMF and recording.
   </Card>
-  <Card title="Incoming Calls" icon="phone-incoming" href="/telephony/sdk/inbound-calls">
+  <Card title="Incoming Calls" icon="phone-incoming" href="/telephony/apis/incoming-calls">
     Answer URL, XML and JSON verbs, inbound events.
   </Card>
-  <Card title="Webhooks" icon="webhook" href="/telephony/sdk/webhooks">
+  <Card title="Webhooks" icon="webhook" href="/telephony/apis/webhooks">
     Verify and parse every call and recording event.
   </Card>
-  <Card title="Migrate from Plivo" icon="arrow-right-left" href="/telephony/sdk/migrate-from-plivo">
+  <Card title="Migrate from Plivo" icon="arrow-right-left" href="/telephony/apis/migrate-from-plivo">
     Method-by-method map from Plivo to the Unpod SDK.
   </Card>
 </CardGroup>

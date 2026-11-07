@@ -126,7 +126,7 @@ except WebhookSignatureError:
     return Response(status_code=401)
 ```
 
-The secret comes from `client.telephony.webhook_secret.rotate()`. See [Webhooks](/telephony/sdk/webhooks).
+The secret comes from `client.telephony.webhook_secret.rotate()`. See [Webhooks](/telephony/apis/webhooks).
 
 ### Call Status
 
@@ -170,7 +170,7 @@ await client.telephony.inbound.set_did("+919000000001", InboundConfig(
 ```
 
 The `StartApp` / `Hangup` / `RecordStop` events and the reply XML are the same as Plivo's -
-see [Incoming Calls](/telephony/sdk/inbound-calls).
+see [Incoming Calls](/telephony/apis/incoming-calls).
 
 ## 6. Hangup causes
 
@@ -186,6 +186,6 @@ see [Incoming Calls](/telephony/sdk/inbound-calls).
 - **Two participants** per call at most.
 - **Callback and audio URLs** must be public https.
 - **`speak`** depends on TTS being available for your org.
-- **Buying numbers** from a carrier is not in the SDK - use the Unpod pool, or [bring your own trunk](/telephony/sdk/trunks#sip-trunks).
+- **Buying numbers** from a carrier is not in the SDK - use the Unpod pool, or [bring your own trunk](/telephony/sip-trunking/trunks#sip-trunks).
 
-Full hotline handler: [Call Control → Full example](/telephony/sdk/call-control#full-example-agent-first-hotline).
+Full hotline handler: [Call Control → Full example](/telephony/apis/call-control#full-example-agent-first-hotline).

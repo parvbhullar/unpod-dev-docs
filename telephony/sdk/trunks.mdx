@@ -15,7 +15,7 @@ async with AsyncClient() as client:      # UNPOD_BASE_URL, UNPOD_PLATFORM_TOKEN,
     tel = client.telephony
 ```
 
-Setup: [Unpod SDK Quickstart](/telephony/sdk/quickstart#authenticate).
+Setup: [Unpod SDK Quickstart](/telephony/apis/quickstart#authenticate).
 
 ## Unpod numbers
 
@@ -142,7 +142,7 @@ flowchart LR
     call = await tel.calls.create("+919000000001", "+919000000002")
     ```
 
-    See [Make an outbound call](/telephony/sdk/quickstart#make-an-outbound-call).
+    See [Make an outbound call](/telephony/apis/quickstart#make-an-outbound-call).
   </Step>
 </Steps>
 
@@ -175,4 +175,4 @@ await tel.inbound.set_trunk("my-trunk", {"answer_url": "https://your-app.example
 cfg = await tel.inbound.get_trunk("my-trunk")
 ```
 
-See [Incoming Calls](/telephony/sdk/inbound-calls).
+See [Incoming Calls](/telephony/apis/incoming-calls).

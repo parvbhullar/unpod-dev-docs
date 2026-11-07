@@ -19,7 +19,7 @@ Every method raises `TelephonyAPIError` on an error response - see [Errors](#err
 ## Make a call
 
 `create` dials the **first participant** (leg A). It returns at once with state `initiated`;
-progress arrives as [webhooks](/telephony/sdk/webhooks).
+progress arrives as [webhooks](/telephony/apis/webhooks).
 
 ```python
 call = await calls.create(
