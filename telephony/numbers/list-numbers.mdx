@@ -24,6 +24,12 @@ Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numb
 | Authorization | string | Yes      | `Token <your-api-key>`          |
 | Org-Handle    | string | No       | Organization domain handle      |
 
+### Query parameters
+
+| Name             | Type    | Required | Description |
+|------------------|---------|----------|-------------|
+| include_assigned | boolean | No       | `true` also returns your organization's own assigned numbers (send `Org-Handle`). Without it, only unassigned pool numbers |
+
 ### Number object fields
 
 | Field   | Type    | Description                                  |
@@ -40,7 +46,8 @@ Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numb
   "status_code": 200,
   "message": "Telephony numbers fetched successfully.",
   "data": [
-    { "id": 501, "number": "+15551234567", "state": "NOT_ASSIGNED", "active": true }
+    { "id": 501, "number": "+15551234567", "state": "NOT_ASSIGNED", "active": true },
+    { "id": 502, "number": "+15559876543", "state": "ASSIGNED", "active": true }
   ]
 }
 ```

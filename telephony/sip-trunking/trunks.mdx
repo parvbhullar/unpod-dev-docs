@@ -119,10 +119,15 @@ or delete the trunk. The API has no call to update a trunk. See
 
 ## Map numbers to a trunk
 
-Mapping takes number **ids**, not E.164 numbers. Read each number's `id` from your org's
-number list, `GET /telephony/numbers/?include_assigned=true`. The SDK's
-`numbers.list()` doesn't return the id yet - step 3 of the
-[Quick Start](/telephony/quickstart) shows a Python lookup.
+Mapping takes number **ids**, not E.164 numbers. Only a `NOT_ASSIGNED` number can be
+mapped; detach an `ASSIGNED` number first
+([Detach a number](/telephony/apis/numbers#detach-a-number)).
+
+Read each number's `id` from your org's number list,
+`GET /telephony/numbers/?include_assigned=true`. The SDK's `numbers.list()` doesn't
+return the id yet - step 3 of the [Quick Start](/telephony/quickstart) shows a Python
+lookup. For numbers already on your org, `client.telephony.overview()` returns the same
+id as `number_id` - a pure-SDK way to find the ids to unmap.
 
 {/* TODO(verify): expose Number.id in the SDK */}
 
@@ -131,7 +136,7 @@ number list, `GET /telephony/numbers/?include_assigned=true`. The SDK's
 from unpod import Client
 
 TRUNK_ID = 21        # your trunk id
-NUMBER_IDS = [501]   # ids from your org's number list
+NUMBER_IDS = [501]   # NOT_ASSIGNED ids from your org's number list
 
 with Client() as client:
     mapped = client.telephony.trunks.attach_numbers(TRUNK_ID, NUMBER_IDS)
@@ -152,9 +157,11 @@ curl -s -X POST \
 </CodeGroup>
 
 The response has the **origin endpoint**: `ingress` is where your carrier sends calls,
-`dids` lists the numbers now on the trunk, and `accepted_source_ips` are the addresses
-Unpod accepts them from. Each number reports `ok` and `error` on its own. If none map, the
-request fails with `400` (the SDK raises `httpx.HTTPStatusError`). See
+`dids` lists the numbers this request mapped, and `accepted_source_ips` are the addresses
+Unpod accepts them from. Each eligible number gets a row in `numbers` with its own `ok`
+and `error`; ids that aren't an active `NOT_ASSIGNED` number are left out. If no id is
+eligible, the request fails with `400` `No valid unassigned numbers found.` (the SDK
+raises `httpx.HTTPStatusError`). See
 [Attach Numbers to Trunk](/telephony/trunks/attach-numbers).
 
 ## Unmap numbers
@@ -182,7 +189,8 @@ curl -s -X POST \
 </CodeGroup>
 
 Unmapping releases the number back to `NOT_ASSIGNED`. A number that isn't on this trunk
-reports `ok: false` with `Number is not mapped to this trunk.` See
+reports `ok: false` with `Number is not mapped to this trunk.` If no number unmaps, the
+request fails with `400` (the SDK raises `httpx.HTTPStatusError`). See
 [Detach Numbers from Trunk](/telephony/trunks/detach-numbers).
 
 ## Inbound config for a whole trunk
@@ -224,7 +232,9 @@ see [For a whole SIP trunk](/telephony/apis/incoming-calls#for-a-whole-sip-trunk
 
 Unmap every number first, then delete. Deleting removes the trunk's number mappings too,
 but unmapping first releases each number cleanly back to `NOT_ASSIGNED`. The sample only
-deletes once every number has unmapped.
+deletes once every number has unmapped. Running it again after a partial failure? Drop
+the ids that already unmapped: they now report `ok: false`, and if none unmap the request
+fails with `400`.
 
 {/* TODO(verify): no endpoint lists the numbers mapped to a trunk; keep the ids you mapped */}
 

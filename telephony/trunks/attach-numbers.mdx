@@ -7,7 +7,7 @@ openapi: 'POST /api/v2/platform/telephony/trunks/{id}/attach-numbers/'
 
 Map one or more numbers to this trunk - the **Leg-A** (BYO carrier) path. The bridge is
 auto-resolved and hidden. The response returns the trunk-level **origin endpoint**: the
-shared SBC ingress your carrier sends inbound calls to, the mapped DIDs, and the accepted
+shared SBC ingress your carrier sends inbound calls to, the mapped numbers, and the accepted
 source IPs.
 
 <Note>
@@ -75,7 +75,7 @@ source IPs.
 ```json 400
 {
   "status_code": 400,
-  "message": "No numbers could be mapped.",
+  "message": "No valid unassigned numbers found.",
   "data": {
     "trunk_id": 21,
     "origin_endpoint": { "ingress": "sip:sip.unpod.tel", "dids": [], "accepted_source_ips": ["1.2.3.4"], "region": null },
