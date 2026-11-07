@@ -33,7 +33,7 @@ Say it in a platform voice with `<Speak>`, or play a recording with `<Play>`:
 </CodeGroup>
 
 To pick a platform voice, add `voice` and `language` to `<Speak>` with real values. A
-made-up value makes the speech fail, and the call ends right after it's answered.
+made-up value can make the speech fail, and the call then ends right after it's answered.
 
 {/* TODO(verify): platform voice ids to list */}
 
@@ -87,7 +87,7 @@ async def dial(calls, to: str, failed: dict[str, str]) -> None:
                     answer_method="GET",
                     status_callback_url=STATUS_URL,
                     metadata={"campaign": CAMPAIGN, "to": to},  # back on events
-                    idempotency_key=f"{CAMPAIGN}:{to}",  # a retry never dials twice
+                    idempotency_key=f"{CAMPAIGN}:{to}",  # a retry won't dial twice
                 )
             return
         except TelephonyAPIError as e:
@@ -96,14 +96,15 @@ async def dial(calls, to: str, failed: dict[str, str]) -> None:
                 return
         except httpx.HTTPError:
             pass  # network error: the same idempotency key makes a retry safe
-        await asyncio.sleep(min(2**attempt, 30))  # 429 or network error: back off
+        if attempt < 9:  # 429 or network error: back off, unless that was the last try
+            await asyncio.sleep(min(2**attempt, 30))
     failed[to] = "gave up after retries"
 
 
 async def main() -> None:
     r = httpx.get(ANSWER_URL, timeout=3)  # the file Unpod will fetch
     r.raise_for_status()  # also fails on a redirect, which Unpod won't follow
-    assert r.text.strip(), "blast.xml is empty"
+    assert "<Response" in r.text, "blast.xml is empty or not XML"
 
     lines = Path("numbers.txt").read_text().splitlines()
     numbers = list(dict.fromkeys(n.strip() for n in lines if n.strip()))  # no dupes
@@ -138,8 +139,10 @@ done < numbers.txt
 
 `create` returns as soon as Unpod accepts the call; it doesn't wait for the phone to ring.
 On a `429` (your org is at its call limit) or a network error the script backs off and
-tries again; any other error is listed at the end and the rest are still dialed. Fix the
-list and run the script again: thanks to the idempotency key `reminder-nov:<number>`, a
+tries again; any other error is listed at the end and the rest are still dialed.
+`gave up after retries` means your org stayed at its cap (or the network kept failing)
+through every try: run the script again later to pick those numbers up. Fix the list and
+run the script again: thanks to the idempotency key `reminder-nov:<number>`, a
 re-run within 24 h doesn't dial the same number twice, unless Unpod restarts (keys live in
 memory). Use a new campaign name for a new blast. For a very large list, run it in chunks
 of a few thousand numbers.
@@ -166,6 +169,8 @@ OUTCOME = {
     "Busy Line": "busy",
     "Ring Timeout Reached": "no answer",
     "No Answer": "no answer",
+    "Rejected": "declined",
+    "Cancelled": "cancelled",
     "Service Unavailable": "not dialed",
 }
 # campaign -> {number: (outcome, seconds answered)}. In memory: use a DB.
@@ -196,16 +201,23 @@ if __name__ == "__main__":
 
 Run it with `python app.py` and expose it as in the
 [Quick Start](/telephony/apis/quickstart#receive-your-first-call). Unpod retries an event
-that doesn't get a 2xx a few times over about 30 seconds
+that doesn't get a 2xx a few times over about a minute
 ([Delivery and retries](/telephony/apis/webhooks#delivery-and-retries)), so the same
 `Hangup` can arrive twice; writing the outcome by number makes that harmless.
+
+If your server is down for the whole retry window (roughly 36-66 s), the event is dropped
+and that number never gets an outcome. A number missing from `results` is either still on
+a call or lost its `Hangup`: list the live calls with
+[`calls.list()`](/telephony/apis/call-control#inspect-and-end-calls) and check again
+later.
 
 | `ev.hangup_cause` | Outcome | What to do |
 | --- | --- | --- |
 | `Normal Hangup` | Answered | They picked up. `ev.duration` is how long, in seconds |
 | `Busy Line` | Busy | Retry later |
 | `Ring Timeout Reached`, `No Answer` | No answer | Retry later, or leave it |
-| `Service Unavailable` | Not dialed | No capacity (`ev.sip_code` 503). Retry |
+| `Rejected`, `Cancelled` | Declined, cancelled | `Rejected`: the person declined. `Cancelled`: the call was ended before it was answered. Retry later, or leave it |
+| `Service Unavailable` | Not dialed | Any 5xx in `ev.sip_code`: Unpod or the carrier had no capacity. Retry |
 | Anything else | Failed | Check `ev.sip_code`, e.g. an invalid number |
 
 `Normal Hangup` only means the call was answered. A duration shorter than your message

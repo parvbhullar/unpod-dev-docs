@@ -1148,8 +1148,10 @@ paths:
       summary: Get Telephony Numbers
       tags: [Bridges]
       description: >
-        List telephony numbers. With Org-Handle: org's own numbers (any state) + pool
-        (NOT_ASSIGNED). Without Org-Handle: pool numbers only.
+        List telephony numbers. By default only unassigned numbers (NOT_ASSIGNED): the
+        shared pool, plus the org's own unassigned numbers when Org-Handle is sent. Add
+        include_assigned=true with Org-Handle to also return the org's own ASSIGNED
+        numbers. Another org's assigned numbers are never returned.
       security:
         - TokenAuth: []
       parameters:
@@ -1159,6 +1161,15 @@ paths:
           schema:
             type: string
           description: "Organization domain handle. Omit to list pool numbers only."
+        - name: include_assigned
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: >
+            Set true (with Org-Handle) to also return the org's own ASSIGNED numbers.
+            Without it, only NOT_ASSIGNED numbers are listed.
       responses:
         '200':
           description: List of telephony numbers
@@ -1754,7 +1765,7 @@ paths:
                   numbers:
                     - number_id: 501
                       ok: false
-                      error: "Number not found or not available to this organization."
+                      error: "Failed to map number."
         '404':
           description: Trunk not found
           content:

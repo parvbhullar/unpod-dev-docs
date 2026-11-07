@@ -49,7 +49,9 @@ source IPs.
 ### Partial success
 
 `201` if at least one number maps, else `400`. Each `data.numbers` entry reports
-`ok`/`error` independently.
+`ok`/`error` independently. Ineligible ids (unknown, inactive, already assigned, or
+another organization's) are skipped with no entry; if none is eligible, the `400`
+(`No valid unassigned numbers found.`) has an empty `data`.
 
 <ResponseExample>
 
@@ -76,13 +78,7 @@ source IPs.
 {
   "status_code": 400,
   "message": "No valid unassigned numbers found.",
-  "data": {
-    "trunk_id": 21,
-    "origin_endpoint": { "ingress": "sip:sip.unpod.tel", "dids": [], "accepted_source_ips": ["1.2.3.4"], "region": null },
-    "numbers": [
-      { "number_id": 501, "ok": false, "error": "Number not found or not available to this organization." }
-    ]
-  }
+  "data": {}
 }
 ```
 

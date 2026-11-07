@@ -80,7 +80,7 @@ client = AsyncClient()  # one client, reused for every request
 app = FastAPI()
 # In memory: run one process, or use your database.
 ours: set[str] = set()  # call and leg ids seen on signed events
-outcomes: dict[str | None, dict[str | None, str | None]] = {}  # call -> role -> cause
+outcomes: dict = {}  # call id -> role -> hangup cause
 
 
 async def start_masked_call(agent: str, customer: str) -> str:
@@ -153,6 +153,7 @@ async def call_status(request: Request):
         if e.status_code == 429 or e.status_code >= 500:
             raise HTTPException(503)  # transient: Unpod sends the event again
         if adding and e.status_code not in (404, 409):  # 404 gone, 409 dialed
+            outcomes.setdefault(ev.call_id, {})["customer"] = "Not dialed"
             with suppress(TelephonyAPIError):
                 await calls.end(ev.call_id)  # can't dial the customer: free the agent
     return {"ok": True}  # 2xx once signed, or Unpod resends
@@ -197,7 +198,7 @@ phone rings, also showing your Unpod number, and the two are connected.
 
 Every event for the call has the same `ev.call_id`; `ev.leg_id` tells the two legs apart and
 `ev.role` is the `role` you gave each one. Until it gets a 2xx, Unpod resends an event a
-few times over about 30 seconds
+few times over about a minute
 ([Delivery and retries](/telephony/apis/webhooks#delivery-and-retries)), so every branch
 is safe to run twice: the
 `idempotency_key` stops a resent `Answered` from dialing the customer again, and ending a
@@ -206,7 +207,10 @@ hangup, and is logged and ignored). A rate limit or server error
 answers `503`, so Unpod sends the event again; any other error adding the customer ends
 the call, so the agent isn't left waiting. If an `Answered` or `Hangup` is lost for good,
 someone can stay on the line: as a backstop, sweep your active calls with `calls.list()`
-every few minutes and end any that should be over.
+every few minutes and end any that should be over: one with only one leg left after the
+customer's ring time (see `calls.get(call_id).legs`), or one older than your longest
+expected call. In the same sweep, clear the `ours` and `outcomes` entries of calls that are
+over and saved, so they don't grow forever.
 
 The `/recording` route doesn't check a signature, so it ignores any `call_id` your
 `/call-status` route hasn't seen on a signed event (which also skips a resent event once
@@ -214,6 +218,13 @@ the recording is saved), then asks the API for the recording with your credentia
 can also put a secret token in the query string of `recording_callback_url`: Unpod sends
 it back unchanged. Save the `call_id` and duration; to download the audio, see
 [Recording](/telephony/apis/recording).
+
+{/* TODO(verify): the proxy forwards recording_callback_url's query string unchanged */}
+
+The recording event may not arrive for a call started with `create`, so after the last
+`Hangup` also call `get_recording` yourself. Run it from a background task (FastAPI's
+`BackgroundTasks`, or your job queue), not inside `/call-status`: the handler must answer
+with a 2xx quickly, within 10 s.
 
 {/* TODO(verify): recording events go out unsigned (recording_completed.rs `secret: None`); switch /recording to parse_call_event(..., secret=SECRET) once they are signed */}
 {/* TODO(verify): one recording event per leg's session (the customer's carries its own leg id as MPCUUID)? and the REST-originate removal race noted in reporter.rs */}
