@@ -1,0 +1,261 @@
+---
+title: 'Incoming Calls'
+icon: 'phone-incoming'
+description: 'Answer calls to your number with your own app, an AI agent, or through your carrier'
+---
+
+When someone calls your number, Unpod can hand the call to your own app, to an Unpod AI
+agent, or to your carrier's trunk. For your app, Unpod asks your answer URL what to do while
+the call is still ringing, then runs the XML or JSON you reply with.
+
+```mermaid
+flowchart LR
+  A["📞<br/><b>Caller</b>"] e1@==> B["🔢<br/><b>Your Unpod number</b>"]
+  B e2@==> C["📡<br/><b>Unpod</b>"]
+  C e3@==>|① StartApp, ringing| D["🌐<br/><b>Your answer URL</b>"]
+  D e4@==>|② XML or JSON reply| E["▶️<br/><b>Unpod runs it</b>"]
+  E e5@==>|③ call events| F["📬<br/><b>status_callback_url</b>"]
+
+  e1@{ animate: true }
+  e2@{ animate: true }
+  e3@{ animate: true }
+  e4@{ animate: true }
+  e5@{ animate: true }
+
+  classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
+  classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
+  class A,D,F ep;
+  class B,C,E pp;
+  linkStyle default stroke:#9a90ff,stroke-width:2.5px;
+```
+
+## Three ways to answer
+
+| Your number | Answered by | Set up with |
+| --- | --- | --- |
+| Unpod number | Your app | The number's answer URL ([below](#point-your-number-at-your-app)) |
+| Unpod number | An Unpod AI agent | `numbers.attach(number, agent_id=…)` - no code to host |
+| Your carrier's number | Your app or an agent | [SIP Trunking](/telephony/quickstart), then the trunk's inbound config ([below](#for-a-whole-sip-trunk)) |
+
+{/* TODO(verify): number attached to an agent AND given an answer URL - SBC source (proxy/call.rs, ExternalBridge route) calls the answer URL but only a reject applies; other verbs don't run */}
+
+## Point your number at your app
+
+**Dashboard:** open the number in the [Unpod dashboard](https://unpod.ai/) and set its
+answer URL.
+
+{/* TODO(verify): dashboard path to set a number's answer URL */}
+
+**API:**
+
+<CodeGroup>
+```python Python
+from unpod import Client
+from unpod.telephony import InboundConfig
+
+NUMBER = "+919000000001"  # your Unpod number
+URL = "https://your-app.example.com/incoming"
+
+with Client() as client:
+    inbound = client.telephony.inbound
+    inbound.set_did(NUMBER, InboundConfig(
+        answer_url=URL,
+        answer_method="POST",
+        status_callback_url=URL,
+        record=True,
+    ))
+    print(inbound.get_did(NUMBER))  # the config in effect
+```
+
+```bash cURL
+# set
+curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{"answer_url": "https://your-app.example.com/incoming", "answer_method": "POST",
+       "status_callback_url": "https://your-app.example.com/incoming", "record": true}'
+
+# read the config in effect
+curl -s "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+```
+</CodeGroup>
+
+`set_did` sets the config for one number. In the URL, `+` becomes `%2B`. Each call replaces
+the number's whole config, so send every field you want to keep. `get_did` returns the
+config in effect, with any values from the number's [trunk](#for-a-whole-sip-trunk) filled
+in. The number must be one of your org's numbers, otherwise `404`.
+
+<Info>
+Inbound configuration is rolling out and needs the Call API switched on for your org (see
+the [Quick Start](/telephony/apis/quickstart)). If `set_did` (or the `PUT`) returns `405` or
+`401`, ask the Unpod team to set the answer URL on your number for now.
+</Info>
+
+### `InboundConfig` fields
+
+| Field | Meaning |
+| --- | --- |
+| `answer_url` / `answer_method` | Where Unpod sends new inbound calls. `POST` (default) or `GET` |
+| `answer_timeout_ms` | 500-10000 (default 3000). How long Unpod waits for your reply |
+| `answer_fallback` | `static_routing` (default) or `reject_503` when your app does not answer. See [below](#when-your-server-is-down) |
+| `status_callback_url` / `_method` / `_format` | Where call events go, and how: `POST` (default) or `GET`, `form` (default) or `json` |
+| `recording_callback_url` | Where the recording event goes |
+| `record` | Record inbound calls (default `false`) |
+| `tts_voice`, `tts_language` | Defaults for the [speak](/telephony/apis/call-control#play-audio-and-speak) endpoint on this number's calls. XML `<Speak>` uses only its own `voice` and `language` |
+
+## Handle the call
+
+Your answer URL gets three events. Reply to `StartApp` with instructions (see
+[Answer URL & XML](/telephony/apis/answer-url) for every verb) and return 200 for the rest.
+
+| `ev.event` | What to do |
+| --- | --- |
+| `StartApp` | A new call, still ringing (`ev.call_status` is `ringing`). Reply with XML. Reply `<Hangup/>` first to reject it (`reason="busy"` sends 486, anything else 603), or `<Speak>…</Speak><Hangup/>` to tell the caller you're busy |
+| `Hangup` | The call ended. Log `ev.duration` and `ev.call_status`: `completed`, `busy`, `no-answer`, `failed` or `cancel` |
+| `RecordStop` | A `<Record>` from your reply finished. Save `ev.recording_url` |
+
+This server routes each caller to a free agent's phone, or tells them everyone is busy:
+
+```python app.py
+import os
+
+import uvicorn
+from fastapi import FastAPI, HTTPException, Request, Response
+from unpod.telephony import WebhookSignatureError, parse_call_event
+
+SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
+AGENTS = ["+919000000003", "+919000000005"]  # your agents' phones
+on_call: dict[str, str] = {}  # call_id -> agent
+app = FastAPI()
+
+
+def xml(verbs: str) -> Response:
+    return Response(f"<Response>{verbs}</Response>", media_type="application/xml")
+
+
+@app.post("/incoming")
+async def incoming(request: Request):
+    try:
+        ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
+    except WebhookSignatureError:
+        raise HTTPException(401)
+
+    if ev.event == "StartApp":  # a new call is ringing
+        free = next((a for a in AGENTS if a not in on_call.values()), None)
+        if free is None:
+            return xml("<Speak>All our agents are busy.</Speak><Hangup/>")
+        on_call[ev.call_id] = free
+        return xml(f"<Dial><Number>{free}</Number></Dial>")
+
+    if ev.event == "Hangup":
+        on_call.pop(ev.call_id, None)  # the agent is free again
+        print(ev.call_id, ev.call_status, ev.duration)
+    elif ev.event == "RecordStop":
+        print("recording:", ev.recording_url)
+    return Response(status_code=200)  # always 2xx once the signature checks out
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+```
+
+Run it with `python app.py` and expose it as in the
+[Quick Start](/telephony/apis/quickstart#receive-your-first-call). After a valid signature it
+always returns 2xx: Unpod treats any other status as a failure and may
+[fall back](#when-your-server-is-down).
+
+`<Dial><Number>` is a blind transfer: Unpod hands the call to that number and runs nothing
+after it. To record these calls, set `record=True` in the number's config. Don't reply
+`<Record/>` before `<Dial>`: the caller waits in silence for the recording to finish (300 s
+by default) before Unpod dials.
+
+{/* TODO(verify): InboundConfig.record is stored but no call path in the SBC source (feat/unpo-284-relay-bridge) reads it yet - confirm inbound calls get recorded */}
+
+## The webhook secret
+
+Your org has one signing key for every request Unpod sends you: inbound answer-URL requests
+and status callbacks alike. Create it with `webhook_secret.rotate()` (org owner or admin).
+The full secret is shown only in that response, so store it as `UNPOD_WEBHOOK_SECRET`.
+
+<CodeGroup>
+```python Python
+from unpod import Client
+
+with Client() as client:
+    s = client.telephony.webhook_secret.rotate()
+    print(s.pushed_to_sbc)  # must be True
+    print(s.secret)         # shown in full only here
+```
+
+```bash cURL
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/webhook-secret/rotate" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" -d '{}'
+```
+</CodeGroup>
+
+<Warning>
+Rotating creates a new key and invalidates the old one. A server still verifying with the
+old key rejects every request with 401 until you give it the new one, and on inbound calls
+that 401 makes Unpod apply the [fallback](#when-your-server-is-down).
+</Warning>
+
+Unpod signs inbound POST requests once your org has a secret, so create it before you point a
+number at a server that verifies. GET requests are not signed. Verify each request with
+`parse_call_event`, as in the server above. See [Webhooks](/telephony/apis/webhooks) for the
+signature format and every event field.
+
+## When your server is down
+
+Unpod waits `answer_timeout_ms` (500-10000, default 3000) for your reply. If your app doesn't
+answer, Unpod applies the number's `answer_fallback`:
+
+| `answer_fallback` | What happens to the call |
+| --- | --- |
+| `static_routing` (default) | Unpod routes it as if the number had no answer URL: to whatever the number is attached to, such as its Unpod AI agent or SIP trunk |
+| `reject_503` | Unpod rejects it with 503 |
+
+{/* TODO(verify): static routing for a number attached with attach_type="human_call" (no agent, no trunk) */}
+
+The fallback applies on a timeout, a connection error, any non-2xx status (including your
+own 401), a reply that doesn't parse, or a reply containing an action URL that isn't public
+https. An empty 2xx body, `<Response/>` or `{"actions": []}` is not a failure: Unpod
+continues with static routing.
+
+After 5 failures in a row, Unpod skips your URL for 30 s and applies the fallback straight
+away.
+
+{/* TODO(verify): the SBC breaker is keyed by trunk name, not by URL; numbers with no trunk share one key */}
+
+## For a whole SIP trunk
+
+Your carrier's numbers reach Unpod over a SIP trunk. Set the inbound config once on the trunk,
+by its name, and every number on it uses it. A number's own config wins field by field over
+its trunk's, so you can give one number a different `answer_url` and keep the rest.
+
+<CodeGroup>
+```python Python
+from unpod import Client
+from unpod.telephony import InboundConfig
+
+with Client() as client:
+    inbound = client.telephony.inbound
+    inbound.set_trunk("my-trunk", InboundConfig(
+        answer_url="https://your-app.example.com/incoming",
+        answer_fallback="reject_503",
+    ))
+    print(inbound.get_trunk("my-trunk"))
+```
+
+```bash cURL
+curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/trunks/my-trunk/inbound" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{"answer_url": "https://your-app.example.com/incoming",
+       "answer_fallback": "reject_503"}'
+```
+</CodeGroup>
+
+An unknown trunk name returns `404`. To create a trunk and attach numbers to it, see
+[Manage Trunks](/telephony/sip-trunking/trunks).
