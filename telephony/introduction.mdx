@@ -27,8 +27,8 @@ Both paths use the same two credentials.
    sidebar, then **Generate New API Key**.
    {/* TODO(verify): exact dashboard path and deep link for the API key page */}
 2. **Org handle** - in the dashboard, open **Studio View**, click the **Settings** icon in
-   the right sidebar, then **Copy Org Handle**. Or call
-   [Get All Organizations](/api/space/organizations) and read `domain_handle`.
+   the right sidebar, then **Copy Org Handle**.
+   {/* TODO(verify): /organizations/ returns 401 for a platform Token - no API returns the org handle for this key yet */}
 
 Export them with the base URL:
 
@@ -42,15 +42,15 @@ The Python SDK reads all three when you create a client with no arguments. cURL 
 `https://unpod.ai/api/v2/platform/...` and send the token and org handle as
 `Authorization: Token $UNPOD_PLATFORM_TOKEN` and `Org-Handle: $UNPOD_ORG_HANDLE`.
 
-Check your key:
+Check your credentials:
 
 ```bash
-curl -s https://unpod.ai/api/v2/platform/organizations/ \
-  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN"
+curl -s https://unpod.ai/api/v2/platform/telephony/overview/ \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
+  -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 
-It needs no org handle and lists your organizations - `domain_handle` is your org handle.
-{/* TODO(verify): openapi.yaml and api/space/organizations.mdx mark Org-Handle as required on this endpoint - confirm it works without one */}
+A 200 with your org's numbers means both values are right; a 401 means the key is wrong.
 
 <Warning>
 Use the dashboard API key with `Authorization: Token …` plus `Org-Handle`. An `sk_...` key
