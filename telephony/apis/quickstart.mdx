@@ -1,388 +1,282 @@
 ---
-title: 'Unpod SDK Quickstart'
-sidebarTitle: 'Quickstart'
+title: 'Telephony APIs Quick Start'
+sidebarTitle: 'Quick Start'
 icon: 'rocket'
-description: 'Make your first outbound call and handle incoming calls with the Unpod Python SDK'
+description: 'Make your first call and receive your first call on an Unpod number'
 ---
 
-Get started with Unpod Voice in minutes. This guide walks you through setting up a number or
-SIP trunk, making your first outbound call, and receiving incoming calls - all from Python.
+Go from zero to a live call: first you call a phone, then a phone calls you.
 
 <Note>
-**Preview.** Call control (`client.telephony.calls`) is in preview. Method names follow the
-SDK; webhook field and event names follow Plivo, so existing Plivo handlers carry over.
-Coming from Plivo? See [Migrate from Plivo](/telephony/apis/migrate-from-plivo).
+**Preview.** Call control is in preview. Ask the Unpod team to switch on the Call API for your
+org; until then every call returns `403 call_api_disabled`. Coming from Plivo? See
+[Migrate from Plivo](/telephony/apis/migrate-from-plivo).
 </Note>
 
-## Prerequisites
+## Make your first call
 
-1. An Unpod account and organization. Note your **API Token** and **Org-Handle** - see [Authentication](/api/get-started/authentication).
-2. The **Call API** switched on for your org. Ask the Unpod team to enable it; until then every call returns `403 call_api_disabled`.
-3. A phone number in your org - from the Unpod pool or your own SIP trunk (set up below).
-4. Python 3.12+.
+<Steps>
+  <Step title="Credentials">
+    Export `UNPOD_BASE_URL`, `UNPOD_PLATFORM_TOKEN` and `UNPOD_ORG_HANDLE` as shown in
+    [Credentials](/telephony/introduction#credentials).
+  </Step>
 
-## Install the SDK
+  <Step title="Install">
+    Python only; cURL needs nothing.
 
-```bash
-pip install "unpod>=0.6.2"
-```
+    ```bash
+    pip install "unpod>=0.6.2"
+    ```
+  </Step>
 
-To receive calls you also need a small web server:
+  <Step title="Get a number">
+    Add one from the dashboard ([Get a Number](/telephony/apis/numbers)) or attach a free pool
+    number from code:
 
-```bash
-pip install fastapi uvicorn
-```
+    <CodeGroup>
+    ```python Python
+    import asyncio
+    from unpod import AsyncClient
 
-## Authenticate
 
-Set three environment variables. The SDK reads them when you create a client with no arguments.
+    async def main() -> None:
+        async with AsyncClient() as client:
+            tel = client.telephony
+            free = next(n.number for n in await tel.numbers.list() if n.status == "not_assigned")
+            result = await tel.numbers.attach(free, attach_type="human_call")
+            print(result.numbers[0].number, result.numbers[0].ok)
+            for o in await tel.overview():
+                print(o.number, o.connection_state)
 
-```bash
-export UNPOD_BASE_URL=https://unpod.ai
-export UNPOD_PLATFORM_TOKEN=<your-api-token>
-export UNPOD_ORG_HANDLE=<your-org-handle>
-```
 
-<CodeGroup>
-
-```python Async
-from unpod import AsyncClient
-
-async with AsyncClient() as client:
-    tel = client.telephony
-```
-
-```python Sync
-from unpod import Client
-
-client = Client()
-tel = client.telephony          # same methods, no await
-```
-
-```python Explicit auth
-from unpod import AsyncClient, TokenAuth
-
-client = AsyncClient(
-    base_url="https://unpod.ai/platform",
-    auth=TokenAuth("<your-api-token>", org_handle="<your-org-handle>"),
-)
-```
-
-</CodeGroup>
-
-<Warning>
-Always set `UNPOD_BASE_URL` (or pass `base_url`). Without it the SDK falls back to a legacy
-host that no longer resolves. Telephony accepts a **Token** or **JWT** with an `Org-Handle` -
-never a Bearer API key.
-</Warning>
-
-## Set up your number
-
-The caller ID you dial from must be one of your org's numbers. Pick the path that fits you.
-
-<Tabs>
-  <Tab title="Unpod number">
-    No carrier account needed. Claim a number from the Unpod pool and route it for call control:
-
-    ```python
-    numbers = await tel.numbers.list()
-    free = next(n.number for n in numbers if n.status == "not_assigned")
-
-    result = await tel.numbers.attach(free, attach_type="human_call")
-    for r in result.numbers:
-        print(r.number, r.ok, r.connection_state, r.error)
+    asyncio.run(main())
     ```
 
-    `attach_type="human_call"` routes the number without an AI agent - right for call control.
-    Use `agent_id="..."` instead to put an Unpod agent on the line.
+    ```bash cURL
+    curl -s "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
-    This is the SDK version of [Connect an Unpod Number](/telephony/integrations/unpod/dashboard):
-    the outbound trunk is ready as soon as the number is attached.
-  </Tab>
-  <Tab title="Your SIP trunk">
-    <Badge color="orange">Beta</Badge> Bring your own carrier. Create a trunk with its SIP
-    credentials, then map numbers onto it:
+    curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/numbers/attach/" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+      -H "Content-Type: application/json" \
+      -d '{"numbers": ["+919000000001"], "attach_type": "human_call"}'
+    ```
+    </CodeGroup>
 
-    ```python
-    trunk = await tel.trunks.create(
-        "My Carrier Trunk",
-        "sip:carrier.example.com",
-        username="<sip-username>",
-        password="<sip-password>",
-        transport="tcp",                     # tcp (default), udp or tls
-        port="5060",
-        source_ips=["203.0.113.10", "198.51.100.0/24"],   # carrier IPs allowed in
-    )
-    print(trunk.id)                          # e.g. 21
+    `attach_type="human_call"` routes the number for call control, with no AI agent.
 
-    # number ids come from the overview of your org's numbers
-    overview = await tel.overview()
-    number_id = next(o.number_id for o in overview if o.number == "+919000000001")
+    {/* TODO(verify): which connection_state values can place calls (PENDING_VERIFY worked; NOT_LINKED was rejected) */}
 
-    mapped = await tel.trunks.attach_numbers(trunk.id, [number_id])
-    print(mapped.origin_endpoint.ingress)    # point your carrier's inbound traffic here
-    print(mapped.origin_endpoint.accepted_source_ips)
+    <Note>
+    Dial only from a number that shows as connected in `overview` (cURL: the same request as the
+    [credentials check](/telephony/introduction#credentials)). A `403 from is not a number
+    available to this organization` means the number isn't ready yet.
+    </Note>
+  </Step>
+
+  <Step title="Call someone and speak">
+    Set `FROM` to your Unpod number and `TO` to a phone you can answer. Pick up when it rings.
+
+    <CodeGroup>
+    ```python Python
+    import asyncio
+    from unpod import AsyncClient
+
+    FROM = "+919000000001"  # your Unpod number
+    TO = "+919000000002"    # who to call
+
+
+    async def main() -> None:
+        async with AsyncClient() as client:
+            calls = client.telephony.calls
+            call = await calls.create(FROM, TO, ring_timeout=30)
+            print("calling", call.call_id)
+
+            state = call.state
+            while state not in ("ended", None):  # an ended call comes back with no state
+                await asyncio.sleep(2)
+                new = (await calls.get(call.call_id)).state
+                if new == "talking" and state != "talking":
+                    await calls.speak(call.call_id, "Hello! This is your first call from Unpod.")
+                if new != state:
+                    print("state:", new)
+                state = new
+
+
+    asyncio.run(main())
     ```
 
-    Full trunk lifecycle: [Numbers & Trunks](/telephony/sip-trunking/trunks).
-  </Tab>
-</Tabs>
+    ```bash cURL
+    # 1. dial
+    curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+      -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
+      -d '{"from": "+919000000001", "to": "+919000000002", "ring_timeout": 30}'
 
-Check the number is connected before you dial:
+    # 2. poll until "state": "talking"
+    curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
-```python
-for o in await tel.overview():
-    print(o.number, o.connection_state, o.sync_state)
-```
+    # 3. speak
+    curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+      -H "Content-Type: application/json" -d '{"text": "Hello from Unpod!"}'
+    ```
+    </CodeGroup>
 
-## Make an outbound call
+    For cURL, set `CALL_ID` to the `call_id` the dial returns. `speak` works once the call is
+    `talking` - no server needed.
+  </Step>
 
-Create a call from your Unpod number to any phone number. Dialing is asynchronous: `create`
-returns at once with state `initiated`, and progress arrives as webhooks at your
-`status_callback_url`.
+  <Step title="What you get back">
+    | `state` | Meaning |
+    | --- | --- |
+    | `initiated` | `create` returned. Unpod is dialing |
+    | `ringing` | The phone is ringing |
+    | `talking` | Answered. `speak` works from here |
 
-```mermaid
-flowchart LR
-  A["🐍<br/><b>Your code</b><br/>calls.create()"] e1@==> B["📡<br/><b>Unpod SBC</b>"]
-  B e2@==> C["📞<br/><b>Destination phone</b>"]
+    After hangup, `GET /sbc/v1/calls/{id}` returns the recording summary instead of a state:
 
-  e1@{ animate: true }
-  e2@{ animate: true }
+    ```json
+    {"call_id": "...", "available": true, "url": "/api/v1/calls/<id>/recording", "duration_secs": 18, "format": "wav", "channels": 2}
+    ```
 
-  classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
-  classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
-  class A,C ep;
-  class B pp;
-  linkStyle default stroke:#9a90ff,stroke-width:2.5px;
-```
+    That is why the loop stops on `ended` or on no state.
 
-<CodeGroup>
+    <Tip>No ring? Check the `from` number is connected (step 3), then that the Call API is switched on.</Tip>
+  </Step>
+</Steps>
 
-```python Python (async)
-import asyncio
-from unpod import AsyncClient
+## Receive your first call
 
+When someone calls your number, Unpod posts the call to your answer URL and runs the XML you
+reply with.
 
-async def main():
-    async with AsyncClient() as client:
-        call = await client.telephony.calls.create(
-            "+919000000001",                 # from_: your Unpod number
-            "+919000000002",                 # to: destination (E.164 or SIP URI)
-            ring_timeout=30,
-            status_callback_url="https://your-app.example.com/call-status",
-        )
-        print(call.call_id, call.state)      # e.g. 'c_8f2e…', 'initiated'
+<Steps>
+  <Step title="Get your webhook secret">
+    One signing key for all call events in your org. Rotating replaces the old one. Fetch it
+    once (org owner or admin) and store it as `UNPOD_WEBHOOK_SECRET`:
 
-
-asyncio.run(main())
-```
-
-```python Python (sync)
-from unpod import Client
-
-client = Client()
-call = client.telephony.calls.create(
-    "+919000000001",                         # from_: your Unpod number
-    "+919000000002",                         # to: destination
-    ring_timeout=30,
-    status_callback_url="https://your-app.example.com/call-status",
-)
-print(call.call_id, call.state)
-```
-
-```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
-  -H "Authorization: Token <your-api-token>" \
-  -H "Org-Handle: <your-org-handle>" \
-  -H "Idempotency-Key: $(uuidgen)" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "from": "+919000000001",
-    "to": "+919000000002",
-    "ring_timeout": 30,
-    "status_callback_url": "https://your-app.example.com/call-status"
-  }'
-```
-
-</CodeGroup>
-
-To play a message when the call is answered, pass an `answer_url`. Unpod fetches it when
-the leg connects and runs the instructions it returns:
-
-```python
-call = await client.telephony.calls.create(
-    "+919000000001", "+919000000002",
-    answer_url="https://your-app.example.com/answer",
-    answer_method="POST",
-)
-```
-
-```xml answer.xml
-<Response>
-    <Speak>Congratulations! You've made your first outbound call with Unpod!</Speak>
-</Response>
-```
-
-Store `call.call_id` - every later step (add a participant, play audio, end) takes it.
-
-## Receive an incoming call
-
-When someone calls your number, Unpod posts the call to your **answer URL** and runs the
-XML (or JSON) you reply with.
-
-```mermaid
-flowchart LR
-  A["📞<br/><b>Caller</b>"] e1@==> B["📡<br/><b>Unpod SBC</b>"]
-  B e2@==> C["🐍<br/><b>Your answer URL</b><br/>returns XML"]
-
-  e1@{ animate: true }
-  e2@{ animate: true }
-
-  classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
-  classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
-  class A,C ep;
-  class B pp;
-  linkStyle default stroke:#9a90ff,stroke-width:2.5px;
-```
-
-### Get your webhook secret
-
-Every event Unpod sends is signed. Fetch the secret once (org owner or admin) and store it as
-`UNPOD_WEBHOOK_SECRET`:
-
-```python
-s = await client.telephony.webhook_secret.rotate()
-print(s.pushed_to_sbc)                        # must be True
-print(s.secret)                               # shown in full only here
-```
-
-<Warning>
-Each `rotate()` invalidates the previous secret. Store it in your secret manager, never in code.
-</Warning>
-
-### Write the answer server
-
-```python app.py
-import os
-from fastapi import FastAPI, HTTPException, Request, Response
-from unpod.telephony import WebhookSignatureError, parse_call_event
-
-SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
-app = FastAPI()
+    ```python
+    import asyncio
+    from unpod import AsyncClient
 
 
-@app.post("/answer")
-async def answer(request: Request):
-    try:
-        ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
-    except WebhookSignatureError:
-        raise HTTPException(401)
-
-    if ev.event == "StartApp":               # a new inbound call is ringing
-        xml = "<Response><Speak>Hello! Thanks for calling.</Speak></Response>"
-        return Response(xml, media_type="application/xml")
-    return Response(status_code=200)         # Hangup / RecordStop: acknowledge
+    async def main() -> None:
+        async with AsyncClient() as client:
+            s = await client.telephony.webhook_secret.rotate()
+            print(s.pushed_to_sbc)  # must be True
+            print(s.secret)         # shown in full only here
 
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-```
+    asyncio.run(main())
+    ```
+  </Step>
 
-Run: `python app.py`
+  <Step title="Run a server">
+    ```bash
+    pip install fastapi uvicorn
+    ```
 
-### Expose your server
+    ```python app.py
+    import os
+    from fastapi import FastAPI, HTTPException, Request, Response
+    from unpod.telephony import WebhookSignatureError, parse_call_event
 
-Unpod only calls public **https** URLs. Use ngrok to expose your local server:
+    SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
+    app = FastAPI()
 
-```bash
-ngrok http 8000
-```
 
-Copy the HTTPS forwarding URL (e.g. `https://abc123.ngrok.app`).
+    @app.post("/answer")
+    async def answer(request: Request):
+        try:
+            ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
+        except WebhookSignatureError:
+            raise HTTPException(401)
 
-### Configure your number
+        if ev.event == "StartApp":               # a new inbound call is ringing
+            xml = "<Response><Speak>Hello! Thanks for calling.</Speak></Response>"
+            return Response(xml, media_type="application/xml")
+        return Response(status_code=200)         # Hangup / RecordStop: acknowledge
 
-Point your number at the answer URL:
 
-```python
-from unpod.telephony import InboundConfig
+    if __name__ == "__main__":
+        import uvicorn
+        uvicorn.run(app, host="0.0.0.0", port=8000)
+    ```
 
-await client.telephony.inbound.set_did("+919000000001", InboundConfig(
-    answer_url="https://abc123.ngrok.app/answer",
-    answer_method="POST",
-    status_callback_url="https://abc123.ngrok.app/answer",
-))
-```
+    Run it with `python app.py`. It rejects unsigned requests, greets new calls and returns 200
+    for every other event.
+  </Step>
 
-Now call your Unpod number to hear the greeting!
+  <Step title="Expose it">
+    Unpod only calls public https URLs. In a second terminal:
 
-<Info>
-Inbound configuration through the SDK is rolling out. If `set_did` returns `405` or `401`,
-ask the Unpod team to set the answer URL on your number for now.
-</Info>
+    ```bash
+    ngrok http 8000
+    ```
 
-## Connect two people
+    Copy the https forwarding URL, e.g. `https://abc123.ngrok.app`.
+  </Step>
 
-Forward a caller to another number by returning a `Dial` from your answer URL:
+  <Step title="Point your number at it">
+    <CodeGroup>
+    ```python Python
+    import asyncio
+    from unpod import AsyncClient
+    from unpod.telephony import InboundConfig
 
-```xml
-<Response>
-    <Record/>
-    <Dial><Number>+919000000003</Number></Dial>
-</Response>
-```
+    URL = "https://abc123.ngrok.app/answer"  # your ngrok URL + /answer
 
-Or bridge two people from code: dial the first one, then add the second when the first
-answers (the `Answered` event at your `status_callback_url`):
 
-```python
-calls = client.telephony.calls
+    async def main() -> None:
+        async with AsyncClient() as client:
+            await client.telephony.inbound.set_did("+919000000001", InboundConfig(
+                answer_url=URL,
+                answer_method="POST",
+                status_callback_url=URL,
+            ))
 
-call = await calls.create(
-    "+919000000001",                         # your Unpod number
-    "+919000000002",                         # first person (agent)
-    role="agent",
-    status_callback_url="https://abc123.ngrok.app/call-status",
-)
 
-# later, in your /call-status handler, when ev.event == "Answered" and ev.role == "agent":
-await calls.add_participant(
-    ev.call_id,
-    "+919000000001",                         # your Unpod number
-    "+919000000003",                         # second person (customer)
-    role="customer",
-    dial_music="none",
-    idempotency_key=f"{ev.call_id}:customer",
-)
-```
+    asyncio.run(main())
+    ```
 
-A call holds at most **two participants**. Full walkthrough: [Call Control](/telephony/apis/call-control).
+    ```bash cURL
+    curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+      -H "Content-Type: application/json" \
+      -d '{"answer_url": "https://abc123.ngrok.app/answer", "answer_method": "POST",
+           "status_callback_url": "https://abc123.ngrok.app/answer"}'
+    ```
+    </CodeGroup>
 
-## Next steps
+    `set_did` sets the config for one number. In the URL, `+` becomes `%2B`.
+
+    <Info>
+    Inbound configuration through the SDK is rolling out. If `set_did` (or the `PUT`) returns
+    `405` or `401`, ask the Unpod team to set the answer URL on your number for now.
+    </Info>
+  </Step>
+
+  <Step title="Call your number">
+    Call your Unpod number from any phone. You hear "Hello! Thanks for calling." For the full
+    picture, see [Incoming Calls](/telephony/apis/incoming-calls).
+  </Step>
+</Steps>
+
+## Next
 
 <CardGroup cols={2}>
-  <Card title="Call Control" icon="sliders-horizontal" href="/telephony/apis/call-control">
-    Bridge, play audio, speak, transfer, DTMF and recording.
+  <Card title="Multiple Participants" icon="users" href="/telephony/apis/multiple-participants">
+    Bridge two people on one call.
+  </Card>
+  <Card title="Answer URL & XML" icon="file-code" href="/telephony/apis/answer-url">
+    Reply to inbound calls with XML or JSON verbs.
   </Card>
   <Card title="Incoming Calls" icon="phone-incoming" href="/telephony/apis/incoming-calls">
-    Answer URL, XML and JSON verbs, inbound events.
+    Route inbound calls to your app or an Unpod agent.
   </Card>
-  <Card title="Webhooks" icon="webhook" href="/telephony/apis/webhooks">
-    Verify and parse every call and recording event.
-  </Card>
-  <Card title="Migrate from Plivo" icon="arrow-right-left" href="/telephony/apis/migrate-from-plivo">
-    Method-by-method map from Plivo to the Unpod SDK.
+  <Card title="Call Blasting" icon="megaphone" href="/telephony/apis/call-blasting">
+    Call many numbers at once.
   </Card>
 </CardGroup>
-
-### Environment variables
-
-| Variable | Used for |
-| --- | --- |
-| `UNPOD_BASE_URL` | Unpod host - `https://unpod.ai` |
-| `UNPOD_PLATFORM_TOKEN` | Your API token |
-| `UNPOD_ORG_HANDLE` | Your org handle |
-| `UNPOD_WEBHOOK_SECRET` | Your secret from `webhook_secret.rotate()`, read by your own webhook code |
-
-The SDK reads the first three when you create `AsyncClient()` or `Client()` with no arguments.
