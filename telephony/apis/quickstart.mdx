@@ -173,8 +173,9 @@ Inbound configuration is rolling out. If `set_did` (or the `PUT` in step 4) retu
 
 <Steps>
   <Step title="Get your webhook secret">
-    One signing key for all call events in your org. Fetch it once (org owner or admin) and
-    store it as `UNPOD_WEBHOOK_SECRET`:
+    One signing key for all call events in your org. Create it once with `rotate()` (org
+    owner or admin) - the only call that returns it in full - and store it as
+    `UNPOD_WEBHOOK_SECRET`:
 
     <Warning>
     Rotating invalidates the previous secret, so any server already verifying with it stops

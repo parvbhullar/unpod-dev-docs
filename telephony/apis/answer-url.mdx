@@ -78,8 +78,8 @@ values `Direction=inbound` and `CallStatus=ringing`, so don't branch on `Directi
 
 Inbound POST requests are signed once your org has a webhook secret (create it as in the
 [Quick Start](/telephony/apis/quickstart#receive-your-first-call)). Verify and parse them
-with `parse_call_event` - see [Webhooks](/telephony/apis/webhooks). Outbound requests and
-GET requests are not signed yet.
+with `parse_call_event` - see [Webhooks](/telephony/apis/webhooks). Outbound requests
+are not signed yet, and GET requests are not signed (there's no body to sign).
 
 ## Reply with XML or JSON
 

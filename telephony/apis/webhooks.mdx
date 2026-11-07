@@ -6,8 +6,9 @@ description: 'Verify and parse call, recording and inbound events with parse_cal
 
 Unpod signs the requests it sends your app with one org-level key, the **webhook secret**.
 It's the same key for status callbacks and inbound answer-URL requests, with no secret per
-number or per call. Fetch it once, store it as `UNPOD_WEBHOOK_SECRET`, and verify each
-request with `parse_call_event`.
+number or per call. Create it once with `rotate()` - the only call that returns it in
+full - and store it as `UNPOD_WEBHOOK_SECRET`. Then verify each request with
+`parse_call_event`.
 
 | Event type | Goes to |
 | --- | --- |
@@ -73,7 +74,7 @@ async def call_status(request: Request):
 
     if ev.event_id in seen:  # the same event can arrive more than once
         return {"ok": True}
-    seen.add(ev.event_id or "")
+    seen.add(ev.event_id)
 
     if ev.event == "Answered":
         print(ev.call_id, ev.leg_id, ev.role, "answered")
@@ -100,12 +101,14 @@ The signature header is
 
 Unpod POSTs each status callback and recording event and waits up to 10 s for a 2xx. Any
 other status, a timeout or a connection error is a failure, and Unpod tries again: 4
-attempts in all, about 1 s, 5 s and 30 s apart (each wait varies by up to 25%), so about
-36 s from the first attempt to the last. Then the event is marked failed and never sent
-again.
+attempts in all, about 1 s, 5 s and 30 s apart (each wait varies by up to 25%). Each
+attempt can take up to 10 s, so the window from the first attempt to the last is roughly
+36-66 s. Then the event is marked failed and never sent again.
 
 - Events for one leg arrive in order (`ev.sequence`). While one is being retried, that
   leg's later events wait behind it; other legs aren't held up.
+- An event queued before you call `rotate()` is retried signed with the old key, so a
+  server that already has the new key rejects it.
 - Return 2xx fast and do slow work afterwards. A reply slower than 10 s is a failure.
 - Make handlers idempotent: the same `ev.event_id` can arrive twice, for example when
   your 2xx is lost.
@@ -142,7 +145,7 @@ snake_case (`call_id`, `leg_id`, ...).
 | `call_id` | `MPCUUID` | The same on every event of a call, across all its legs |
 | `leg_id` | `CallUUID` | Differs per leg |
 | `role`, `direction`, `call_status` | `Role`, `Direction`, `CallStatus` | `role` is the label you set on the leg |
-| `from_`, `to` | `From`, `To` | Only on `Incoming` and answer-URL events. `None` on leg events, so outbound events never have them: put your own ids in `metadata` |
+| `from_`, `to` | `From`, `To` | Only on `Incoming` and answer-URL events. `None` on leg events, so outbound status callbacks never have them: put your own ids in `metadata` |
 | `start_time`, `answer_time`, `end_time`, `timestamp` | `StartTime`, ... | Unix seconds |
 | `initiation_time`, `hangup_time`, `duration` | `InitiationTime`, `HangupTime`, `Duration` | `duration` is answered seconds, `0` if never answered |
 | `hangup_cause`, `hangup_by`, `sip_code` | `HangupCause` / `PlivoHangupCause`, `HangupBy`, `SipCode` | `Hangup` only. See [Hangup causes](#hangup-causes) |
@@ -150,7 +153,7 @@ snake_case (`call_id`, `leg_id`, ...).
 | `sequence` | `Sequence` | Per leg, from 1 |
 | `event_id` | `EventId` | Stable across retries: de-duplicate on it |
 | `recording_url`, `recording_duration`, `record_file` | `RecordingURL` / `RecordUrl`, `RecordingDuration`, `RecordFile` | Recording and `RecordStop` events |
-| `metadata` | `Metadata` | The `metadata` you passed to `create`, echoed on every event of the call |
+| `metadata` | `Metadata` | The `metadata` you set on `create` or `add_participant`, echoed on the events of that leg (an `add_participant` leg without its own falls back to the call's). Inbound calls carry metadata only on `Incoming` |
 | `raw` | | Every field exactly as received |
 
 <Warning>
@@ -169,16 +172,18 @@ reads only the form field `Metadata`. Keep the form format, or read
 | `"Normal Hangup"` | `None` | The leg was answered. `ev.hangup_by` says who hung up |
 | `"Busy Line"` | 486 or 600 | Busy. End the call or retry later |
 | `"No Answer"` | 408 or 480 | The far end reported no answer. Treat like a ring timeout |
-| `"Ring Timeout Reached"` | Often 487 | The leg rang for `ring_timeout` seconds without an answer |
+| `"Ring Timeout Reached"` | 487, or `None` | The leg rang for `ring_timeout` seconds without an answer |
 | `"Rejected"` | 603, or `None` | Declined, or the callee ended the leg before answering |
 | `"Cancelled"` | 487, or `None` | The caller (or your app) ended the leg before it was answered |
 | `"Invalid Destination Address"` | 404, 484 or 604 | The number doesn't exist or is incomplete |
 | `"Forbidden"` | 401, 403 or 407 | The carrier refused the call |
-| `"Service Unavailable"` | Any 5xx | The call couldn't be placed, including when your org is at capacity (503) |
+| `"Service Unavailable"` | Any 5xx | The call couldn't be placed. At your org's cap, `create` and `add_participant` normally return `429` right away; a 503 hangup means a burst passed that check and hit the cap while dialing (see [Call Blasting](/telephony/apis/call-blasting#3-track-results)) |
 | `"Unknown"` | Any other code, or `None` | Anything else |
 
-The strings are exact. Match on `ev.hangup_cause` first: `ev.sip_code` is set only when an
-unanswered leg ended with a SIP status, so it can be `None` for any cause, and a ring
-timeout also reports the 487 from cancelling the ringing leg.
+The strings are exact. Match on `ev.hangup_cause` first. `ev.sip_code` is always set for
+`Busy Line`, `No Answer`, `Invalid Destination Address`, `Forbidden` and
+`Service Unavailable`. It's `None` on an answered leg, and can be `None` for `Rejected`,
+`Cancelled`, `Unknown` and `Ring Timeout Reached`. A ring timeout also reports the 487
+from cancelling the ringing leg, so 487 alone doesn't mean a cancel.
 
 {/* TODO(verify): full list from leg_lifecycle.rs hangup_cause(); sip_code is HangupFacts.sip_code filtered to unanswered legs */}
