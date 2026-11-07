@@ -4,17 +4,18 @@ icon: 'phone-incoming'
 description: 'Answer calls to your number with your own app, an AI agent, or through your carrier'
 ---
 
-When someone calls your number, Unpod can hand the call to your own app, to an Unpod AI
-agent, or to your carrier's trunk. For your app, Unpod asks your answer URL what to do while
-the call is still ringing, then runs the XML or JSON you reply with.
+When someone calls your number, Unpod hands the call to your own app or an Unpod AI agent,
+whether it reached Unpod on an Unpod number or through your carrier's trunk. For your app,
+Unpod asks your answer URL what to do while the call is still ringing, then runs the XML or
+JSON you reply with.
 
 ```mermaid
 flowchart LR
   A["📞<br/><b>Caller</b>"] e1@==> B["🔢<br/><b>Your Unpod number</b>"]
   B e2@==> C["📡<br/><b>Unpod</b>"]
-  C e3@==>|① StartApp, ringing| D["🌐<br/><b>Your answer URL</b>"]
-  D e4@==>|② XML or JSON reply| E["▶️<br/><b>Unpod runs it</b>"]
-  E e5@==>|③ call events| F["📬<br/><b>status_callback_url</b>"]
+  C e3@==> D["🌐<br/><b>Your answer URL</b><br/>StartApp, ringing"]
+  D e4@==> E["▶️<br/><b>Your XML or JSON reply</b><br/>Unpod runs it"]
+  E e5@==> F["📬<br/><b>status_callback_url</b><br/>call events"]
 
   e1@{ animate: true }
   e2@{ animate: true }
@@ -34,10 +35,13 @@ flowchart LR
 | Your number | Answered by | Set up with |
 | --- | --- | --- |
 | Unpod number | Your app | The number's answer URL ([below](#point-your-number-at-your-app)) |
-| Unpod number | An Unpod AI agent | `numbers.attach(number, agent_id=…)` - no code to host |
+| Unpod number | An Unpod AI agent | [`numbers.attach(number, agent_id=…)`](/telephony/apis/numbers) - no code to host |
 | Your carrier's number | Your app or an agent | [SIP Trunking](/telephony/quickstart), then the trunk's inbound config ([below](#for-a-whole-sip-trunk)) |
 
-{/* TODO(verify): number attached to an agent AND given an answer URL - SBC source (proxy/call.rs, ExternalBridge route) calls the answer URL but only a reject applies; other verbs don't run */}
+For your app to answer, attach the number with `attach_type="human_call"` (see the
+[Quick Start](/telephony/apis/quickstart#make-your-first-call)). On a number attached to an
+AI agent, the agent always answers: your answer URL can only reject the call (a reply that
+starts with `<Hangup/>`), and no `Hangup` event reaches the answer URL.
 
 ## Point your number at your app
 
@@ -62,7 +66,6 @@ with Client() as client:
         answer_url=URL,
         answer_method="POST",
         status_callback_url=URL,
-        record=True,
     ))
     print(inbound.get_did(NUMBER))  # the config in effect
 ```
@@ -73,7 +76,7 @@ curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B919000000001/inb
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"answer_url": "https://your-app.example.com/incoming", "answer_method": "POST",
-       "status_callback_url": "https://your-app.example.com/incoming", "record": true}'
+       "status_callback_url": "https://your-app.example.com/incoming"}'
 
 # read the config in effect
 curl -s "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
@@ -81,15 +84,16 @@ curl -s "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
 ```
 </CodeGroup>
 
-`set_did` sets the config for one number. In the URL, `+` becomes `%2B`. Each call replaces
-the number's whole config, so send every field you want to keep. `get_did` returns the
-config in effect, with any values from the number's [trunk](#for-a-whole-sip-trunk) filled
-in. The number must be one of your org's numbers, otherwise `404`.
+`set_did` sets the config for one number. In the URL, `+` becomes `%2B`. A `PUT` replaces
+the number's own config; fields you leave out come from its
+[trunk](#for-a-whole-sip-trunk). `get_did` returns the config in effect. The number must be
+one of your org's numbers, otherwise `404`.
 
 <Info>
 Inbound configuration is rolling out and needs the Call API switched on for your org (see
-the [Quick Start](/telephony/apis/quickstart)). If `set_did` (or the `PUT`) returns `405` or
-`401`, ask the Unpod team to set the answer URL on your number for now.
+the [Quick Start](/telephony/apis/quickstart)). If `set_did` (or the `PUT`) returns `403`
+(Call API not switched on), `405` or `401`, ask the Unpod team to switch it on or set the
+answer URL on your number for now.
 </Info>
 
 ### `InboundConfig` fields
@@ -99,78 +103,11 @@ the [Quick Start](/telephony/apis/quickstart)). If `set_did` (or the `PUT`) retu
 | `answer_url` / `answer_method` | Where Unpod sends new inbound calls. `POST` (default) or `GET` |
 | `answer_timeout_ms` | 500-10000 (default 3000). How long Unpod waits for your reply |
 | `answer_fallback` | `static_routing` (default) or `reject_503` when your app does not answer. See [below](#when-your-server-is-down) |
-| `status_callback_url` / `_method` / `_format` | Where call events go, and how: `POST` (default) or `GET`, `form` (default) or `json` |
+| `status_callback_url` / `_format` | Where call events go, as `form` (default) or `json` |
+| `status_callback_method` | `POST` only: inbound call events are always POSTed |
 | `recording_callback_url` | Where the recording event goes |
-| `record` | Record inbound calls (default `false`) |
+| `record` | Stored, not applied yet |
 | `tts_voice`, `tts_language` | Defaults for the [speak](/telephony/apis/call-control#play-audio-and-speak) endpoint on this number's calls. XML `<Speak>` uses only its own `voice` and `language` |
-
-## Handle the call
-
-Your answer URL gets three events. Reply to `StartApp` with instructions (see
-[Answer URL & XML](/telephony/apis/answer-url) for every verb) and return 200 for the rest.
-
-| `ev.event` | What to do |
-| --- | --- |
-| `StartApp` | A new call, still ringing (`ev.call_status` is `ringing`). Reply with XML. Reply `<Hangup/>` first to reject it (`reason="busy"` sends 486, anything else 603), or `<Speak>…</Speak><Hangup/>` to tell the caller you're busy |
-| `Hangup` | The call ended. Log `ev.duration` and `ev.call_status`: `completed`, `busy`, `no-answer`, `failed` or `cancel` |
-| `RecordStop` | A `<Record>` from your reply finished. Save `ev.recording_url` |
-
-This server routes each caller to a free agent's phone, or tells them everyone is busy:
-
-```python app.py
-import os
-
-import uvicorn
-from fastapi import FastAPI, HTTPException, Request, Response
-from unpod.telephony import WebhookSignatureError, parse_call_event
-
-SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
-AGENTS = ["+919000000003", "+919000000005"]  # your agents' phones
-on_call: dict[str, str] = {}  # call_id -> agent
-app = FastAPI()
-
-
-def xml(verbs: str) -> Response:
-    return Response(f"<Response>{verbs}</Response>", media_type="application/xml")
-
-
-@app.post("/incoming")
-async def incoming(request: Request):
-    try:
-        ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
-    except WebhookSignatureError:
-        raise HTTPException(401)
-
-    if ev.event == "StartApp":  # a new call is ringing
-        free = next((a for a in AGENTS if a not in on_call.values()), None)
-        if free is None:
-            return xml("<Speak>All our agents are busy.</Speak><Hangup/>")
-        on_call[ev.call_id] = free
-        return xml(f"<Dial><Number>{free}</Number></Dial>")
-
-    if ev.event == "Hangup":
-        on_call.pop(ev.call_id, None)  # the agent is free again
-        print(ev.call_id, ev.call_status, ev.duration)
-    elif ev.event == "RecordStop":
-        print("recording:", ev.recording_url)
-    return Response(status_code=200)  # always 2xx once the signature checks out
-
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
-```
-
-Run it with `python app.py` and expose it as in the
-[Quick Start](/telephony/apis/quickstart#receive-your-first-call). After a valid signature it
-always returns 2xx: Unpod treats any other status as a failure and may
-[fall back](#when-your-server-is-down).
-
-`<Dial><Number>` is a blind transfer: Unpod hands the call to that number and runs nothing
-after it. To record these calls, set `record=True` in the number's config. Don't reply
-`<Record/>` before `<Dial>`: the caller waits in silence for the recording to finish (300 s
-by default) before Unpod dials.
-
-{/* TODO(verify): InboundConfig.record is stored but no call path in the SBC source (feat/unpo-284-relay-bridge) reads it yet - confirm inbound calls get recorded */}
 
 ## The webhook secret
 
@@ -203,8 +140,90 @@ that 401 makes Unpod apply the [fallback](#when-your-server-is-down).
 
 Unpod signs inbound POST requests once your org has a secret, so create it before you point a
 number at a server that verifies. GET requests are not signed. Verify each request with
-`parse_call_event`, as in the server above. See [Webhooks](/telephony/apis/webhooks) for the
+`parse_call_event`, as in the server below. See [Webhooks](/telephony/apis/webhooks) for the
 signature format and every event field.
+
+## Handle the call
+
+Unpod sends your answer URL three events of its own. Reply to `StartApp` with instructions
+(see [Answer URL & XML](/telephony/apis/answer-url) for every verb) and return 200 for the
+rest.
+
+| `ev.event` | What to do |
+| --- | --- |
+| `StartApp` | A new call, still ringing (`ev.call_status` is `ringing`). Reply with XML. Reply `<Hangup/>` first to reject it (`reason="busy"` sends 486, anything else 603), or `<Speak>…</Speak><Hangup/>` to tell the caller you're busy |
+| `Hangup` | The call ended. Log `ev.duration` and `ev.call_status`: `completed`, `busy`, `no-answer`, `failed` or `cancel` |
+| `RecordStop` | A `<Record>` from your reply finished. Save `ev.recording_url` |
+
+Point `status_callback_url` at the same route, as in the config above. Unpod sends the
+answer URL's `Hangup` only once, but retries status callbacks until it gets a 2xx, so a
+missed `Hangup` arrives again. The route then also receives call events, such as
+`Incoming`, `Ringing`, `Answered` and a `Hangup` per leg: return 200 for them. `Hangup` can
+arrive more than once, which `on_call.pop(ev.call_id, None)` below handles.
+
+This server routes each caller to a free agent's phone, or tells them everyone is busy:
+
+```python app.py
+import os
+
+import uvicorn
+from fastapi import FastAPI, HTTPException, Request, Response
+from unpod.telephony import WebhookSignatureError, parse_call_event
+
+SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
+AGENTS = ["+919000000003", "+919000000005"]  # your agents' phones
+# call_id -> agent. In memory: run one process (no --workers or replicas)
+# or keep it in shared storage.
+on_call: dict[str, str] = {}
+app = FastAPI()
+
+
+def xml(verbs: str) -> Response:
+    return Response(f"<Response>{verbs}</Response>", media_type="application/xml")
+
+
+@app.post("/incoming")
+async def incoming(request: Request):
+    try:
+        ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
+    except WebhookSignatureError:
+        raise HTTPException(401)
+
+    if ev.event == "StartApp":  # a new call is ringing
+        free = next((a for a in AGENTS if a not in on_call.values()), None)
+        if free is None:
+            return xml("<Speak>All our agents are busy.</Speak><Hangup/>")
+        on_call[ev.call_id] = free
+        return xml(f"<Dial><Number>{free}</Number></Dial>")
+
+    if ev.event == "Hangup":
+        on_call.pop(ev.call_id, None)  # the agent is free again; safe to repeat
+        print(ev.call_id, ev.call_status, ev.duration)
+    elif ev.event == "RecordStop":
+        print("recording:", ev.recording_url)
+    return Response(status_code=200)  # always 2xx once the signature checks out
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
+```
+
+Run it with `python app.py` and expose it as in the
+[Quick Start](/telephony/apis/quickstart#receive-your-first-call). After a valid signature it
+always returns 2xx: Unpod treats any other status as a failure and may
+[fall back](#when-your-server-is-down).
+
+`<Dial><Number>` is a blind transfer: Unpod hands the call to that number and runs nothing
+after it. If the chosen agent doesn't pick up or is busy, the call ends with `no-answer` or
+`busy`. Unpod doesn't try the next agent, and the server frees the agent on `Hangup`.
+
+<Note>
+Recording inbound calls from the number's config is rolling out (see
+[Recording](/telephony/apis/recording)). For now, don't put `<Record/>` before `<Dial>`: the
+caller waits in silence for the recording to finish (300 s by default) before Unpod dials.
+</Note>
+
+{/* TODO(verify): InboundConfig.record is stored but no call path in the SBC source (feat/unpo-284-relay-bridge) reads it yet - confirm inbound calls get recorded */}
 
 ## When your server is down
 
@@ -223,8 +242,8 @@ own 401), a reply that doesn't parse, or a reply containing an action URL that i
 https. An empty 2xx body, `<Response/>` or `{"actions": []}` is not a failure: Unpod
 continues with static routing.
 
-After 5 failures in a row, Unpod skips your URL for 30 s and applies the fallback straight
-away.
+After 5 failures in a row, Unpod stops calling the answer URL for 30 s and applies the
+fallback straight away.
 
 {/* TODO(verify): the SBC breaker is keyed by trunk name, not by URL; numbers with no trunk share one key */}
 

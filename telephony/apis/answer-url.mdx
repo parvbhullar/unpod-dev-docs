@@ -141,8 +141,9 @@ Set the voice and language on `<Speak>` itself:
 </Response>
 ```
 
-To record a connected call, set `record=True` on `create` or on the number's config (see
-[Recording](/telephony/apis/recording)). Don't put `<Record/>` before `<Dial>`: it waits
+To record an outbound call, set `record=True` on `create`. Recording inbound calls from the
+number's config is rolling out (see [Recording](/telephony/apis/recording)). Don't put
+`<Record/>` before `<Dial>`: it waits
 for the recording to finish (300 s by default) before dialing, and the caller hears
 silence.
 
