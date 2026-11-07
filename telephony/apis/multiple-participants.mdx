@@ -235,8 +235,8 @@ async def call_status(request: Request):
 ```
 
 Restart the server, then start a call from a second terminal, in the same directory and
-virtualenv as the server, with `UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE` and
-`UNPOD_WEBHOOK_SECRET` exported:
+virtualenv as the server, with `UNPOD_BASE_URL`, `UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE`
+and `UNPOD_WEBHOOK_SECRET` exported:
 
 ```bash
 python -c 'import asyncio, app
