@@ -165,10 +165,9 @@ curl -s -X DELETE \
 With the webhook server below, start the sound after `add_participant` and stop it on the
 `Answered` event for the `customer` leg.
 
-If `SECOND` doesn't pick up, `FIRST` stays on the line alone, and the same happens when you
-remove `SECOND` with `remove_participant`. End the call yourself:
-
-{/* TODO(verify): does a bridged call end by itself when one person hangs up, or while the other is still ringing? */}
+When `FIRST` hangs up, Unpod hangs up `SECOND` too and the call ends. The other way round
+it doesn't: if `SECOND` doesn't pick up, hangs up, or is removed with `remove_participant`,
+`FIRST` stays on the line alone. End the call yourself:
 
 <CodeGroup>
 ```python Python

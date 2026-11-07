@@ -174,7 +174,7 @@ reads only the form field `Metadata`. Keep the form format, or read
 
 | `ev.hangup_cause` | `ev.sip_code` | Meaning |
 | --- | --- | --- |
-| `"Normal Hangup"` | `None` | The leg was answered. `ev.hangup_by` says who hung up |
+| `"Normal Hangup"` | `None` | The leg was answered. `ev.hangup_by` says who hung up: the person on that leg (`callee`), or Unpod (`system`), for example after `hangup()` or when the first person left a two-person call |
 | `"Busy Line"` | 486 or 600 | Busy. End the call or retry later |
 | `"No Answer"` | 408 or 480 | The far end reported no answer. Treat like a ring timeout |
 | `"Ring Timeout Reached"` | 487, or `None` | The leg rang for `ring_timeout` seconds without an answer |
