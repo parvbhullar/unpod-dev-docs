@@ -1,0 +1,171 @@
+---
+title: 'Multiple Participants'
+icon: 'users'
+description: 'Dial one person, then add a second to the same call'
+---
+
+A call is a set of **legs**, one per person. You dial the first leg with `create`, then add
+the second with `add_participant` and Unpod connects the two. Both people see your Unpod
+number. Haven't made a call yet? Start with the [Quick Start](/telephony/apis/quickstart).
+
+<Warning>
+A call holds **at most two participants** today. A third returns `409 participant_limit`.
+Conference calls are coming.
+</Warning>
+
+## Add a participant after the first answers
+
+Export your [credentials](/telephony/introduction#credentials), then set `FROM` to your Unpod
+number and `FIRST` and `SECOND` to two phones you can answer, all in E.164.
+
+<CodeGroup>
+```python Python
+import time
+from unpod import Client
+from unpod.telephony import TelephonyAPIError
+
+FROM = "+919000000001"    # your Unpod number
+FIRST = "+919000000002"   # dialled first
+SECOND = "+919000000003"  # added once FIRST answers
+
+
+def wait_for_answer(calls, call_id: str) -> bool:
+    """True once the call is talking; False if it ended first."""
+    while True:
+        try:
+            state = calls.get(call_id).state
+        except TelephonyAPIError:  # the call is gone
+            return False
+        if state == "talking":
+            return True
+        if state in ("ended", None):  # an ended call comes back with no state
+            return False
+        time.sleep(2)
+
+
+with Client() as client:
+    calls = client.telephony.calls
+    call = calls.create(FROM, FIRST, role="agent")
+    if not wait_for_answer(calls, call.call_id):
+        raise SystemExit("The first person did not answer.")
+    leg = calls.add_participant(
+        call.call_id,
+        FROM,
+        SECOND,
+        role="customer",
+        dial_music="none",
+        idempotency_key=f"{call.call_id}:customer",
+    )
+    print("adding", SECOND, "leg", leg.leg_id, leg.state)
+```
+
+```bash cURL
+# 1. dial FIRST -> {"call_id": "...", "state": "initiated", ...}
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
+  -d '{"from": "+919000000001", "to": "+919000000002", "role": "agent"}'
+
+# CALL_ID=<call_id from step 1>
+
+# 2. poll as in the Quick Start until "state": "talking"
+curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+
+# 3. add SECOND -> the new leg's leg_id, "state": "initiated"
+curl -s -X POST \
+  "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/participants" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Idempotency-Key: $CALL_ID:customer" -H "Content-Type: application/json" \
+  -d '{"from": "+919000000001", "to": "+919000000003", "role": "customer",
+       "dial_music": "none"}'
+```
+</CodeGroup>
+
+`add_participant` returns at once with the new leg in state `initiated`. `SECOND`'s phone
+rings; when they answer, Unpod connects the two and they can talk. Both see `FROM` as the
+caller. Keep `leg.leg_id` if you want to remove that person later.
+
+## React to events instead of polling
+
+Polling suits a script. A server should react to events: create the call with a
+`status_callback_url`, and add the second person when Unpod reports that the first one
+answered. Get `UNPOD_WEBHOOK_SECRET` and a public URL as in
+[Receive your first call](/telephony/apis/quickstart#receive-your-first-call).
+
+```python app.py
+import os
+from fastapi import FastAPI, HTTPException, Request
+from unpod import AsyncClient
+from unpod.telephony import WebhookSignatureError, parse_call_event
+
+FROM = "+919000000001"                         # your Unpod number
+HOOK = "https://abc123.ngrok.app/call-status"  # your public URL + /call-status
+SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
+
+client = AsyncClient()  # one client, reused for every request
+app = FastAPI()
+
+
+async def start_call(first: str, second: str) -> str:
+    """Dial `first`; /call-status adds `second` once they answer."""
+    call = await client.telephony.calls.create(
+        FROM, first, role="agent", status_callback_url=HOOK,
+        metadata={"second": second},
+    )
+    return call.call_id
+
+
+@app.post("/call-status")
+async def call_status(request: Request):
+    try:
+        ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
+    except WebhookSignatureError:
+        raise HTTPException(401)
+
+    if ev.event == "Answered" and ev.role == "agent":  # the first person answered
+        await client.telephony.calls.add_participant(
+            ev.call_id, FROM, ev.metadata["second"], role="customer",
+            dial_music="none", status_callback_url=HOOK,
+            idempotency_key=f"{ev.call_id}:customer",
+        )
+    return {"ok": True}  # any 2xx acknowledges
+```
+
+`ev.role` is the `role` you set on the leg. Unpod retries an event until it gets a 2xx, so
+the `idempotency_key` keeps a retried `Answered` from dialing `second` twice. See
+[Webhooks](/telephony/apis/webhooks) for signatures and every event, and
+[Number Masking](/telephony/apis/number-masking) for the full production flow.
+
+## Remove a participant
+
+Hang up one person and keep the call up with the other.
+
+<CodeGroup>
+```python Python
+calls.remove_participant(call.call_id, leg.leg_id)  # inside the `with` block above
+```
+
+```bash cURL
+curl -s -X DELETE \
+  "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/participants/$LEG_ID" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+```
+</CodeGroup>
+
+## Options
+
+The `add_participant` options most people need:
+
+| Option | Meaning |
+| --- | --- |
+| `role` | Free-text label for the leg, e.g. `agent` or `customer`. Returned on its events as `ev.role` |
+| `dial_music` | `"none"` (lowercase), or a public https audio URL played to the first person while the second rings |
+| `ring_timeout` | Seconds to ring before giving up, 1-120 (default 30) |
+| `answer_url` | Run XML on this leg when it connects, instead of bridging it. See [Answer URL & XML](/telephony/apis/answer-url) |
+| `status_callback_url` | Public https URL for this leg's events |
+| `record` | `True` to record the call |
+| `idempotency_key` | Retry-safe: the same key never dials twice |
+
+`create` takes the same options. Every URL must be public https, or you get
+`400 invalid_url`. Full list: [Call Control](/telephony/apis/call-control#options).
