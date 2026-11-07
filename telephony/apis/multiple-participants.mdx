@@ -27,7 +27,6 @@ from unpod.telephony import TelephonyAPIError
 FROM = "+919000000001"    # your Unpod number
 FIRST = "+919000000002"   # dialed first
 SECOND = "+919000000003"  # added once FIRST answers
-RINGING = "https://cdn.example.com/ringing.mp3"  # FIRST hears this while SECOND rings
 
 
 def wait_for_answer(calls, call_id: str) -> bool:
@@ -54,7 +53,6 @@ with Client() as client:
         FROM,
         SECOND,
         role="customer",
-        dial_music=RINGING,
         idempotency_key=f"{call.call_id}:customer",
     )
     print("adding", SECOND, "leg", leg.leg_id, leg.state)
@@ -78,8 +76,7 @@ curl -s -X POST \
   "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/participants" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Idempotency-Key: $CALL_ID:customer" -H "Content-Type: application/json" \
-  -d '{"from": "+919000000001", "to": "+919000000003", "role": "customer",
-       "dial_music": "https://cdn.example.com/ringing.mp3"}'
+  -d '{"from": "+919000000001", "to": "+919000000003", "role": "customer"}'
 ```
 </CodeGroup>
 
@@ -89,18 +86,84 @@ caller. Keep `leg.leg_id` if you want to remove that person later.
 
 ### Play a ringing sound while the second person rings
 
-`dial_music` sets what `FIRST` hears until `SECOND` picks up:
+What `FIRST` hears while `SECOND`'s phone rings:
 
-| Value | `FIRST` hears |
-| --- | --- |
-| A public https MP3 or WAV URL | That audio, e.g. a ringing tone or hold music |
-| `"none"` (lowercase) | Silence |
-| Omitted | The default |
+| Option | `FIRST` hears | How |
+| --- | --- | --- |
+| Default | `SECOND`'s ringing, passed through from the phone network | Nothing to set |
+| Your own sound file | Your MP3 or WAV, e.g. a ringing tone or hold music, until `SECOND` answers | `play_audio` with `loop=True`, then `stop_audio` (below) |
 
-Host your own ringing tone and pass its URL. `"NONE"` in capitals is read as a URL and
-refused with `400 invalid_url`.
+`dial_music` does not play a sound yet: today it accepts only `"none"`, and an audio URL is
+rejected as not supported.
 
-{/* TODO(verify): what FIRST hears when dial_music is omitted, and whether the audio loops until SECOND answers */}
+{/* TODO(verify): default ringback is heard on add_participant calls (the Nov 7 review heard ringing play unreliably) */}
+
+To play your own file, start it right after `add_participant` and stop it when `SECOND`'s
+leg is `answered` (or hung up). Without a `leg_id`, `play_audio` plays to everyone on the
+call, which until `SECOND` answers is only `FIRST`. The file must be a public https MP3 or
+WAV.
+
+<CodeGroup>
+```python Python
+RINGING = "https://cdn.example.com/ringing.mp3"  # your sound file
+
+
+def wait_for_leg(calls, call_id: str, leg_id: str, timeout: float = 60) -> str:
+    """Return "answered" or "hungup" for one leg, or "timeout"."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            legs = calls.get(call_id).legs
+        except TelephonyAPIError:  # the whole call is gone
+            return "hungup"
+        state = next((x.state for x in legs if x.leg_id == leg_id), None)
+        if state in ("answered", "hungup"):
+            return state
+        time.sleep(1)
+    return "timeout"
+
+
+# inside the `with Client() as client:` block, in place of the add above
+leg = calls.add_participant(
+    call.call_id,
+    FROM,
+    SECOND,
+    role="customer",
+    idempotency_key=f"{call.call_id}:customer",
+)
+play = calls.play_audio(call.call_id, url=RINGING, loop=True)
+try:
+    outcome = wait_for_leg(calls, call.call_id, leg.leg_id)
+finally:
+    try:
+        calls.stop_audio(call.call_id, play_id=play.play_id)
+    except TelephonyAPIError:
+        pass  # the call already ended
+print("second person:", outcome)
+```
+
+```bash cURL
+# after adding SECOND (step 3): play your file, looping -> {"play_id": "play-..."}
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/play" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{"source": {"type": "url", "url": "https://cdn.example.com/ringing.mp3"},
+       "loop": true}'
+
+# PLAY_ID=<play_id from above>
+# poll GET .../calls/$CALL_ID until SECOND's entry in "legs" has "state": "answered"
+
+# then stop the sound
+curl -s -X DELETE \
+  "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/play?play_id=$PLAY_ID" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+```
+</CodeGroup>
+
+With the webhook server below, start the sound after `add_participant` and stop it on the
+`Answered` event for the `customer` leg.
+
+{/* TODO(verify): play_audio on a call whose second leg is still ringing, live */}
 
 If `SECOND` doesn't pick up, `FIRST` stays on the line alone. End the call yourself:
 
@@ -216,7 +279,7 @@ The `add_participant` options most people need:
 | Option | Meaning |
 | --- | --- |
 | `role` | Free-text label for the leg, e.g. `agent` or `customer`. Returned on its events as `ev.role` |
-| `dial_music` | What the first person hears while the second rings: an https audio URL, or `"none"`. See [ringing sound](#play-a-ringing-sound-while-the-second-person-rings) |
+| `dial_music` | Only `"none"` is accepted today; it does not play a sound yet. To play one, see [ringing sound](#play-a-ringing-sound-while-the-second-person-rings) |
 | `ring_timeout` | Seconds to ring before giving up, 1-120 (default 30) |
 | `answer_url` | Run XML on this leg when it connects, instead of bridging it. See [Answer URL & XML](/telephony/apis/answer-url) |
 | `status_callback_url` | Public https URL for this leg's events |

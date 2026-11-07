@@ -85,8 +85,8 @@ leg = await calls.add_participant(
 
 | Plivo | Unpod SDK |
 | --- | --- |
-| `dialMusic: "NONE"` | `dial_music="none"`. Uppercase `"NONE"` is read as a URL and refused (`400 invalid_url`) |
-| `dialMusic: <url>` | `dial_music="https://…"` |
+| `dialMusic: "NONE"` | `dial_music="none"` |
+| `dialMusic: <url>` | Not supported yet. Play the file with `play_audio(..., loop=True)` after `add_participant` and stop it when the leg answers - see [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
 | No participant limit | **At most two participants** per call. A third raises `409 participant_limit` |
 
 ## 3. Play and stop audio

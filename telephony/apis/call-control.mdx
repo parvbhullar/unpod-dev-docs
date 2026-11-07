@@ -45,7 +45,7 @@ The same options apply to `create` and `add_participant`.
 | `caller_name` | `str` | Caller name shown where supported |
 | `friendly_name` | `str` | Your label for the leg |
 | `ring_timeout` | `int` 1-120 | Seconds to ring before giving up (default 30) |
-| `dial_music` | `str` | `"none"` (lowercase) or an https audio URL played while this leg rings |
+| `dial_music` | `str` | Only `"none"` is accepted today; an audio URL is rejected as not supported. To play a sound while a leg rings, see [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
 | `status_callback_url` | `str` | Public https URL for this leg's events. Its query string is echoed back |
 | `status_callback_method` | `"POST"` \| `"GET"` | Default `POST` |
 | `status_callback_format` | `"form"` \| `"json"` | Default `form` (Plivo-style keys); `json` uses snake_case |
@@ -191,7 +191,7 @@ except TelephonyAPIError as e:
 | 400 `organization_required` | `Org-Handle` missing, or you are not an active member |
 | 403 `call_api_disabled` | The Call API is not switched on for your org |
 | 400 `from_not_owned` | `from_` is not one of your org's numbers |
-| 400 `invalid_url` | A callback or audio URL is not public https, or `dial_music="NONE"` (use lowercase) |
+| 400 `invalid_url` | A callback or audio URL is not public https |
 | 400 `bad_request` | Malformed body or unknown field |
 | 404 `not_found` | Unknown call, leg or DID, or one that belongs to another org |
 | 409 `participant_limit` | A third participant |
