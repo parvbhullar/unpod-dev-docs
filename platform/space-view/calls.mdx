@@ -10,42 +10,56 @@ Call View is a dedicated interface where you can manage voice communication acti
 
 <img src="/images/Space Mode3.png" alt="Call View Screenshot" />
 
-In the call section, select the contact from the left side bar on which you have to make the call, then click on Call at the top right corner. You will be redirected to the page from where you can select the Voice agent and make the call.
+### Make a call
+
+1. Open **Calls**. When no call is selected, click **New Call**.
+2. In **Start Calls for Contacts**, select the contacts you want to call and click **Call Now**.
 
 <img src="/images/Space Mode4.png" alt="Call Selection Screenshot" />
 
-Here, you have two options, first is directly click on Submit that will initiate the call immediately, second is the Schedule option from where you can schedule the call for later. When you click on Schedule, you will be redirected to the schedule page.
+3. In the **Schedule a call** dialog, select the agent and, if needed, edit the instructions for the call.
+4. Choose when to call:
+   - **Now** - Calls right away. This is the default option.
+   - **Auto Schedule** - Calls within the agent's pre-configured calling hours.
+   - **Custom Schedule** - Calls on a date and time you pick.
+5. Click **Start Call**.
 
 <img src="/images/Space Mode5.png" alt="Schedule Options Screenshot" />
 
-You have three options in the above scenario:
+### Call details
 
-- **Now** - This is the default option
-- **Auto Schedule** - This will take the pre-configured agent hours which we provide while creating the agent
-- **Custom Schedule** - In this option, you can select the date and time manually
-
-At the top right corner of the dashboard, you will be able to see the status of the call - outgoing/inbound or Pending/In Progress/Completed etc.
+Select a call in the left sidebar to open it. The header shows the call's direction (inbound or outbound) and status, such as Pending, In Progress or Completed.
 
 <img src="/images/Space Mode6.png" alt="Call Status Screenshot" />
 
-In the call section, you have two more tabs - Overview and Conversation.
+<Note>
+Call times in the Calls section are shown in IST (UTC+5:30), whatever timezone your browser uses.
+</Note>
+
+A call has three tabs - Overview, Conversation and Activity.
 
 ### Overview
 
-In the overview, you will be able to find the entire details:
+The Overview tab shows these cards:
 
-- **Summary** - Details about what the agent is offering
-- **Call recording** - Call recording of the entire conversation
-- **Analytics** - In this section, all parameters and outcomes of the call are shown like what is the interest level of the customer, which agent is used, outcome of the call, cost of the call, who triggered the call, etc
-- **Next Action** - If any action is required by the client to fulfill the requirements of the customer
-- **Follow Up** - This will show whether we have to take the follow up from the customer or not. This is the case when we see a customer is interested in a product or service
+- **Summary** - What happened on the call, with metrics such as call score, sentiment, engagement, duration and tone, the **Next Step**, and whether a **Follow Up** is needed
+- **Call Details** - When the call was dialed, connected and ended, who ended it, the user and assistant numbers, and who triggered the call
+- **Attempts** - Each attempt made to reach the contact
+- **Structured Data** - Data the agent extracted from the call
+- **Evaluation** - A quality evaluation of the call. If none exists yet, click the generate button on the card to create one. Very short calls cannot be evaluated.
+
+A card stays empty until its data is collected and processed.
 
 <img src="/images/Space Mode7.jpeg" alt="Overview Tab Screenshot" />
 
 ### Conversation
 
-In the conversation, chat between the customer and agent is visible. You may take the key points without listening to the whole recording.
+The Conversation tab shows the call recording and the transcript of the chat between the customer and the agent, so you can read the key points without listening to the whole recording.
 
 <img src="/images/Space Mode7.jpeg" alt="Conversation Tab Screenshot" />
+
+### Activity
+
+The Activity tab shows the **Call Flow** and the **Call Output** of the call.
 
 ---

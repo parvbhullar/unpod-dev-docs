@@ -6,36 +6,54 @@ description: 'Create and manage knowledge bases for your AI agent.'
 
 ## Knowledge Base (Optional)
 
-Sometimes FAQs are more and not possible to give all information in System Prompt. You can create your own Knowledge Base and connect it with Voice Agent from the dashboard only.
+When you have more FAQs or reference material than fits in the system prompt, put it in a Knowledge Base and attach the knowledge base to your agent.
 <img src="/images/Persona4.png" alt="Template Selection Screenshot" />
 
 ### How to Create a Knowledge Base?
 
 #### Step 1
-On the Dashboard, you find the Knowledge Base option at the left corner.
+In the left sidebar, click **Knowledge Base**.
 
 <img src="/images/KB1.png" alt="Knowledge Base Dashboard Screenshot" />
 
 #### Step 2
-Click on the Add button, you will be redirected to the page where you can fill the required information to create a new Knowledge Base.
+Click **Add**. A form opens where you fill in the details of the new knowledge base.
 
 <img src="/images/KB2.png" alt="Add Knowledge Base Screenshot" />
 
-You have to fill in the Name, Type of content, Description, and Visibility of the knowledge base.
+Fill in the Name, Content Type, Description, and Visibility of the knowledge base.
+
+**Content Type:**
+
+| Content Type | What it holds | Files you can upload |
+|---|---|---|
+| **Document** | Documents the agent searches, such as FAQs, policies and product sheets | PDF, DOCX, PPTX, XLSX, EPUB, EML, HTML, TXT, Markdown, JSON, XML, YAML, CSV, TSV |
+| **Table** | Rows of structured data with a schema | CSV, TSV, XLSX |
+| **Email** | Content from a connected email account | - |
+| **Contact** | A contact list. Name and phone number are required fields | CSV, TSV, XLSX |
 
 **Visibility Options:**
 - **Everyone** - Your knowledge base is accessible to everyone.
-- **Shared** - Your knowledge base is only accessible to shared mail ids.
+- **Shared** - Your knowledge base is accessible only to the people you add.
 - **Private** - Your knowledge base is accessible to you only.
 
 #### Step 3
-Once you fill in all the details, click on the Next button and you will be redirected to the page where you can upload the CSV file or you can add more schema Fields.
+What happens next depends on the content type.
+
+- **Table or Contact** - Click **Next**. Upload a file in a supported format, or click **Edit Schema** to add schema fields. Then click **Save**.
+- **Document or Email** - Click **Save**. The knowledge base is created right away. For a Document knowledge base, open it and drag your file onto the upload panel, then click **Upload**.
 
 <img src="/images/KB3.png" alt="Knowledge Base Upload Screenshot" />
 
+After you upload, the files are processed in the background. If a file cannot be processed, an error message above the upload panel tells you how many files failed. Check the file and upload it again.
+
 #### Step 4
-Once you click on the Save button, your personal Knowledge Base is created and can be used with your AI Voice Agent to access FAQs or other information.
+Your knowledge base is created and can be used with your AI Voice Agent to answer FAQs or look up other information.
 
 <img src="/images/KB4.png" alt="Knowledge Base Created Screenshot" />
 
-After filling in all the details, click on the Save button and move to the next part Voice Profile.
+### Attach a Knowledge Base to an Agent
+
+1. In **AI Studio**, open your agent.
+2. On the **Persona** tab, go to the **Knowledge** section and click **Add**.
+3. Select the knowledge base and click **Save**.
