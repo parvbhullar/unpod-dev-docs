@@ -11,11 +11,11 @@ and takes minutes.
 
 | I want to... | Start here | You need |
 |---|---|---|
-| **Place a real phone call with an agent** | [Quickstart](/get-started/quickstart) - six SDK calls, nothing to deploy | Platform token + a number |
-| Talk to an agent in the browser | [Realtime](/get-started/realtime) | A browser - runs in the hosted Playground |
-| Publish an agent to a number, no code | [Phone](/get-started/phone) | A [Playground](https://superdialog.unpod.ai/playground) account |
-| Run my own Python brain on calls | [Run Your Own Brain](/get-started/first-phone-call) | SDK key + a number |
-| Call your agent like a model, over REST | [Chat API](/playbook/api) | Endpoint key |
+| **Place a real phone call with an agent** | [Quickstart](/home/quickstart) - six SDK calls, nothing to deploy | Platform token + a number |
+| Talk to an agent in the browser | [Realtime](/telephony/streaming/unpod-speech-quickstart) | A browser - runs in the hosted Playground |
+| Publish an agent to a number, no code | [Phone](/agent-studio/quickstart) | A [Playground](https://superdialog.unpod.ai/playground) account |
+| Run my own Python brain on calls | [Run Your Own Brain](/agent-sdk/quickstart) | SDK key + a number |
+| Call your agent like a model, over REST | [Chat API](/agent-studio/api) | Endpoint key |
 
 Not sure? Take the **Quickstart** - it is the shortest path to something
 real: your phone rings, an agent speaks, and the transcript comes back in
@@ -27,8 +27,8 @@ Unpod's credentials are not interchangeable:
 
 | You are calling | Host | Auth | From |
 |---|---|---|---|
-| **Python SDK REST** (agents, numbers, calls) | `unpod.ai` | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | [Quickstart → Prerequisites](/get-started/quickstart#prerequisites) |
-| **AgentRunner** (your own brain) | the orchestrator | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | [Quickstart → Prerequisites](/get-started/quickstart#prerequisites) |
+| **Python SDK REST** (agents, numbers, calls) | `unpod.ai` | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | [Quickstart → Prerequisites](/home/quickstart#prerequisites) |
+| **AgentRunner** (your own brain) | the orchestrator | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | [Quickstart → Prerequisites](/home/quickstart#prerequisites) |
 | **Chat API** (your agent as a model) | `inference.unpod.ai` | `Authorization: Bearer` endpoint key | Playground → Deploy as Endpoint |
 
 The SDK reads all of it from the environment; token auth wins over the API

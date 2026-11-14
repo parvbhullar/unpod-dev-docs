@@ -19,37 +19,61 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// EXACT-PAGE rules, longest "from" first.
+// EXACT-PAGE rules: UNPO-541 (docs journey restructure, phase 1) page moves.
+// No old path is a prefix-collision risk: each is matched with a terminator.
 const EXACT_RULES = [
-  ["/Voice%20AI/introduction", "/platform/onboarding"],
-  ["/Voice AI/introduction", "/platform/onboarding"],
-  ["/why-unpod/vs-competition", "/get-started/vs-competition"],
-  ["/why-unpod/introduction", "/get-started/why-unpod"],
-  ["/why-unpod/how-it-works", "/get-started/how-it-works"],
-  ["/speech/quickstart", "/get-started/first-phone-call"],
-  ["/core-components", "/get-started/core-concepts"],
-  ["/configuration", "/platform/self-hosting/configuration"],
-  ["/architecture", "/platform/self-hosting/architecture"],
-  ["/introduction", "/platform/introduction"],
-  ["/quickstart", "/platform/self-hosting/quickstart"],
-  ["/platform", "/platform/introduction"],
-  ["/home", "/get-started/why-unpod"],
+  ["/get-started/quickstart", "/home/quickstart"],
+  ["/guides/understanding-telephony", "/telephony/concepts/understanding-telephony"],
+  ["/core-engine/calling-engine", "/telephony/concepts/calling-engine"],
+  ["/core-engine/channels", "/telephony/concepts/channels"],
+  ["/platform/dev-platform/security-and-compliance", "/telephony/concepts/security-and-compliance"],
+  ["/get-started/realtime", "/telephony/streaming/unpod-speech-quickstart"],
+  ["/speech-stack/websocket", "/telephony/streaming/websocket"],
+  ["/speech-stack/introduction", "/agent-sdk/overview"],
+  ["/speech-stack/setup-checklist", "/agent-sdk/setup-checklist"],
+  ["/get-started/first-phone-call", "/agent-sdk/quickstart"],
+  ["/speech-stack/bring-your-agent", "/agent-sdk/bring-your-agent"],
+  ["/speech-stack/adapters", "/agent-sdk/adapters"],
+  ["/speech-stack/agent-settings", "/agent-sdk/agent-settings"],
+  ["/speech-stack/agent-tools", "/agent-sdk/agent-tools"],
+  ["/speech-stack/voice-profiles", "/agent-sdk/voice-profiles"],
+  ["/speech-stack/domain-dictionaries", "/agent-sdk/domain-dictionaries"],
+  ["/speech-stack/pipes", "/agent-sdk/pipes"],
+  ["/speech-stack/agent-runner", "/agent-sdk/agent-runner"],
+  ["/speech-stack/call-lifecycle", "/agent-sdk/call-lifecycle"],
+  ["/speech-stack/outbound-calls", "/agent-sdk/outbound-calls"],
+  ["/speech-stack/recordings-transcripts", "/agent-sdk/recordings-transcripts"],
+  ["/speech-stack/deploy", "/agent-sdk/deploy"],
+  ["/core-engine/models-router", "/agent-sdk/models-router"],
+  ["/platform/dev-platform/load-testing", "/agent-sdk/load-testing"],
+  ["/playbook/playground", "/agent-studio/playground"],
+  ["/get-started/phone", "/agent-studio/quickstart"],
+  ["/playbook/what-is-a-playbook", "/agent-studio/what-is-a-playbook"],
+  ["/playbook/build-an-agent", "/agent-studio/build-an-agent"],
+  ["/playbook/test-by-voice", "/agent-studio/test-by-voice"],
+  ["/playbook/optimize", "/agent-studio/optimize"],
+  ["/playbook/publish-and-share", "/agent-studio/publish-and-share"],
+  ["/playbook/library", "/agent-studio/library"],
+  ["/playbook/developer-setup", "/agent-studio/developer-setup"],
+  ["/playbook/api", "/agent-studio/api"],
+  ["/core-engine/flows-journeys", "/agent-studio/flows-journeys"],
+  ["/core-engine/actions", "/agent-studio/actions"],
+  ["/core-engine/agent-workforce", "/agent-studio/agent-workforce"],
+  ["/core-engine/agent-harness", "/agent-studio/agent-harness"],
+  ["/core-engine/context-engine", "/context/overview"],
+  ["/core-engine/entities", "/context/entities"],
+  ["/core-engine/conversations", "/context/conversations"],
+  ["/core-engine/outcomes", "/context/outcomes"],
+  ["/core-engine/intelligence", "/context/intelligence"],
+  ["/core-engine/teams-policies", "/context/teams-policies"],
+  ["/apps/overview", "/platform/apps/overview"],
+  ["/apps/contact-center", "/platform/apps/contact-center"],
+  ["/apps/personal-assistant", "/platform/apps/personal-assistant"],
+  ["/apps/email-first-agent", "/platform/apps/email-first-agent"],
 ];
 
 // PREFIX rules, longest "from" first.
-const PREFIX_RULES = [
-  ["/SuperDialog/Embedding%20Guides/", "/superdialog/embedding-guides/"],
-  ["/SuperDialog/Embedding Guides/", "/superdialog/embedding-guides/"],
-  ["/Voice%20AI/Space%20View/", "/platform/space-view/"],
-  ["/Voice AI/Space View/", "/platform/space-view/"],
-  ["/Voice%20AI/Studio%20View/", "/platform/studio-view/"],
-  ["/Voice AI/Studio View/", "/platform/studio-view/"],
-  ["/Dev%20Platform/", "/platform/dev-platform/"],
-  ["/Dev Platform/", "/platform/dev-platform/"],
-  ["/SuperDialog/", "/superdialog/"],
-  ["/speech/", "/speech-stack/"],
-  ["/sdk/", "/speech-stack/"],
-];
+const PREFIX_RULES = [];
 
 // EXACT: replace only when followed by a terminating delimiter, in a
 // link-start context ("(", '"' or "'").
@@ -84,6 +108,7 @@ const SKIP = new Set([
   "images",
   "logo",
   ".claude",
+  ".worktrees",
 ]);
 
 const files = [];

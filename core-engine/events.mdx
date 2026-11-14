@@ -37,7 +37,7 @@ entity, conversation, interaction, or outcome emits an event. They write
 nothing back to the Context Engine - the stream is an append-only record
 of what already happened. In the other direction, events are the input
 side of Execution: an inbound message or reply lands as an event, and
-[Flows & Journeys](/core-engine/flows-journeys) waiting on that signal
+[Flows & Journeys](/agent-studio/flows-journeys) waiting on that signal
 resume.
 
 ## What stays hidden
@@ -68,11 +68,11 @@ to run and swap without breaking your consumers.
     The payload the production webhook delivers - transcripts, summaries,
     extracted fields.
   </Card>
-  <Card title="Outcomes" icon="clipboard-check" href="/core-engine/outcomes">
+  <Card title="Outcomes" icon="clipboard-check" href="/context/outcomes">
     The structured records whose writes are the events you most often
     consume.
   </Card>
-  <Card title="Flows & Journeys" icon="route" href="/core-engine/flows-journeys">
+  <Card title="Flows & Journeys" icon="route" href="/agent-studio/flows-journeys">
     The engine that reacts to events - outcome branching, waits, and
     inbound signals.
   </Card>

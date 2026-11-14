@@ -1,0 +1,202 @@
+---
+title: 'Speech Pipe (deprecated)'
+icon: 'audio-lines'
+description: 'client.pipes is superseded by client.agents. Migration table and the reference kept for existing code.'
+---
+
+<Warning>
+**`client.pipes` is deprecated.** Every method now raises a
+`DeprecationWarning` naming `client.agents.voice` as the replacement. New code
+should use [Agents](/speech-stack/agents) - one `agent_id`, one brain, N voices.
+Pipes and agents write the same rows, so nothing you already created is lost.
+</Warning>
+
+## Why It Changed
+
+A Speech Pipe bundled five concerns into one row: a voice, an `agent_id`, a
+recording flag, a duration cap, and a fallback URL. The agent model separates
+them:
+
+| Old model | New model |
+|---|---|
+| A pipe **is** the agent for one voice | An **agent** has N voices; the brain belongs to the agent |
+| Two languages meant two pipes with duplicated config | `agents.voice.add(...)` - the second voice inherits the brain |
+| The brain was implicitly "whatever runner claims this `agent_id`" | The brain is explicit and typed: `Playbook` / `Prompt` / `Runner` / `Endpoint` |
+| A number pinned to a `pipe_id` | A number attaches to an `agent_id` |
+
+That last row also changed a signature: **`client.numbers.attach()` no longer
+takes `pipe_id`** - it takes `agent_id`. Supervoice stopped storing the pipe pin
+and resolves the pipe from the agent instead.
+
+---
+
+## Migration
+
+```python
+# ---------- before ----------
+pipe = await client.pipes.create(
+    name="Support Bot",
+    voice_profile="vp_en_female_hd",
+    agent_id="my-bot",
+    recording=True,
+    max_call_duration_s=600,
+)
+await client.numbers.attach(number_id="num_...", pipe_id=pipe.pipe_id)
+
+# ---------- after ----------
+from unpod import Runner
+
+voice = await client.agents.voice.create(
+    "my-bot",                                # agent_id is the identity now
+    brain=Runner(),                          # say the brain out loud
+    name="Support Bot",
+    voice_profile="vp_en_female_hd",
+    recording=True,
+    max_call_duration_s=600,
+)
+await client.agents.numbers.attach("my-bot", "+14155550101")
+```
+
+| Old | New |
+|---|---|
+| `client.pipes.create(name=, agent_id=, voice_profile=)` | `client.agents.voice.create(agent_id, brain=..., name=, voice_profile=)` |
+| `client.pipes.list()` | `client.agents.list()` |
+| `client.pipes.get(pipe_id)` | `client.agents.get(agent_id)` |
+| `client.pipes.update(pipe_id, **kwargs)` (PATCH) | `client.agents.update(agent_id, **fields)` (PUT) |
+| `client.pipes.delete(pipe_id)` | `client.agents.delete(agent_id)` |
+| a second pipe for a second language | `client.agents.voice.add(agent_id, voice_profile=...)` |
+| `client.numbers.attach(number_id=, pipe_id=)` | `client.numbers.attach(number_id, agent_id)` or `client.agents.numbers.attach(agent_id, number)` |
+| `agent_endpoint="wss://..."` (legacy `serve` fallback) | `brain=Endpoint("https://.../v1")` - an HTTP brain Unpod calls, or keep a `Runner()` brain |
+
+<Note>
+`client.sessions.create_token(pipe_id=...)` is **unchanged** - browser sessions
+still mint a token against a pipe id. See
+[Browser & WebSocket](/telephony/streaming/websocket).
+</Note>
+
+---
+
+## Reference (existing code)
+
+Kept for code that has not migrated yet. `create` / `get` / `list` / `update` /
+`delete` all still work and all warn.
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:
+        pipe = await client.pipes.create(       # DeprecationWarning
+            name="Support Bot",
+            voice_profile="vp_en_female_hd",
+            agent_id="my-bot",
+            recording=True,
+            max_call_duration_s=600,
+        )
+        print(pipe.pipe_id, pipe.name)
+
+asyncio.run(main())
+```
+
+### `Pipe` fields
+
+| Field | Type | Description |
+|---|---|---|
+| `pipe_id` | `str` | Speech Pipe id |
+| `name` | `str` | Display name |
+| `voice_profile_id` | `str \| None` | Voice profile id |
+| `agent_id` | `str \| None` | The brain id - the agent identity in the new model |
+| `agent_endpoint` | `str \| None` | Static `wss://` bridge URL (legacy `serve` transport only) |
+| `playbook_id` | `str \| None` | Playbook bound to the pipe, when one is |
+| `recording` | `bool \| dict` | Recording enabled |
+| `max_call_duration_s` | `int` | Call duration hard cap |
+| `number_id`, `number` | `str \| None` | The attached number, when one is |
+| `status` | `str` | Default `"active"` |
+| `created`, `modified` | `datetime \| None` | Timestamps |
+
+<Warning>
+Deleting a pipe does **not** automatically detach phone numbers. Detach them
+first to avoid orphaned routing.
+</Warning>
+
+---
+
+## How a Call Reaches Your Brain
+
+Unchanged by the rename, and it applies to a `Runner()` brain today. The
+platform never calls your brain over HTTP. On every call the orchestrator
+dispatches the session to a **worker**, and the worker connects to your
+`AgentRunner` over a **WebSocket bridge** (text in / text out).
+
+Under the default `dial_out` transport the runner never listens - it registers,
+then dials **out** to a per-call bridge when a call is assigned. The
+orchestrator picks a registered, least-loaded runner per call, and you never
+expose a URL, a tunnel, or a webhook. See
+[AgentRunner](/agent-sdk/agent-runner).
+
+The legacy `serve` transport - where the runner serves a fixed `wss://` URL set
+as the pipe's `agent_endpoint` - is deprecated. It is a **WebSocket** URL, not
+an HTTP webhook: the orchestrator does not `POST` to it.
+
+## Bridging a Remote HTTP Brain
+
+Two ways, depending on who initiates:
+
+**Unpod calls you** - the `Endpoint` brain, no process of yours to run:
+
+```python
+from unpod import Endpoint
+
+await client.agents.voice.create(
+    "my-bot",
+    brain=Endpoint("https://your-api.example.com/v1", model="my-model"),
+    voice_profile="vp_en_female_hd",
+)
+```
+
+That endpoint must be **OpenAI-compatible** chat completions.
+
+**Your runner calls you** - the `HTTPAdapter`, if your API is not
+OpenAI-shaped:
+
+```python
+from unpod import AgentRunner, CallContext
+from unpod.adapters.http import HTTPAdapter
+
+async def handle_call(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = HTTPAdapter(
+        url="https://your-api.example.com/dialog/turn",
+    )
+    await ctx.session.run()
+
+AgentRunner(entrypoint=handle_call, agent_id="my-bot").start()
+```
+
+```jsonc
+// POST https://your-api.example.com/dialog/turn
+{
+  "text": "I'd like to reschedule my appointment",
+  "context": { },
+  "session_id": "sess_xyz789",
+  "system_instructions": ["..."]   // only after assist() is called
+}
+// 200 response
+{ "text": "Sure - what date works for you?" }
+```
+
+Streaming, `assist()`, and error surfaces:
+[Adapters](/agent-sdk/adapters).
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agents" icon="robot" href="/speech-stack/agents">
+    The surface that replaces this one - brain union, voices, numbers.
+  </Card>
+  <Card title="AgentRunner & Sessions" icon="code" href="/agent-sdk/agent-runner">
+    Run the worker a `Runner()` brain points at.
+  </Card>
+</CardGroup>

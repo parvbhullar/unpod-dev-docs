@@ -89,14 +89,14 @@ await client.numbers.attach(numbers[0].number_id, "kyc-bot")
 See [Agents](/speech-stack/agents) for the other three brain sources.
 
 Full script, env vars, and voice-profile lookup:
-[Provisioning checklist](/speech-stack/setup-checklist).
+[Provisioning checklist](/agent-sdk/setup-checklist).
 
 ---
 
 ## Complete example
 
 The long-lived runner process. Agent and number are provisioned once beforehand
-- see [Provisioning checklist](/speech-stack/setup-checklist).
+- see [Provisioning checklist](/agent-sdk/setup-checklist).
 
 ```python
 from superdialog import DialogMachine, PythonTool
@@ -207,7 +207,7 @@ See [Playbooks](/superdialog/playbooks).
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="AgentRunner & Sessions" icon="code" href="/speech-stack/agent-runner">
+  <Card title="AgentRunner & Sessions" icon="code" href="/agent-sdk/agent-runner">
     Constructor, credentials, lifecycle, and live-call controls -
     say(), transfer(), recording.
   </Card>
