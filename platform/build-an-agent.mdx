@@ -6,7 +6,7 @@ icon: 'bot'
 ---
 
 <Info>
-**Last updated:** July 22, 2026 · **Product version:** v2 · **Tested against:** `openapi.yaml` 2.0.0
+**Last updated:** November 14, 2026 · **Product version:** v2 · **Tested against:** `openapi.yaml` 2.0.0
 </Info>
 
 ---
@@ -25,20 +25,16 @@ A customer support agent that:
 
 ## Step 1: Create Your Agent in AI Studio
 
-Log in to [unpod.ai](https://unpod.ai) and open **AI Studio**. Click **New Agent**.
+Log in to [unpod.ai](https://unpod.ai) and open **AI Studio** from the left sidebar. In the **Agents** list, click **+**. This opens the agent setup flow:
 
-### Identity Tab
+1. **Start** - describe what the agent should do in **What should your agent do?**, pick a template under "or start from a template", or switch to **Fetch from URL** and paste your website. Click **Generate Agent**.
+2. **AI Identity** - review the generated **Name** (e.g. Aria), **Greeting** and **Behavior script**, then click **Continue**. This creates the agent.
+3. **Voice Profile** - on the "Pick a tone" screen, pick a voice profile and click **Continue**.
+4. **Launch** - review the summary and click **Launch profile**.
 
-Set the core details:
+You land on the agent's page in AI Studio, with the tabs **Persona**, **Voice Profile**, **Advanced**, **Analysis**, **Integration** and **Identity**. See [Create Your AI Identity](/platform/onboarding) for the full flow.
 
-| Field | Example |
-|-------|---------|
-| Name | Aria |
-| Handle | `aria-support` (URL-safe slug, used in API) |
-| Language | English (US) |
-| Timezone | America/New_York |
-
-The **handle** is how you reference this agent in the API and telephony config.
+The agent's **handle** is how you reference it in the API and telephony config. To copy it, open the **⋮** menu at the top right of the agent page and click **Copy Handle**.
 
 ---
 
@@ -48,10 +44,12 @@ The persona determines how your agent thinks, speaks, and behaves. Open the **Pe
 
 ### System Prompt
 
-Write a clear system prompt that defines:
+Under **CONVERSATION MODE**, open **Prompt** and write a clear system prompt that defines:
 - Role and purpose
 - Tone and communication style
 - What the agent should and should not do
+
+You can also start from a template: switch to the **Template** tab, click **Select template** and pick one; its prompt is copied into the editor.
 
 Example:
 
@@ -68,31 +66,33 @@ Rules:
 
 ### Greeting Message
 
-The first thing your agent says when the call connects:
+Under **GREETING**, open **Greeting message** and enter the first thing your agent says when the call connects:
 
 ```
 Hi, you've reached Acme support. I'm Aria, your AI assistant. 
 How can I help you today?
 ```
 
+Click **Save** at the bottom right of the tab. See [Persona](/platform/studio-view/persona) for every section.
+
 ---
 
 ## Step 3: Configure the Voice Profile
 
-Open the **Voice Profile** tab. Choose:
+Open the **Voice Profile** tab. To reuse a saved setup, open the **Voice Profile** section and click **Manage Profiles**. To set the voice by hand, open the **Voice** section and choose:
 
-- **TTS Provider**: ElevenLabs, OpenAI, Azure, or Google
-- **Voice**: Pick from available voices for your chosen provider
-- **Speed**: 0.9-1.0 works well for support calls
-- **Stability / Similarity**: Higher stability = more consistent, lower = more expressive
+- **Voice Provider** and **Voice model**
+- **Synthesized voice**: the voice your agent speaks with
+- **Voice Speed**: 0.9-1.0 works well for support calls
+- **Voice Temperature**: lower values sound more consistent, higher values more expressive
 
-Test voices using the built-in preview before finalizing.
+The **Transcriber** section sets the speech-to-text provider and the **Language for transcription**. Click **Save** when you're done.
 
 ---
 
 ## Step 4: Choose Your AI Model
 
-Open the **Voice Profile** tab and, under **Model**, select the LLM provider and model powering your agent (see [Voice Profile - Model](/platform/studio-view/voice-profile#model)):
+On the same **Voice Profile** tab, open the **LLM** section and select the **AI provider** and **AI model** powering your agent (see [Voice Profile - LLM](/platform/studio-view/voice-profile#llm)). The list shows the providers and models available in your workspace, for example:
 
 | Provider | Model | Best For |
 |----------|-------|----------|
@@ -101,7 +101,7 @@ Open the **Voice Profile** tab and, under **Model**, select the LLM provider and
 | Google | gemini-1.5-flash | Multimodal, long context |
 | Azure OpenAI | gpt-4o | Enterprise compliance |
 
-For support bots, `gpt-4o` or `llama-3.1-70b` via Groq are solid starting points.
+For support bots, `gpt-4o` or `llama-3.1-70b` via Groq are solid starting points. Click **Save**.
 
 ---
 
@@ -112,7 +112,7 @@ Upload product documentation, FAQs, or policy docs so your agent can answer accu
 1. In the left sidebar, open **Knowledge Base** and click **Add**.
 2. Set **Content Type** to **Document** and click **Save**.
 3. Open the new knowledge base and drag your files onto the upload panel, then click **Upload**. Supported formats include PDF, DOCX, PPTX, TXT and Markdown (see [Knowledge Base](/platform/studio-view/knowledge-base) for the full list).
-4. In **AI Studio**, open your agent, go to **Persona → Knowledge**, click **Add**, and select the knowledge base.
+4. In **AI Studio**, open your agent and go to **Persona → Knowledge**. Click **Add**, select the knowledge base in the **Select knowledge bases** drawer, click **Add (1)**, then click **Save** at the bottom right of the Persona tab.
 
 Unpod uses RAG (Retrieval-Augmented Generation) - the agent searches relevant chunks before generating a response.
 
@@ -131,27 +131,20 @@ Your agent needs a phone number to receive calls.
 This step is the dashboard flow. If you attach a number to an agent from the SDK instead, the bridge is created and managed for you - see [Attach a Number to an Agent](/platform/dev-platform/attach-number-to-agent).
 </Note>
 
-### 6a: Create a Bridge
+In the left sidebar, click **Telephony**:
 
-Go to **Telephony → Bridges → Create Bridge**. A bridge connects your agent to a voice infrastructure provider.
+1. The **Telephony** panel lists the numbers assigned to your workspace. If it is empty, click **+** and pick a number in the **Available Numbers** drawer.
+2. Select the number.
+3. On the **Integration** tab, under **Number Configuration**, open **Select Agent** and pick your agent (Aria).
+4. Click **Save**.
 
-- **Name**: `support-bridge`
-- **Provider**: LiveKit or Vapi
-- **Agent**: Select `aria-support`
-
-### 6b: Add a Phone Number
-
-Go to **Numbers → Provision Number**. Select a country and area code. Unpod provisions a real phone number via your connected SIP provider.
-
-### 6c: Link Number to Bridge
-
-Assign the provisioned number to your bridge. Incoming calls to this number will now route to Aria.
+Incoming calls to this number now route to Aria. See [Telephony](/platform/studio-view/telephony) for details.
 
 ---
 
 ## Step 7: Test the Agent
 
-1. Click **Preview** in AI Studio to test via the browser interface
+1. Click **Talk To Agent** at the top right of the agent page to test it in the browser
 2. Call the provisioned phone number from your mobile
 3. Check **Call Logs** to review the transcript and see how the agent performed
 

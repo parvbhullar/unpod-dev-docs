@@ -1,35 +1,56 @@
 ---
 title: 'Advanced'
 icon: 'settings'
-description: 'Configure advanced settings and automatic call features.'
+description: 'Configure context, follow-ups, handover, calling hours and the speaking plan.'
 ---
 
 ## Advanced
 
-This is the advanced feature with the help of which you can set up automatic calls. When you set up this feature, your Voice AI agent will automatically call on the provided number at a given time.
+The **Advanced** tab controls how the agent behaves around a call: spam and memory settings, automatic follow-ups and redials, human handover, when the agent may call, and when it should stop talking. It is only shown for voice agents.
 
-### Context Settings
-This setting enables the AI assistant to retain and reference relevant details from past conversations, allowing it to better understand user context over time. By using conversation memory, the assistant can deliver more personalized, consistent, and context-aware responses instead of treating each interaction as isolated.
-<img src="/images/Advanced1.png" alt="Advanced Settings Screenshot" />
+The sections in the left list are **Context**, **Follow-up & Handover**, **Calling Hours** and **Speaking Plan**.
 
-### Auto Reachout
-- **Enable Followup** - This allows the assistant to schedule a follow up with the user automatically.
-- **Enable Callback** - This allows the assistant to initiate a callback if the call is missed or dropped.
-- **Notify via SMS** - This option sends an SMS notification to the user when the assistant is unable to connect via a call.
-- **Handover Number** - This is the number where calls will be forwarded if human handover is triggered.
+{/* TODO(UNPO-403): new screenshot — Advanced tab with the section list (Context, Follow-up & Handover, Calling Hours, Speaking Plan) */}
 
-<img src="/images/Advanced2.png" alt="Auto Reachout Screenshot" />
+### Context
+
+Spam detection, memory and recording:
+- **Spam Detection** - the assistant automatically detects spam calls and blocks suspicious callers.
+- **Enable Memory** - the assistant uses previous conversation memories to understand the user's context, so replies stay consistent across calls instead of treating each call as new.
+- **Enable Recording** - records conversations for quality assurance and training. If recording isn't included in your workspace's plan, the switch is disabled with the note "Recording is not enabled for your workspace. Contact support to add it."
+- **RealTime Evaluation** - tracks real-time evaluation results and response latency during calls.
+- **Duplicate lead** - when on, a call can't be triggered on the same number again for 24 hours.
+- **ISD calls** - turn this on to allow international calling on your agent.
+
+{/* TODO(UNPO-403): new screenshot — Context section */}
+
+### Follow-up & Handover
+
+Follow-ups, redial, SMS notifications and handover:
+- **Enable Followup** - the assistant schedules a follow-up with the user automatically. When on, a **Followup Instructions** box appears where you describe when and how to follow up.
+- **Instant Redial** - the assistant redials if the call is missed or dropped.
+- **Notify Via SMS** - if the assistant can't reach the user by call, it informs them by SMS.
+- **Handover Number** - forwards the call to a human when handover is triggered. When on, you can set:
+  - **Instant Handover** - transfer the call to a human agent immediately.
+  - **Phone Number** - the number calls are forwarded to.
+  - **Handover Instructions** - when the agent should hand over.
+  - **Role** - the role of the person who takes the call.
+
+{/* TODO(UNPO-403): new screenshot — Follow-up & Handover section */}
 
 ### Calling Hours
-Define when calls can be placed automatically with flexible scheduling rules. You can set up the time according to flexibility.
 
-<img src="/images/Advanced3.png" alt="Calling Hours Screenshot" />
+The days and time ranges when the agent can place calls. Choose the days under **Select Days**, then set **Time Ranges** with a **Start time** and **End time**. Click **Add Range** to add more slots. At least one time slot is required.
 
-### Stop Speaking Plan
-- **Number of Words** - This is the number of words that the customer has to say before the assistant will stop talking.
-- **Voice Seconds** - This is the seconds a customer has to speak before the assistant stops talking.
-- **Back Off Seconds** - This is the seconds to wait before the assistant will start talking after being interrupted.
+{/* TODO(UNPO-403): new screenshot — Calling Hours section */}
 
-<img src="/images/Advanced4.png" alt="Stop Speaking Plan Screenshot" />
+### Speaking Plan
 
-After filling in all the details, click on the Save button and move to the next part Analysis.
+Endpointing thresholds that decide when the assistant stops talking because the caller has started speaking:
+- **Number of words** - how many words the caller has to say before the assistant stops.
+- **Voice seconds** - how many seconds the caller can speak before the assistant stops.
+- **Back off seconds** - how many seconds to wait before the assistant starts talking again after an interruption.
+
+{/* TODO(UNPO-403): new screenshot — Speaking Plan section */}
+
+When you're done, click **Save** at the bottom right of the tab, then continue with the next tab, [Analysis](/platform/studio-view/analysis).

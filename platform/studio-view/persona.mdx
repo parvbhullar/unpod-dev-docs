@@ -1,26 +1,71 @@
 ---
 title: 'Persona'
 icon: 'user'
-description: 'Configure your AI agent personality and behavior.'
+description: 'Configure how your AI agent greets callers, behaves and what it knows.'
 ---
 
 ## Persona
 
-A Persona typically refers to a customizable AI agent or system designed for specialized tasks such as handling conversations, automating support, or performing workflow actions. In this part, you can provide how an AI agent starts the conversation, moving further how it resolves the queries of your customer with a provided system prompt.
+The **Persona** tab defines how your agent starts the conversation, how it behaves (its prompt or playbook), which tools it can call and which knowledge bases it can use. It is the first tab that opens on an agent.
 
-### Greeting Message
+The section list on the left is grouped like this:
+- **Engine** - at the top.
+- **GREETING** - **Greeting message**.
+- **CONVERSATION MODE** - **Prompt**, **Playbook** and **SDK**.
+- **SETTING** - **Tools** and **Knowledge**.
 
-Enter a Greeting Message. This is the first message which your AI identity says to your client. For example:
+Click a section to edit it on the right. When you're done, click **Save** at the bottom right of the tab.
+
+{/* TODO(UNPO-403): new screenshot — Persona tab with the section list (Engine, Greeting message, Prompt, Playbook, SDK, Tools, Knowledge) */}
+
+### Greeting message
+
+The first line spoken when a session starts. For example:
 
 "Hello! How can I assist you today?"
-<img src="/images/Persona1.png" alt="Greeting Message Screenshot" />
 
-### Behavior Instructions
+{/* TODO(UNPO-403): new screenshot — Greeting message section */}
 
-Provide System Prompt which defines the behavior of AI. This part will contain Identity, Style (How your AI Identity behaves), Response Guidelines (How your AI Identity gives response to the client), Tasks and Roles (what roles will be completed by your AI Identity). You have to give clear instructions so that your identity will provide exact and proper information to the client.
+### Conversation Mode
 
-Set the agent's tone in the Style part of the system prompt, for example "professional", "friendly" or "empathetic". The Persona tab has no separate tone selector.
-<img src="/images/Persona3.png" alt="Conversation Tone Screenshot" />
+The conversation mode decides what drives the agent. Exactly one mode is active at a time: **Prompt**, **Playbook** or **SDK**. The active one is marked **Active**; the others show a lock. To switch, open the section you want, click **Set as Conversation mode**, and click **Save**.
 
-In this section, you have two options whether you can provide system prompt manually or you can click on Choose Template, choose the template that best suits your business, and then click on Generate with AI. This will give you a pre-built instructions, you can read it and modify the instructions if needed as per business requirements.
-<img src="/images/Persona3a.png" alt="Conversation Tone Screenshot" />
+#### Prompt
+
+Write the system prompt that defines the agent's behavior: its identity, style (for example "professional", "friendly" or "empathetic" — there is no separate tone selector), response guidelines, and the tasks it should complete. Clear instructions give more exact and reliable answers.
+
+The **Prompt** section has two tabs at the top right:
+- **Prompt** - write or edit the system prompt yourself.
+- **Template** - start from a ready-made prompt:
+  1. Click **Select template**.
+  2. In the **Select template** drawer, pick the template card that best fits your business.
+  3. The template's prompt is copied into the system prompt. The template you picked is shown with **Change** and **Remove** options.
+  4. Review and edit the prompt on the **Prompt** tab if needed, then click **Save**.
+
+Picking a template copies its prompt; it doesn't generate a new one.
+
+{/* TODO(UNPO-403): new screenshot — Prompt section, Template tab with "Select template" */}
+
+#### Playbook
+
+Run the agent from a playbook instead of a prompt. The switch at the top right of the section has two options:
+- **Endpoint** - link an existing playbook. Click **Select playbook**, choose one from **My Playbooks** or **Defaults** in the drawer, then click **Save**. Use **Sync latest changes** to pull the playbook's latest version. While a playbook is linked, its content is read-only here; use **Edit in Playground** to change it.
+- **Prompt** - write the playbook yourself in the editor (**Open in full view** gives a larger editor).
+
+#### SDK
+
+Choose the speech agent the playbook runs on. Click **Select agent** and pick the agent in the drawer; **Change** and **Remove** replace or clear it.
+
+### Engine
+
+The calling engine the agent runs on (**Stable** or **Dev**). Click **Change** to pick a different one.
+
+### Tools
+
+Functions the agent can call during a conversation, such as an HTTP request to your API. Click **Add tool** to create one, **Import Tool** to import tool definitions, or **Export Tools** to export them. Each tool has a **Tool ID**, a **Description** the model reads to decide when to call it, its **Parameters**, and the request details.
+
+### Knowledge
+
+Attach knowledge bases the agent can retrieve answers from. Click **Add**, select one or more knowledge bases in the **Select knowledge bases** drawer, click **Add (n)**, then click **Save**. See [Attach a Knowledge Base to an Agent](/platform/studio-view/knowledge-base#attach-a-knowledge-base-to-an-agent).
+
+After saving, continue with the next tab, [Voice Profile](/platform/studio-view/voice-profile).

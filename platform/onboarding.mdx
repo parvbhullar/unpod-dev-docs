@@ -1,42 +1,71 @@
 ---
 title: 'Create Your AI Identity'
 icon: 'book-open'
-description: 'Onboarding walkthrough: create your voice identity and first agent in the Unpod Platform.'
+description: 'Onboarding walkthrough: set up your business identity and create your first AI agent in the Unpod Platform.'
 ---
 
+After you sign up and verify your email (see [Register](/platform/register)), Unpod walks you through a short setup. The steps below are for a new account that does not belong to an organization yet.
 
-### Step 1
-Enter OTP and click on "Verify". You will be redirected to the page "Create your Voice Identity".
+### Step 1: Pick your role
+The **Which role describes you the best?** screen shows four cards: **Developer**, **Founder**, **Product Manager**, and **Other**. Click the one that fits you.
 
-<img src="/images/Introduction1.3.png" alt="Step 3 - OTP Verification" />
+### Step 2: Choose what to start with
+On **What would you like to get started with?**, click one of **Agent Studio**, **AI Agents**, **Analytics**, **Contact Center**, **Context Engine**, **Speech Infra**, or **Telephony**. Every option takes you to the business identity step. **Back** returns you to the role screen.
 
-### Step 2
-First section is "Identity" which is the identity of your business. You can import the details from your business website by using "Quick Import from Website" or you can fill the details manually. When you import it from a website, all your details will be automatically taken by the CRM. The details required are:
-- **Name** - Your business name.
-- **Domain Name** - Enter the domain name of your business, like gmail.com, yahoo.co, etc.
-- **Purpose** - The purpose of your identity. You can choose from business, personal, or service according to the requirements of the business.
-- **Description** - This sub-section will describe your business, what it does, what services or products it will provide to your business.
-- **Tags** - Which type of identity you are creating for your business, for example, you want to create an identity who provides sales and leads to your business.
+### Step 3: Set up your business identity
+The **Set up your business identity** screen (marked **Step 1 · Your business**) creates your organization. You only see it if you do not have an organization yet.
 
-After importing the business information from the website, the details will look like:
+- **Business name & Website URL** - type your business name, or your website (for example `https://acme.com`). When you enter a website, Unpod waits about 2 seconds, shows **Fetching your business details…**, and fills in the business name and domain from the site. Public email domains such as gmail.com are rejected; use your company domain. If the fetch fails, you see "Could not fetch your website details. Please continue manually." and can fill in the details yourself.
+- **Domain** - your company domain, for example `yourcompany.com`. It is filled in for you when you enter a website.
 
-<img src="/images/Introduction1.4.png" alt="Step 4 - Identity Details" />
+Click **Continue**. If the website scan also produced a ready agent, you skip ahead to [Step 6](#step-6-review-the-ai-identity) with the fields prefilled. Otherwise you go to Step 4.
 
-Here you have to select the tags which are more relevant to your business, and click on "Continue".
+{/* TODO(UNPO-403): new screenshot — "Set up your business identity" screen with the "Business name & Website URL" and "Domain" fields and the Continue button */}
 
-### Step 3
-The second section is "Voice Profile". With the help of this section, you can give voice to your business. You can listen to the available voices and choose the best that suits your business and click on "Continue".
+### Step 4: Describe your agent
+The **Describe the AI calling agent you want to create** screen (marked **Step 1 of 4 · Tell us what you want**) starts the agent setup. A progress bar at the top shows the four steps: **Start**, **AI Identity**, **Voice Profile**, **Launch**.
 
-<img src="/images/Introduction1.5.png" alt="Step 5 - Voice Profile" />
+Pick an input mode:
+- **Describe in chat** (selected by default) - in **What should your agent do?**, describe your business, who the agent talks to, and the kind of calls it handles. The hint under the box suggests covering your business type, customer type, agent task, language, and handoff rules. Under **or start from a template**, you can instead click **Choose** on a ready-made agent template.
+- **Fetch from URL** - paste your site into **Paste your website URL**. Unpod scans the site and turns what it finds into an agent.
 
-### Step 4
-The last section is "Launch", it shows the summary of the identity of your business.
+Click **Generate Agent**. Choosing a template skips generation and prefills the next steps from the template.
 
-<img src="/images/Introduction1.6.png" alt="Step 6 - Launch Summary" />
+### Step 5: Wait while the agent is built
+The **Building your AI Profile** screen shows while Unpod generates the agent. It usually takes 15–30 seconds. If generation fails, you return to Step 4 with an error message.
 
-### Step 5
-Click on "Launch" and you will be redirected to the page of your organization which is the "Space View" of the organization.
+### Step 6: Review the AI Identity
+The **Review the AI Identity** screen (marked **Step 2 of 4 · Generated for you**) shows what was generated. Edit any field:
+- **Name** (required)
+- **Greeting** (required) - the first line your agent says when a session starts.
+- **Behavior script** - the instructions the agent runs on.
 
-<img src="/images/Introduction1.7.png" alt="Step 7 - Space View" />
+Click **Continue**. This creates the agent.
+
+{/* TODO(UNPO-403): new screenshot — "Review the AI Identity" screen with the Name, Greeting and Behavior script fields and the Continue button */}
+
+### Step 7: Pick a voice profile
+The **Pick a tone** screen (marked **Step 3 of 4**) lists the available voice profiles. Each card has a play button to preview the voice, plus the profile's gender, provider, languages, **Quality**, **Latency**, and **Cost**. Click a card to select it, then click **Continue**. **Continue** stays disabled until you select a profile. **Back** returns you to the AI Identity step.
+
+{/* TODO(UNPO-403): new screenshot — "Pick a tone" screen with the voice profile cards (play button, Quality, Latency, Cost) and the Back / Continue buttons */}
+
+### Step 8: Launch
+The **Ready to launch** screen (marked **Step 4 of 4 · Almost there**) summarizes your agent:
+- **Identity** - the agent's name and description.
+- **Behavior** - the length of the behavior script.
+- **Tone & Reach** - the voice profile, gender, and language.
+
+Below the summary, **After you launch** lists the next things you can set up. Click **Launch profile**.
+
+{/* TODO(UNPO-403): new screenshot — "Ready to launch" summary screen with the Identity, Behavior and Tone & Reach rows and the Launch profile button */}
+
+### Step 9: Refine the agent in AI Studio
+After **Launch profile**, you land on your agent's page in **AI Studio**. From there you can refine the agent and open the rest of the dashboard from the left sidebar.
+
+{/* TODO(UNPO-403): new screenshot — the new agent's page in AI Studio that opens after Launch profile */}
+
+<Note>
+To create another agent later, click **+** in the AI Studio agent list. It opens the same flow at Step 4, and the business identity step is skipped because you already have an organization.
+</Note>
 
 Now you have complete access to the [dashboard](https://unpod.ai).
