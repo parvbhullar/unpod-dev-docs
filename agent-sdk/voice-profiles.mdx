@@ -1,0 +1,171 @@
+---
+title: 'Voice Profiles'
+icon: 'mic'
+description: 'Browse and select the speech stack for your agents.'
+---
+
+## What Is a Voice Profile?
+
+A [Voice Profile](/home/how-it-fits#voice-profile) bundles three
+things into a single reusable configuration:
+
+- **Speech-to-Text (STT)** - transcribes the caller's audio into text
+- **Text-to-Speech (TTS)** - converts agent text into natural-sounding audio
+- **Voice** - the specific voice identity (gender, accent, character) used for TTS output
+
+When you attach a voice profile to an agent, every call that voice handles uses that configuration automatically - including failover if a provider goes down.
+
+<Frame>
+  <img src="/images/diagrams/voice-profile-pipeline.svg" alt="Voice profile pipeline diagram showing caller speech passing through STT, dialog machine text handling, TTS plus voice, and caller playback." />
+</Frame>
+
+Voice profiles are managed by Unpod. You browse and select from the available list - you do not configure STT/TTS providers directly.
+
+---
+
+## Listing Voice Profiles via SDK
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads credentials from .env
+        # All profiles
+        profiles = await client.voice_profiles.list()
+
+        # Filter by language
+        en_profiles = await client.voice_profiles.list(language="en")
+        es_profiles = await client.voice_profiles.list(language="es")
+
+        for p in profiles:
+            print(
+                p.profile_id,
+                p.name,
+                f"gender={p.gender}",
+                f"quality={p.quality}",
+            )
+
+asyncio.run(main())
+```
+
+### VoiceProfile fields
+
+| Field | Type | Description |
+|---|---|---|
+| `profile_id` | `str` | Profile ID to pass as `voice_profile` when creating an agent |
+| `name` | `str` | Human-readable name, e.g. `"Emma (HD)"` |
+| `gender` | `str` | `male`, `female`, or `neutral` |
+| `quality` | `str` | `standard` or `high` |
+| `languages` | `list[str]` | Supported language codes, e.g. `["en", "hi"]` |
+| `description` | `str \| None` | Short description of the voice character |
+| `latency_ms` | `int \| None` | Expected end-to-end latency in milliseconds |
+| `greeting_message` | `str \| None` | Default greeting for this profile |
+
+---
+
+## Getting a Single Profile
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads credentials from .env
+        profile = await client.voice_profiles.get("vp_en_female_hd")
+        print(profile.name, profile.quality, profile.languages)
+
+asyncio.run(main())
+```
+
+---
+
+## Choosing the Right Profile
+
+### By use case
+
+| Use case | Recommended qualities |
+|---|---|
+| Customer support | High quality, natural voice, low latency |
+| Sales outreach | Expressive, high quality, brand-matched |
+| Appointment booking | Standard quality - lower latency |
+| Multilingual | Match language codes to caller's region |
+
+### By latency
+
+Total call latency has three components: STT transcription + LLM thinking + TTS synthesis.
+
+- Choose `quality == "high"` when voice naturalness matters more than speed
+- Choose `quality == "standard"` for latency-sensitive or high-volume deployments
+- Check `latency_ms` on the profile object for the estimated end-to-end figure
+
+---
+
+## Using a Profile When Creating an Agent
+
+Pass `profile_id` as `voice_profile` when you create the agent:
+
+```python
+import asyncio
+from unpod import AsyncClient, Prompt
+
+async def main():
+    async with AsyncClient() as client:  # reads credentials from .env
+        # List to find the right profile
+        profiles = await client.voice_profiles.list(language="en")
+        hd_female = next(
+            p for p in profiles if p.quality == "high" and p.gender == "female"
+        )
+
+        voice = await client.agents.voice.create(
+            "support-bot",
+            brain=Prompt("You are a concise support assistant."),
+            name="Support Bot",
+            voice_profile=hd_female.profile_id,
+        )
+        print("Created agent with profile:", voice.voice_profile_name)
+
+asyncio.run(main())
+```
+
+---
+
+## Giving an Agent a Second Voice
+
+One agent, one brain, many voices - a second language is a second voice, not a
+second agent. The new voice inherits the brain unchanged.
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads credentials from .env
+        await client.agents.voice.add(
+            "support-bot",
+            voice_profile="vp_es_male_std",     # Spanish male
+            greeting="Hola, gracias por llamar.",
+        )
+
+        agent = await client.agents.get("support-bot")
+        for v in agent.voices:
+            print(v.voice_profile_id, v.voice_profile_name, v.is_default)
+
+        # Drop one voice; the agent keeps the rest
+        await client.agents.voice.remove("support-bot", "vp_es_male_std")
+
+asyncio.run(main())
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Agents" icon="robot" href="/agent-sdk/agents">
+    Attach a voice profile when creating an agent, and add more voices later.
+  </Card>
+  <Card title="AgentRunner & Sessions" icon="code" href="/agent-sdk/agent-runner">
+    Install the SDK and configure your runner process.
+  </Card>
+</CardGroup>

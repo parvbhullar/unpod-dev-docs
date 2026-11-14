@@ -6,7 +6,7 @@ description: 'Get numbers directly from Unpod or bring your own, then attach the
 
 ## Overview
 
-A [Number](/get-started/core-concepts#number) is the phone number callers
+A [Number](/home/how-it-fits#number) is the phone number callers
 dial; it routes to whatever agent it is attached to. Phone numbers in
 Unpod come from two sources:
 
@@ -62,7 +62,7 @@ asyncio.run(main())
 
 ## Trunks
 
-A [Trunk](/get-started/core-concepts#trunk) is your carrier connection - the SIP
+A [Trunk](/home/how-it-fits#trunk) is your carrier connection - the SIP
 capacity numbers ride on. Bring your own carrier (Twilio, Tata, …), register it
 once with its SIP credentials, then work with numbers, not SIP. BYON numbers
 arrive this way.
@@ -77,7 +77,7 @@ arrive this way.
   </Step>
   <Step title="Sync">
     Click **Sync** on the trunk, or run `await client.numbers.sync()`. The trunk's
-    numbers appear in your account, ready to attach to an [agent](/speech-stack/agents).
+    numbers appear in your account, ready to attach to an [agent](/agent-sdk/agents).
   </Step>
 </Steps>
 
@@ -118,7 +118,7 @@ result = await client.numbers.sync()   # {"synced": int, "new": int}
 ```
 
 One-time provisioning end to end (profile, agent, number, env vars):
-[Provisioning checklist](/speech-stack/setup-checklist).
+[Provisioning checklist](/agent-sdk/setup-checklist).
 
 ---
 
@@ -194,7 +194,7 @@ calls raise a `TypeError`.
 </Warning>
 
 `client.agents.numbers.attach(agent_id, number)` does the same job keyed by the
-E.164 number rather than the number id - see [Agents](/speech-stack/agents).
+E.164 number rather than the number id - see [Agents](/agent-sdk/agents).
 
 ---
 
@@ -284,10 +284,10 @@ asyncio.run(rotate(["+918071539102", "+918071539118"], ["support-bot", "sales-bo
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Voice Profiles" icon="audio-lines" href="/speech-stack/voice-profiles">
+  <Card title="Voice Profiles" icon="audio-lines" href="/agent-sdk/voice-profiles">
     Choose the voice profile your agent speaks with.
   </Card>
-  <Card title="Agents" icon="robot" href="/speech-stack/agents">
+  <Card title="Agents" icon="robot" href="/agent-sdk/agents">
     Create and configure the agent a number routes to.
   </Card>
 </CardGroup>

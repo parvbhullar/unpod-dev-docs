@@ -1,0 +1,324 @@
+---
+title: 'How Unpod fits together'
+icon: 'book-open'
+description: 'The single source of truth for Unpod terminology - every term defined once, with deep links.'
+---
+
+import Architecture from '/snippets/architecture.mdx';
+
+This page defines every Unpod term once. Other pages link here instead of
+redefining things. If a definition seems to conflict elsewhere, this page wins.
+
+Unpod is the agentic backend for conversational AI: apps that talk,
+remember and act. This is how the pieces fit.
+
+## The architecture
+
+<Architecture />
+
+The data model under all of it is the spine.
+
+## The Spine
+
+```
+             Agents         Flows
+                \             /
+                 v           v
+CHANNELS ---> ENTITY -> CONVERSATION -> INTERACTION -> OUTCOME ---> EVENTS
+                  |                                |
+                  +--------- CONTEXT --------------+
+                 ^           ^
+              Teams       Policies
+```
+
+Read it as: channels deliver to an entity; every touch belongs to a
+channel-neutral conversation; each call, message, or email is an interaction;
+each interaction produces a structured outcome; every change emits an event.
+Context underlies entity through outcome. Agents and Flows act on the spine;
+Teams and Policies govern it.
+
+## Talk, remember, act
+
+| Verb | Component | Mental model | Status |
+|---|---|---|---|
+| Talk | [Calling Engine](/telephony/concepts/calling-engine) | Programmable realtime voice runtime | Production |
+| Talk | [Channels](/telephony/concepts/channels) | Every channel writes to the same record | Voice, chat: production · messaging: in build |
+| Talk | [Models & Router](/agent-sdk/models-router) | Real-time STT, TTS and LLM with failover | Production |
+| Remember | [Context Engine](/context/overview) | One memory per customer | Per call: production · cross-channel: in build |
+| Remember | [People & identity](/context/entities) | System-of-record identity | People: production · cross-channel: in build |
+| Remember | [Conversations](/context/conversations) | Channel-neutral threads | In build |
+| Remember | [Outcomes](/context/outcomes) | The structured result of every interaction | Production |
+| Remember | [Permissions & tenancy](/context/teams-policies) | Multi-tenant authorization boundary | Production |
+| Remember | [Own your model](/context/intelligence) | Blocks today, your own model later | Blocks: production |
+| Act | [Agents](/agent-studio/agent-workforce) | Workers that communicate and act | Production |
+| Act | [Agent Harness](/agent-studio/agent-harness) | Everything around the brain in production | Production |
+| Act | [Flows & Journeys](/agent-studio/flows-journeys) | Durable communication workflows | Flows: production · journeys: in build |
+| Act | [Actions](/agent-studio/actions) | Your APIs as the agent's hands | Production |
+| Act | [Events](/core-engine/events) | Everything that happened, once | Post-call webhook: production · stream: in build |
+| Act | [Observability](/core-engine/observability) | Logs, recordings, transcripts, traces | Production |
+
+The rest of this page is the speech stack - the Calling Engine's developer
+surface, and the part of Unpod a Python dev builds against first. The rule
+that explains it is [SuperDialog](/superdialog/introduction)'s defining rule:
+**the wire carries text, not audio - you own the brain.** Unpod owns the
+phone call, the speech, and the carriers. You own the brain that decides what
+to say. That rule is SuperDialog's, not the whole platform's - a WhatsApp or
+email agent never touches audio in the first place - but the text/audio split
+still governs everything the speech stack hands your code: text in, text out.
+
+## Use It Like a Model
+
+Build an agent for your use case, then use it like a model - a playbook plus any
+third-party model, over whichever surface fits your stack:
+
+| Surface | I/O | Live in |
+|---|---|---|
+| [Chat](/get-started/chat) | text in, text out | 1 URL swap |
+| [Realtime](/telephony/streaming/unpod-speech-quickstart) | audio in, audio out | 1 WebSocket |
+| [Phone](/agent-studio/quickstart) | a phone number | 1 click |
+
+Not sure which? [Getting Started](/home/journey).
+
+## One call, end to end
+
+A single inbound call, end to end - the Talk layer's voice path, as the
+speech stack exposes it:
+
+<Frame>
+  <img src="/images/diagrams/unpod-voice-stack.svg" alt="Animated Unpod voice stack diagram showing phone, browser, and mobile entrypoints flowing through the managed speech layer into your AgentRunner, dialog machine, and tools." />
+</Frame>
+
+Read it as: a **Caller** enters through a phone number, browser, or mobile app.
+For phone calls, the **Number** routes into Unpod's managed speech layer - over
+Unpod's own carrier capacity, or over a **Trunk** you registered if you brought
+your own number. Unpod transcribes the audio with the call's **voice profile**
+(STT) and sends plain text across the **Bridge** over a WebSocket to your
+**AgentRunner**. Your runner hands each turn to your **Agent** (your brain).
+Your reply text crosses back over the Bridge, Unpod synthesises it (TTS), and
+the caller hears it. SuperDialog is one option for the brain - powerful, but
+optional.
+
+You own everything from the AgentRunner down. Everything above it is managed.
+On the spine, the whole call is one interaction: it belongs to a conversation,
+resolves to an entity, and reports a structured outcome when it ends.
+
+## Glossary
+
+One canonical definition each. Headings are anchor-able, so other pages can deep
+link (for example `/home/how-it-fits#pipe`). These are the speech
+stack's terms; the spine's terms (entity, conversation, interaction, outcome,
+event, context) are defined on their [Core Engine](/core-engine/overview)
+pages.
+
+### Number
+
+A phone number callers dial. Inbound calls arrive on a number and route to the
+**agent** it is attached to. Numbers come from Unpod directly or you bring
+your own (BYON). You never configure a carrier. See
+[Numbers](/speech-stack/numbers).
+
+### Trunk
+
+The SIP connection between your own carrier and Unpod - **only needed for BYON**
+(bringing a number you already own). Numbers provisioned from Unpod need no
+trunk and no carrier account. If you do bring your own, you register the trunk
+once with its SIP credentials and then work with numbers, not SIP. See
+[Trunks](/speech-stack/numbers#trunks).
+
+### Voice Profile
+
+A bundle of STT + TTS provider configuration: which providers recognise and
+synthesise speech, which language and voice, latency, and failover order.
+Profiles are a read-only catalog you pick from - you reference one by name or
+`profile_id` when creating an agent voice. See
+[Voice Profiles](/agent-sdk/voice-profiles).
+
+### Agent
+
+An **agent** is one `agent_id`, one **brain**, and one or more **voices**. The
+brain answers turns; each voice is a voice profile the agent speaks with. The
+brain belongs to the agent, so editing it reaches every voice. Numbers attach to
+an agent; outbound calls dispatch to an agent. See
+[Agents](/agent-sdk/agents).
+
+### Brain
+
+What answers a turn, named explicitly when you create the agent - exactly one of
+four sources:
+
+| Source | Who answers | You deploy |
+|---|---|---|
+| `Playbook(id)` | Unpod's playbook pool | nothing; publish the playbook |
+| `Prompt(text)` | Unpod, as a one-node playbook | nothing |
+| `Runner()` | your own worker over WebSocket | an AgentRunner process |
+| `Endpoint(url, ...)` | your own HTTP service, called per turn | an OpenAI-compatible URL |
+
+### Pipe (deprecated)
+
+A **Speech Pipe** was the configuration entity that bound a call together: a
+name, a voice profile, recording and duration settings, and the `agent_id` that
+pointed at your runner. It is the predecessor of a single agent-voice row -
+`client.pipes` still writes the same rows but warns on every call. One place it
+survives: `client.sessions.create_token(pipe_id=...)` for browser sessions. See
+[Speech Pipe](/agent-sdk/pipes) for the migration table.
+
+### Bridge
+
+The text-routing seam inside Unpod between the speech pipeline and your code.
+Transcribed caller text crosses the Bridge to your AgentRunner; your reply text
+crosses back to be synthesised. The Bridge is why your code never touches audio.
+It is Unpod-internal infrastructure - you do not configure it; you'll see the
+term in WebSocket frame names and in the legacy
+[Bridges API](/api/telephony/bridges-overview).
+
+### Agent (Brain)
+
+Your conversation logic - whatever decides what to say next. It can be a
+SuperDialog `DialogMachine`, a LangChain chain, a plain HTTP endpoint, or custom
+Python. Unpod is brain-agnostic: it routes text in and text out. "Agent" and
+"brain" mean the same thing here. See
+[Bring Your Agent](/agent-sdk/bring-your-agent).
+
+### AgentRunner
+
+A long-lived Python process you run. It registers with the Unpod orchestrator
+over WebSocket, advertises capacity, and serves a per-call bridge that Unpod
+dials into. For each call it builds a `CallContext` and invokes your entrypoint.
+You identify it with an `agent_id` (see [IDs You'll Meet](#ids-youll-meet)). See
+[SDK Setup](/agent-sdk/agent-runner).
+
+### Session
+
+Your control interface for one live call, reached as `ctx.session`. It exposes
+controls (`say()`, `transfer_to_human()`, `end()`, recording controls), hooks,
+metrics, and the `dialog_machine` slot where you plug in your brain. Calling
+`session.run()` keeps the call alive and routes each transcribed turn to your
+brain. See [Session Controls](/agent-sdk/agent-runner).
+
+### CallContext
+
+The per-call metadata envelope your entrypoint receives:
+`async def entrypoint(ctx: CallContext)`. It carries `call_id`, `session_id`,
+`agent_id`, `direction` (`"inbound"` or `"outbound"`), `user_number`, any
+`instructions` and `data` from dispatch, and the live `session` you control the
+call through. It also exposes `runner_id` - the runner's own configured
+`agent_id`. On a multi-tenant runner the call's `agent_id` (the agent the call
+was dispatched to) and `runner_id` can differ; use `runner_id` when you need to
+know which pool this process registered under.
+
+### Space
+
+A Platform concept, not an SDK one. A Space is a workspace container in the Unpod
+Platform that organises agents, tasks, runs, and data. The Platform's REST API
+addresses a space by its **space token**. You only meet spaces when you use the
+hosted Platform or its REST API - the voice SDK does not require one.
+
+## Two APIs
+
+The `unpod` SDK package contains two distinct halves. Know which one you are
+using.
+
+| | Management API | Connectivity API |
+|---|---|---|
+| Protocol | REST (HTTPS) | WebSocket (WSS) |
+| Entry point | `Client` / `AsyncClient` | `AgentRunner` / `Session` |
+| Purpose | Provision resources | Handle live calls |
+| You call it | Before calls | During calls |
+| Examples | `client.agents`, `client.numbers`, `client.voice_profiles`, `client.calls`, `client.analytics`, `client.trunks` | `AgentRunner(...).start()`, `ctx.session.say(...)` |
+
+**Management API** is for setup and orchestration: register a trunk, sync
+numbers, create an agent, trigger an outbound call, fetch transcripts and
+analytics. You construct a `Client` (sync) or `AsyncClient` (async); it reads
+`UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE` and the host URLs from the
+environment or a `.env` file.
+
+```python
+from unpod import AsyncClient, Runner
+
+client = AsyncClient()                       # REST, reads credentials from .env / env
+await client.agents.voice.create("support-bot", brain=Runner(), name="Support")
+```
+
+**Connectivity API** is for the call itself: your `AgentRunner` holds a
+persistent WSS connection to the orchestrator, and each call gives you a live
+`Session` to act on.
+
+```python
+from unpod import AgentRunner, CallContext
+
+async def entrypoint(ctx: CallContext) -> None:
+    await ctx.session.say("Hello")           # WSS, live call
+    await ctx.session.run()
+
+AgentRunner(entrypoint=entrypoint, agent_id="support-bot").start()
+```
+
+## IDs You'll Meet
+
+Four identifiers cause most first-run failures. They are not interchangeable.
+
+<Warning>
+**`agent_id` is the one that must match.** The `agent_id` you pass to
+`AgentRunner(...)` must exactly match the `agent_id` you created the agent with,
+or a call rings and no runner claims it.
+</Warning>
+
+| ID | What it identifies | Where it comes from |
+|---|---|---|
+| **`agent_id`** | The agent - its brain, its voices, and which AgentRunner handles its calls | A string **you choose**. Passed to both `AgentRunner(agent_id=...)` and `client.agents.voice.create(agent_id, ...)`. They must match exactly. Numbers and outbound calls key on it too. |
+| **`pipe_id`** | One agent-voice row, in the deprecated spelling | A UUID **Unpod assigns**. Still needed by `client.sessions.create_token(pipe_id=...)` for browser sessions; everything else takes `agent_id`. |
+| **Space token** | A Platform workspace | A token from the Platform's Spaces API. Used only in the hosted Platform and its REST API, not in the voice SDK. |
+| **Runner agent ID** | Same as `agent_id` | Just another name for `agent_id` as seen from the runner side. Internally the runner derives a `worker_id` (`<agent_id>#<random>`) per process, but you never set that. |
+
+Wiring it correctly:
+
+```python
+from unpod import Runner
+
+# 1. The agent says: my brain is a runner registered as "support-bot".
+await client.agents.voice.create(
+    "support-bot", brain=Runner(), name="Support", voice_profile="vp_en_female_hd")
+
+# 2. The runner says: I am "support-bot".
+AgentRunner(entrypoint=entrypoint, agent_id="support-bot").start()
+#                                            ^^^^^^^^^^^^
+#            must equal the agent_id above, or calls never arrive
+```
+
+If a call rings but your runner never wakes up, check this match first.
+
+## Naming: The Four Product Terms
+
+Unpod is one company with one platform, described at four altitudes. Use these
+terms precisely.
+
+| Term | What it means |
+|---|---|
+| **Unpod** | The company and the platform as a whole - everything below combined. |
+| **Speech Stack** | The voice infrastructure plus the `unpod` SDK: agents, numbers, trunks, voice profiles, STT/TTS, and the AgentRunner runtime. This is what a Python dev builds against. |
+| **SuperDialog** | The optional dialog framework (`superdialog` package): flow graphs, tools, and state for structured conversations. One choice of brain - not required. |
+| **Platform** | The hosted UI and self-hostable stack: dashboard, agent studio, spaces, analytics, and telephony management on top of the Speech Stack. |
+
+In the docs, **Core Engine** names the backend as a whole - the architecture,
+the spine, and the components at the top of this page. Start at the
+[Core Engine overview](/core-engine/overview).
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Core Engine" icon="network" href="/core-engine/overview">
+    The architecture, talk / remember / act, and every component's page.
+  </Card>
+  <Card title="Run Your Own Brain" icon="phone" href="/agent-sdk/quickstart">
+    Wire a number, an agent, and a runner end to end.
+  </Card>
+  <Card title="Speech Stack" icon="layers" href="/agent-sdk/overview">
+    Agents, numbers, voice profiles, and the AgentRunner SDK.
+  </Card>
+  <Card title="SuperDialog" icon="git-branch" href="/superdialog/introduction">
+    The optional framework for structured conversation flows.
+  </Card>
+  <Card title="AgentRunner & Sessions" icon="sliders-horizontal" href="/agent-sdk/agent-runner">
+    Act on a live call - say, transfer, end, record.
+  </Card>
+</CardGroup>
