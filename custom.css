@@ -9,7 +9,7 @@
    Key the pill off that class ONLY. Broader selectors (`header a`,
    `#navbar a`) also matched in-page Cards and inline body links, turning
    them into purple blobs with white text. */
-a.nav-tabs-item[href*="superdialog.unpod.ai/playground"] {
+a.nav-tabs-item[href*="app.unpod.ai/playground"] {
   position: relative;
   display: inline-flex !important;
   align-items: center;
@@ -26,12 +26,12 @@ a.nav-tabs-item[href*="superdialog.unpod.ai/playground"] {
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.nav-tabs a[href*="superdialog.unpod.ai/playground"]:hover {
+.nav-tabs a[href*="app.unpod.ai/playground"]:hover {
   transform: translateY(-1px) scale(1.04);
   box-shadow: 0 8px 22px rgba(121, 108, 255, 0.45);
 }
 
-.nav-tabs a[href*="superdialog.unpod.ai/playground"] * {
+.nav-tabs a[href*="app.unpod.ai/playground"] * {
   color: #fff !important;
   fill: currentColor;
 }
@@ -47,7 +47,7 @@ a.nav-tabs-item[href*="superdialog.unpod.ai/playground"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nav-tabs a[href*="superdialog.unpod.ai/playground"] {
+  .nav-tabs a[href*="app.unpod.ai/playground"] {
     animation: none !important;
   }
 }
@@ -69,7 +69,7 @@ a.nav-tabs-item[href*="superdialog.unpod.ai/playground"] {
    viewport on the right by ~16rem — margin-left:auto alone pushed the group
    off-screen. Cancel that overflow on the last tab so the group lands fully
    visible, ending near the "On this page" column. */
-.nav-tabs > a[href*="superdialog.unpod.ai/playground"] {
+.nav-tabs > a[href*="app.unpod.ai/playground"] {
   /* 16rem cancels the bar's right overflow (flush to edge); +3rem leaves the
      same ~48px gap after Playground as the px-12 gap before "Get Started". */
   margin-right: 19rem !important;
