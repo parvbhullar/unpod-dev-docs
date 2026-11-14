@@ -23,7 +23,7 @@ statements:
 <Note>
 `client.pipes` is the deprecated predecessor of a single agent-voice row. It
 still writes the same rows, but every call now raises a `DeprecationWarning`.
-See [Speech Pipe](/speech-stack/pipes) for the migration table.
+See [Speech Pipe](/agent-sdk/pipes) for the migration table.
 </Note>
 
 ---
@@ -42,7 +42,7 @@ from unpod import Playbook, Prompt, Runner, Endpoint
 |---|---|---|---|
 | **Playbook** | `Playbook(playbook_id)` | Unpod's playbook pool | nothing - the playbook must be published |
 | **Prompt** | `Prompt(text)` | Unpod, as a one-node playbook | nothing |
-| **Runner** | `Runner(agent_id=None)` | your own worker, over WebSocket | an [AgentRunner](/speech-stack/agent-runner) process |
+| **Runner** | `Runner(agent_id=None)` | your own worker, over WebSocket | an [AgentRunner](/agent-sdk/agent-runner) process |
 | **Endpoint** | `Endpoint(url, model=..., api_key=...)` | your own HTTP service - Unpod calls **you** per turn | an OpenAI-compatible chat-completions URL |
 
 - `Playbook(id)` is a **live reference**, not a snapshot: editing the playbook
@@ -92,11 +92,11 @@ asyncio.run(main())
 | `max_call_duration_s` | `int` | `3600` | Hard cap in seconds |
 | `max_concurrent` | `int` | `1` | Concurrent calls this agent accepts |
 | `brain_execution` | `str \| None` | set by the server | Where the brain runs - leave unset |
-| `domain` | `str \| None` | `None` | [Domain dictionary](/speech-stack/domain-dictionaries) tag |
-| `background_sound` | `BackgroundSound \| str \| None` | `None` | Ambience room - see [Configure an agent](/speech-stack/agent-settings#background-sound) |
+| `domain` | `str \| None` | `None` | [Domain dictionary](/agent-sdk/domain-dictionaries) tag |
+| `background_sound` | `BackgroundSound \| str \| None` | `None` | Ambience room - see [Configure an agent](/agent-sdk/agent-settings#background-sound) |
 | `background_sound_enabled` | `bool \| None` | `None` | Ambience on/off |
 | `background_sound_volume` | `float \| None` | `None` | Ambience gain, 0.0-1.0 |
-| `noise_cancellation` | `NoiseCancellation \| str \| None` | `None` | Caller-audio canceller - see [Configure an agent](/speech-stack/agent-settings#noise-cancellation) |
+| `noise_cancellation` | `NoiseCancellation \| str \| None` | `None` | Caller-audio canceller - see [Configure an agent](/agent-sdk/agent-settings#noise-cancellation) |
 
 <Note>
 Re-running `create()` with an existing `agent_id` and the **same** brain is
@@ -106,7 +106,7 @@ one brain. Change it with `agents.update(agent_id, brain=...)`.
 
 <Tip>
 Swap `brain=Prompt(...)` for `brain=Runner()` and the same call configures an
-agent your own [AgentRunner](/speech-stack/agent-runner) drives. Nothing else
+agent your own [AgentRunner](/agent-sdk/agent-runner) drives. Nothing else
 about the agent changes.
 </Tip>
 
@@ -206,7 +206,7 @@ language.
 
 `update()` changes much more than the brain - voice, phone number, background
 sound, noise cancellation, muting, limits, model, tools. Every argument, with
-examples: [Configure an agent](/speech-stack/agent-settings).
+examples: [Configure an agent](/agent-sdk/agent-settings).
 
 To change one voice only (its greeting, or which voice is the default), use
 `agents.voice.update()`:
@@ -274,7 +274,7 @@ For the number lifecycle itself - provisioning, syncing, trunks - see
 | `agents.create(agent_id, brain=..., **kw)` | `AgentVoice` | Alias for the above, kept for older examples |
 | `agents.list()` | `list[Agent]` | Every agent in the project, each with all its voices |
 | `agents.get(agent_id)` | `Agent` | Brain plus every voice |
-| `agents.update(agent_id, brain=, name=, greeting=, voice_profile=, number=, ...)` | `Agent` | Agent-wide; full list in [Configure an agent](/speech-stack/agent-settings#all-update-arguments) |
+| `agents.update(agent_id, brain=, name=, greeting=, voice_profile=, number=, ...)` | `Agent` | Agent-wide; full list in [Configure an agent](/agent-sdk/agent-settings#all-update-arguments) |
 | `agents.delete(agent_id)` | `None` | The agent and every voice |
 | `agents.voice.add(agent_id, voice_profile=, greeting=)` | `AgentVoice` | Inherits the brain unchanged |
 | `agents.voice.update(agent_id, voice_profile_id, greeting=, make_default=)` | `AgentVoice` | Edits one voice only |
@@ -288,11 +288,11 @@ For the number lifecycle itself - provisioning, syncing, trunks - see
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="AgentRunner & Sessions" icon="code" href="/speech-stack/agent-runner">
+  <Card title="AgentRunner & Sessions" icon="code" href="/agent-sdk/agent-runner">
     Run the worker a `Runner()` brain points at, and act on live calls - say,
     transfer, end, record.
   </Card>
-  <Card title="Voice Profiles" icon="waveform-lines" href="/speech-stack/voice-profiles">
+  <Card title="Voice Profiles" icon="waveform-lines" href="/agent-sdk/voice-profiles">
     Browse the catalog and pick the `profile_id` you pass as `voice_profile`.
   </Card>
   <Card title="Numbers" icon="phone" href="/speech-stack/numbers">
