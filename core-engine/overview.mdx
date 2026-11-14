@@ -23,40 +23,40 @@ plumbing.
 
 How the backend reaches the human.
 
-- [Calling Engine](/core-engine/calling-engine) - programmable realtime
+- [Calling Engine](/telephony/concepts/calling-engine) - programmable realtime
   voice: numbers, calls, SIP, transfers, streams.
-- [Channels](/core-engine/channels) - voice and chat today; WhatsApp, SMS
+- [Channels](/telephony/concepts/channels) - voice and chat today; WhatsApp, SMS
   and email in build.
-- [Models & Router](/core-engine/models-router) - STT, TTS and LLM for
+- [Models & Router](/agent-sdk/models-router) - STT, TTS and LLM for
   real-time turns, with automatic failover.
 
 ## Remember
 
 The Context Engine: what survives every call, message and model swap.
 
-- [Context Engine](/core-engine/context-engine) - one memory per customer,
+- [Context Engine](/context/overview) - one memory per customer,
   from the live turn to outcome history.
-- [People & identity](/core-engine/entities) - the record every touch
+- [People & identity](/context/entities) - the record every touch
   resolves to.
-- [Conversations](/core-engine/conversations) - channel-neutral threads.
-- [Outcomes](/core-engine/outcomes) - the structured result of every
+- [Conversations](/context/conversations) - channel-neutral threads.
+- [Outcomes](/context/outcomes) - the structured result of every
   interaction.
-- [Permissions & tenancy](/core-engine/teams-policies) - who can see and do
+- [Permissions & tenancy](/context/teams-policies) - who can see and do
   what, per space and team.
-- [Own your model](/core-engine/intelligence) - blocks that turn
+- [Own your model](/context/intelligence) - blocks that turn
   conversations into structure, and where that memory goes next.
 
 ## Act
 
 What decides and performs the next step.
 
-- [Agents](/core-engine/agent-workforce) - workers that communicate and act,
+- [Agents](/agent-studio/agent-workforce) - workers that communicate and act,
   spun up per task.
-- [Agent Harness](/core-engine/agent-harness) - tools, retries, guardrails,
+- [Agent Harness](/agent-studio/agent-harness) - tools, retries, guardrails,
   human handoff, evals and observability around every agent.
-- [Flows & Journeys](/core-engine/flows-journeys) - durable workflows:
+- [Flows & Journeys](/agent-studio/flows-journeys) - durable workflows:
   steps, waits, outcome branching.
-- [Actions](/core-engine/actions) - your APIs, called mid-conversation or
+- [Actions](/agent-studio/actions) - your APIs, called mid-conversation or
   fed every outcome.
 - [Events](/core-engine/events) - everything that happened, once.
 - [Observability](/core-engine/observability) - call logs, recordings,
@@ -75,4 +75,4 @@ today, the page links the doc where it lives now.
 
 First call → one agent → memory of past calls → one more channel → one flow
 → a reply wakes the journey → context across every channel. Start with the
-first call: [Quickstart](/get-started/quickstart).
+first call: [Quickstart](/home/quickstart).

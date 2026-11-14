@@ -21,9 +21,9 @@ you missed.
 
 | Primitive | What it is | Where it lives today |
 |---|---|---|
-| Event stream | The ordered feed of every state change, consumable in realtime | In build - today the equivalent is per-call delivery via [Hooks & Events](/speech-stack/hooks-events) |
+| Event stream | The ordered feed of every state change, consumable in realtime | In build - today the equivalent is per-call delivery via [Hooks & Events](/agent-sdk/hooks-events) |
 | Webhooks | HTTP delivery of events to your endpoint | Production for post-call: one webhook per completed call carrying [post-call data](/api/post-call-data); request signing in build |
-| Subscriptions | Filters that pick which event types and sources reach a consumer | In build - today you configure the post-call webhook per agent via [Hooks & Events](/speech-stack/hooks-events) |
+| Subscriptions | Filters that pick which event types and sources reach a consumer | In build - today you configure the post-call webhook per agent via [Hooks & Events](/agent-sdk/hooks-events) |
 | Replay | Re-delivery of past events from a point in the stream | In build |
 
 ## On the spine
@@ -37,7 +37,7 @@ entity, conversation, interaction, or outcome emits an event. They write
 nothing back to the Context Engine - the stream is an append-only record
 of what already happened. In the other direction, events are the input
 side of Execution: an inbound message or reply lands as an event, and
-[Flows & Journeys](/core-engine/flows-journeys) waiting on that signal
+[Flows & Journeys](/agent-studio/flows-journeys) waiting on that signal
 resume.
 
 ## What stays hidden
@@ -52,7 +52,7 @@ to run and swap without breaking your consumers.
 
 - **Production**: the post-call webhook - every completed call delivers
   its transcript and structured outcome to your endpoint. Configure it
-  per [Hooks & Events](/speech-stack/hooks-events); payload documented at
+  per [Hooks & Events](/agent-sdk/hooks-events); payload documented at
   [post-call data](/api/post-call-data).
 - **In build**: the unified event stream, signed webhooks, subscriptions,
   and replay - one feed across all channels and every spine primitive.
@@ -60,7 +60,7 @@ to run and swap without breaking your consumers.
 ## Go deeper
 
 <CardGroup cols={2}>
-  <Card title="Hooks & Events" icon="bolt" href="/speech-stack/hooks-events">
+  <Card title="Hooks & Events" icon="bolt" href="/agent-sdk/hooks-events">
     The event surface that exists today - call lifecycle hooks and the
     post-call webhook.
   </Card>
@@ -68,11 +68,11 @@ to run and swap without breaking your consumers.
     The payload the production webhook delivers - transcripts, summaries,
     extracted fields.
   </Card>
-  <Card title="Outcomes" icon="clipboard-check" href="/core-engine/outcomes">
+  <Card title="Outcomes" icon="clipboard-check" href="/context/outcomes">
     The structured records whose writes are the events you most often
     consume.
   </Card>
-  <Card title="Flows & Journeys" icon="route" href="/core-engine/flows-journeys">
+  <Card title="Flows & Journeys" icon="route" href="/agent-studio/flows-journeys">
     The engine that reacts to events - outcome branching, waits, and
     inbound signals.
   </Card>
