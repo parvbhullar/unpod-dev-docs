@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Validates docs.json navigation against files on disk.
-// Fails on: pages referenced in docs.json that don't exist; .mdx files on
-// disk that are neither in navigation nor in scripts/docs-allowlist.txt.
+// Fails on: an empty navigation; pages referenced in docs.json that don't
+// exist; .mdx files on disk that are neither in navigation nor in
+// scripts/docs-allowlist.txt; redirect chains; and any URL in
+// scripts/pre-restructure-urls.txt that no longer resolves.
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,9 +19,16 @@ function collect(node) {
     if (node.pages) collect(node.pages);
     if (node.groups) collect(node.groups);
     if (node.tabs) collect(node.tabs);
+    if (node.products) collect(node.products);
   }
 }
 collect(docs.navigation);
+// A nav shape collect() doesn't know yields no pages; fail instead of
+// reporting every file as an orphan.
+if (!pages.length) {
+  console.error("EMPTY NAV: docs.json navigation yielded 0 pages; teach collect() its shape.");
+  process.exit(1);
+}
 
 const missing = pages.filter((p) => !existsSync(join(ROOT, `${p}.mdx`)));
 
@@ -28,7 +37,7 @@ const allowlist = existsSync(allowlistPath)
   ? readFileSync(allowlistPath, "utf8").split("\n").map((s) => s.trim()).filter((s) => s && !s.startsWith("#"))
   : [];
 
-const SKIP = new Set(["node_modules", ".git", "snippets", "docs", "scripts", "images", "logo", ".claude"]);
+const SKIP = new Set(["node_modules", ".git", "snippets", "docs", "scripts", "images", "logo", ".claude", ".worktrees"]);
 const onDisk = [];
 function walk(dir) {
   for (const name of readdirSync(dir)) {
@@ -42,6 +51,20 @@ walk(ROOT);
 const referenced = new Set(pages);
 const orphans = onDisk.filter((f) => !referenced.has(f) && !allowlist.includes(f));
 const staleAllow = allowlist.filter((f) => !existsSync(join(ROOT, `${f}.mdx`)));
+
+// --- Redirects and old URLs -------------------------------------------------
+// A redirect must land on a real page, never on another redirect. Every URL
+// snapshotted before the journey restructure must still resolve, directly or
+// through exactly one redirect.
+const redirectTo = new Map((docs.redirects || []).map((r) => [r.source, r.destination]));
+const isPage = (url) => existsSync(join(ROOT, `${url.split("#")[0].replace(/^\//, "")}.mdx`));
+const badRedirects = [...redirectTo].filter(([, to]) => redirectTo.has(to.split("#")[0]) || !isPage(to))
+  .map(([from, to]) => `${from} -> ${to}`);
+const urlsPath = join(ROOT, "scripts", "pre-restructure-urls.txt");
+const oldUrls = existsSync(urlsPath)
+  ? readFileSync(urlsPath, "utf8").split("\n").map((s) => s.trim()).filter((s) => s && !s.startsWith("#"))
+  : [];
+const unresolved = oldUrls.filter((u) => !isPage(u) && !(redirectTo.has(u) && isPage(redirectTo.get(u))));
 
 // --- Python snippet health -------------------------------------------------
 // Every ```python fence must parse. Fences tagged `python Signature` are
@@ -84,7 +107,8 @@ if (pyWarnings.length) console.warn(`note: ${pyWarnings.length} snippet(s) hardc
 
 // --- Retired claims ---------------------------------------------------------
 // Phrases the docs must not say again: retired positioning, and claims the
-// product does not back. platform/ is frozen and exempt.
+// product does not back. platform/ is frozen and exempt, except the apps
+// moved under it (platform/apps/), which were checked before the move.
 const RETIRED = [
   "tasks/create/",
   "in-house TTS",          // not on prod; speech is third-party
@@ -110,7 +134,7 @@ const retiredHits = [];
 // snippets/ is skipped by the nav walk but renders inside pages, so scan it too.
 const scanned = [...onDisk, ...readdirSync(join(ROOT, "snippets")).filter((n) => n.endsWith(".mdx")).map((n) => `snippets/${n.slice(0, -4)}`)];
 for (const rel of scanned) {
-  if (rel.startsWith("platform/")) continue;
+  if (rel.startsWith("platform/") && !rel.startsWith("platform/apps/")) continue;
   readFileSync(join(ROOT, `${rel}.mdx`), "utf8").split("\n").forEach((line, i) => {
     const lower = line.toLowerCase();
     for (const phrase of RETIRED) {
@@ -123,6 +147,10 @@ if (retiredHits.length) console.error("RETIRED CLAIMS:\n  " + retiredHits.join("
 if (missing.length) console.error("MISSING (in docs.json, not on disk):\n  " + missing.join("\n  "));
 if (orphans.length) console.error("ORPHANS (on disk, not in nav or allowlist):\n  " + orphans.join("\n  "));
 if (staleAllow.length) console.error("STALE ALLOWLIST (file no longer exists):\n  " + staleAllow.join("\n  "));
+if (badRedirects.length) console.error("BAD REDIRECTS (chain or missing target):\n  " + badRedirects.join("\n  "));
+if (unresolved.length) console.error("OLD URLS NO LONGER RESOLVE:\n  " + unresolved.join("\n  "));
 if (allowlist.length) console.warn(`note: ${allowlist.length} file(s) on allowlist pending absorption`);
-if (missing.length || orphans.length || staleAllow.length || pyErrors.length || retiredHits.length) process.exit(1);
-console.log(`OK: ${pages.length} nav pages, 0 missing, 0 unexplained orphans, all python fences parse.`);
+if (missing.length || orphans.length || staleAllow.length || pyErrors.length || retiredHits.length
+  || badRedirects.length || unresolved.length) process.exit(1);
+console.log(`OK: ${pages.length} nav pages, 0 missing, 0 unexplained orphans, all python fences parse, `
+  + `${redirectTo.size} redirects land on pages, ${oldUrls.length} old URLs resolve.`);
