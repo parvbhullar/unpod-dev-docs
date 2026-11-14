@@ -1,14 +1,20 @@
 ---
 title: 'Integration'
 icon: 'plug'
-description: 'Configure webhook integrations and API connections.'
+description: 'Configure webhooks and Google Sheet sync for your agent.'
 ---
 
 ## Integration
 
+The **Integration** tab connects the agent to other systems. Each integration appears as a section in the list on the left: the integrations configured for your workspace (such as the webhook) and **Google Sheet Sync**. Click a section to edit it on the right.
+
+{/* TODO(UNPO-403): new screenshot — Integration tab with its section list */}
+
+### Webhook
+
 Webhook integration is the process of using webhooks to enable real-time communication between web applications, where one application sends data to another as an event occurs.
 
-<img src="/images/Integration1.png" alt="Webhook Integration Screenshot" />
+{/* TODO(UNPO-403): new screenshot — webhook section */}
 
 To enable the webhook integration, you have to click on Enable Webhook as Yes.
 
@@ -16,9 +22,9 @@ Webhook URL is the endpoint which will be provided by the user.
 
 You can also add some headers while doing this integration if needed. Webhook headers are the key-value pairs for identification, authentication, and context, telling the receiver who sent it, how to process data, and event details.
 
-<img src="/images/Integration2.png" alt="Webhook Headers Screenshot" />
+{/* TODO(UNPO-403): new screenshot — webhook headers */}
 
-### Common Webhook Headers
+#### Common Webhook Headers
 
 **Common and Standard Headers:**
 - **Content-Type** - Describes the format of the data (e.g., application/json, application/x-www-form-urlencoded).
@@ -37,6 +43,22 @@ You can also add some headers while doing this integration if needed. Webhook he
 - **X-Gitlab-Event** - GitLab event type (e.g., Push Hook).
 - **X-Contentful-Topic** - Event topic in Contentful.
 
-After entering all the required information, click on Save. At last click on the Publish button at the right top corner and the agent is ready to use.
+### Google Sheet Sync
+
+Append every finished call as a row to a Google Sheet you control.
+
+The agent must be saved before you can connect a sheet.
+
+1. Open **Google Sheet Sync** and turn the switch on.
+2. Choose the sheet:
+   - With your Google account connected with Drive access, pick one of your sheets from the **Google Sheet** list, or click **Create new** and enter a **Sheet title** (the sheet is created in your own Google Drive).
+   - Otherwise, paste the **Google Sheet URL** (open the sheet in Google Sheets and copy its link from the address bar) and click **Connect**. Without your own Google account, the platform service account writes to the sheet, so share the sheet with it as Editor. **Connect your own Google account instead** switches to your account.
+3. Click **Manage sheet** to set the **Sheet tab** (created on the first sync if missing; left blank, it defaults to "Call Logs") and **Pick columns** — columns are written left to right in the order you pick them. **Open in Google Sheets** opens the sheet.
+
+These changes apply right away; they don't wait for the tab's **Save** button. From then on, every finished call is appended as a row. Turning the switch off pauses writing but keeps the sheet and its sync position. **Disconnect this sheet** (in **Manage sheet**) stops syncing new calls until you attach another sheet.
+
+{/* TODO(UNPO-403): new screenshot — Google Sheet Sync section */}
+
+When you're done, click **Save** at the bottom right of the tab. Then click **Publish** at the top right of the agent page, and the agent is ready to use.
 
 ---

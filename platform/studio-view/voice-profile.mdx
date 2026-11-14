@@ -1,59 +1,64 @@
 ---
 title: 'Voice Profile'
 icon: 'mic'
-description: 'Configure voice settings and audio parameters for your AI agent.'
+description: 'Configure the LLM, transcriber and voice of your AI agent.'
 ---
 
 ## Voice Profile
 
-A voice profile is a set of settings that define how an AI or virtual assistant sounds during conversations. It includes choices like the voice's gender, accent, tone, speed, and emotion, allowing businesses to create a natural and consistent speaking style that matches their brand or use case. Voice profiles help make automated calls or chat interactions more engaging and personalized for users.
+A voice profile is a saved set of voice settings (LLM, transcriber and voice) that defines how your agent understands callers and how it sounds. You can reuse a saved profile or set every part by hand.
 
-### Voice Profile Selection
+The **Voice Profile** tab is only shown for voice agents. Like the other agent tabs, it has a section list on the left; click a section to edit it on the right. The sections are **Voice Profile**, **LLM**, **Transcriber**, **Voice** and **Config**.
 
-The first option is Voice Profile. The default voice is already visible. Click on the Manage Profiles to change the Voice Profile from the given choices.
+{/* TODO(UNPO-403): new screenshot — Voice Profile tab with the section list (Voice Profile, LLM, Transcriber, Voice, Config) and the Save button */}
 
-<img src="/images/VP1.png" alt="Voice Profile Selection Screenshot" />
+### Voice Profile
 
-<img src="/images/VP1a.png" alt="Manage Profiles Screenshot" />
+Reuse a saved voice profile. Click **Manage Profiles** (or **Select Voice Profile** if none is set yet) to open the **Manage Profiles** drawer and pick a profile. The LLM, Transcriber and Voice fields are filled in from the selected profile.
 
-Once you select the Voice Profile from the given options, then all other fields will get automatically selected on the basis of the selected agent.
+This section also shows the estimated **COST** per minute and the **LATENCY** of the current setup. Hover on the cost bar to see the breakup by Platform, TTS, LLM and STT. The cost is an estimate, not the actual price.
 
-### Model
-This part has two parameters:
-- **AI Provider** - is the service platform that hosts and delivers the AI technology used by the agent.
-- **AI Model** - is the specific intelligence selected from that provider that defines how the agent understands input, reasons, and responds.
+{/* TODO(UNPO-403): new screenshot — Voice Profile section and the Manage Profiles drawer */}
 
-<img src="/images/VP2.png" alt="Model Configuration Screenshot" />
+### LLM
+
+The language model that understands the caller and writes the agent's replies:
+- **AI provider** - the service that hosts the model.
+- **AI model** - the model from that provider.
+- **Max Tokens** - the maximum number of tokens in each reply. Default: 150.
+- **Temperature** - controls AI randomness: lower values give more predictable replies, higher values more creative ones. Default: 0.7.
+
+{/* TODO(UNPO-403): new screenshot — LLM section (AI provider, AI model, Max Tokens, Temperature) */}
 
 ### Transcriber
-This part has three parameters:
-- **Transcription Provider** - Service which converts speech to text.
-- **Transcription Model** - Model which is used to process the transcription.
-- **Language for Transcription** - Language for speech recognition.
 
-<img src="/images/VP3.png" alt="Transcriber Configuration Screenshot" />
+Speech-to-text settings:
+- **Transcription Provider** - the service that converts speech to text.
+- **Transcription model** - the model that processes the transcription.
+- **Language for transcription** - the language for speech recognition.
+- **STT Vocabulary** - words or phrases the transcriber should recognize. Click **Add Vocabulary** and fill in **Word / Phrase** and **Recognition Hint**.
+
+{/* TODO(UNPO-403): new screenshot — Transcriber section */}
 
 ### Voice
-This part has three parameters:
-- **Voice Provider** - Voice service provider who provides voice to your Voice Agent.
-- **Voice Model** - The model which is used to process the audio.
-- **Synthesized Voice** - The name of the voice which is used for text-to-speech.
 
-<img src="/images/VP4.png" alt="Voice Configuration Screenshot" />
+Text-to-speech settings and tuning:
+- **Voice Provider** - the provider that gives your agent its voice.
+- **Voice model** - the model used to generate the audio.
+- **Synthesized voice** - the voice used for text-to-speech. To use a voice that isn't in the list, check **Add Voice ID Manually** and enter its ID.
+- **Voice Prompt** - instructions for how the voice should speak.
+- **Voice Temperature** and **Voice Speed** - tune the voice's variation and speaking speed.
+- **Background Sound** and **Background Volume** - ambient sound played during the call and how loud it is. A high volume can compete with speech and hurt transcription quality.
+- **Thinking Volume** - how loud the ambient sound plays while the agent is thinking. Keep it below the background volume, or it can mask the agent's first words.
+- **Enable Filler** - adds filler words (e.g. "um", "uh") for more natural-sounding conversations.
+- **TTS Pronunciation** - how specific words should be spoken. Click **Add Pronunciation** and fill in **Word / Phrase** and **Pronunciation**.
 
-### Temperature
-It is used to adjust the latency of the responses. It is used to control the randomness of AI as well as to adjust how creative the response of AI will be. In simple terms, after what time an AI voice agent gives a response to your question. The recommended value for this parameter is 0.5.
+{/* TODO(UNPO-403): new screenshot — Voice section */}
 
-<img src="/images/VP5.png" alt="Temperature Settings Screenshot" />
+### Config
 
-### Max Tokens
-It represents the maximum token in output as a response for each question you asked from the AI Voice Agent. It would not be more than the given number. The preferred number is 250.
+Custom key-value pairs available to the agent. Click **Add field** and fill in **Config Key** and **Config Value**.
 
-<img src="/images/VP6.png" alt="Max Tokens Settings Screenshot" />
+{/* TODO(UNPO-403): new screenshot — Config section */}
 
-### Config (Optional)
-This has two fields: Config Key and Config Value.
-
-<img src="/images/VP7.png" alt="Config Settings Screenshot" />
-
-After filling in all the details, click on the Save button and move to the next tab, Advanced.
+When you're done, click **Save** at the bottom right of the tab, then continue with the next tab, [Advanced](/platform/studio-view/advance).

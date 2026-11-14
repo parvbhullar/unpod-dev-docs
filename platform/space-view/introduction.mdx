@@ -6,37 +6,49 @@ description: 'Spaces are your personalized work hubs inside Unpod - organized, f
 
 ## Introduction to Space Mode
 
-The interface below represents the Space View.
+To open the Space View, click **Space View** at the bottom of the left sidebar. In the Space View the same button reads **Studio View** and takes you back. Pick the space you want to work in from the space switcher at the top of the left sidebar.
 
-<img src="/images/Space Mode1.png" alt="Space View Screenshot" />
+{/* TODO(UNPO-403): new screenshot — Space View of a contact space: left sidebar with the space switcher, Inbox, Calls, People, Analytics and Agent, and the Studio View button at the bottom */}
 
 The left sidebar of the Space View has these sections:
 
 - **Inbox** - the agent's conversation queue, with All, Unread, WhatsApp and Email views
 - **Calls** - the space's calls
-- **People** - the space's contacts (in a document or knowledge space this entry is named Documents or Knowledge)
+- **People** - the space's contacts. This entry is named after the space's content type: **People** in a contact space, **Inbox** in an email space, **Documents** in a document space, and **Knowledge** otherwise.
 - **Analytics** - activity metrics for the space
 - **Agent** - talk to the space's agent. This section was earlier named Conversation.
 
-At the left corner of the [dashboard](https://unpod.ai), you can see three dots from where you will be able to edit the space, copy the Space token, and download the Call Logs.
+At the top right of a space page, after the share button, click the three-dot menu (⋮). It has three options:
 
-<img src="/images/Space Mode1a.png" alt="Three Dots Menu Screenshot" />
+- **Edit Space** - opens the Edit Space drawer
+- **Space Token** - copies the space token to your clipboard
+- **Call Logs** - opens the **Download Call Logs** drawer. See [Call Logs](/platform/studio-view/call-logs).
+
+The menu is shown only to users who can edit the space.
+
+{/* TODO(UNPO-403): new screenshot — the three-dot menu open at the top right of a space page, showing Edit Space, Space Token and Call Logs */}
 
 ## Edit Space
 
-When you click on Edit space, you will be able to edit basic information of the space, Table schema which is the predefined fields required while adding the contact, and also able to link the agent.
+Click **Edit Space** in the three-dot menu. In a contact space the drawer has three tabs:
+
+- **Basic Info** - the space name and description
+- **Table Schema** - the fields each contact has
+- **Link Agent** - the agent linked to the space
+
+In other spaces the drawer shows only the basic information.
 
 <img src="/images/Space Mode1b.png" alt="Edit Space Screenshot" />
 
-The main part to edit is Table Schema as the default schema has some fields which are not required or also we need some more fields according to the need of the business. When you click on Table Schema you will get the default fields.
+The main part to edit is the table schema. The default schema may have fields your business does not need, or miss fields it does need. Click the **Table Schema** tab to see the current fields.
 
 <img src="/images/Space Mode1c.png" alt="Table Schema Screenshot" />
 
-As you can see two fields are mandatory Name and Contact Number which you can not delete from the schema, rest of the fields can be deleted from the schema as per the requirement of the business. There is a check box in front of each field, if the check box is ticked that means the field is compulsory to fill but if there is no tick that means the field is not compulsory to fill. You can also add new fields according to the business requirement by clicking on Add Field at the top right corner.
+Name and Contact Number cannot be deleted from the schema. Every other field has a delete button. Each field also has a **Required** checkbox: when it is ticked, the field must be filled in when you add a contact. To add a field, click **Add Field**.
 
-When you click on Add Field, you will get the options of which type of field you want to add like Text, Text Area, File, Date, Time, Date and Time, etc.
+When you click **Add Field**, pick the type of field to add, such as Text, Text area, File, Number, Email address, Phone number, URL, Date, Time, Date and Time, Check List, Single select or Multi select. Click **Save** at the bottom of the drawer to save the schema.
 
-<img src="/images/Space Mode1d.png" alt="Conversation Section Screenshot" />
+<img src="/images/Space Mode1d.png" alt="Add Field Screenshot" />
 
 ## Space Token
 

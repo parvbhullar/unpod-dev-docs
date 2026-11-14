@@ -12,19 +12,24 @@ Call View is a dedicated interface where you can manage voice communication acti
 
 ### Make a call
 
-1. Open **Calls**. When no call is selected, click **New Call**.
-2. In **Start Calls for Contacts**, select the contacts you want to call and click **Call Now**.
+1. Open **Calls**. When no call is selected, click the **New Call** card.
+2. In the **Start Calls for Contacts** drawer, select the contacts you want to call and click **Call Now**.
 
 <img src="/images/Space Mode4.png" alt="Call Selection Screenshot" />
 
-3. In the **Schedule a call** dialog, select the agent and, if needed, edit the instructions for the call.
-4. Choose when to call:
-   - **Now** - Calls right away. This is the default option.
+3. A call dialog opens. Its title reads **Call to** followed by the contact's name, or by the number of contacts when you selected more than one.
+4. If needed, edit the instructions for the call, and pick the agent in the agent selector at the bottom left.
+5. By default the call is placed right away. To change when to call, click **Schedule** and choose:
+   - **Now** - Calls right away.
    - **Auto Schedule** - Calls within the agent's pre-configured calling hours.
    - **Custom Schedule** - Calls on a date and time you pick.
-5. Click **Start Call**.
 
-<img src="/images/Space Mode5.png" alt="Schedule Options Screenshot" />
+   Click **Cancel** (the same button) to hide the schedule options again.
+6. Click **Start Call**.
+
+If your workspace has no phone number yet, the dialog shows **Please add a phone number in Telephony.** with an **Open Telephony** link, and **Start Call** is disabled.
+
+{/* TODO(UNPO-403): new screenshot — the call dialog ("Call to ...") with the instructions box, the agent selector, and the Schedule and Start Call buttons, with the Now / Auto Schedule / Custom Schedule options shown */}
 
 ### Call details
 
@@ -46,7 +51,7 @@ The Overview tab shows these cards:
 - **Call Details** - When the call was dialed, connected and ended, who ended it, the user and assistant numbers, and who triggered the call
 - **Attempts** - Each attempt made to reach the contact
 - **Structured Data** - Data the agent extracted from the call
-- **Evaluation** - A quality evaluation of the call. If none exists yet, click the generate button on the card to create one. Very short calls cannot be evaluated.
+- **Evaluation** - A quality evaluation of the call. If none exists yet, click **Generate evaluation** on the card to create one. Evaluation is available only for calls longer than 1 minute.
 
 A card stays empty until its data is collected and processed.
 

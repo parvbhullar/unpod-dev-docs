@@ -6,14 +6,16 @@ description: 'Connect a phone number to your agent.'
 
 ## Telephony
 
-The agent page in AI Studio has no Telephony tab. You connect a phone number to an agent from the **Telephony** section in the left sidebar:
+The agent page in AI Studio has no Telephony tab. You connect a phone number to an agent from the **Telephony** section in the left sidebar of the Studio View:
 
-1. Open **Telephony → Numbers**.
+1. Click **Telephony** in the left sidebar. The **Telephony** panel lists the numbers assigned to your workspace. If it is empty, click **+** and pick a number in the **Available Numbers** drawer.
 2. Select the number you want the agent to answer.
-3. Under **Connect to**, select the agent to route this number to, then click **Connect agent**.
+3. On the **Integration** tab, under **Number Configuration**, open the **Select Agent** dropdown and pick the agent.
+4. If needed, set **Concurrency Channels** and add **Config Fields** (key and value pairs, with **Add Field**).
+5. Click **Save**.
 
 Calls to that number now route to the selected agent. Each number connects to one agent.
 
-To connect a number from code instead, see [Attach a Number to an Agent](/platform/dev-platform/attach-number-to-agent).
+A number managed in another product (tagged **SIP** or **Other** in the list) is read-only here.
 
-After the Voice Profile tab, continue with the next tab, [Advanced](/platform/studio-view/advance).
+To connect a number from code instead, see [Attach a Number to an Agent](/platform/dev-platform/attach-number-to-agent).
