@@ -78,16 +78,6 @@
                 ]
               },
               {
-                "group": "Concepts",
-                "icon": "lightbulb",
-                "pages": [
-                  "telephony/concepts/understanding-telephony",
-                  "telephony/concepts/calling-engine",
-                  "telephony/concepts/channels",
-                  "telephony/concepts/security-and-compliance"
-                ]
-              },
-              {
                 "group": "Telephony APIs",
                 "icon": "phone-call",
                 "pages": [
@@ -114,6 +104,16 @@
                   "telephony/integrations/websockets",
                   "telephony/streaming/unpod-speech-quickstart",
                   "telephony/streaming/websocket"
+                ]
+              },
+              {
+                "group": "Concepts",
+                "icon": "lightbulb",
+                "pages": [
+                  "telephony/concepts/understanding-telephony",
+                  "telephony/concepts/calling-engine",
+                  "telephony/concepts/channels",
+                  "telephony/concepts/security-and-compliance"
                 ]
               }
             ]
