@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Validates docs.json navigation against files on disk.
 // Fails on: pages referenced in docs.json that don't exist; .mdx files on
-// disk that are neither in navigation nor in scripts/docs-allowlist.txt.
+// disk that are neither in navigation nor in scripts/docs-allowlist.txt;
+// redirects that chain, dangle or shadow a live page; and URLs from
+// scripts/pre-restructure-urls.txt that no longer resolve.
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,6 +16,7 @@ function collect(node) {
   if (typeof node === "string") { pages.push(node); return; }
   if (Array.isArray(node)) { node.forEach(collect); return; }
   if (node && typeof node === "object") {
+    if (node.products) collect(node.products);
     if (node.pages) collect(node.pages);
     if (node.groups) collect(node.groups);
     if (node.tabs) collect(node.tabs);
@@ -23,10 +26,13 @@ collect(docs.navigation);
 
 const missing = pages.filter((p) => !existsSync(join(ROOT, `${p}.mdx`)));
 
-const allowlistPath = join(ROOT, "scripts", "docs-allowlist.txt");
-const allowlist = existsSync(allowlistPath)
-  ? readFileSync(allowlistPath, "utf8").split("\n").map((s) => s.trim()).filter((s) => s && !s.startsWith("#"))
-  : [];
+function readList(name) {
+  const path = join(ROOT, "scripts", name);
+  return existsSync(path)
+    ? readFileSync(path, "utf8").split("\n").map((s) => s.trim()).filter((s) => s && !s.startsWith("#"))
+    : [];
+}
+const allowlist = readList("docs-allowlist.txt");
 
 const SKIP = new Set(["node_modules", ".git", "snippets", "docs", "scripts", "images", "logo", ".claude"]);
 const onDisk = [];
@@ -42,6 +48,18 @@ walk(ROOT);
 const referenced = new Set(pages);
 const orphans = onDisk.filter((f) => !referenced.has(f) && !allowlist.includes(f));
 const staleAllow = allowlist.filter((f) => !existsSync(join(ROOT, `${f}.mdx`)));
+
+// --- Redirects ---------------------------------------------------------------
+// Each redirect lands on a real page in one hop and does not hide a live page.
+// Every pre-restructure URL still resolves, directly or through one redirect.
+const bare = (url) => url.replace(/^\//, "").replace(/[#?].*$/, "");
+const pageExists = (url) => bare(url) !== "" && existsSync(join(ROOT, `${bare(url)}.mdx`));
+const redirects = new Map((docs.redirects || []).map((r) => [r.source, r.destination]));
+const badRedirects = [...redirects]
+  .filter(([src, dst]) => pageExists(src) || !pageExists(dst) || redirects.has(`/${bare(dst)}`))
+  .map(([src, dst]) => `${src} -> ${dst}`);
+const unresolved = readList("pre-restructure-urls.txt")
+  .filter((p) => !pageExists(p) && !redirects.has(`/${p}`));
 
 // --- Python snippet health -------------------------------------------------
 // Every ```python fence must parse. Fences tagged `python Signature` are
@@ -84,7 +102,8 @@ if (pyWarnings.length) console.warn(`note: ${pyWarnings.length} snippet(s) hardc
 
 // --- Retired claims ---------------------------------------------------------
 // Phrases the docs must not say again: retired positioning, and claims the
-// product does not back. platform/ is frozen and exempt.
+// product does not back. platform/ is frozen and exempt, except platform/apps/
+// (moved there from apps/ in UNPO-540, still checked).
 const RETIRED = [
   "tasks/create/",
   "in-house TTS",          // not on prod; speech is third-party
@@ -110,7 +129,7 @@ const retiredHits = [];
 // snippets/ is skipped by the nav walk but renders inside pages, so scan it too.
 const scanned = [...onDisk, ...readdirSync(join(ROOT, "snippets")).filter((n) => n.endsWith(".mdx")).map((n) => `snippets/${n.slice(0, -4)}`)];
 for (const rel of scanned) {
-  if (rel.startsWith("platform/")) continue;
+  if (rel.startsWith("platform/") && !rel.startsWith("platform/apps/")) continue;
   readFileSync(join(ROOT, `${rel}.mdx`), "utf8").split("\n").forEach((line, i) => {
     const lower = line.toLowerCase();
     for (const phrase of RETIRED) {
@@ -123,6 +142,8 @@ if (retiredHits.length) console.error("RETIRED CLAIMS:\n  " + retiredHits.join("
 if (missing.length) console.error("MISSING (in docs.json, not on disk):\n  " + missing.join("\n  "));
 if (orphans.length) console.error("ORPHANS (on disk, not in nav or allowlist):\n  " + orphans.join("\n  "));
 if (staleAllow.length) console.error("STALE ALLOWLIST (file no longer exists):\n  " + staleAllow.join("\n  "));
+if (badRedirects.length) console.error("BAD REDIRECTS (chained, dangling, or shadowing a page):\n  " + badRedirects.join("\n  "));
+if (unresolved.length) console.error("UNRESOLVED OLD URLS (no page, no redirect):\n  " + unresolved.join("\n  "));
 if (allowlist.length) console.warn(`note: ${allowlist.length} file(s) on allowlist pending absorption`);
-if (missing.length || orphans.length || staleAllow.length || pyErrors.length || retiredHits.length) process.exit(1);
-console.log(`OK: ${pages.length} nav pages, 0 missing, 0 unexplained orphans, all python fences parse.`);
+if (missing.length || orphans.length || staleAllow.length || pyErrors.length || retiredHits.length || badRedirects.length || unresolved.length) process.exit(1);
+console.log(`OK: ${pages.length} nav pages, 0 missing, 0 unexplained orphans, ${redirects.size} redirects valid, all old URLs resolve, all python fences parse.`);
