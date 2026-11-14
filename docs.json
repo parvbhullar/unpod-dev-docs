@@ -29,8 +29,8 @@
   "navigation": {
     "products": [
       {
-        "product": "Dev Platform",
-        "description": "Telephony, agents and context, for developers",
+        "product": "Developers",
+        "description": "Telephony, SIP trunking, agents and context",
         "icon": "code",
         "tabs": [
           {
@@ -108,36 +108,28 @@
                 ]
               },
               {
-                "group": "SIP Trunking",
-                "icon": "git-branch",
-                "pages": [
-                  "telephony/quickstart",
-                  "telephony/integrations/unpod/dashboard",
-                  "telephony/sip-trunking/trunks",
-                  "platform/dev-platform/telephony",
-                  "platform/dev-platform/provider",
-                  {
-                    "group": "API Reference",
-                    "pages": [
-                      "telephony/numbers/list-numbers",
-                      "telephony/trunks/list-trunks",
-                      "telephony/trunks/create-trunk",
-                      "telephony/trunks/get-trunk",
-                      "telephony/trunks/attach-numbers",
-                      "telephony/trunks/detach-numbers",
-                      "telephony/trunks/delete-trunk",
-                      "telephony/calls/overview"
-                    ]
-                  }
-                ]
-              },
-              {
                 "group": "Audio Streaming",
                 "icon": "audio-waveform",
                 "pages": [
                   "telephony/integrations/websockets",
                   "telephony/streaming/unpod-speech-quickstart",
                   "telephony/streaming/websocket"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "SIP Trunking",
+            "groups": [
+              {
+                "group": "Getting Started",
+                "icon": "book-open",
+                "pages": [
+                  "telephony/quickstart",
+                  "telephony/integrations/unpod/dashboard",
+                  "telephony/sip-trunking/trunks",
+                  "platform/dev-platform/telephony",
+                  "platform/dev-platform/provider"
                 ]
               },
               {
@@ -180,6 +172,20 @@
                       "telephony/integrations/ultravox/api"
                     ]
                   }
+                ]
+              },
+              {
+                "group": "API Reference",
+                "icon": "code",
+                "pages": [
+                  "telephony/numbers/list-numbers",
+                  "telephony/trunks/list-trunks",
+                  "telephony/trunks/create-trunk",
+                  "telephony/trunks/get-trunk",
+                  "telephony/trunks/attach-numbers",
+                  "telephony/trunks/detach-numbers",
+                  "telephony/trunks/delete-trunk",
+                  "telephony/calls/overview"
                 ]
               }
             ]
