@@ -1,0 +1,85 @@
+---
+title: 'Recordings & Transcripts'
+icon: 'file-music'
+description: 'Retrieve call audio and per-turn transcripts - with per-stage latency timing - after calls end.'
+---
+
+Every call can leave two artifacts: an audio **recording** (when the agent was
+created with `recording=True`) and a turn-by-turn **transcript**. Both are
+retrieved through the Management API.
+
+## Recordings
+
+```python
+from unpod import AsyncClient
+
+client = AsyncClient()
+
+sessions = await client.recordings.list()              # all
+sessions = await client.recordings.list(call_id=cid)   # one call
+```
+
+`recordings.list()` returns the **sessions** that have a recording; read the
+download URL off each one:
+
+```python
+s.session_id     # str
+s.call_id        # str | None
+s.duration_s     # int | None
+s.recording_url  # str | None - download / stream URL
+```
+
+<Note>
+Pause and resume recording during a live call (e.g. around card numbers) with
+`ctx.session.recording.pause(reason=...)` / `.resume()` - see
+[AgentRunner & Sessions](/agent-sdk/agent-runner#recording-control).
+</Note>
+
+## Transcripts
+
+```python
+sessions = await client.transcripts.list()       # sessions that have a transcript
+session = await client.transcripts.get(session_id)
+```
+
+`transcripts.list()`/`.get()` return **sessions**; the turns live on
+`session.transcript`:
+
+```python
+for entry in session.transcript:
+    print(entry.role, entry.content)   # role: "agent" | "user"
+    entry.timestamp                    # datetime | None
+```
+
+## Transcripts From a Call
+
+`client.calls` carries the turns too, and its two read paths differ on purpose:
+
+```python
+for row in await client.calls.list():
+    row.transcript          # None - the list endpoint projects the turns out
+    row.transcript_turns    # int  - how many there are to fetch
+
+full = await client.calls.get(call_id)
+full.transcript             # list[dict] - {role, content, timestamp}
+full.recording_url          # str | None
+```
+
+<Warning>
+**`None` means not loaded; `[]` means the call genuinely had no turns.** A list
+row always reads `None` because the endpoint drops the turns to keep a page
+small - it is not a silent call. Check `transcript_turns` first, then call
+`calls.get(call_id)` only when there is something to fetch.
+</Warning>
+
+```python
+for row in await client.calls.list(status="completed"):
+    if row.transcript_turns:                       # cheap check, no second read
+        full = await client.calls.get(row.call_id)
+        for turn in full.transcript or []:
+            print(turn["role"], turn["content"])
+```
+
+This is the post-call complement to the live metrics in
+[Observability](/speech-stack/observability), and the raw material
+[Analytics](/speech-stack/analytics) extracts structured fields from.
