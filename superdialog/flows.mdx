@@ -32,9 +32,21 @@ agent = DialogMachine(Flow.load("kyc.json"), llm="anthropic/claude-haiku-4-5")
 dm = DialogMachine(Flow.load("kyc.json"), llm="anthropic/claude-haiku-4-5", engine="flow")
 ```
 
-<Frame>
-  <img src="/images/diagrams/superdialog-flow-graph.svg" alt="SuperDialog flow graph diagram showing states connected by conditional edges, including fallback and retry paths." />
-</Frame>
+<div className="ud" role="img" aria-label="Flow graph: greet, then collect details, then check availability, then confirm, then done. Each edge is a condition: ready, details provided, slot available, confirmed. Missing info loops back to collect details, and try another time returns from check availability to collect details.">
+  <div className="ud__title">Flow graph</div>
+  <div className="uf-flow is-vertical">
+    <div className="uf-node is-ext"><span className="uf-t">Greet</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">ready</span></div>
+    <div className="uf-node"><span className="uf-t">Collect details</span><span className="uf-s">↺ <b>missing info</b> - stays here and asks again</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">details provided</span></div>
+    <div className="uf-node"><span className="uf-t">Check availability</span><span className="uf-s">↩ <b>try another time</b> - back to Collect details</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">slot available</span></div>
+    <div className="uf-node"><span className="uf-t">Confirm</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">confirmed</span></div>
+    <div className="uf-node is-accent"><span className="uf-t">Done</span></div>
+  </div>
+  <div className="ud__note">Node = state. Edge = condition the LLM picks between.</div>
+</div>
 
 ## Building from a prompt
 

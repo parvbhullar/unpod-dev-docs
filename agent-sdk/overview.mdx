@@ -5,9 +5,11 @@ icon: 'route'
 description: 'What runs between the caller audio and your agent text - whether users dial a number or connect from a browser or app.'
 ---
 
+import VoiceStack from '/snippets/voice-stack.mdx';
+
 ## What runs the call
 
-Unpod gives your agent voice. It handles everything between the user's audio and your agent's text logic. The Speech Stack is the developer surface of the [Calling Engine](/telephony/concepts/calling-engine) - one channel in the Talk layer of the [Core Engine](/core-engine/overview).
+Unpod gives your agent voice. It handles everything between the user's audio and your agent's text logic. The Speech Stack is the developer surface of the [Calling Engine](/telephony/concepts/calling-engine) - one channel in the Talk layer of the [Core Engine](/get-started/core-concepts).
 
 Your agent receives plain text. It returns plain text. The Speech Stack handles everything else: transcription, synthesis, VAD, barge-in detection, endpointing, and transport.
 
@@ -30,9 +32,7 @@ Both paths run through the same managed speech pipeline (STT, TTS, VAD, barge-in
 
 ## How Audio Flows
 
-<Frame>
-  <img src="/images/diagrams/unpod-voice-stack.svg" alt="Unpod voice stack diagram showing phone, browser, and mobile entrypoints flowing through the managed speech layer into your AgentRunner and dialog machine." />
-</Frame>
+<VoiceStack />
 
 <Steps>
   <Step title="User connects">
@@ -60,7 +60,7 @@ Both paths run through the same managed speech pipeline (STT, TTS, VAD, barge-in
   <Card title="Voice Profiles" icon="audio-lines" href="/agent-sdk/voice-profiles">
     Choose STT and TTS providers. Pre-built profiles or custom combinations with automatic failover.
   </Card>
-  <Card title="Agents" icon="robot" href="/speech-stack/agents">
+  <Card title="Agents" icon="bot" href="/speech-stack/agents">
     One `agent_id`, one brain, N voices. Say the brain out loud - a playbook, a prompt, your own runner, or your own endpoint.
   </Card>
   <Card title="Phone Numbers" icon="phone" href="/speech-stack/numbers">

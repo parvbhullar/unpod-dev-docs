@@ -15,9 +15,21 @@ things into a single reusable configuration:
 
 When you attach a voice profile to an agent, every call that voice handles uses that configuration automatically - including failover if a provider goes down.
 
-<Frame>
-  <img src="/images/diagrams/voice-profile-pipeline.svg" alt="Voice profile pipeline diagram showing caller speech passing through STT, dialog machine text handling, TTS plus voice, and caller playback." />
-</Frame>
+<div className="ud" role="img" aria-label="Voice profile pipeline: the caller speaks, the voice profile's STT turns it into user text for your dialog machine, the dialog machine returns agent text, and the voice profile's TTS and voice speak it back to the caller.">
+  <div className="ud__title">Voice profile pipeline</div>
+  <div className="uf-flow is-compact">
+    <div className="uf-node is-ext"><span className="uf-ic"><Icon icon="mic" size={20} /></span><span className="uf-t">Caller speaks</span><span className="uf-s">Audio in</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="audio-lines" size={20} /></span><span className="uf-t">STT</span><span className="uf-s">From the voice profile</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">user text</span></div>
+    <div className="uf-node is-you"><span className="uf-ic"><Icon icon="brain" size={20} /></span><span className="uf-t">Dialog machine</span><span className="uf-s">Your agent logic</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">agent text</span></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="volume-2" size={20} /></span><span className="uf-t">TTS + voice</span><span className="uf-s">From the voice profile</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-ext"><span className="uf-ic"><Icon icon="ear" size={20} /></span><span className="uf-t">Caller hears</span><span className="uf-s">Audio out</span></div>
+  </div>
+  <div className="ud__legend"><span>Unpod runs it</span><span className="is-you">You run it</span><span className="is-ext">Caller</span></div>
+</div>
 
 Voice profiles are managed by Unpod. You browse and select from the available list - you do not configure STT/TTS providers directly.
 
@@ -162,7 +174,7 @@ asyncio.run(main())
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Agents" icon="robot" href="/speech-stack/agents">
+  <Card title="Agents" icon="bot" href="/speech-stack/agents">
     Attach a voice profile when creating an agent, and add more voices later.
   </Card>
   <Card title="AgentRunner & Sessions" icon="code" href="/agent-sdk/agent-runner">

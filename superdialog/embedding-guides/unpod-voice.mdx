@@ -8,9 +8,41 @@ description: "Connect a SuperDialog dialog machine to Unpod voice calls via the 
 
 The `unpod` SDK connects your `AgentRunner` to Unpod's voice platform over WebSocket. Unpod handles STT, TTS, telephony, numbers, and recording - your code handles dialog logic using a SuperDialog `DialogMachine` or `LLMAgent`.
 
-<Frame>
-  <img src="/images/diagrams/superdialog-session-integration.svg" alt="Animated SuperDialog and Unpod voice integration diagram showing caller speech through STT, user-turn hooks, DialogMachine.turn, agent-turn hooks, TTS, and caller playback." />
-</Frame>
+<div className="ud" role="img" aria-label="SuperDialog on Unpod voice: the caller speaks, Unpod's voice stack runs speech-to-text and sends user text to your code. Your user_turn hook fires, DialogMachine.turn produces the agent reply, your agent_turn hook fires, and Unpod's voice stack speaks the reply with text-to-speech so the caller hears it.">
+  <div className="ud__title">SuperDialog on Unpod voice</div>
+  <div className="ud-lanes">
+    <div className="ud-lane">
+      <div className="ud-lane__h">Caller</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-ext"><span className="ud-box__t">Speaks</span><span className="ud-box__s">Phone, browser or app</span></div>
+        <div className="ud-box is-ext"><span className="ud-box__t">Hears</span><span className="ud-box__s">The agent's reply</span></div>
+      </div>
+    </div>
+    <div className="ud-gut">
+      <div className="ud-ga is-both"><span className="ud-ga__l">audio</span></div>
+    </div>
+    <div className="ud-lane is-unpod">
+      <div className="ud-lane__h">Unpod voice stack</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-unpod"><span className="ud-box__t">STT</span><span className="ud-box__s">Speech to user text</span></div>
+        <div className="ud-box is-unpod"><span className="ud-box__t">TTS</span><span className="ud-box__s">Reply text to speech</span></div>
+      </div>
+    </div>
+    <div className="ud-gut">
+      <div className="ud-ga is-you"><span className="ud-ga__l">user text</span></div>
+      <div className="ud-ga is-back is-you is-below"><span className="ud-ga__l">agent reply</span></div>
+    </div>
+    <div className="ud-lane is-you">
+      <div className="ud-lane__h">Your AgentRunner</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-you"><span className="ud-box__t">Hook: <code>user_turn</code></span><span className="ud-box__s">Optional, e.g. <code>assist()</code></span></div>
+        <div className="ud-box is-you"><span className="ud-box__t">DialogMachine.turn</span><span className="ud-box__s">SuperDialog, in your process</span></div>
+        <div className="ud-box is-you"><span className="ud-box__t">Hook: <code>agent_turn</code></span><span className="ud-box__s">Optional</span></div>
+      </div>
+    </div>
+  </div>
+  <div className="ud__legend"><span>Unpod runs it</span><span className="is-you">You run it</span><span className="is-ext">Caller</span></div>
+</div>
 
 Your dialog machine runs inside your process, in the same call as the rest of your agent logic. No separate WebSocket server needed.
 

@@ -12,9 +12,25 @@ SuperDialog ships **two conversation engines** behind the same `Agent` protocol
 (`turn` / `assist` / `chat_ctx` / `load_chat_ctx`). Hosts, sessions, and
 adapters do not know which engine they are driving.
 
-<Frame>
-  <img src="/images/diagrams/superdialog-engines-contract.svg" alt="Animated SuperDialog engine contract diagram showing host platforms flowing through adapters, SessionWorker, the Agent protocol, and then branching to PlaybookAgent and DialogMachine engines." />
-</Frame>
+<div className="ud" role="img" aria-label="SuperDialog engine contract: host platforms (LiveKit, Pipecat, FastAPI, WebSocket, CLI) go through superdialog.adapters and the SessionWorker to the Agent protocol (turn, assist, chat_ctx, load_chat_ctx), which drives either PlaybookAgent, engine B and the default, with its runtime and event log, or DialogMachine, engine A and legacy, with its flow graph and state.">
+  <div className="ud__title">One contract, two engines</div>
+  <div className="uf-flow is-vertical">
+    <div className="uf-node is-you"><span className="uf-t">Host platforms</span><span className="ud-sd-chips"><span className="ud-chip is-you">LiveKit</span><span className="ud-chip is-you">Pipecat</span><span className="ud-chip is-you">FastAPI</span><span className="ud-chip is-you">WebSocket</span><span className="ud-chip is-you">CLI</span></span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node"><span className="uf-t"><code>superdialog.adapters</code></span><span className="uf-s">Translate each host into sessions</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node"><span className="uf-t">SessionWorker</span><span className="uf-s">Runs the session, drives turns</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-accent"><span className="uf-t">Agent protocol</span><span className="uf-s"><code>turn</code> · <code>assist</code> · <code>chat_ctx</code> · <code>load_chat_ctx</code></span></div>
+    <div className="uf-arrow"></div>
+    <div className="ud-sd-split">
+      <div className="uf-node"><span className="uf-t">PlaybookAgent</span><span className="uf-s"><b>Engine B · default</b><br />Runtime + EventLog</span></div>
+      <div className="uf-node is-ext"><span className="uf-t">DialogMachine</span><span className="uf-s"><b>Engine A · legacy</b><br />Flow graph + state</span></div>
+    </div>
+  </div>
+  <div className="ud__legend"><span>SuperDialog</span><span className="is-you">Your host</span><span className="is-ext">Legacy engine</span></div>
+  <div className="ud__note">Hosts, sessions and adapters never know which engine they drive.</div>
+</div>
 
 - **Engine B - Playbook (default).** Checkpoint-compound runtime: a Talker and a
   Director over an event-sourced log. Internals below.
@@ -56,9 +72,22 @@ one append-only event log:
 
 ### One turn, in order
 
-<Frame>
-  <img src="/images/diagrams/playbook-turn-runtime.svg" alt="Animated Playbook turn runtime diagram showing user text entering PlaybookAgent.turn, splitting into a shielded Director task and Talker stream, joining, and returning checkpoint and outcome data." />
-</Frame>
+<div className="ud" role="img" aria-label="Playbook turn runtime: user text enters PlaybookAgent.turn, which runs a shielded Director task (append utterance, evaluate slots, quiesce rules) alongside the Talker stream (snapshot state N, soft or hard gate, tokens to host). The two join, and the turn returns the checkpoint and outcome.">
+  <div className="ud__title">One Playbook turn</div>
+  <div className="uf-flow is-vertical">
+    <div className="uf-node is-ext"><span className="uf-t">User text</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-accent"><span className="uf-t">PlaybookAgent.turn</span><span className="uf-s">Snapshots state <i>N</i>, starts both roles at once</span></div>
+    <div className="uf-arrow"></div>
+    <div className="ud-sd-split">
+      <div className="uf-node"><span className="uf-t">Director task</span><span className="ud-sd-chips" style={{"justifyContent": "flex-start"}}><span className="ud-chip">shielded</span></span><span className="uf-s">1. Append utterance<br />2. Evaluate slots<br />3. Quiesce rules</span></div>
+      <div className="uf-node"><span className="uf-t">Talker stream</span><span className="ud-sd-chips" style={{"justifyContent": "flex-start"}}><span className="ud-chip">streams</span></span><span className="uf-s">1. Snapshot state <i>N</i><br />2. Soft or hard gate<br />3. Tokens to host</span></div>
+    </div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node"><span className="uf-t">Join</span><span className="uf-s">Done: checkpoint + outcome</span></div>
+  </div>
+  <div className="ud__note">Barge-in cancels speech, not state: the Director always finishes.</div>
+</div>
 
 1. **User text arrives.** The agent snapshots state (version *N*) for the Talker.
 2. **Director starts concurrently** in a cancellation-shielded task: appends the
@@ -130,9 +159,47 @@ natural-language conditions), and declarative actions. The graph decides what is
 *possible*; the LLM picks among the outgoing edges. Every transition is
 authored and every reachable path is enumerable.
 
-<Frame>
-  <img src="/images/diagrams/superdialog-runtime.svg" alt="Animated SuperDialog runtime diagram showing user text entering DialogMachine.turn, loading a node, building a prompt, calling the LLM, running tools, updating state, advancing an edge, and returning a turn result to CLI, FastAPI, LiveKit, or Unpod hosts." />
-</Frame>
+<div className="ud" role="img" aria-label="DialogMachine runtime: user text plus your flow, model URI and tools enter DialogMachine.turn, which loads the node, builds the prompt, calls the LLM, runs tools, updates state and advances an edge. It returns a TurnResult with the reply, tool calls and metadata to the host: CLI, FastAPI, LiveKit or Unpod.">
+  <div className="ud__title">DialogMachine turn (Engine A)</div>
+  <div className="ud-lanes">
+    <div className="ud-lane is-you">
+      <div className="ud-lane__h">In</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-ext"><span className="ud-box__t">User text</span></div>
+        <div className="ud-box is-you"><span className="ud-box__t">Flow</span><span className="ud-box__s">Nodes and edges</span></div>
+        <div className="ud-box is-you"><span className="ud-box__t">Model URI</span><span className="ud-box__s">e.g. <code>anthropic/…</code></span></div>
+        <div className="ud-box is-you"><span className="ud-box__t">Tools</span><span className="ud-box__s">Python, HTTP, MCP</span></div>
+      </div>
+    </div>
+    <div className="ud-gut">
+      <div className="ud-ga"></div>
+    </div>
+    <div className="ud-lane is-unpod">
+      <div className="ud-lane__h">DialogMachine.turn</div>
+      <div className="ud-lane__body">
+        <ol className="ud-seq">
+          <li><span className="ud-seq__t">Load node</span></li>
+          <li><span className="ud-seq__t">Build prompt</span></li>
+          <li><span className="ud-seq__t">Call LLM</span></li>
+          <li><span className="ud-seq__t">Run tools</span></li>
+          <li><span className="ud-seq__t">Update state</span></li>
+          <li><span className="ud-seq__t">Advance edge</span></li>
+        </ol>
+      </div>
+    </div>
+    <div className="ud-gut">
+      <div className="ud-ga"></div>
+    </div>
+    <div className="ud-lane">
+      <div className="ud-lane__h">Out</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-brand"><span className="ud-box__t">TurnResult</span><span className="ud-box__s">Reply · tools · metadata</span></div>
+        <div className="ud-box is-ext is-center"><span className="ud-box__t">Host</span><span className="ud-sd-chips"><span className="ud-chip is-ext">CLI</span><span className="ud-chip is-ext">FastAPI</span><span className="ud-chip is-ext">LiveKit</span><span className="ud-chip is-ext">Unpod</span></span></div>
+      </div>
+    </div>
+  </div>
+  <div className="ud__legend"><span>SuperDialog runs it</span><span className="is-you">You supply it</span><span className="is-ext">Host</span></div>
+</div>
 
 ```python
 from superdialog import DialogMachine, Flow

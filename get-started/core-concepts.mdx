@@ -1,16 +1,20 @@
 ---
-title: 'How Unpod fits together'
-icon: 'book-open'
-description: 'The single source of truth for Unpod terminology - every term defined once, with deep links.'
+title: 'Core concepts'
+icon: 'network'
+description: 'How Unpod fits together: the architecture, talk / remember / act, and every term defined once.'
 ---
 
+import VoiceStack from '/snippets/voice-stack.mdx';
 import Architecture from '/snippets/architecture.mdx';
+
+**Unpod is the agentic backend for conversational AI.** Apps that talk,
+remember and act: voice, messaging, agents and workflows in one SDK, on a
+Context Engine that remembers every customer across every channel. Today,
+voice and the Chat API run in production, and voice agents remember past
+calls; WhatsApp, SMS, email and cross-channel memory are in build.
 
 This page defines every Unpod term once. Other pages link here instead of
 redefining things. If a definition seems to conflict elsewhere, this page wins.
-
-Unpod is the agentic backend for conversational AI: apps that talk,
-remember and act. This is how the pieces fit.
 
 ## The architecture
 
@@ -20,16 +24,20 @@ The data model under all of it is the spine.
 
 ## The Spine
 
-```
-             Agents         Flows
-                \             /
-                 v           v
-CHANNELS ---> ENTITY -> CONVERSATION -> INTERACTION -> OUTCOME ---> EVENTS
-                  |                                |
-                  +--------- CONTEXT --------------+
-                 ^           ^
-              Teams       Policies
-```
+<div className="ud" role="img" aria-label="The spine: channels deliver to an entity, then conversation, interaction, outcome, and events. Context underlies entity through outcome. Agents and flows act on the spine; teams and policies govern it.">
+  <div className="ud__title">The spine</div>
+  <div className="ud-spine__band"><span className="ud-chip">Agents</span><span className="ud-chip">Flows</span><span className="ud-spine__verb">act on it</span></div>
+  <div className="ud-spine">
+    <div className="ud-box is-ext is-center"><span className="ud-box__t">Channels</span><span className="ud-box__s">Call, chat, messaging</span></div>
+    <div className="ud-box is-unpod is-center"><span className="ud-box__t">Entity</span><span className="ud-box__s">Who it is</span></div>
+    <div className="ud-box is-unpod is-center"><span className="ud-box__t">Conversation</span><span className="ud-box__s">Channel-neutral thread</span></div>
+    <div className="ud-box is-unpod is-center"><span className="ud-box__t">Interaction</span><span className="ud-box__s">One call, message or email</span></div>
+    <div className="ud-box is-unpod is-center"><span className="ud-box__t">Outcome</span><span className="ud-box__s">Structured result</span></div>
+    <div className="ud-box is-brand is-center"><span className="ud-box__t">Events</span><span className="ud-box__s">Every change, once</span></div>
+    <div className="ud-spine__ctx">Context - underlies entity through outcome</div>
+  </div>
+  <div className="ud-spine__band"><span className="ud-chip is-ext">Teams</span><span className="ud-chip is-ext">Policies</span><span className="ud-spine__verb">govern it</span></div>
+</div>
 
 Read it as: channels deliver to an entity; every touch belongs to a
 channel-neutral conversation; each call, message, or email is an interaction;
@@ -57,6 +65,10 @@ Teams and Policies govern it.
 | Act | [Events](/core-engine/events) | Everything that happened, once | Post-call webhook: production · stream: in build |
 | Act | [Observability](/core-engine/observability) | Logs, recordings, transcripts, traces | Production |
 
+**Production** means it carries production traffic today. **In build** means
+it is being built and is not available to use yet. **Early access** means it
+is open to early partners. Statuses are as of October 2026.
+
 The rest of this page is the speech stack - the Calling Engine's developer
 surface, and the part of Unpod a Python dev builds against first. The rule
 that explains it is [SuperDialog](/superdialog/introduction)'s defining rule:
@@ -77,16 +89,14 @@ third-party model, over whichever surface fits your stack:
 | [Realtime](/telephony/streaming/unpod-speech-quickstart) | audio in, audio out | 1 WebSocket |
 | [Phone](/agent-studio/quickstart) | a phone number | 1 click |
 
-Not sure which? [Getting Started](/get-started/getting-started).
+Not sure which? See the [Introduction](/get-started/getting-started).
 
 ## One call, end to end
 
 A single inbound call, end to end - the Talk layer's voice path, as the
 speech stack exposes it:
 
-<Frame>
-  <img src="/images/diagrams/unpod-voice-stack.svg" alt="Animated Unpod voice stack diagram showing phone, browser, and mobile entrypoints flowing through the managed speech layer into your AgentRunner, dialog machine, and tools." />
-</Frame>
+<VoiceStack />
 
 Read it as: a **Caller** enters through a phone number, browser, or mobile app.
 For phone calls, the **Number** routes into Unpod's managed speech layer - over
@@ -107,8 +117,8 @@ resolves to an entity, and reports a structured outcome when it ends.
 One canonical definition each. Headings are anchor-able, so other pages can deep
 link (for example `/get-started/core-concepts#pipe`). These are the speech
 stack's terms; the spine's terms (entity, conversation, interaction, outcome,
-event, context) are defined on their [Core Engine](/core-engine/overview)
-pages.
+event, context) are defined on the pages linked from
+[Talk, remember, act](#talk-remember-act).
 
 ### Number
 
@@ -300,14 +310,19 @@ terms precisely.
 | **Platform** | The hosted UI and self-hostable stack: dashboard, agent studio, spaces, analytics, and telephony management on top of the Speech Stack. |
 
 In the docs, **Core Engine** names the backend as a whole - the architecture,
-the spine, and the components at the top of this page. Start at the
-[Core Engine overview](/core-engine/overview).
+the spine, and the components at the top of this page.
+
+## The adoption path
+
+First call → one agent → memory of past calls → one more channel → one flow
+→ a reply wakes the journey → context across every channel. Start with the
+first call: [Quickstart](/home/quickstart).
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Core Engine" icon="network" href="/core-engine/overview">
-    The architecture, talk / remember / act, and every component's page.
+  <Card title="Quickstart" icon="zap" href="/home/quickstart">
+    Six SDK calls: your phone rings and an agent speaks.
   </Card>
   <Card title="Run Your Own Brain" icon="phone" href="/agent-sdk/quickstart">
     Wire a number, an agent, and a runner end to end.

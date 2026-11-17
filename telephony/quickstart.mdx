@@ -13,19 +13,21 @@ Only want to make calls? You don't need a trunk - see the
 [Telephony APIs Quick Start](/telephony/apis/quickstart).
 </Tip>
 
-```mermaid
-flowchart LR
-  A["📞<br/><b>Caller</b>"] ==> B["📡<br/><b>Your carrier</b>"]
-  B ==> C["🔗<br/><b>Unpod</b><br/>origin endpoint"]
-  C ==> D["🔢<br/><b>Your number</b>"]
-  D ==> E["🌐<br/><b>Your app</b><br/>(answer URL)"]
-
-  classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
-  classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
-  class A,E ep;
-  class B,C,D pp;
-  linkStyle default stroke:#9a90ff,stroke-width:2.5px;
-```
+<div className="ud" role="img" aria-label="SIP trunking inbound path: a caller reaches your carrier, your carrier sends the call to the Unpod origin endpoint, Unpod matches your number and asks your app at its answer URL.">
+  <div className="ud__title">Inbound through your carrier</div>
+  <div className="uf-flow is-compact">
+    <div className="uf-node is-ext"><span className="uf-ic"><Icon icon="phone-incoming" size={20} /></span><span className="uf-t">Caller</span><span className="uf-s">Dials your number</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-ext"><span className="uf-ic"><Icon icon="radio-tower" size={20} /></span><span className="uf-t">Your carrier</span><span className="uf-s">Your SIP trunk</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">SIP</span></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="waypoints" size={20} /></span><span className="uf-t">Unpod</span><span className="uf-s">Origin endpoint</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="hash" size={20} /></span><span className="uf-t">Your number</span><span className="uf-s">Mapped to the trunk</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-you"><span className="uf-ic"><Icon icon="globe" size={20} /></span><span className="uf-t">Your app</span><span className="uf-s">Answer URL</span></div>
+  </div>
+  <div className="ud__legend"><span>Unpod runs it</span><span className="is-you">You run it</span><span className="is-ext">Outside Unpod</span></div>
+</div>
 
 {/* TODO(verify): the Unpod agent path for trunk numbers (not documented yet) */}
 

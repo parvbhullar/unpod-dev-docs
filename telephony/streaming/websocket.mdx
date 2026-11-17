@@ -4,15 +4,50 @@ icon: 'plug-zap'
 description: 'Unpod exposes your agent as a WebSocket endpoint. Any browser, app, or client connects to it. Speech is processed entirely by Unpod.'
 ---
 
+import VoiceStack from '/snippets/voice-stack.mdx';
+
 ## How It Works
 
 When you create an agent on Unpod, it is automatically available as a WebSocket endpoint. Any client - browser, mobile app, desktop, IoT device - can connect to that endpoint and have a real-time voice conversation.
 
 Your agent code does not change. Speech processing (STT, VAD, barge-in, endpointing, TTS) all happens on Unpod's side. Your AgentRunner just receives text and returns text, exactly as it does for phone calls.
 
-<Frame>
-  <img src="/images/diagrams/websocket-connectivity.svg" alt="Animated WebSocket connectivity diagram showing browser, app, or client audio connecting through a pipe WSS endpoint into the Unpod speech pipeline, then text routing to your AgentRunner." />
-</Frame>
+<div className="ud" role="img" aria-label="WebSocket connectivity: a browser, app or any client streams audio to your agent's WSS endpoint. Unpod's speech pipeline runs STT, VAD, TTS and barge-in. Only text reaches your AgentRunner.">
+  <div className="ud__title">WebSocket connectivity</div>
+  <div className="ud-lanes">
+    <div className="ud-lane">
+      <div className="ud-lane__h">Client</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-ext"><span className="ud-box__t">Browser</span><span className="ud-box__s">Web page</span></div>
+        <div className="ud-box is-ext"><span className="ud-box__t">Mobile app</span><span className="ud-box__s">Your app, any platform</span></div>
+        <div className="ud-box is-ext"><span className="ud-box__t">Any client</span><span className="ud-box__s">Desktop, IoT device</span></div>
+      </div>
+    </div>
+    <div className="ud-gut">
+      <div className="ud-ga is-both"><span className="ud-ga__l">audio</span></div>
+    </div>
+    <div className="ud-lane is-unpod">
+      <div className="ud-lane__h">Unpod runs</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-brand"><span className="ud-box__t">WSS endpoint</span><span className="ud-box__s">Created with your agent</span></div>
+        <div className="ud-box is-unpod"><span className="ud-box__t">Speech in</span><span className="ud-box__s">STT + VAD, endpointing</span></div>
+        <div className="ud-box is-unpod"><span className="ud-box__t">Speech out</span><span className="ud-box__s">TTS + barge-in</span></div>
+      </div>
+    </div>
+    <div className="ud-gut">
+      <div className="ud-ga is-you"><span className="ud-ga__l">text in</span></div>
+      <div className="ud-ga is-back is-you is-below"><span className="ud-ga__l">text out</span></div>
+    </div>
+    <div className="ud-lane is-you">
+      <div className="ud-lane__h">You run</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-you"><span className="ud-box__t">AgentRunner</span><span className="ud-box__s">Same code as phone calls</span></div>
+      </div>
+    </div>
+  </div>
+  <div className="ud__legend"><span>Unpod runs it</span><span className="is-you">You run it</span><span className="is-ext">Outside both</span></div>
+  <div className="ud__note">Speech stays on Unpod. Your AgentRunner receives text and returns text.</div>
+</div>
 
 ---
 
@@ -72,9 +107,7 @@ Return the token to your frontend via your own API. The client passes it to `Unp
 
 Your AgentRunner accepts sessions from all sources on the same `agent_id`. You do not need separate agents for phone calls and web/app clients.
 
-<Frame>
-  <img src="/images/diagrams/unpod-voice-stack.svg" alt="Animated Unpod voice stack diagram showing phone, browser, and mobile entrypoints reaching the same managed speech layer and AgentRunner." />
-</Frame>
+<VoiceStack />
 
 The `CallContext` tells you how the session arrived:
 

@@ -30,26 +30,20 @@ either person is gone.
    a call started with `create`, so also call `get_recording` after the last `Hangup`
    (see [Recording](/telephony/apis/recording#get-a-recording)).
 
-```mermaid
-sequenceDiagram
-    participant App as Your app
-    participant U as Unpod
-    participant A as Agent's phone
-    participant C as Customer's phone
-
-    App->>U: calls.create(agent, role="agent")
-    U->>A: rings, showing your Unpod number
-    A-->>U: answers
-    U-->>App: Answered (role agent)
-    App->>U: calls.add_participant(customer)
-    U->>C: rings, showing your Unpod number
-    C-->>U: answers
-    Note over A,C: talking: each sees only your Unpod number
-    C-->>U: hangs up
-    U-->>App: Hangup (role customer)
-    App->>U: calls.end
-    U-->>App: recording event
-```
+<div className="ud" role="img" aria-label="Masked call sequence: your app creates the agent leg, Unpod rings the agent showing your Unpod number, your app adds the customer on Answered, both talk seeing only your Unpod number, the customer hangs up, your app ends the call and receives the recording event.">
+  <div className="ud__title">Masked call, step by step</div>
+  <ol className="ud-seq">
+    <li><div className="ud-seq__who"><span className="ud-chip is-you">Your app</span> → <span className="ud-chip">Unpod</span></div><div className="ud-seq__t"><code>calls.create(agent, role="agent")</code></div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip">Unpod</span> → <span className="ud-chip is-ext">Agent's phone</span></div><div className="ud-seq__t">Rings, showing your Unpod number.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip is-ext">Agent's phone</span> → <span className="ud-chip">Unpod</span> → <span className="ud-chip is-you">Your app</span></div><div className="ud-seq__t">The agent answers. Unpod sends your app <code>Answered</code> (role <code>agent</code>).</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip is-you">Your app</span> → <span className="ud-chip">Unpod</span></div><div className="ud-seq__t"><code>calls.add_participant(customer)</code></div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip">Unpod</span> → <span className="ud-chip is-ext">Customer's phone</span></div><div className="ud-seq__t">Rings, showing your Unpod number. The customer answers.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip is-ext">Agent's phone</span> ↔ <span className="ud-chip is-ext">Customer's phone</span></div><div className="ud-seq__t">Talking. Each side sees only your Unpod number.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip is-ext">Customer's phone</span> → <span className="ud-chip">Unpod</span> → <span className="ud-chip is-you">Your app</span></div><div className="ud-seq__t">The customer hangs up. Unpod sends your app <code>Hangup</code> (role <code>customer</code>).</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip is-you">Your app</span> → <span className="ud-chip">Unpod</span></div><div className="ud-seq__t"><code>calls.end</code></div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip">Unpod</span> → <span className="ud-chip is-you">Your app</span></div><div className="ud-seq__t">The recording event arrives.</div></li>
+  </ol>
+</div>
 
 ## Start a masked call
 

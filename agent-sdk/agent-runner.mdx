@@ -34,9 +34,17 @@ environment variable.
 call is dispatched to your agent, the runner invokes your `entrypoint` with a
 `CallContext`.
 
-<Frame>
-  <img src="/images/diagrams/agent-runner-dispatch.svg" alt="Animated AgentRunner dispatch diagram showing the Unpod orchestrator connected to AgentRunner over WSS, heartbeats and capacity reporting, dispatch into entrypoint CallContext, and the Session run loop." />
-</Frame>
+<div className="ud" role="img" aria-label="AgentRunner dispatch: the runner registers with the Unpod orchestrator over WSS and reports its capacity, keeps heartbeats flowing, the orchestrator dispatches a call to it, the runner invokes your entrypoint with a CallContext, and the session run loop handles the call until it ends.">
+  <div className="ud__title">AgentRunner dispatch</div>
+  <ol className="ud-seq">
+    <li><div className="ud-seq__who"><span className="ud-chip is-you">AgentRunner</span>→<span className="ud-chip">Orchestrator</span></div><div className="ud-seq__t">Registers over <strong>WSS</strong> with your <code>agent_id</code> and its capacity, <code>max_sessions</code>.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip is-you">AgentRunner</span>→<span className="ud-chip">Orchestrator</span></div><div className="ud-seq__t">Sends periodic <strong>heartbeats</strong>. The orchestrator balances calls on reported capacity.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip">Orchestrator</span>→<span className="ud-chip is-you">AgentRunner</span></div><div className="ud-seq__t"><strong>Dispatches</strong> a call to this runner - never beyond <code>max_sessions</code>.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip is-you">AgentRunner</span>→<span className="ud-chip is-you">entrypoint</span></div><div className="ud-seq__t">Invokes your <code>entrypoint</code> with a <code>CallContext</code> for that call.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip is-you">Session</span></div><div className="ud-seq__t"><code>ctx.session.run()</code> runs the turn loop until the call ends.</div></li>
+  </ol>
+  <div className="ud__legend"><span>Unpod runs it</span><span className="is-you">You run it</span></div>
+</div>
 
 ```python
 from unpod import AgentRunner, CallContext

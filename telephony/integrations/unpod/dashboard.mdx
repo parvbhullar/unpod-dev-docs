@@ -44,19 +44,17 @@ for calls you receive.
 
 <Badge color="green">Created automatically</Badge> - **for calls you make from your Unpod number.**
 
-```mermaid
-flowchart LR
-  A["🤖<br/><b>Your SIP client</b><br/>places the call"]
-  B["📡<br/><b>Unpod outbound trunk</b><br/>sip-lb1.unpod.tel"]
-  A ==> B
-  B ==> C["📞<br/><b>Customer's phone</b>"]
-
-  classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
-  classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
-  class A,C ep;
-  class B pp;
-  linkStyle default stroke:#9a90ff,stroke-width:2.5px;
-```
+<div className="ud" role="img" aria-label="Outbound trunk: your SIP client places the call through the Unpod outbound trunk at sip-lb1.unpod.tel to the customer's phone.">
+  <div className="ud__title">Outbound trunk</div>
+  <div className="uf-flow">
+    <div className="uf-node is-you"><span className="uf-ic"><Icon icon="phone-outgoing" size={20} /></span><span className="uf-t">Your SIP client</span><span className="uf-s">Places the call</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="radio-tower" size={20} /></span><span className="uf-t">Unpod outbound trunk</span><span className="uf-s">sip-lb1.unpod.tel</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-ext"><span className="uf-ic"><Icon icon="phone" size={20} /></span><span className="uf-t">Customer's phone</span><span className="uf-s">Receives the call</span></div>
+  </div>
+  <div className="ud__legend"><span>Unpod runs it</span><span className="is-you">You run it</span><span className="is-ext">Outside Unpod</span></div>
+</div>
 
 The moment you choose **Connect to → SIP Trunk**, Unpod creates the outbound trunk and
 the number turns **Linked**. Outbound is complete at this point - there is nothing else
@@ -84,18 +82,17 @@ manager, and blur them out before you share a screenshot.
 
 <Badge color="orange">You configure this</Badge> - **for calls people make to your Unpod number.**
 
-```mermaid
-flowchart LR
-  A["📞<br/><b>Caller</b><br/>dials your Unpod number"]
-  A ==> B["📡<br/><b>Unpod inbound trunk</b>"]
-  B ==> C["🤖<br/><b>Your SIP URI</b><br/>answers the call"]
-
-  classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
-  classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
-  class A,C ep;
-  class B pp;
-  linkStyle default stroke:#9a90ff,stroke-width:2.5px;
-```
+<div className="ud" role="img" aria-label="Inbound trunk: a caller dials your Unpod number, the Unpod inbound trunk forwards the call to your SIP URI, which answers.">
+  <div className="ud__title">Inbound trunk</div>
+  <div className="uf-flow">
+    <div className="uf-node is-ext"><span className="uf-ic"><Icon icon="phone-incoming" size={20} /></span><span className="uf-t">Caller</span><span className="uf-s">Dials your Unpod number</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="radio-tower" size={20} /></span><span className="uf-t">Unpod inbound trunk</span><span className="uf-s">Forwards the call</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-you"><span className="uf-ic"><Icon icon="bot" size={20} /></span><span className="uf-t">Your SIP URI</span><span className="uf-s">Answers the call</span></div>
+  </div>
+  <div className="ud__legend"><span>Unpod runs it</span><span className="is-you">You run it</span><span className="is-ext">Outside Unpod</span></div>
+</div>
 
 Until you add it, the number shows **Inbound trunk is not configured yet** and inbound
 calls have nowhere to go.

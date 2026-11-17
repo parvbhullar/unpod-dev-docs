@@ -9,20 +9,21 @@ whether it reached Unpod on an Unpod number or through your carrier's trunk. For
 Unpod asks your answer URL what to do while the call is still ringing, then runs the XML or
 JSON you reply with.
 
-```mermaid
-flowchart LR
-  A["📞<br/><b>Caller</b>"] ==> B["🔢<br/><b>Your Unpod number</b>"]
-  B ==> C["📡<br/><b>Unpod</b>"]
-  C ==> D["🌐<br/><b>Your answer URL</b><br/>StartApp, ringing"]
-  D ==> E["▶️<br/><b>Your XML or JSON reply</b><br/>Unpod runs it"]
-  E ==> F["📬<br/><b>status_callback_url</b><br/>call events"]
-
-  classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
-  classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
-  class A,D,F ep;
-  class B,C,E pp;
-  linkStyle default stroke:#9a90ff,stroke-width:2.5px;
-```
+<div className="ud" role="img" aria-label="Incoming call: a caller dials your Unpod number, Unpod fetches your answer URL, runs the XML or JSON you return, and posts call events to your status callback URL.">
+  <div className="uf-flow is-compact">
+    <div className="uf-node is-ext"><span className="uf-ic"><Icon icon="phone-incoming" size={20} /></span><span className="uf-t">Caller</span><span className="uf-s">Dials your number</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="hash" size={20} /></span><span className="uf-t">Unpod</span><span className="uf-s">Answers on your number</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">StartApp</span></div>
+    <div className="uf-node is-you"><span className="uf-ic"><Icon icon="globe" size={20} /></span><span className="uf-t">Answer URL</span><span className="uf-s">Returns XML or JSON</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">runs it</span></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="play" size={20} /></span><span className="uf-t">Unpod</span><span className="uf-s">Executes your reply</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">events</span></div>
+    <div className="uf-node is-you"><span className="uf-ic"><Icon icon="webhook" size={20} /></span><span className="uf-t">Status callback</span><span className="uf-s">Call events</span></div>
+  </div>
+  <div className="ud__legend"><span>Unpod runs it</span><span className="is-you">You run it</span><span className="is-ext">Caller</span></div>
+  <div className="ud__note">Call events post to your <code>status_callback_url</code>.</div>
+</div>
 
 ## Three ways to answer
 
