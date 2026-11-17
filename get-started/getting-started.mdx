@@ -1,11 +1,31 @@
 ---
-title: 'Getting Started'
+title: 'Introduction'
 icon: 'rocket'
-description: 'Choose your path into Unpod - and the right credential for it.'
+description: 'Unpod for developers: get a key, make your first call, then pick your path.'
 ---
 
-One backend, several doors. Pick the outcome you want; each path is one page
-and takes minutes.
+Unpod is the agentic backend for conversational AI: numbers, speech, agents
+and memory behind one SDK. You bring the logic; Unpod runs the phone call.
+
+## Your first hour
+
+<Steps>
+  <Step title="Get an account and a key">
+    Request access, create your hub and generate an API key:
+    [Account & keys](/get-started/account-and-keys).
+  </Step>
+  <Step title="Make your first call">
+    Six SDK calls, nothing to deploy - your phone rings and an agent speaks:
+    [Quickstart](/home/quickstart).
+  </Step>
+  <Step title="Learn the moving parts">
+    Number, agent, brain, AgentRunner - each defined once:
+    [Core concepts](/get-started/core-concepts).
+  </Step>
+  <Step title="Pick your path">
+    Use the table below, then go deeper in that tab.
+  </Step>
+</Steps>
 
 ## Choose your path
 
@@ -14,33 +34,25 @@ and takes minutes.
 | **Place a real phone call with an agent** | [Quickstart](/home/quickstart) - six SDK calls, nothing to deploy | Platform token + a number |
 | Talk to an agent in the browser | [Realtime](/telephony/streaming/unpod-speech-quickstart) | A browser - runs in the hosted Playground |
 | Publish an agent to a number, no code | [Phone](/agent-studio/quickstart) | A [Playground](https://app.unpod.ai/playground) account |
-| Run my own Python brain on calls | [Run Your Own Brain](/agent-sdk/quickstart) | SDK key + a number |
+| Run my own Python brain on calls | [Run Your Own Brain](/agent-sdk/quickstart) | Platform token + a number |
 | Call your agent like a model, over REST | [Chat API](/agent-studio/api) | Endpoint key |
 
 Not sure? Take the **Quickstart** - it is the shortest path to something
 real: your phone rings, an agent speaks, and the transcript comes back in
 code.
 
-## Which credential is which
+## Where things live
 
-Unpod's credentials are not interchangeable:
+| Tab | Go there when you want to |
+|---|---|
+| **Telephony** | Buy numbers, place and control calls, receive inbound calls, stream audio |
+| **SIP Trunking** | Bring your own carrier, or connect Vapi, LiveKit, ElevenLabs, Daily or Ultravox |
+| **Agent SDK** | Run your own Python brain on calls with the `unpod` SDK and AgentRunner |
+| **Agent Studio** | Build, test and publish a playbook agent without code, or with SuperDialog |
+| **Context** | Give agents memory: people, conversations and outcomes |
+| **Guides** | Step-by-step tutorials across all of the above |
 
-| You are calling | Host | Auth | From |
-|---|---|---|---|
-| **Python SDK REST** (agents, numbers, calls) | `unpod.ai` | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | [Quickstart → Prerequisites](/home/quickstart#prerequisites) |
-| **AgentRunner** (your own brain) | the orchestrator | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | [Quickstart → Prerequisites](/home/quickstart#prerequisites) |
-| **Chat API** (your agent as a model) | `inference.unpod.ai` | `Authorization: Bearer` endpoint key | Playground → Deploy as Endpoint |
-
-The SDK reads all of it from the environment; token auth wins over the API
-key when both are present. Set whichever matches the path you are on.
-
-## Before the first line of code
-
-<CardGroup cols={2}>
-  <Card title="Why Unpod" icon="compass" href="/get-started/why-unpod">
-    The agentic backend for conversational AI - the case in two minutes.
-  </Card>
-  <Card title="How Unpod fits together" icon="network" href="/get-started/core-concepts">
-    The architecture, talk / remember / act, and every term defined once.
-  </Card>
-</CardGroup>
+<Note>
+Each path needs a different credential. [Account & keys](/get-started/account-and-keys#which-credential-is-which)
+lists which one goes where.
+</Note>

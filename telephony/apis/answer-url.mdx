@@ -42,18 +42,11 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
 ```
 </CodeGroup>
 
-The answer URL must be public https, or you get `400 invalid_url`.
+The answer URL must be public https, or you get `400 invalid_url`. After 5 failures in a
+row, Unpod skips your URL for 30 s and applies the fallback; inbound and outbound share that
+limit.
 
-<Warning>
-Outbound answer-URL requests are not signed yet, so a route that rejects unsigned requests
-rejects them too. Serve outbound legs on a separate route (the
-[minimal server](#a-minimal-answer-server) below uses `/outbound`), or skip verification
-for them until signing ships. After 5 failures in a row, Unpod skips your URL for 30 s and
-applies the fallback, and inbound and outbound share that limit - so don't point outbound
-legs at the signed `/answer` route.
-</Warning>
-
-{/* TODO(verify): outbound answer-URL signing (UNPO-181) */}
+{/* TODO(verify): UNPO-536 spec conflicts with itself on answer-URL signing. Spec section 4: "Answer-URL fetches are not signed (only the StartApp/Hangup event POSTs are)". Spec section 6: "Outbound answer-URL requests -> Yes (UNPO-181)". SDK 685e98c examples/pipecat_streaming/server.py: "The SBC does not sign answer-URL fetches, so this route is open", and SDK docs/08-telephony.md still lists outbound answer-URL requests as not signed. supersbc 07b34c6f ("sign REST answer-URL requests") and outbound_hook.rs send_form sign POST (not GET) with the org webhook secret. This page follows section 6 and the SBC code: confirm on QA that an outbound StartApp carries X-Webhook-Signature. */}
 
 ## What Unpod sends
 
@@ -78,14 +71,14 @@ doesn't match the `leg_id` that `create` returned: match outbound requests on `M
 (`ev.call_id`). When the call ends, the same URL also gets a `Hangup` with `Duration`,
 `StartTime`, `EndTime`, `AnswerTime` and `HangupCause`; reply `200` to it.
 
-Inbound POST requests are signed once your org has a webhook secret (create it as in the
-[Quick Start](/telephony/apis/quickstart#receive-your-first-call)). Verify and parse them
-with `parse_call_event` - see [Webhooks](/telephony/apis/webhooks). Outbound requests
-are not signed yet, and GET requests are not signed (there's no body to sign).
+POST requests, inbound and outbound, are signed once your org has a webhook secret
+(create it as in the [Quick Start](/telephony/apis/quickstart#receive-your-first-call)).
+Verify and parse them with `parse_call_event` - see [Webhooks](/telephony/apis/webhooks).
+GET requests are not signed (there's no body to sign).
 
 ## Reply with XML or JSON
 
-Reply with Plivo-style XML or JSON. Greet the caller, then connect them to an agent:
+Reply with XML or JSON. Greet the caller, then connect them to an agent:
 
 ```xml
 <Response>
@@ -115,23 +108,32 @@ The first reply as JSON:
 | `<Speak>` | `speak` | `voice`, `language`, `loop` | Text-to-speech |
 | `<Play>` | `play` | `loop` | Play an https audio URL |
 | `<Wait>` | `wait` | `length` (seconds, default 1) | Pause |
-| `<Record>` | `record` | `maxLength` (seconds, default 300) | Record the call |
-| `<Dial>` | `dial` | - (just the `<Number>`) | Blind transfer to that number |
+| `<Record>` | `record` | `maxLength` (seconds), `callbackUrl`, `recordSession`; with `recordSession`, also `action` and `callbackMethod` | Record the call |
+| `<Dial>` | `dial` | `callerId`, `timeout` (ring seconds), `callbackUrl`, `record`, and the `<Number>` inside | Blind transfer to that number |
+| `<GetDigits>` | `get_digits` | `action`, `method`, `timeout`, `digitTimeout`, `finishOnKey`, `numDigits`, `retries`, `validDigits`, `redirect`, and `<Speak>` / `<Play>` prompts inside | Collect keypad digits |
+| `<GetInput>` | `get_input` | `action`, `method`, `inputType`, `executionTimeout`, `digitEndTimeout`, `finishOnKey`, `numDigits`, `redirect`, and prompts inside | Collect keypad digits (DTMF only) |
+| `<Stream>` | `stream` | See [Audio Streaming](/telephony/apis/audio-streaming) | Stream the call's audio to your WebSocket |
 | `<Hangup>` | `hangup` | `reason`, `code` | End the call |
 
 On `<Hangup>`, `reason` applies only when rejecting a ringing inbound call (`busy` sends
 486, anything else 603). `code` is a SIP status 400-699 and works before and after answer.
 JSON field names differ from XML attributes: `speak.text`, `play.url`, `wait.seconds`,
-`record.max_duration_secs`.
+`record.max_duration_secs`, and on `dial`, `ring_timeout` and `status_callback_url`.
+Other attributes are the snake_case form of the XML name (`record_session`, `num_digits`,
+`finish_on_key`, ...).
 
-{/* TODO(verify): attribute list from SBC source; confirm live; platform voice ids */}
+`loop` on `<Speak>` and `<Play>` is a bool: `true` (or `0`) repeats the audio, `false` (or
+`1`) plays it once. There's no repeat count: any other number makes the whole reply fail.
 
-Only these verbs are supported. Any other element, such as `<GetDigits>`, `<Conference>`
-or `<Redirect>`, makes the whole reply fail and the
+{/* TODO(verify): platform voice ids; whether <Dial callerId> is applied on an inbound transfer (see number-masking.mdx) */}
+
+Only these verbs are supported. `<Redirect>`, `<PreAnswer>`, `<DTMF>`, `<Conference>`,
+`<MultiPartyCall>`, `<Message>` or any other element makes the whole reply fail and the
 [fallback](#timeouts-and-fallback) applies.
 
-Verbs run in order. When the last one finishes, Unpod hangs up; verbs after `<Dial>`
-don't run. A reply can be at most 64 KB with 32 verbs, and 4096 characters in each
+Verbs run in order. When the last one finishes, Unpod hangs up, and the `Hangup` events
+carry the `HangupCause` `End Of XML Instructions` (an explicit `<Hangup>` doesn't). Verbs
+after `<Dial>` don't run. A reply can be at most 64 KB with 32 verbs, and 4096 characters in each
 `<Speak>`. Every audio URL must be public https.
 
 Set the voice and language on `<Speak>` itself:
@@ -147,7 +149,61 @@ Whether a call is recorded follows the recording policy (set by the Unpod team);
 `record=True` on `create` doesn't override it today (see
 [Recording](/telephony/apis/recording)). Don't put `<Record/>` before `<Dial>`: it waits
 for the recording to finish (300 s by default) before dialing, and the caller hears
-silence.
+silence. To record and dial, use [`recordSession`](#record-in-the-background).
+
+### Collect digits
+
+`<GetDigits>` plays its `<Speak>` / `<Play>` prompts (a key press stops them), then
+collects digits:
+
+```xml
+<Response>
+    <GetDigits action="https://your-app.example.com/digits" numDigits="4" retries="2">
+        <Speak>Enter your PIN.</Speak>
+    </GetDigits>
+    <Speak>We didn't get your PIN.</Speak>
+</Response>
+```
+
+| Attribute | Default |
+| --- | --- |
+| `timeout` | 5 s to wait for the first digit |
+| `digitTimeout` | 2 s to wait between digits |
+| `finishOnKey` | `#`. `""` or `none` turns it off |
+| `numDigits` | 99 |
+| `retries` | 1 attempt in all when nothing is entered |
+| `validDigits` | `1234567890*#`; other keys are dropped |
+| `redirect` | `true`: the `action` reply replaces the rest of the verbs |
+
+Unpod then requests `action` (with `method`, default `POST`) with `Digits`, `MPCUUID`,
+`CallUUID`, `From`, `To` and `Direction`. Verify and parse it with
+`parse_digits_request(body, headers, secret)`; reply with the next verbs. With
+`redirect="false"`, the reply is ignored and the next verb runs. If nothing is entered
+after every attempt, Unpod skips the request and runs the next verb.
+
+`<GetInput>` works the same way, but only for keypad input: `inputType="speech"` is skipped,
+and `dtmf` or `dtmf speech` collects digits. Its timeouts are `executionTimeout` (15 s for
+the first digit) and `digitEndTimeout` (5 s between digits, or `auto`), and the `action`
+request also carries `InputType=dtmf`.
+
+### Record in the background
+
+A plain `<Record>` waits until the recording reaches `maxLength` (300 s by default)
+before the next verb runs. With `recordSession="true"`, Unpod records in the background
+(60 s by default) and runs the next verb at once:
+
+```xml
+<Response>
+    <Record recordSession="true" maxLength="600"
+            callbackUrl="https://your-app.example.com/recording"/>
+    <Dial><Number>+919000000003</Number></Dial>
+</Response>
+```
+
+`callbackUrl` (sent with `callbackMethod`) gets the recording event when the recording
+ends. `action` gets a POST right away, with `RecordingDuration` and `RecordingEndMs` set to
+`-1` until the recording is done. A call has one recording: a second `<Record>` while one
+runs is skipped. See [Recording](/telephony/apis/recording).
 
 ## A minimal answer server
 
@@ -173,9 +229,13 @@ async def answer(request: Request):
     return Response(status_code=200)  # Hangup / RecordStop: acknowledge
 
 
-@app.post("/outbound")  # outbound answer-URL requests are not signed yet
+@app.post("/outbound")  # outbound: signed too
 async def outbound(request: Request):
-    ev = parse_call_event(await request.body(), request.headers, None, verify=False)
+    try:
+        ev = parse_call_event(await request.body(), request.headers, secret=SECRET)
+    except WebhookSignatureError:
+        raise HTTPException(401)
+
     if ev.event == "StartApp":  # the person answered
         return Response(GREETING, media_type="application/xml")
     return Response(status_code=200)  # Hangup: acknowledge
@@ -187,9 +247,10 @@ if __name__ == "__main__":
 ```
 
 Run it with `python app.py` and expose it as in the
-[Quick Start](/telephony/apis/quickstart#receive-your-first-call). `/answer` rejects
-unsigned requests, greets every new inbound call and returns 200 for every other event.
-`/outbound` greets each outbound leg once it's answered and acknowledges its `Hangup`. To route callers to free agents, see
+[Quick Start](/telephony/apis/quickstart#receive-your-first-call). Both routes reject
+unsigned requests. `/answer` greets every new inbound call and returns 200 for every other
+event. `/outbound` greets each outbound leg once it's answered and acknowledges its
+`Hangup`. To route callers to free agents, see
 [Incoming Calls](/telephony/apis/incoming-calls).
 
 ## Timeouts and fallback

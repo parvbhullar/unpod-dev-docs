@@ -87,13 +87,30 @@ cd playground/web && npm run dev          # terminal 2 - Vite :5173
 
 Two planes, deliberately separate:
 
-```
-Browser (web/) ──audio (WS /ws/audio, protobuf)──► remote supervoice (UNPOD_BASE_URL)
-   │                                                         ▲
-   │  POST /playground/sessions  ┌── harness (api.py) ───────┘ AgentRunner registers
-   │  WS  /playground/events  ◄──┤   side-channel: session hooks → browser
-   └─────────────────────────────┘
-```
+<div className="ud" role="img" aria-label="Playground architecture, two planes. Audio plane: the browser streams audio straight to the remote supervoice over WS /ws/audio with protobuf frames. Event plane: the browser starts sessions on the local harness with POST /playground/sessions and receives transcript and checkpoint events over WS /playground/events; the harness's AgentRunner registers with supervoice.">
+  <div className="ud__title">Playground architecture (M1)</div>
+  <div className="ud-lanes">
+    <div className="ud-lane is-you">
+      <div className="ud-lane__h">Browser</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-you"><span className="ud-box__t">Playground web</span><span className="ud-box__s">web/ · mic 16 kHz up, playback 24 kHz down</span></div>
+      </div>
+    </div>
+    <div className="ud-gut" style={{"gap": "70px"}}>
+      <div className="ud-ga is-both"><span className="ud-ga__l">audio</span></div>
+      <div className="ud-ga is-both is-you"><span className="ud-ga__l">events</span></div>
+    </div>
+    <div className="ud-lane">
+      <div className="ud-lane__h">Servers</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-unpod"><span className="ud-box__t">Remote supervoice</span><span className="ud-box__s">WS /ws/audio, protobuf frames · UNPOD_BASE_URL</span></div>
+        <div className="ud-box is-you"><span className="ud-box__t">Harness · api.py</span><span className="ud-box__s">POST /playground/sessions · WS /playground/events</span></div>
+      </div>
+    </div>
+  </div>
+  <div className="ud__note">The harness's AgentRunner registers with supervoice. Session hooks feed the events plane, not the audio bridge.</div>
+  <div className="ud__legend"><span>Unpod runs it</span><span className="is-you">You run it</span></div>
+</div>
 
 - **Audio** rides the supervoice WS bridge directly (16 kHz mic up, 24 kHz
   playback down). The wire codec is a small proto3 `Frame` encoder/decoder in

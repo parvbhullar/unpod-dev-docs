@@ -1,5 +1,6 @@
 ---
 title: 'Context Engine'
+icon: 'brain'
 description: 'Every conversation makes the next one better - one memory per customer, from the live turn to outcome history.'
 ---
 
@@ -11,34 +12,39 @@ Context is the one input a competitor cannot buy, scrape or copy - and you
 keep it. It comes in five tiers, from hot and fast at the top to persistent
 and compounding at the bottom:
 
-<div className="ce-pyramid" role="img" aria-label="Five context tiers and their status: live turn, session memory, customer context, organisation knowledge, outcome history.">
-  <div className="ce-tier" style={{"--w": "46%", "--bg": "#9333ea"}}>
-    <span className="ce-tier__t">Live turn</span>
-    <span className="ce-tier__s">This call, right now</span>
-    <span className="ce-tier__chips"><span className="st-chip on-color">Production</span></span>
-  </div>
-  <div className="ce-tier" style={{"--w": "62%", "--bg": "#5a4fff"}}>
-    <span className="ce-tier__t">Session memory</span>
-    <span className="ce-tier__s">Active context across the conversation</span>
-    <span className="ce-tier__chips"><span className="st-chip on-color">Production</span></span>
-  </div>
-  <div className="ce-tier" style={{"--w": "76%", "--bg": "#6a3df0"}}>
-    <span className="ce-tier__t">Customer context</span>
-    <span className="ce-tier__s">Every touch with this person</span>
-    <span className="ce-tier__chips"><span className="st-chip on-color">Per call: production</span><span className="st-chip on-color">Cross-channel: in build</span></span>
-  </div>
-  <div className="ce-tier" style={{"--w": "88%", "--bg": "#4535d0"}}>
-    <span className="ce-tier__t">Organisation knowledge</span>
-    <span className="ce-tier__s">Products, policies, FAQs</span>
-    <span className="ce-tier__chips"><span className="st-chip on-color">Production</span></span>
-  </div>
-  <div className="ce-tier" style={{"--w": "100%", "--bg": "#15103a"}}>
-    <span className="ce-tier__t">Outcome history</span>
-    <span className="ce-tier__s">Every result, kept</span>
-    <span className="ce-tier__chips"><span className="st-chip on-color">As data: production</span><span className="st-chip on-color">As memory: in build</span></span>
+<div className="ud" role="img" aria-label="Five context tiers, hot and fast at the top to persistent and compounding at the bottom: live turn, session memory, customer context, organisation knowledge, outcome history, each with its status.">
+  <div className="ud__title">Context tiers</div>
+  <div className="ce-pyramid">
+    <div className="ce-rail"><span>Hot · fast</span><span>Kept · compounding</span></div>
+    <div className="ce-tiers">
+      <div className="ce-tier" style={{"--t": "28%", "--b": "42%", "--bg": "#8174ff"}}>
+        <span className="ce-tier__t">Live turn</span>
+        <span className="ce-tier__s">This call, right now</span>
+        <span className="ce-tier__chips"><span className="st-chip on-color">Production</span></span>
+      </div>
+      <div className="ce-tier" style={{"--t": "42%", "--b": "57%", "--bg": "#6a5cf6"}}>
+        <span className="ce-tier__t">Session memory</span>
+        <span className="ce-tier__s">Active context across the conversation</span>
+        <span className="ce-tier__chips"><span className="st-chip on-color">Production</span></span>
+      </div>
+      <div className="ce-tier" style={{"--t": "57%", "--b": "71%", "--bg": "#5446e2"}}>
+        <span className="ce-tier__t">Customer context</span>
+        <span className="ce-tier__s">Every touch with this person</span>
+        <span className="ce-tier__chips"><span className="st-chip on-color">Per call: production</span><span className="st-chip on-color">Cross-channel: in build</span></span>
+      </div>
+      <div className="ce-tier" style={{"--t": "71%", "--b": "86%", "--bg": "#4034c4"}}>
+        <span className="ce-tier__t">Organisation knowledge</span>
+        <span className="ce-tier__s">Products, policies, FAQs</span>
+        <span className="ce-tier__chips"><span className="st-chip on-color">Production</span></span>
+      </div>
+      <div className="ce-tier" style={{"--t": "86%", "--b": "100%", "--bg": "#2b2490"}}>
+        <span className="ce-tier__t">Outcome history</span>
+        <span className="ce-tier__s">Every result, kept</span>
+        <span className="ce-tier__chips"><span className="st-chip on-color">As data: production</span><span className="st-chip on-color">As memory: in build</span></span>
+      </div>
+    </div>
   </div>
 </div>
-<div className="ce-axis"><span>↑ Hot · fast</span><span>Persistent · compounding ↓</span></div>
 
 ## Use it today
 

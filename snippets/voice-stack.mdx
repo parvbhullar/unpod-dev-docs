@@ -1,0 +1,39 @@
+<div className="ud" role="img" aria-label="Unpod voice stack. A caller reaches Unpod by phone, browser or mobile app and exchanges audio with Unpod. Unpod runs the number, speech-to-text, the orchestrator and text-to-speech. Only text crosses the bridge to your side: your AgentRunner, your brain and your tools.">
+  <div className="ud__title">Unpod voice stack</div>
+  <div className="ud-lanes">
+    <div className="ud-lane">
+      <div className="ud-lane__h">Caller</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-ext"><span className="ud-box__t">Phone</span><span className="ud-box__s">PSTN, dials a number</span></div>
+        <div className="ud-box is-ext"><span className="ud-box__t">Browser</span><span className="ud-box__s">WebRTC / WebSocket</span></div>
+        <div className="ud-box is-ext"><span className="ud-box__t">Mobile app</span><span className="ud-box__s">Session token</span></div>
+      </div>
+    </div>
+    <div className="ud-gut">
+      <div className="ud-ga is-both"><span className="ud-ga__l">audio</span></div>
+    </div>
+    <div className="ud-lane is-unpod">
+      <div className="ud-lane__h">Unpod runs</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-unpod"><span className="ud-box__t">Number &amp; carrier</span><span className="ud-box__s">Unpod rails, or your trunk</span></div>
+        <div className="ud-box is-unpod"><span className="ud-box__t">Speech in</span><span className="ud-box__s">STT + VAD, from the voice profile</span></div>
+        <div className="ud-box is-brand"><span className="ud-box__t">Orchestrator</span><span className="ud-box__s">Turns, barge-in, dispatch</span></div>
+        <div className="ud-box is-unpod"><span className="ud-box__t">Speech out</span><span className="ud-box__s">TTS, streamed to the caller</span></div>
+      </div>
+    </div>
+    <div className="ud-gut">
+      <div className="ud-ga is-you"><span className="ud-ga__l">text turn</span></div>
+      <div className="ud-ga is-back is-you is-below"><span className="ud-ga__l">reply text</span></div>
+    </div>
+    <div className="ud-lane is-you">
+      <div className="ud-lane__h">You run</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-you"><span className="ud-box__t">AgentRunner</span><span className="ud-box__s">Registers over WSS</span></div>
+        <div className="ud-box is-you"><span className="ud-box__t">Your brain</span><span className="ud-box__s">DialogMachine, LLM, any Python</span></div>
+        <div className="ud-box is-you"><span className="ud-box__t">Tools &amp; APIs</span><span className="ud-box__s">Your systems</span></div>
+      </div>
+    </div>
+  </div>
+  <div className="ud__legend"><span>Unpod runs it</span><span className="is-you">You run it</span><span className="is-ext">Outside both</span></div>
+  <div className="ud__note">Audio never reaches your side. The bridge carries text in, text out.</div>
+</div>

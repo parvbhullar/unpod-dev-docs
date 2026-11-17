@@ -33,9 +33,31 @@ Those are the **full format** names. The **simple format** spells the same four
 `purpose` / `collect` / `say` / `done_when`; both compile to one checkpoint - see
 [Playbooks](/superdialog/playbooks).
 
-<Frame>
-  <img src="/images/diagrams/playbook-checkpoint-model.svg" alt="Animated Playbook checkpoint model diagram showing goal, slots, guidance, and advance rules inside a checkpoint, free conversation within it, and movement to the next checkpoint when an outcome is met." />
-</Frame>
+<div className="ud" role="img" aria-label="Playbook checkpoint model: the checkpoint collect_details has a goal (city, date and party size), slots (city, date, players), guidance (collect naturally) and advance rules (details complete or course info). Inside it the conversation is free. When the outcome is met, the framework moves to the next checkpoint.">
+  <div className="ud__title">Playbook checkpoint model</div>
+  <div className="ud-lanes">
+    <div className="ud-lane is-unpod" style={{"flex": "2 1 0"}}>
+      <div className="ud-lane__h">Checkpoint · collect_details</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-you"><span className="ud-box__t">goal</span><span className="ud-box__s">City + date + party size</span></div>
+        <div className="ud-box is-you"><span className="ud-box__t">slots</span><span className="ud-box__s"><code>city</code> · <code>date</code> · <code>players</code></span></div>
+        <div className="ud-box is-you"><span className="ud-box__t">guidance</span><span className="ud-box__s">Collect naturally</span></div>
+        <div className="ud-box is-you"><span className="ud-box__t">advance_when</span><span className="ud-box__s">Details complete, or course info</span></div>
+        <div className="ud-box is-brand is-center"><span className="ud-box__t">Free conversation</span><span className="ud-box__s">The model talks; any order, one breath, changed minds</span></div>
+      </div>
+    </div>
+    <div className="ud-gut">
+      <div className="ud-ga"><span className="ud-ga__l">outcome met</span></div>
+    </div>
+    <div className="ud-lane is-unpod">
+      <div className="ud-lane__h">Next</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-unpod is-center"><span className="ud-box__t">Next checkpoint</span><span className="ud-box__s">The framework owns progress</span></div>
+      </div>
+    </div>
+  </div>
+  <div className="ud__legend"><span>SuperDialog runs it</span><span className="is-you">You write it</span></div>
+</div>
 
 Inside a checkpoint the conversation is free - the caller can answer in any
 order, give everything in one breath, or change their mind. The framework's job

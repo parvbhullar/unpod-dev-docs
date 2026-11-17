@@ -18,9 +18,38 @@ There are **two authoring formats and one engine**. Start in the simple format;
 graduate to the full format when you need precision. Both compile to the same
 validated artifact and run identically.
 
-<Frame>
-  <img src="/images/diagrams/playbook-loading-pipeline.svg" alt="Animated Playbook loading pipeline diagram showing simple YAML, full YAML, and legacy flow JSON converging into a validated Playbook artifact and one runtime." />
-</Frame>
+<div className="ud" role="img" aria-label="Playbook loading pipeline: simple YAML via simple_to_playbook, full YAML via Playbook.load, and legacy flow JSON via compile_flow all become one validated Playbook IR artifact, which runs on one runtime.">
+  <div className="ud__title">Playbook loading pipeline</div>
+  <div className="ud-lanes">
+    <div className="ud-lane is-you">
+      <div className="ud-lane__h">You author</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-you"><span className="ud-box__t">Simple YAML</span><span className="ud-box__s"><code>simple_to_playbook</code></span></div>
+        <div className="ud-box is-you"><span className="ud-box__t">Full YAML</span><span className="ud-box__s"><code>Playbook.load</code></span></div>
+        <div className="ud-box is-you"><span className="ud-box__t">Legacy flow JSON</span><span className="ud-box__s"><code>compile_flow</code></span></div>
+      </div>
+    </div>
+    <div className="ud-gut">
+      <div className="ud-ga"><span className="ud-ga__l">compile</span></div>
+    </div>
+    <div className="ud-lane is-unpod">
+      <div className="ud-lane__h">Validated artifact</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-brand is-center"><span className="ud-box__t">Playbook IR</span><span className="ud-box__s">One format, checked</span></div>
+      </div>
+    </div>
+    <div className="ud-gut">
+      <div className="ud-ga"><span className="ud-ga__l">runs on</span></div>
+    </div>
+    <div className="ud-lane is-unpod">
+      <div className="ud-lane__h">Engine</div>
+      <div className="ud-lane__body">
+        <div className="ud-box is-unpod is-center"><span className="ud-box__t">One runtime</span><span className="ud-box__s">Runs every format identically</span></div>
+      </div>
+    </div>
+  </div>
+  <div className="ud__legend"><span>SuperDialog runs it</span><span className="is-you">You write it</span></div>
+</div>
 
 `Playbook.load(path)` auto-detects all three, so callers never branch on format.
 

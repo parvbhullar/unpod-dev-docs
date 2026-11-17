@@ -11,24 +11,37 @@ and the worker bridges the audio while streaming transcripts to your
 room or touches audio. This page traces both directions, the states a call moves
 through, and how it can end.
 
-<Frame>
-  <img src="/images/diagrams/call-lifecycle.svg" alt="Animated call lifecycle diagram showing a caller entering Unpod, speech converted to text, dispatch to AgentRunner and Session, dialog turns, reply text, and final transcript, metrics, and webhook storage." />
-</Frame>
+<div className="ud" role="img" aria-label="Call lifecycle in six steps: the call starts on a Unpod number, Unpod's speech pipeline turns audio into text, the orchestrator dispatches the call to your AgentRunner, your session and dialog machine take the turn, reply text goes back to Unpod for speech, and at call end the transcript, metrics and webhooks are stored and sent.">
+  <div className="ud__title">Call lifecycle</div>
+  <ol className="ud-seq">
+    <li><div className="ud-seq__who"><span className="ud-chip is-ext">Caller</span>→<span className="ud-chip">Number</span></div><div className="ud-seq__t"><strong>Call start.</strong> The call reaches Unpod - a caller rings in, or you dial out.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip">Speech pipeline</span></div><div className="ud-seq__t"><strong>Audio to text.</strong> Unpod transcribes the caller. Audio stays on Unpod's side.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip">Orchestrator</span>→<span className="ud-chip is-you">AgentRunner</span></div><div className="ud-seq__t"><strong>Dispatch.</strong> The call goes to your runner, which opens a <code>Session</code>.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip is-you">Session</span>→<span className="ud-chip is-you">DialogMachine</span></div><div className="ud-seq__t"><strong>Turn.</strong> Your dialog logic reads the caller's text and decides the reply.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip is-you">AgentRunner</span>→<span className="ud-chip">Speech pipeline</span></div><div className="ud-seq__t"><strong>Reply text.</strong> Unpod synthesizes it to speech for the caller. Steps 2-5 repeat every turn.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip">Storage + hooks</span></div><div className="ud-seq__t"><strong>Call end.</strong> Transcript, metrics and webhooks are recorded and sent.</div></li>
+  </ol>
+  <div className="ud__legend"><span>Unpod runs it</span><span className="is-you">You run it</span><span className="is-ext">Caller</span></div>
+</div>
 
 ## The state machine
 
-```mermaid
-stateDiagram-v2
-    [*] --> pending: calls.create() (outbound)
-    [*] --> ringing: inbound call arrives
-    pending --> ringing: dialing starts
-    ringing --> active: answered
-    ringing --> failed: no answer / busy / blocked / cancelled / voicemail pre-connect
-    active --> completed: hangup or end()
-    active --> failed: error
-    completed --> [*]
-    failed --> [*]
-```
+<div className="ud" role="img" aria-label="Call states: outbound calls start at pending and move to ringing when dialing starts; inbound calls start at ringing. Ringing becomes active when answered, and active becomes completed on hangup or end(). Ringing goes to failed on no answer, busy, blocked, cancelled or voicemail before connect; active goes to failed on error.">
+  <div className="ud__title">Call states</div>
+  <div className="uf-flow is-compact">
+    <div className="uf-node is-ext"><span className="uf-t">pending</span><span className="uf-s">Outbound only, after calls.create()</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">dialing</span></div>
+    <div className="uf-node"><span className="uf-t">ringing</span><span className="uf-s">Inbound calls start here</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">answered</span></div>
+    <div className="uf-node is-accent"><span className="uf-t">active</span><span className="uf-s">Your agent is talking</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">hangup</span></div>
+    <div className="uf-node is-you"><span className="uf-t">completed</span><span className="uf-s">Hangup or end() after being active</span></div>
+  </div>
+  <div className="ud-box is-ext" style={{"marginTop": "14px"}}>
+    <span className="ud-box__t">failed</span>
+    <span className="ud-box__s">From <code>ringing</code>: no answer, busy, blocked, cancelled, or voicemail before connect. From <code>active</code>: an error.</span>
+  </div>
+</div>
 
 | Visible `status` | Internal state | What is happening |
 |---|---|---|
@@ -74,24 +87,19 @@ concurrency limit.
   </Step>
 </Steps>
 
-```mermaid
-sequenceDiagram
-    participant You as Your backend
-    participant API as Unpod API
-    participant Q as Queue (concurrency-gated)
-    participant LK as LiveKit + SIP
-    participant Agent as Your AgentRunner
-
-    You->>API: calls.create(pipe_id, to_number)
-    API-->>You: 201 { status: pending }
-    API->>Q: enqueue
-    Q->>Q: per-account concurrency check
-    Q->>LK: create room + dial to_number
-    LK-->>Agent: media worker bridges call; runner connects (text)
-    LK-->>Agent: caller transcript (text)
-    Agent-->>LK: reply text (synthesised to speech on Unpod's side)
-    Note over API: status: pending → ringing → active → completed
-```
+<div className="ud" role="img" aria-label="Outbound call sequence: your backend calls calls.create, the Unpod API returns 201 pending and enqueues the call, the queue checks per-account concurrency, then creates a room and dials the number; a media worker bridges the call and your AgentRunner connects over text, receives caller transcripts and returns reply text that Unpod synthesizes to speech.">
+  <div className="ud__title">Outbound call, step by step</div>
+  <ol className="ud-seq">
+    <li><div className="ud-seq__who"><span className="ud-chip is-you">Your backend</span>→<span className="ud-chip">Unpod API</span></div><div className="ud-seq__t"><code>calls.create(pipe_id, to_number)</code></div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip">Unpod API</span>→<span className="ud-chip is-you">Your backend</span></div><div className="ud-seq__t"><code>201</code> with <code>status: pending</code>, right away.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip">Unpod API</span>→<span className="ud-chip">Queue</span></div><div className="ud-seq__t">Enqueues the call. The queue checks your per-account concurrency.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip">Queue</span>→<span className="ud-chip">LiveKit + SIP</span></div><div className="ud-seq__t">Creates a room and dials <code>to_number</code>.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip">LiveKit + SIP</span>→<span className="ud-chip is-you">AgentRunner</span></div><div className="ud-seq__t">A media worker bridges the call; your runner connects over text.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip">LiveKit + SIP</span>→<span className="ud-chip is-you">AgentRunner</span></div><div className="ud-seq__t">Caller transcript arrives as text.</div></li>
+    <li><div className="ud-seq__who"><span className="ud-chip is-you">AgentRunner</span>→<span className="ud-chip">LiveKit + SIP</span></div><div className="ud-seq__t">Reply text goes back; Unpod synthesizes it to speech.</div></li>
+  </ol>
+  <div className="ud__note"><code>status</code>: pending → ringing → active → completed</div>
+</div>
 
 <Tip>
 Because `create()` returns `pending`, poll `client.calls.get(call_id)` to watch

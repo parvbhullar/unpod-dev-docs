@@ -19,9 +19,20 @@ In the Unpod platform, SuperDialog is how you build the
 [Core Engine](/core-engine/overview). Its defining rule: **the wire between
 Unpod and your code carries text, not audio** - you own the brain.
 
-<Frame>
-  <img src="/images/diagrams/superdialog-text-loop.svg" alt="Animated SuperDialog text loop diagram showing user text entering the Agent protocol, agent.turn using tools and state, and reply text coming back." />
-</Frame>
+<div className="ud" role="img" aria-label="SuperDialog text loop: user text enters the Agent protocol, agent.turn uses your tools and conversation state, and reply text comes back. Only text crosses the wire.">
+  <div className="ud__title">SuperDialog text loop</div>
+  <div className="uf-flow is-compact">
+    <div className="uf-node is-ext"><span className="uf-ic"><Icon icon="message-square-text" size={20} /></span><span className="uf-t">User text</span><span className="uf-s">From any host</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node"><span className="uf-ic"><Icon icon="plug" size={20} /></span><span className="uf-t">Agent protocol</span><span className="uf-s">One contract, two engines</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="bot" size={20} /></span><span className="uf-t">agent.turn</span><span className="uf-s">Uses tools and state</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-ext"><span className="uf-ic"><Icon icon="reply" size={20} /></span><span className="uf-t">Reply text</span><span className="uf-s">Back to the host</span></div>
+  </div>
+  <div className="ud__legend"><span>SuperDialog runs it</span><span className="is-ext">Your host</span></div>
+  <div className="ud__note">Text in, text out. No audio crosses this wire.</div>
+</div>
 
 It ships **two engines behind one `Agent` protocol**, and the **Playbook
 engine is the default everywhere**:
@@ -47,7 +58,7 @@ text out - on both engines.
   <Card title="New to the checkpoint model?" icon="lightbulb" href="/superdialog/thinking-in-playbooks">
     Read the mental-model guide before diving into the quickstart.
   </Card>
-  <Card title="SuperDialog on GitHub" icon="github" href="https://github.com/unpod-ai/superdialog">
+  <Card title="SuperDialog on GitHub" icon="git-branch" href="https://github.com/unpod-ai/superdialog">
     Browse the source, issues, and releases at `unpod-ai/superdialog`.
   </Card>
 </CardGroup>

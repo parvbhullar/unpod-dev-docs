@@ -10,17 +10,17 @@ A trunk holds your carrier's SIP details: its SIP URL, credentials and the addre
 sends calls from. Map your numbers to a trunk and Unpod returns the **origin endpoint** -
 where your carrier sends calls for those numbers.
 
-```mermaid
-flowchart LR
-  A["📞<br/><b>Your carrier</b>"] ==> B["📡<br/><b>Unpod SIP trunk</b>"]
-  B ==> C["🔢<br/><b>Your numbers</b>"]
-
-  classDef ep fill:#5a4fff,color:#fff,stroke:#3d34d9,stroke-width:3px;
-  classDef pp fill:#796cff,color:#fff,stroke:#5a4fff,stroke-width:2px;
-  class A,C ep;
-  class B pp;
-  linkStyle default stroke:#9a90ff,stroke-width:2.5px;
-```
+<div className="ud" role="img" aria-label="SIP trunk: your carrier sends calls to the Unpod SIP trunk origin endpoint, which routes them to the numbers mapped to it.">
+  <div className="ud__title">SIP trunk</div>
+  <div className="uf-flow">
+    <div className="uf-node is-ext"><span className="uf-ic"><Icon icon="radio-tower" size={20} /></span><span className="uf-t">Your carrier</span><span className="uf-s">SIP URL + credentials</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">SIP</span></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="waypoints" size={20} /></span><span className="uf-t">Unpod SIP trunk</span><span className="uf-s">Origin endpoint</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="hash" size={20} /></span><span className="uf-t">Your numbers</span><span className="uf-s">Mapped to the trunk</span></div>
+  </div>
+  <div className="ud__legend"><span>Unpod runs it</span><span className="is-ext">Outside Unpod</span></div>
+</div>
 
 Setting up your first trunk? Follow the [Quick Start](/telephony/quickstart). This page
 covers each operation on its own. The samples read your

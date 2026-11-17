@@ -23,7 +23,15 @@
     "raiseIssue": false
   },
   "contextual": {
-  "options": ["copy", "view", "chatgpt", "claude", "aistudio", "perplexity", "cursor"],
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "aistudio",
+      "perplexity",
+      "cursor"
+    ],
     "display": "header"
   },
   "navigation": {
@@ -40,29 +48,20 @@
                 "group": "Start Here",
                 "icon": "flag",
                 "pages": [
+                  "get-started/getting-started",
+                  "get-started/account-and-keys",
+                  "home/quickstart",
+                  "get-started/core-concepts"
+                ]
+              },
+              {
+                "group": "About Unpod",
+                "icon": "info",
+                "expanded": false,
+                "pages": [
                   "get-started/why-unpod",
                   "get-started/who-its-for",
-                  "get-started/vs-competition",
-                  "get-started/getting-started",
-                  "home/quickstart",
-                  "guides/index"
-                ]
-              },
-              {
-                "group": "How Unpod fits together",
-                "icon": "network",
-                "pages": [
-                  "get-started/core-concepts",
-                  "core-engine/overview"
-                ]
-              },
-              {
-                "group": "Account & keys",
-                "icon": "key-round",
-                "pages": [
-                  "platform/dev-platform/introduction",
-                  "platform/dev-platform/register",
-                  "platform/dev-platform/login"
+                  "get-started/vs-competition"
                 ]
               }
             ]
@@ -84,6 +83,7 @@
                   "telephony/apis/quickstart",
                   "telephony/apis/multiple-participants",
                   "telephony/apis/answer-url",
+                  "telephony/apis/audio-streaming",
                   "telephony/apis/incoming-calls",
                   "telephony/apis/call-blasting",
                   "telephony/apis/number-masking",
@@ -375,6 +375,18 @@
                 ]
               }
             ]
+          },
+          {
+            "tab": "Guides",
+            "groups": [
+              {
+                "group": "Guides",
+                "icon": "newspaper",
+                "pages": [
+                  "guides/index"
+                ]
+              }
+            ]
           }
         ]
       },
@@ -590,7 +602,7 @@
       "anchors": [
         {
           "anchor": "GitHub",
-          "icon": "github",
+          "icon": "git-branch",
           "href": "https://github.com/unpod-ai/unpod"
         },
         {
@@ -612,7 +624,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/get-started/why-unpod"
+      "destination": "/get-started/getting-started"
     },
     {
       "source": "/blog/getting-started-with-unpod-api",
@@ -849,6 +861,22 @@
     {
       "source": "/apps/email-first-agent",
       "destination": "/platform/apps/email-first-agent"
+    },
+    {
+      "source": "/platform/dev-platform/introduction",
+      "destination": "/get-started/account-and-keys"
+    },
+    {
+      "source": "/platform/dev-platform/register",
+      "destination": "/get-started/account-and-keys"
+    },
+    {
+      "source": "/platform/dev-platform/login",
+      "destination": "/get-started/account-and-keys"
+    },
+    {
+      "source": "/core-engine/overview",
+      "destination": "/get-started/core-concepts"
     }
   ]
 }

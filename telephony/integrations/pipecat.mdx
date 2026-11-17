@@ -1,12 +1,19 @@
 ---
 title: 'Pipecat'
 icon: 'git-merge'
-description: 'Run the Unpod brain inside an open-source Pipecat voice pipeline - drop-in FrameProcessor, fully self-hosted.'
+description: 'Two ways to use Pipecat with Unpod: run your own Pipecat bot on an Unpod call over audio streaming, or run the Unpod brain inside a Pipecat pipeline.'
 ---
 
-Pipecat is an **open-source voice pipeline** you host yourself. Unlike the SIP-trunk
-providers, you don't configure Pipecat as a carrier - instead you drop the Unpod
-brain **into** a Pipecat pipeline as a `FrameProcessor`. Audio that Pipecat captures
+Pipecat is an **open-source voice pipeline** you host yourself. There are two ways to use it
+with Unpod:
+
+- **Your Pipecat bot on an Unpod call.** Unpod carries the phone call and streams its audio
+  to your bot; your pipeline does STT, the LLM and TTS.
+  [Jump to the walkthrough](#your-pipecat-bot-on-an-unpod-call).
+- **The Unpod brain inside your Pipecat pipeline**, below.
+
+Unlike the SIP-trunk providers, you don't configure Pipecat as a carrier - instead you drop
+the Unpod brain **into** a Pipecat pipeline as a `FrameProcessor`. Audio that Pipecat captures
 flows through your `DialogMachine`, and the reply streams back out the same pipeline.
 
 <Note>
@@ -52,6 +59,236 @@ config - you wire it in code. The full, working integration lives in the embeddi
 - **Bring audio in** - any Pipecat transport (WebRTC, Daily, telephony) feeds frames.
 - **Insert the brain** - add the Unpod `FrameProcessor` so each user turn drives your `DialogMachine`.
 - **Stream the reply** - tokens stream back through Pipecat's TTS stage for low latency.
+
+## Your Pipecat bot on an Unpod call
+
+Unpod answers the call and asks your answer URL what to do. You reply with `<Stream>`, Unpod
+opens a WebSocket to your bot, and `UnpodFrameSerializer` turns its messages into Pipecat
+frames and back. The rest of your bot is plain Pipecat. The protocol underneath is on
+[Audio Streaming](/telephony/apis/audio-streaming).
+
+<Note>
+**Preview.** Your org needs the Call API and audio streaming switched on. Ask the Unpod team.
+</Note>
+
+<Steps>
+  <Step title="Credentials and install">
+    Export `UNPOD_BASE_URL`, `UNPOD_PLATFORM_TOKEN` and `UNPOD_ORG_HANDLE` as shown in
+    [Credentials](/telephony/apis/quickstart). Python 3.12+.
+
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install "unpod[pipecat]" "pipecat-ai[websocket,silero,deepgram,anthropic,cartesia]" fastapi uvicorn
+    ```
+
+    The bot below uses Deepgram, Anthropic and Cartesia; export `DEEPGRAM_API_KEY`,
+    `ANTHROPIC_API_KEY` and `CARTESIA_API_KEY`, or swap in any Pipecat services.
+  </Step>
+
+  <Step title="Get a number and your webhook secret">
+    Attach a number with `attach_type="human_call"` so your app answers it. Then get your
+    org's [webhook secret](/telephony/apis/incoming-calls#the-webhook-secret): create it once
+    with `webhook_secret.rotate()`, or read the current one with `webhook_secret.reveal()`
+    (org admin). Store it as `UNPOD_WEBHOOK_SECRET`. Unpod signs the stream's WebSocket
+    upgrade with it, so your bot only accepts streams from Unpod.
+
+    <Warning>
+    Rotating invalidates the previous secret. If your org already has one, use `reveal()`.
+    </Warning>
+  </Step>
+
+  <Step title="Run the bot">
+    One app, two routes: `/answer` replies with `<Stream>`, and `/ws` is the stream.
+    Save as `app.py`:
+
+    ```python app.py
+    import os
+
+    import uvicorn
+    from fastapi import FastAPI, Request, Response, WebSocket
+    from pipecat.audio.vad.silero import SileroVADAnalyzer
+    from pipecat.frames.frames import LLMRunFrame
+    from pipecat.pipeline.pipeline import Pipeline
+    from pipecat.pipeline.worker import PipelineParams, PipelineWorker
+    from pipecat.processors.aggregators.llm_context import LLMContext
+    from pipecat.processors.aggregators.llm_response_universal import (
+        LLMContextAggregatorPair,
+        LLMUserAggregatorParams,
+    )
+    from pipecat.services.anthropic.llm import AnthropicLLMService
+    from pipecat.services.cartesia.tts import CartesiaTTSService
+    from pipecat.services.deepgram.stt import DeepgramSTTService
+    from pipecat.transports.websocket.fastapi import (
+        FastAPIWebsocketParams,
+        FastAPIWebsocketTransport,
+    )
+    from pipecat.workers.runner import WorkerRunner
+
+    from unpod import AsyncClient
+    from unpod.pipecat import UnpodFrameSerializer, parse_unpod_websocket, verify_stream_request
+    from unpod.telephony.answer import Response as Answer
+    from unpod.telephony.stream import NonceCache
+
+    SECRET = os.environ["UNPOD_WEBHOOK_SECRET"]
+    PUBLIC_HOST = os.environ["PUBLIC_HOST"]  # e.g. abc123.ngrok.app
+    NONCES = NonceCache()  # rejects a replayed signature
+    app = FastAPI()
+    unpod = AsyncClient()
+
+
+    @app.api_route("/answer", methods=["GET", "POST"])
+    async def answer(request: Request):
+        """Unpod asks what to do with the call: stream it to /ws."""
+        xml = Answer().stream(f"wss://{PUBLIC_HOST}/ws").to_xml()
+        return Response(xml, media_type="application/xml")
+
+
+    @app.websocket("/ws")
+    async def ws(websocket: WebSocket):
+        # Only Unpod holds your webhook secret: refuse anything else.
+        if not verify_stream_request(
+            websocket.headers,
+            SECRET,
+            url=str(websocket.url),
+            public_base=f"wss://{PUBLIC_HOST}",  # TLS ends at ngrok
+            nonce_cache=NONCES,
+        ):
+            await websocket.close(code=1008)
+            return
+        await websocket.accept()
+        start = await parse_unpod_websocket(websocket)  # call id, stream id, audio format
+
+        transport = FastAPIWebsocketTransport(
+            websocket=websocket,
+            params=FastAPIWebsocketParams(
+                audio_in_enabled=True,
+                audio_out_enabled=True,
+                add_wav_header=False,
+                # Hangs the call up through the call API when the bot ends.
+                serializer=UnpodFrameSerializer.from_start(start, client=unpod),
+            ),
+        )
+
+        stt = DeepgramSTTService(api_key=os.environ["DEEPGRAM_API_KEY"])
+        llm = AnthropicLLMService(
+            api_key=os.environ["ANTHROPIC_API_KEY"],
+            settings=AnthropicLLMService.Settings(
+                model="claude-haiku-5-5",
+                system_instruction="You are a friendly assistant on a phone call. "
+                "Answer in one or two short spoken sentences.",
+            ),
+        )
+        tts = CartesiaTTSService(
+            api_key=os.environ["CARTESIA_API_KEY"],
+            settings=CartesiaTTSService.Settings(voice="71a7ad14-091c-4e8e-a314-022ece01c121"),
+        )
+        context = LLMContext()
+        user, assistant = LLMContextAggregatorPair(
+            context, user_params=LLMUserAggregatorParams(vad_analyzer=SileroVADAnalyzer())
+        )
+        worker = PipelineWorker(
+            Pipeline([transport.input(), stt, user, llm, tts, transport.output(), assistant]),
+            params=PipelineParams(audio_in_sample_rate=8000, audio_out_sample_rate=8000),
+        )
+        runner = WorkerRunner(handle_sigint=False)
+        await runner.add_workers(worker)
+
+        @transport.event_handler("on_client_connected")
+        async def greet(transport, client):
+            context.add_message({"role": "user", "content": "Greet the caller in one short sentence."})
+            await worker.queue_frames([LLMRunFrame()])
+
+        @transport.event_handler("on_client_disconnected")
+        async def gone(transport, client):
+            await runner.cancel()  # the caller hung up
+
+        await runner.run()
+
+
+    if __name__ == "__main__":
+        uvicorn.run(app, host="127.0.0.1", port=8000)
+    ```
+
+    Run it with `python app.py`.
+  </Step>
+
+  <Step title="Expose it">
+    Unpod only calls public https URLs and streams only to a public `wss://` host. In a
+    second terminal:
+
+    ```bash
+    ngrok http 8000
+    ```
+
+    Set `PUBLIC_HOST` to the ngrok host (e.g. `abc123.ngrok.app`) and restart `app.py`.
+  </Step>
+
+  <Step title="Point your number at it, or call out">
+    **Inbound**, once per number:
+
+    ```python
+    from unpod import Client
+    from unpod.telephony import InboundConfig
+
+    with Client() as client:
+        client.telephony.inbound.set_did(
+            "+919000000001",
+            InboundConfig(answer_url="https://abc123.ngrok.app/answer", answer_method="POST"),
+        )
+    ```
+
+    **Outbound**, per call:
+
+    ```python
+    from unpod import Client
+
+    with Client() as client:
+        call = client.telephony.calls.create(
+            "+919000000001",  # your Unpod number
+            "+919000000002",  # who to call
+            answer_url="https://abc123.ngrok.app/answer",
+            answer_method="POST",
+        )
+        print("calling", call.call_id)
+    ```
+  </Step>
+
+  <Step title="Talk to it">
+    Call your number, or pick up the outbound call. The bot greets you; talk and it answers.
+    When the caller hangs up, Unpod closes the socket and the pipeline stops. When the bot
+    ends (an `EndFrame`), the serializer hangs up the call.
+  </Step>
+</Steps>
+
+A fuller example, with outbound calls started from a `POST /start` route protected by an
+`X-Api-Key` header, is in the SDK repo:
+[`examples/pipecat_streaming`](https://github.com/unpod-ai/unpod-python-sdk/tree/main/examples/pipecat_streaming).
+
+### What `UnpodFrameSerializer` does
+
+| Unpod sends | Your pipeline gets |
+| --- | --- |
+| `media` (the caller's audio) | `InputAudioRawFrame`, resampled to your pipeline's rate |
+| `dtmf` | `InputDTMFFrame` |
+| `playedStream`, `clearedAudio` | `InputTransportMessageFrame` |
+
+| Your pipeline produces | Unpod gets |
+| --- | --- |
+| `OutputAudioRawFrame` (bot speech) | `playAudio` in the stream's format |
+| `InterruptionFrame` (the caller barged in) | `clearAudio` |
+| `OutputDTMFFrame` | `sendDTMF` |
+| `EndFrame` | Waits for the audio already sent to play (up to `hangup_drain_secs`, 5 s), then hangs up through the call API |
+| `CancelFrame` | Hangs up at once |
+
+- It reads the format from `start`: μ-law or A-law at 8000 Hz, or L16 at 8000, 16000 or
+  24000 Hz. Run the pipeline at 8000 Hz for μ-law and A-law calls to skip resampling.
+- It feeds only the caller's (`inbound`) audio to the pipeline, so the bot never hears
+  itself even with `audioTrack="both"`.
+- Hanging up needs `client=` (an `AsyncClient`) or your own `hangup=` coroutine. A call that
+  already ended (404, 409, 410) is ignored. Turn it off with
+  `params=UnpodFrameSerializer.InputParams(auto_hang_up=False)`.
+
 
 ## When to pick Pipecat
 

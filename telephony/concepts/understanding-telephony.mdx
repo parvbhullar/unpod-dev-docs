@@ -21,9 +21,21 @@ Telephony is the layer that connects your AI agent to the real phone network. Un
 
 Unpod telephony has three core concepts:
 
-<Frame>
-  <img src="/images/diagrams/telephony-routing-flow.svg" alt="Animated telephony routing flow diagram showing a phone number routed through a bridge and provider to an agent." />
-</Frame>
+<div className="ud" role="img" aria-label="Telephony routing: a phone call reaches your phone number, the bridge routes it, the provider carries the media, and the agent answers.">
+  <div className="ud__title">Telephony routing</div>
+  <div className="uf-flow is-compact">
+    <div className="uf-node is-ext"><span className="uf-ic"><Icon icon="phone-incoming" size={20} /></span><span className="uf-t">Phone</span><span className="uf-s">A caller dials in</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="hash" size={20} /></span><span className="uf-t">Phone number</span><span className="uf-s">PSTN or VoIP</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">routing</span></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="git-merge" size={20} /></span><span className="uf-t">Bridge</span><span className="uf-s">Number + provider + agent</span></div>
+    <div className="uf-arrow"></div>
+    <div className="uf-node"><span className="uf-ic"><Icon icon="server" size={20} /></span><span className="uf-t">Provider</span><span className="uf-s">Handles the media</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">media</span></div>
+    <div className="uf-node"><span className="uf-ic"><Icon icon="bot" size={20} /></span><span className="uf-t">Agent</span><span className="uf-s">Talks to the caller</span></div>
+  </div>
+  <div className="ud__legend"><span>Unpod routing config</span><span className="is-ext">Outside Unpod</span></div>
+</div>
 
 | Component | What It Is | Example |
 |-----------|-----------|---------|

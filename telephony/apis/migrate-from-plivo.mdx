@@ -29,9 +29,9 @@ async with AsyncClient() as client:
 | `calls.playMusic(callUuid, url, { loop })` | `calls.play_audio(call_id, url=, leg_id=, loop=)` | `PlayResult` |
 | `calls.stopPlayingMusic(callUuid)` | `calls.stop_audio(call_id, leg_id=, play_id=)` | `None` |
 | `GET` on `RecordingURL` | `calls.get_recording(call_id).url`, then a `GET` with your auth headers and `Accept: audio/wav` ([Recording](/telephony/apis/recording#download-the-audio)) | `Recording` |
-| Call Status / Recording / Incoming webhooks | `parse_call_event(body, headers, secret)`. Recording events aren't signed yet: `verify=False` | `CallEvent` |
+| Call Status / Recording / Incoming webhooks | `parse_call_event(body, headers, secret)` | `CallEvent` |
 | Number answer URL | `telephony.inbound.set_did(number, InboundConfig(answer_url=…))` | `InboundConfig` |
-| `X-Plivo-Signature-V3` | `X-Webhook-Signature`, checked by `parse_call_event` | - |
+| `X-Plivo-Signature-V3` | Callbacks: `X-Webhook-Signature`, checked by `parse_call_event`. Stream WebSocket: `X-Unpod-Signature`, checked by `verify_stream_request`. Plivo SDK validators accept neither | - |
 | Search / buy / configure a number | `telephony.numbers.list()` / `attach()` from the Unpod pool | - |
 
 ## 1. Dial the agent (leg 1)
@@ -159,7 +159,7 @@ The secret comes from `client.telephony.webhook_secret.rotate()`. See [Webhooks]
 | --- | --- |
 | `ParticipantRecordingInitiated` | Sent only with `record_participant_track=True`, together with `ParticipantRecordingCompleted` after the call. No recording URL; the leg's channel is in `ev.metadata["channel"]` (`1` left, `2` right) |
 | `ParticipantRecordingCompleted` | `ev.metadata["recording_url"]` and `ev.metadata["channel"]`: the same 2-channel WAV - split it if you need per-leg audio |
-| `MPCRecordingCompleted` | Same name, but unsigned and without `metadata`. `ev.recording_url` is a path inside Unpod: fetch with `get_recording(ev.call_id)` |
+| `MPCRecordingCompleted` | Same name, but without `metadata`. `ev.recording_url` is a path inside Unpod: fetch with `get_recording(ev.call_id)` |
 
 One **2-channel WAV** per call: agent on the left, customer on the right. Whether a call
 is recorded follows the recording policy (set by the Unpod team): `record=True` doesn't
@@ -193,6 +193,22 @@ see [Incoming Calls](/telephony/apis/incoming-calls).
 
 Any other cause on the customer leg also ends the call. For every cause and code, see
 [Hangup causes](/telephony/apis/webhooks#hangup-causes).
+
+## 7. Audio streams
+
+`<Stream>` takes the same attributes as Plivo's, and the WebSocket carries the same events
+in both directions. On top of μ-law, Unpod streams A-law (`audio/x-alaw;rate=8000`) and
+L16 at 8, 16 or 24 kHz. Watch for these:
+
+| Area | Unpod |
+| --- | --- |
+| Stream signature | `X-Unpod-Signature` on the WebSocket connection, not `X-Plivo-Signature-V3`. Check it with `verify_stream_request` (`unpod.telephony.stream`) |
+| Status callbacks | `Event` is `started`, `stopped`, `failed` or `degraded`, read as `ev.event` with `parse_call_event`. See [Stream events](/telephony/apis/webhooks#stream-events) |
+| `callId` in the `start` event | Unpod's call id, not a UUID. Plivo's Node stream SDK rejects it; Pipecat accepts it |
+
+See [Audio Streaming](/telephony/apis/audio-streaming) for every attribute and event.
+
+{/* TODO(verify): UNPO-536 spec open point 4 - confirm Plivo's own stream status-callback event names with one real Plivo capture before adding a "differs from Plivo" note */}
 
 ## Known differences
 
