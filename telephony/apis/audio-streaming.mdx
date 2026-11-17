@@ -35,6 +35,12 @@ with the rest of your reply, and the REST stream API returns `403`.
   <div className="ud__legend"><span>Unpod runs it</span><span className="is-you">You run it</span><span className="is-ext">Outside Unpod</span></div>
 </div>
 
+<Info>
+The Python SDK pieces on this page (`Answer().stream()`, `calls.start_stream()`,
+`verify_stream_request`, `UnpodFrameSerializer`) ship in the `unpod` release after 0.7.0.
+The HTTP API, the `<Stream>` verb and the WebSocket protocol work from any language today.
+</Info>
+
 Building with Pipecat? [Pipecat bots on Unpod calls](/telephony/integrations/pipecat#your-pipecat-bot-on-an-unpod-call)
 is a full walkthrough: `UnpodFrameSerializer` does the protocol below for you.
 
@@ -199,6 +205,11 @@ Every frame also has `sequenceNumber`, `streamId` and a top-level `extra_headers
 
 {"event": "checkpoint", "streamId": "<uuid>", "name": "greeting-done"}
 ```
+
+The SDK builds and reads these frames for you in `unpod.telephony.stream`: `parse_start()`
+reads `start` (`call_id`, `stream_id`, `account_id`, `media_format`, `extra_headers`), and
+`play_audio_message()`, `clear_audio_message()`, `checkpoint_message()` and
+`send_dtmf_message()` build the bot's frames, checking the limits above.
 
 - There is no `stop` frame: Unpod ends the stream by closing the socket with code `1000`.
 - `start.callId` is the id the call APIs take, for example to hang up from the bot with

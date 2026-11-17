@@ -261,6 +261,10 @@ frames and back. The rest of your bot is plain Pipecat. The protocol underneath 
   </Step>
 </Steps>
 
+A fuller example, with outbound calls started from a `POST /start` route protected by an
+`X-Api-Key` header, is in the SDK repo:
+[`examples/pipecat_streaming`](https://github.com/unpod-ai/unpod-python-sdk/tree/main/examples/pipecat_streaming).
+
 ### What `UnpodFrameSerializer` does
 
 | Unpod sends | Your pipeline gets |
