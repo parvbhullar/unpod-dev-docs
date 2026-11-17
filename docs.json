@@ -84,6 +84,7 @@
                   "telephony/apis/quickstart",
                   "telephony/apis/multiple-participants",
                   "telephony/apis/answer-url",
+                  "telephony/apis/audio-streaming",
                   "telephony/apis/incoming-calls",
                   "telephony/apis/call-blasting",
                   "telephony/apis/number-masking",

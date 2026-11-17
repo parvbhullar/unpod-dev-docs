@@ -27,11 +27,17 @@ that id. Every method raises `TelephonyAPIError` on an error response - see
 | `transfer_complete` / `transfer_cancel` | `POST /sbc/v1/calls/{call_id}/transfer/complete` / `.../transfer/cancel` |
 | `send_dtmf` | `POST /sbc/v1/calls/{call_id}/dtmf` |
 | `record` / `get_recording` | `POST /sbc/v1/calls/{call_id}/record` / `GET .../recording` - see [Recording](/telephony/apis/recording) |
+| `start_stream` / `list_streams` / `stop_stream` | `POST` / `GET` / `DELETE /sbc/v1/calls/{call_id}/stream` - see [Audio Streaming](/telephony/apis/audio-streaming#rest-stream-api) |
+| `get_stream` / `stop_stream` | `GET` / `DELETE /sbc/v1/calls/{call_id}/stream/{stream_id}` |
+| API only | `POST /sbc/v1/calls/{call_id}/hold`, `.../unhold`, `.../mute`, `.../unmute` - see [Hold and mute](#hold-and-mute) |
 
 Every request sends `Authorization: Token $UNPOD_PLATFORM_TOKEN` and
 `Org-Handle: $UNPOD_ORG_HANDLE`, plus `Content-Type: application/json` when it has a body.
 
 ## Options
+
+A call holds at most two participants: the leg `create` dials and one `add_participant`.
+A third `add_participant` returns `409 participant_limit`.
 
 `create` and `add_participant` take the same options. Over HTTP they are body fields of
 the same name (`from_` is `from`), and `idempotency_key` is the `Idempotency-Key` header.
@@ -45,7 +51,7 @@ the same name (`from_` is `from`), and `idempotency_key` is the `Idempotency-Key
 | `dial_music` | `str` | Only `"none"` is accepted today; an audio URL is rejected as not supported. To play a sound while a leg rings, see [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
 | `status_callback_url` | `str` | Public https URL for this leg's events. Its query string is echoed back |
 | `status_callback_method` | `"POST"` \| `"GET"` | `POST` only today: status callbacks are always POSTed, and `GET` is ignored |
-| `status_callback_format` | `"form"` \| `"json"` | Default `form` (Plivo-style keys); `json` uses snake_case |
+| `status_callback_format` | `"form"` \| `"json"` | Default `form` (keys such as `CallUUID`); `json` uses snake_case |
 | `recording_callback_url` | `str` | Public https URL for the recording event |
 | `record` | `bool` | Stored, but doesn't override the recording policy (set by the Unpod team) today. See [Recording](/telephony/apis/recording) |
 | `record_participant_track` | `bool` | Also send per-leg recording events. Needs `record=True` |
@@ -95,7 +101,7 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
 
 | Method | Notes |
 | --- | --- |
-| `play_audio(call_id, *, url, leg_id, loop, interrupt_on_dtmf)` → `PlayResult` | `url` is a public https MP3 or WAV. `loop` and `interrupt_on_dtmf` default to `false`. Answers `202` with a `play_id`. The SDK also accepts `file=`, but the API rejects it with `400 bad_request`: use `url` |
+| `play_audio(call_id, *, url, leg_id, loop, mix, interrupt_on_dtmf)` → `PlayResult` | `url` is a public https MP3 or WAV. `loop` and `interrupt_on_dtmf` default to `false`. `mix` (default `true`) plays the file over the call audio on the leg you dialed (`callee`) of a call you started with `create`; on any other leg the file replaces that leg's audio. Answers `202` with a `play_id`. The SDK also accepts `file=`, but the API rejects it with `400 bad_request`: use `url` |
 | `stop_audio(call_id, *, leg_id, play_id)` | Stops one play, one leg's audio, or both omitted, all audio on the call. `202` even if nothing was playing |
 | `speak(call_id, text, *, voice, language, leg_id, loop)` → `PlayResult` | Text-to-speech, 1-1000 characters. `voice` and `language` default to the number's [`tts_voice` / `tts_language`](/telephony/apis/incoming-calls#inboundconfig-fields). Answers `202` with a `play_id` |
 
@@ -103,6 +109,8 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
 `callee`); omit it to play to everyone on the call. Each leg gets `PlayStarted` / `PlayStopped` events with the same
 `play_id`. `speak` answers `503 tts_unavailable` when speech can't be made (the call
 carries on) and `429 rate_limited` when your org sends too many at once.
+
+{/* TODO(verify): mix - spec UNPO-536 section 5 and supersbc call_play.rs (UNPO-469) say mix=true mixes on a REST call's callee leg; the SDK 685e98c play_audio docstring still says "mixing is not supported yet: playback replaces the call audio" */}
 
 ## Transfer and DTMF
 
@@ -137,7 +145,7 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/transfer
 
 | Method | Notes |
 | --- | --- |
-| `send_dtmf(call_id, digits, *, leg_id)` | `digits` from `0-9 A-D * #`. Omit `leg_id` to send to the person you dialed (outbound) or who called in (inbound) |
+| `send_dtmf(call_id, digits, *, leg_id)` | `digits` from `0-9 A-D * #`. Omit `leg_id` to send to the person you dialed (outbound) or who called in (inbound). Over HTTP the body also takes `duration_ms` (how long each tone plays) and `inter_digit_ms` (the gap between tones); API only, the SDK doesn't send them yet |
 | `transfer(call_id, target, *, type, leg_id)` | `target` is E.164 or a `sip:` / `sips:` URI. `type` is `"blind"` (default) or `"attended"`. `leg_id` defaults to `"callee"` |
 | `transfer_complete(call_id, consult_leg)` / `transfer_cancel(call_id, consult_leg)` | Finish or abandon an attended transfer. Body `{"consult_leg": ...}` |
 
@@ -146,6 +154,29 @@ from `create` or an event - and goes over HTTP as `leg`. Anything else returns
 `400 bad_request`.
 
 {/* TODO(verify): how to send DTMF to a participant added with add_participant (its dynamic leg_id is rejected) */}
+
+## Hold and mute
+
+API only: the SDK has no methods for these yet. Call them over HTTP:
+
+```bash cURL
+# mute the caller leg -> 200 {"message": "dispatched"}
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/mute" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" -d '{"leg": "caller"}'
+
+# put the caller on hold -> 202 {"leg_id": "<call_id>-caller"}
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/hold" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" -d '{}'
+```
+
+| Request | Notes |
+| --- | --- |
+| `POST .../mute` / `POST .../unmute` | Body `{"leg": "caller"}` or `{"leg": "callee"}` (required). `409` before the call's audio is set up |
+| `POST .../hold` / `POST .../unhold` | Only the caller's leg of an inbound call: body `{}` or `{"leg_id": "caller"}`. A call you started with `create` answers `400`. The leg gets `Hold` / `Unhold` [events](/telephony/apis/webhooks#events) |
+
+{/* TODO(verify): hold/mute bodies and limits read from supersbc feat/unpo-487-streaming 81081486 (calls.rs mute_call LegRequest, call_hold.rs hold_leg), not from the deployed 018a47e8; confirm through the unpod proxy on QA */}
 
 ## Inspect and end calls
 

@@ -16,8 +16,8 @@ and the number people dial to reach you. Add one from the Unpod pool in either o
 
 <Tip>
 Using the Telephony APIs ([Quick Start](/telephony/apis/quickstart))? Attach the number
-[from the API](#from-the-api) with `attach_type="human_call"`. The steps below connect it
-to a SIP trunk or an agent.
+[from the API](#from-the-api) with `attach_type="human_call"`: your app controls its calls
+with the Telephony APIs. The steps below connect it to a SIP trunk or an agent.
 </Tip>
 
 <Steps>
@@ -45,8 +45,6 @@ to a SIP trunk or an agent.
     <Frame caption="A new number starts Not Linked - Connect to opens the options">
       <img src="/images/unpod-numbers/03-connect-to.png" alt="Number Configuration showing Not Linked and the Connect to menu with SIP Trunk and Agents" />
     </Frame>
-
-    {/* TODO(verify): which Connect to option matches attach_type="human_call" (your app controls calls with the Telephony APIs) */}
   </Step>
 
   <Step title="Ready (SIP Trunk)">
@@ -131,9 +129,23 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/numbers/attach/" \
 
 Pass one number or a list, in strict E.164 (`+` and the country code). Each number
 succeeds or fails on its own: check `ok` and `error` on every row (`data.numbers` in the
-cURL response). If no number attaches, the whole request fails: `400`, `402` (no balance)
-or `206` (over your plan's channel quota). The SDK raises `httpx.HTTPStatusError` on `400`
-and `402`, but not on `206`, so still check `ok`.
+cURL response). If no number attaches, the whole request fails:
+
+| Status | Why |
+| --- | --- |
+| `400` | A bad request, for example `channels_count` below 1 |
+| `402` | No balance |
+| `402` | `Number entitlement exceeded for this plan`: the numbers your org holds plus this one are more than your plan allows |
+| `206` | Over your plan's channel quota |
+
+The SDK raises `httpx.HTTPStatusError` on `400` and `402`, but not on `206`, so still
+check `ok`.
+
+Each attached number takes its channels from your plan. Over HTTP, `channels_count` (on
+`numbers/attach/` and on a trunk's `attach-numbers/`) sets how many: at least 1, default 1.
+It's API only: the SDK doesn't send it, so you get the default. `bridge_slug` is optional
+too: leave it out and Unpod uses your org's bridge (one per org), creating it if there's
+none yet.
 
 | Option | Who handles the calls |
 | --- | --- |
@@ -168,7 +180,9 @@ curl -s "https://unpod.ai/api/v2/platform/telephony/overview/" \
 
 Detach releases the number back to `NOT_ASSIGNED`; it isn't deleted. A number your org
 owns stays yours to attach again. A number you took from the shared pool goes back to the
-pool, where another org can take it.
+pool, where another org can take it. Detach also frees the number's channels and removes
+its routing and its [inbound config](/telephony/apis/incoming-calls), so set the inbound
+config again if you attach it later.
 
 <CodeGroup>
 ```python Python

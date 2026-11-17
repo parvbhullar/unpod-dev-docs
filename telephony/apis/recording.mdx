@@ -154,8 +154,8 @@ number's [inbound config](/telephony/apis/incoming-calls#inboundconfig-fields). 
 carries `ev.call_id`, `ev.recording_url` and `ev.recording_duration`. Treat it as a hint
 that the recording is ready:
 
-- It isn't signed yet, so `parse_call_event` with your secret rejects it. Parse it with
-  `verify=False` and trust only what `get_recording` returns for `ev.call_id`.
+- It's signed like every other [webhook](/telephony/apis/webhooks#which-requests-are-signed):
+  verify it with `parse_call_event` and your secret.
 - It carries no `metadata`, so match it to your own records by `ev.call_id`.
 - `ev.recording_url` is a path inside Unpod, not a download link. Call
   `get_recording(ev.call_id)` for the `url`.
@@ -172,12 +172,16 @@ arrive together after the call ends, and both carry the leg's channel in
 `ParticipantRecordingCompleted` carries the recording, in `ev.metadata["recording_url"]`:
 the same 2-channel file, at the same path inside Unpod.
 
-{/* TODO(verify): recording events go out unsigned (recording_completed.rs `secret: None`, UNPO-181); REST-originated calls can miss the event when the report loses the PendingOriginate removal race (reporter.rs recording_callback_target) */}
+{/* TODO(verify): REST-originated calls can miss the event when the report loses the PendingOriginate removal race (reporter.rs recording_callback_target) */}
 
 **Answer URL `<Record>`.** When a `<Record>` in your
 [answer-URL reply](/telephony/apis/answer-url) reaches its `maxLength` (300 s by default),
 Unpod sends `RecordStop` to your answer URL with `ev.recording_url`. That's the same path
 inside Unpod: once the call ends, get the audio with `get_recording(ev.call_id)`.
+
+With `<Record recordSession="true">`, the recording runs in the background (60 s by
+default) while the next verbs run, and its `callbackUrl` gets the recording event when it
+ends. See [Record in the background](/telephony/apis/answer-url#record-in-the-background).
 
 {/* TODO(verify): answer_url.rs reports RecordStop at maxLength while the file keeps growing until hangup; whether <Record> on a call the policy already records does anything (sip_session start_recording: "Recording already active") */}
 
@@ -204,7 +208,8 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/record" 
 
 It returns as soon as the request reaches the call, before recording starts, so it doesn't
 report whether recording started. A call that has ended returns `404 not_found`. A call
-the recording policy already records keeps that one recording. Whether `get_recording`
+the recording policy already records keeps that one recording. A call has one recording:
+after `stop_recording`, `record` is refused with `409 conflict`. Whether `get_recording`
 returns a recording started this way isn't confirmed yet. `transcribe=True` is accepted,
 but no transcript is made yet.
 

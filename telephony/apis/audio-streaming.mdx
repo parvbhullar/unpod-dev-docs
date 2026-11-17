@@ -1,0 +1,334 @@
+---
+title: 'Audio Streaming'
+icon: 'audio-lines'
+description: "Stream a call's raw audio to your own WebSocket and play your bot's audio back: the <Stream> verb, the REST stream API, the WebSocket protocol and its signature."
+---
+
+Unpod can run the whole conversation for you ([Realtime](/telephony/streaming/unpod-speech-quickstart)
+and [WebSocket sessions](/telephony/streaming/websocket): Unpod does STT, VAD, barge-in and
+TTS, and your code sees only text). Audio streaming is the other way round: Unpod sends the
+call's audio to your WebSocket, 20 ms at a time, and plays back the audio your bot returns.
+You bring the speech pipeline.
+
+| | Realtime / WebSocket sessions | Audio streaming |
+| --- | --- | --- |
+| Who runs STT, VAD, TTS | Unpod | You |
+| Your code sees | Text | Audio frames |
+| How a call reaches it | Number attached to an agent | `<Stream>` in your answer URL reply, or the REST stream API |
+
+<Note>
+**Preview.** Audio streaming is off by default. Your org needs the Call API switched on
+(otherwise `403 call_api_disabled`) **and** audio streaming switched on. Ask the Unpod team
+to enable both. While streaming is off, a `<Stream>` verb is skipped and the call carries on
+with the rest of your reply, and the REST stream API returns `403`.
+</Note>
+
+<div className="ud" role="img" aria-label="Audio streaming: a call reaches Unpod. Your answer URL replies with a Stream verb, or your app starts a stream over REST. Unpod opens a signed WebSocket to your bot and streams the call's audio both ways.">
+  <div className="ud__title">Audio streaming</div>
+  <div className="uf-flow">
+    <div className="uf-node is-ext"><span className="uf-ic"><Icon icon="phone" size={20} /></span><span className="uf-t">Call</span><span className="uf-s">Inbound or outbound</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">audio</span></div>
+    <div className="uf-node is-accent"><span className="uf-ic"><Icon icon="radio-tower" size={20} /></span><span className="uf-t">Unpod</span><span className="uf-s">&lt;Stream&gt; or REST</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">signed WebSocket</span></div>
+    <div className="uf-node is-you"><span className="uf-ic"><Icon icon="bot" size={20} /></span><span className="uf-t">Your bot</span><span className="uf-s">Any language</span></div>
+  </div>
+  <div className="ud__legend"><span>Unpod runs it</span><span className="is-you">You run it</span><span className="is-ext">Outside Unpod</span></div>
+</div>
+
+Building with Pipecat? [Pipecat bots on Unpod calls](/telephony/integrations/pipecat#your-pipecat-bot-on-an-unpod-call)
+is a full walkthrough: `UnpodFrameSerializer` does the protocol below for you.
+
+## Start a stream
+
+There are two ways:
+
+- **From your answer URL.** Reply to `StartApp` with a `<Stream>` verb (below). Works for
+  inbound calls and for calls you place with `calls.create(answer_url=...)`.
+- **On a live call, over REST.** `POST /calls/{id}/stream` starts a stream on a call that is
+  already up, for example halfway through. See [REST stream API](#rest-stream-api).
+
+A call has at most one stream at a time.
+
+## The `<Stream>` verb
+
+<CodeGroup>
+```xml XML
+<Response>
+    <Stream bidirectional="true" keepCallAlive="true" audioTrack="inbound"
+            contentType="audio/x-mulaw;rate=8000">wss://bot.example.com/ws</Stream>
+</Response>
+```
+
+```json JSON
+{"actions": [{"type": "stream", "url": "wss://bot.example.com/ws",
+              "bidirectional": true, "keep_call_alive": true, "audio_track": "inbound",
+              "content_type": "audio/x-mulaw;rate=8000"}]}
+```
+
+```python Python SDK
+from unpod.telephony.answer import Response as Answer
+
+Answer().stream("wss://bot.example.com/ws").to_xml()   # or .to_json()
+```
+</CodeGroup>
+
+| XML | JSON | Default when left out | Notes |
+| --- | --- | --- | --- |
+| element text | `url` | - | `ws://` or `wss://`, at most 2048 characters. The path and query reach your bot exactly as written, so you can put a per-call token in them |
+| `bidirectional` | `bidirectional` | `false` | `true` lets the bot play audio back. Then `audioTrack` must be `inbound` |
+| `audioTrack` | `audio_track` | `inbound` | What the bot hears: `inbound` (the caller), `outbound` (what Unpod plays to the caller) or `both` |
+| `contentType` | `content_type` | `audio/x-l16;rate=8000` | `audio/x-mulaw;rate=8000`, `audio/x-alaw;rate=8000`, or `audio/x-l16;rate=8000`, `16000` or `24000`. The rate is part of the content type |
+| `keepCallAlive` | `keep_call_alive` | `false` | `true`: the call waits on the stream until the bot closes it. `false`: the stream runs in the background and the next verb runs at once; with no next verb the call ends (`End Of XML Instructions`) |
+| `streamTimeout` | `stream_timeout` | `86400` | Seconds from `started` until Unpod stops the stream. At least 1 |
+| `extraHeaders` | `extra_headers` | - | `key=value,key2=value2`, letters, digits, `_` and `-` only, at most 512 bytes. Sent to your bot in every frame and in the status callbacks |
+| `statusCallbackUrl` | `status_callback_url` | - | Where [status callbacks](#status-callbacks) go. **Without it there are no stream callbacks** |
+| `statusCallbackMethod` | `status_callback_method` | `POST` | `POST` or `GET` |
+| `noiseCancellation`, `noiseCancellationLevel` | `noise_cancellation`, `noise_cancellation_level` | - | Accepted and checked (level 60-100) but **not applied yet** |
+
+<Tip>
+The SDK's `Answer().stream(url)` is set up for a voice bot: it sends `bidirectional="true"`,
+`keepCallAlive="true"`, `audioTrack="inbound"` and μ-law at 8000 Hz unless you pass
+`bidirectional=`, `keep_call_alive=`, `audio_track=`, `content_type=` / `sample_rate=`.
+It also takes `stream_timeout=`, `status_callback_url=`, `status_callback_method=`,
+`extra_headers=` (a string or a dict), `noise_cancellation=` and `noise_cancellation_level=`,
+and checks them the same way Unpod does.
+</Tip>
+
+Verbs after `<Stream>` run once the stream ends (with `keepCallAlive="true"`, when your bot
+closes the socket), for example a `<Dial>` to hand the caller to a person. See
+[Answer URL & XML](/telephony/apis/answer-url) for every verb.
+
+## REST stream API
+
+Start, list and stop streams on a live call. Same host and headers as the other
+[call APIs](/telephony/apis/call-control): `https://unpod.ai/api/v2/platform/sbc/v1`,
+`Authorization: Token` and `Org-Handle`.
+
+| Method and path | Does | Returns |
+| --- | --- | --- |
+| `POST /calls/{id}/stream` | Start a stream | `202 {"stream_id", "message"}`. An error when the call already has an active stream |
+| `GET /calls/{id}/stream` | Every stream the call has had | `{"streams": [...]}` |
+| `GET /calls/{id}/stream/{stream_id}` | One stream | The stream object below |
+| `DELETE /calls/{id}/stream` | Stop the active stream | `204`. The stream ends with `api_request`; the call carries on |
+| `DELETE /calls/{id}/stream/{stream_id}` | Stop that stream | `204` |
+
+{/* TODO(verify): second-stream status code - UNPO-536 spec says 400, SDK 685e98c start_stream docstring says 409; disabled org: spec says 403 forbidden, SDK says 403 audio_stream_disabled. Confirm on QA. */}
+
+The `POST` body takes the snake_case keys from the `<Stream>` table, with `service_url` in
+place of `url`. The noise-cancellation keys are not taken over REST.
+
+A stream object has `stream_id`, `call_uuid`, `service_url`, `status` (`in-progress`,
+`stopped` or `failed`), `bidirectional`, `audio_track`, `content_type`, `start_time`,
+`end_time`, `duration` (seconds) and `status_reason`.
+
+<CodeGroup>
+```python Python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:
+        calls = client.telephony.calls
+        started = await calls.start_stream(
+            "CALL_ID",
+            "wss://bot.example.com/ws",
+            bidirectional=True,
+            content_type="audio/x-mulaw;rate=8000",
+            status_callback_url="https://app.example.com/stream-events",
+        )
+        print(started.stream_id)
+
+        for s in await calls.list_streams("CALL_ID"):
+            print(s.stream_id, s.status, s.status_reason)
+
+        await calls.stop_stream("CALL_ID")  # the call carries on
+
+asyncio.run(main())
+```
+
+```bash cURL
+curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/CALL_ID/stream" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{"service_url": "wss://bot.example.com/ws", "bidirectional": true,
+       "content_type": "audio/x-mulaw;rate=8000",
+       "status_callback_url": "https://app.example.com/stream-events"}'
+
+curl -s -X DELETE "https://unpod.ai/api/v2/platform/sbc/v1/calls/CALL_ID/stream" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+```
+</CodeGroup>
+
+## WebSocket protocol
+
+Unpod opens a WebSocket to your URL, signed with your [webhook secret](#verify-the-stream-signature),
+and both sides send JSON text frames.
+
+**Unpod → your bot**
+
+| Event | Carries |
+| --- | --- |
+| `start` | First frame. `start.callId`, `start.streamId`, `start.accountId` (your org), `start.tracks`, `start.mediaFormat {encoding, sampleRate}` |
+| `media` | `media.track`, `media.timestamp` (Unix ms, as a string), `media.chunk`, `media.payload` (base64 audio, about 20 ms) |
+| `dtmf` | `dtmf.digit`: the caller pressed a key |
+| `playedStream` | `name`: every audio frame you sent before that `checkpoint` has played |
+| `clearedAudio` | Reply to your `clearAudio` |
+
+Every frame also has `sequenceNumber`, `streamId` and a top-level `extra_headers` string (your
+`extraHeaders`).
+
+**Your bot → Unpod**
+
+| Event | Carries |
+| --- | --- |
+| `playAudio` | `media {contentType, sampleRate, payload}`. Must be in the stream's format, or it is dropped. Needs `bidirectional` |
+| `clearAudio` | Drop the audio still queued to play (the caller barged in). Pending checkpoints get no `playedStream` |
+| `checkpoint` | `name` (up to 256 characters). Unpod answers with `playedStream` once everything before it has played |
+| `sendDTMF` | `dtmf`: digits `0-9`, `A-D`, `*`, `#`, at most 32 queued. Played to the caller |
+
+```json
+{"event": "start", "sequenceNumber": 1, "streamId": "<uuid>", "extra_headers": "",
+ "start": {"callId": "<call id>", "streamId": "<uuid>", "accountId": "<org id>",
+           "tracks": ["inbound"], "mediaFormat": {"encoding": "audio/x-mulaw", "sampleRate": 8000}}}
+
+{"event": "media", "sequenceNumber": 2, "streamId": "<uuid>", "extra_headers": "",
+ "media": {"track": "inbound", "timestamp": "1763380000000", "chunk": 1, "payload": "<base64>"}}
+
+{"event": "playAudio", "streamId": "<uuid>",
+ "media": {"contentType": "audio/x-mulaw", "sampleRate": 8000, "payload": "<base64>"}}
+
+{"event": "checkpoint", "streamId": "<uuid>", "name": "greeting-done"}
+```
+
+- There is no `stop` frame: Unpod ends the stream by closing the socket with code `1000`.
+- `start.callId` is the id the call APIs take, for example to hang up from the bot with
+  `calls.hangup(call_id)`. It is not a UUID.
+- Unpod reads the format from `start.mediaFormat`; send `playAudio` in the same format.
+
+## Verify the stream signature
+
+Unpod signs every stream WebSocket upgrade with your org's
+[webhook secret](/telephony/apis/incoming-calls#the-webhook-secret), in one header:
+
+```
+X-Unpod-Signature: t=<unix seconds>,n=<nonce>,v1=<hex>
+v1 = hex(HMAC-SHA256(webhook secret, "ws." + t + "." + n + "." + url))
+```
+
+- `url` is the URL exactly as Unpod dialled it, `wss://host/path?query`.
+- Reject the upgrade when `t` is more than 300 seconds from now. To block replays, remember
+  each `n` for 10 minutes and reject one you have seen.
+- While the secret is being rotated the header can carry two `v1` values; accept either.
+- The `ws.` prefix keeps stream and [webhook](/telephony/apis/webhooks) signatures apart:
+  neither can pass as the other.
+
+With the SDK, check it before you accept the socket:
+
+```python
+import os
+
+from unpod.pipecat import verify_stream_request
+from unpod.telephony.stream import NonceCache
+
+NONCES = NonceCache()  # one per process, shared by your handlers
+
+ok = verify_stream_request(
+    websocket.headers,
+    os.environ["UNPOD_WEBHOOK_SECRET"],
+    url=str(websocket.url),
+    public_base="wss://bot.example.com",  # behind a proxy or tunnel
+    nonce_cache=NONCES,
+)
+```
+
+Behind a proxy or tunnel your server sees its own host and often `ws://`, so pass
+`public_base`: the host is taken from it, never from request headers.
+
+Without the SDK (any language), the same check:
+
+```python
+import hashlib, hmac, time
+
+def verify(header: str, secret: str, url: str) -> bool:
+    parts = [p.strip().partition("=")[::2] for p in header.split(",")]
+    t = next((v for k, v in parts if k == "t"), "")
+    n = next((v for k, v in parts if k == "n"), "")
+    sigs = [v.lower() for k, v in parts if k == "v1" and v]
+    if not (t.isdigit() and n and sigs) or abs(time.time() - int(t)) > 300:
+        return False
+    want = hmac.new(secret.encode(), f"ws.{t}.{n}.{url}".encode(), hashlib.sha256).hexdigest()
+    return any(hmac.compare_digest(want, s) for s in sigs)
+```
+
+## Status callbacks
+
+With `statusCallbackUrl` set, Unpod posts stream events there (form fields; with
+`statusCallbackMethod="GET"`, query parameters). They are signed with `X-Webhook-Signature`
+like every other [webhook](/telephony/apis/webhooks).
+
+| `Event` | When |
+| --- | --- |
+| `started` | Your bot accepted the socket |
+| `stopped` | The stream ended normally |
+| `failed` | The stream could not start, or broke |
+| `degraded` | Warning: your bot is reading audio too slowly. The stream keeps running |
+
+Fields: `Event`, `CallUUID`, `StreamID`, `Timestamp` (ISO 8601), `From`, `To`, `Direction`,
+`ServiceURL` (without its query), `ExtraHeaders`; plus `StatusReason` and `Duration` on
+`stopped` and `failed`, and `Error` on `failed`.
+
+| `Event` | `StatusReason` |
+| --- | --- |
+| `stopped` | `completed`, `api_request` (REST `DELETE`), `stream_timeout`, `call_hangup` |
+| `failed` | `start_failed`, `connection_failed`, `authentication_failed`, `connection_dropped`, `slow_connection`, `message_too_large` |
+| `degraded` | `slow_connection_30`, `slow_connection_60`, `slow_connection_90` |
+
+With the SDK:
+
+```python
+from unpod.telephony import STREAM_EVENTS, parse_call_event
+
+ev = parse_call_event(body, headers, secret=SECRET)
+if ev.event in STREAM_EVENTS:
+    print(ev.event, ev.stream_id, ev.stream_reason, ev.service_url, ev.error, ev.event_time)
+```
+
+## Limits
+
+- One stream per call at a time.
+- The URL is at most 2048 characters; `extraHeaders` at most 512 bytes.
+- A frame over 64 KB ends the stream (`message_too_large`).
+- A bot that keeps falling behind gets `degraded` warnings, then the stream fails with
+  `slow_connection`.
+- Noise cancellation is accepted but not applied yet.
+- The answer URL rules still apply: public https, 3000 ms to reply, and the
+  [fallback](/telephony/apis/answer-url#timeouts-and-fallback) on a failure.
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+| --- | --- |
+| Answer URL hit, no WebSocket | Audio streaming is off for your org: ask the Unpod team. Or the stream URL isn't a public `ws://` / `wss://` host |
+| `failed` with `authentication_failed` | Your server rejected the upgrade: wrong secret, wrong `url` / `public_base`, or a clock more than 300 s off |
+| Call ends the moment it is answered | `keepCallAlive` left at `false` with nothing after `<Stream>` |
+| Fallback instead of streaming | The reply didn't parse (bad `contentType`, `bidirectional` with a track other than `inbound`), a non-2xx status, or no reply within 3000 ms |
+| Bot hears noise | Your code decodes a different format than `start.mediaFormat` |
+| Caller hears nothing | `bidirectional` is off, or `playAudio` is not in the stream's format |
+| No stream callbacks | No `statusCallbackUrl` on the stream |
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Pipecat bots on Unpod calls" icon="git-merge" href="/telephony/integrations/pipecat#your-pipecat-bot-on-an-unpod-call">
+    A full voice bot on a call, with `UnpodFrameSerializer`.
+  </Card>
+  <Card title="Answer URL & XML" icon="file-code" href="/telephony/apis/answer-url">
+    Every verb you can put before or after `<Stream>`.
+  </Card>
+  <Card title="Call control" icon="sliders-horizontal" href="/telephony/apis/call-control">
+    Hang up, play, send digits and more on a live call.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/telephony/apis/webhooks">
+    Every event, its fields and how to verify it.
+  </Card>
+</CardGroup>

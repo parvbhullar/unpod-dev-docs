@@ -107,10 +107,11 @@ keeps retrying it in the background.
 
 ## The webhook secret
 
-Your org has one signing key for every *signed* request Unpod sends you: inbound answer-URL
-requests and status callbacks alike. Outbound answer-URL requests and recording events
-aren't signed yet (see
-[Which requests are signed](/telephony/apis/webhooks#which-requests-are-signed)).
+Your org has one signing key for every *signed* request Unpod sends you: answer-URL
+requests, status callbacks and recording events (see
+[Which requests are signed](/telephony/apis/webhooks#which-requests-are-signed)). Audio
+streams are signed with the same secret in their own header,
+[`X-Unpod-Signature`](/telephony/apis/audio-streaming#verify-the-stream-signature).
 Create the key with `webhook_secret.rotate()` (org owner or editor).
 The full secret is shown only in that response, so store it as `UNPOD_WEBHOOK_SECRET`.
 
