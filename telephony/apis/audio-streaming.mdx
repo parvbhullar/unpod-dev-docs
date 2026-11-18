@@ -20,7 +20,7 @@ You bring the speech pipeline.
 **Preview.** Audio streaming is off by default. Your org needs the Call API switched on
 (otherwise `403 call_api_disabled`) **and** audio streaming switched on. Ask the Unpod team
 to enable both. While streaming is off, a `<Stream>` verb is skipped and the call carries on
-with the rest of your reply, and the REST stream API returns `403`.
+with the rest of your reply, and the REST stream API returns `403 audio_stream_disabled`.
 </Note>
 
 <div className="ud" role="img" aria-label="Audio streaming: a call reaches Unpod. Your answer URL replies with a Stream verb, or your app starts a stream over REST. Unpod opens a signed WebSocket to your bot and streams the call's audio both ways.">
@@ -112,13 +112,11 @@ Start, list and stop streams on a live call. Same host and headers as the other
 
 | Method and path | Does | Returns |
 | --- | --- | --- |
-| `POST /calls/{id}/stream` | Start a stream | `202 {"stream_id", "message"}`. An error when the call already has an active stream |
+| `POST /calls/{id}/stream` | Start a stream | `202 {"stream_id", "message"}`. `400` ("a stream is already active") when the call already has one |
 | `GET /calls/{id}/stream` | Every stream the call has had | `{"streams": [...]}` |
 | `GET /calls/{id}/stream/{stream_id}` | One stream | The stream object below |
 | `DELETE /calls/{id}/stream` | Stop the active stream | `204`. The stream ends with `api_request`; the call carries on |
 | `DELETE /calls/{id}/stream/{stream_id}` | Stop that stream | `204` |
-
-{/* TODO(verify): second-stream status code - UNPO-536 spec says 400, SDK 685e98c start_stream docstring says 409; disabled org: spec says 403 forbidden, SDK says 403 audio_stream_disabled. Confirm on QA. */}
 
 The `POST` body takes the snake_case keys from the `<Stream>` table, with `service_url` in
 place of `url`. The noise-cancellation keys are not taken over REST.

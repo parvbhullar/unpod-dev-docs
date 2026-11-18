@@ -46,8 +46,6 @@ The answer URL must be public https, or you get `400 invalid_url`. After 5 failu
 row, Unpod skips your URL for 30 s and applies the fallback; inbound and outbound share that
 limit.
 
-{/* TODO(verify): UNPO-536 spec conflicts with itself on answer-URL signing. Spec section 4: "Answer-URL fetches are not signed (only the StartApp/Hangup event POSTs are)". Spec section 6: "Outbound answer-URL requests -> Yes (UNPO-181)". SDK 685e98c examples/pipecat_streaming/server.py: "The SBC does not sign answer-URL fetches, so this route is open", and SDK docs/08-telephony.md still lists outbound answer-URL requests as not signed. supersbc 07b34c6f ("sign REST answer-URL requests") and outbound_hook.rs send_form sign POST (not GET) with the org webhook secret. This page follows section 6 and the SBC code: confirm on QA that an outbound StartApp carries X-Webhook-Signature. */}
-
 ## What Unpod sends
 
 On an inbound call, your answer URL receives:

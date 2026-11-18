@@ -29,7 +29,7 @@ that id. Every method raises `TelephonyAPIError` on an error response - see
 | `record` / `get_recording` | `POST /sbc/v1/calls/{call_id}/record` / `GET .../recording` - see [Recording](/telephony/apis/recording) |
 | `start_stream` / `list_streams` / `stop_stream` | `POST` / `GET` / `DELETE /sbc/v1/calls/{call_id}/stream` - see [Audio Streaming](/telephony/apis/audio-streaming#rest-stream-api) |
 | `get_stream` / `stop_stream` | `GET` / `DELETE /sbc/v1/calls/{call_id}/stream/{stream_id}` |
-| API only | `POST /sbc/v1/calls/{call_id}/hold`, `.../unhold`, `.../mute`, `.../unmute` - see [Hold and mute](#hold-and-mute) |
+| `hold` / `unhold` / `mute` / `unmute` | `POST /sbc/v1/calls/{call_id}/hold`, `.../unhold`, `.../mute`, `.../unmute` - see [Hold and mute](#hold-and-mute) |
 
 Every request sends `Authorization: Token $UNPOD_PLATFORM_TOKEN` and
 `Org-Handle: $UNPOD_ORG_HANDLE`, plus `Content-Type: application/json` when it has a body.
@@ -110,8 +110,6 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
 `play_id`. `speak` answers `503 tts_unavailable` when speech can't be made (the call
 carries on) and `429 rate_limited` when your org sends too many at once.
 
-{/* TODO(verify): mix - spec UNPO-536 section 5 and supersbc call_play.rs (UNPO-469) say mix=true mixes on a REST call's callee leg; the SDK 685e98c play_audio docstring still says "mixing is not supported yet: playback replaces the call audio" */}
-
 ## Transfer and DTMF
 
 <Warning>
@@ -157,7 +155,16 @@ from `create` or an event - and goes over HTTP as `leg`. Anything else returns
 
 ## Hold and mute
 
-API only: the SDK has no methods for these yet. Call them over HTTP:
+The SDK methods `hold`, `unhold`, `mute` and `unmute` ship in the `unpod` release after
+0.7.0. Until then, call the HTTP routes.
+
+<CodeGroup>
+```python Python
+calls.mute(call_id, "caller")       # stop sending the caller's audio
+calls.unmute(call_id, "caller")
+leg_id = calls.hold(call_id)        # "<call_id>-caller"
+calls.unhold(call_id)
+```
 
 ```bash cURL
 # mute the caller leg -> 200 {"message": "dispatched"}
@@ -170,13 +177,12 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/hold" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" -d '{}'
 ```
+</CodeGroup>
 
-| Request | Notes |
+| Method | Notes |
 | --- | --- |
-| `POST .../mute` / `POST .../unmute` | Body `{"leg": "caller"}` or `{"leg": "callee"}` (required). `409` before the call's audio is set up |
-| `POST .../hold` / `POST .../unhold` | Only the caller's leg of an inbound call: body `{}` or `{"leg_id": "caller"}`. A call you started with `create` answers `400`. The leg gets `Hold` / `Unhold` [events](/telephony/apis/webhooks#events) |
-
-{/* TODO(verify): hold/mute bodies and limits read from supersbc feat/unpo-487-streaming 81081486 (calls.rs mute_call LegRequest, call_hold.rs hold_leg), not from the deployed 018a47e8; confirm through the unpod proxy on QA */}
+| `mute(call_id, leg)` / `unmute(call_id, leg)` | `POST .../mute` / `.../unmute`. Body `{"leg": "caller"}` or `{"leg": "callee"}` (required). `409` before the call's audio is set up |
+| `hold(call_id, *, leg_id)` / `unhold(call_id, *, leg_id)` → leg id | `POST .../hold` / `.../unhold`. Only the caller's leg of an inbound call: body `{}` or `{"leg_id": "caller"}`. A call you started with `create` answers `400`. The leg gets `Hold` / `Unhold` [events](/telephony/apis/webhooks#events) |
 
 ## Inspect and end calls
 
