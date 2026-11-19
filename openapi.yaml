@@ -1170,25 +1170,307 @@ paths:
           description: >
             Set true (with Org-Handle) to also return the org's own ASSIGNED numbers.
             Without it, only NOT_ASSIGNED numbers are listed.
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [agent]
+          description: "Set to agent to return only agent numbers. Omit for all numbers."
+        - name: region
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "IN"
+          description: "Only numbers in this region, e.g. IN or US."
       responses:
         '200':
-          description: List of telephony numbers
+          description: List of telephony numbers (default, without include_assigned)
           content:
             application/json:
               example:
                 status_code: 200
                 message: "Telephony numbers fetched successfully."
                 data:
-                  - id: 501
-                    number: "+15551234567"
-                    state: "ASSIGNED"
-                    active: true
                   - id: 502
                     number: "+15559876543"
                     state: "NOT_ASSIGNED"
                     active: true
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/NotOrgMember'
+
+  /api/v2/platform/telephony/numbers/attach/:
+    post:
+      operationId: attachNumbersToAgent
+      summary: Attach Numbers
+      tags: [Numbers]
+      description: >
+        Attach one or more numbers so calls to them are answered: by an agent
+        (attach_type agent, the default), a pipeline, or your own app (human_call).
+        Only free (NOT_ASSIGNED, active) numbers can be attached; an already attached
+        number is rejected. The bridge is resolved for you. Each number reports ok or
+        error on its own. Returns 201 if at least one number attached.
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: "Send numbers or number_ids."
+              properties:
+                numbers:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: string
+                  description: "E.164 numbers to attach (max 100)."
+                  example: ["+15559876543"]
+                number_ids:
+                  type: array
+                  items:
+                    type: integer
+                  description: "Number ids to attach (alternative to numbers)."
+                  example: [502]
+                agent_id:
+                  type: string
+                  description: >
+                    Handle of an agent your org owns. Optional. With attach_type agent,
+                    an unknown handle fails the whole request with 400. Omit for
+                    human_call.
+                  example: "asst_sales"
+                attach_type:
+                  type: string
+                  enum: [agent, pipeline, human_call]
+                  default: agent
+                supervoice_agent_id:
+                  type: string
+                  description: "Required when attach_type is pipeline."
+                pipe_id:
+                  type: string
+                  deprecated: true
+                  description: "Deprecated alias for supervoice_agent_id."
+                bridge_slug:
+                  type: string
+                  description: "Optional explicit bridge; auto-resolved when omitted."
+                region:
+                  type: string
+                  description: "Region for a new bridge."
+                  example: "IN"
+                product_id:
+                  type: string
+                  description: "Product this attachment belongs to. Omit for the default."
+                channels_count:
+                  type: integer
+                  minimum: 1
+                  default: 1
+                  description: "Concurrent channels for each attached number, metered against your plan."
+            example:
+              numbers: ["+15559876543"]
+              agent_id: "asst_sales"
+      responses:
+        '201':
+          description: At least one number attached (partial-success per number)
+          content:
+            application/json:
+              example:
+                status_code: 201
+                message: "Numbers attached to agent."
+                data:
+                  agent_id: "asst_sales"
+                  numbers:
+                    - number_id: 502
+                      number: "+15559876543"
+                      connection_state: "NOT_LINKED"
+                      agent_id: "asst_sales"
+                      ok: true
+        '400':
+          description: >
+            Nothing attached. Messages include "No valid unassigned numbers found.",
+            "All selected numbers are already assigned to this bridge.", "Agent not
+            found for this organization." and "No numbers could be attached."
+          content:
+            application/json:
+              example:
+                status_code: 400
+                message: "No valid unassigned numbers found."
+                data:
+                  agent_id: "asst_sales"
+                  numbers: []
+        '402':
+          description: Nothing attached; no balance or number entitlement exceeded for the plan
+        '206':
+          description: >
+            Nothing attached because of the channel quota, or Org-Handle is missing
+            ("Please provide Org-Handle in headers") or names no org ("Organization
+            not found").
+          content:
+            application/json:
+              example:
+                status_code: 206
+                message: "Please provide Org-Handle in headers"
+                data: {}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/NotOrgMember'
+
+  /api/v2/platform/telephony/numbers/detach/:
+    post:
+      operationId: detachNumbersFromAgent
+      summary: Detach Numbers
+      tags: [Numbers]
+      description: >
+        Detach one or more numbers attached by your org. A detached number goes back
+        to NOT_ASSIGNED; it isn't deleted. Each number reports ok or error on its own.
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: "Send numbers or number_ids."
+              properties:
+                numbers:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: string
+                  description: "E.164 numbers to detach (max 100)."
+                  example: ["+15559876543"]
+                number_ids:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: integer
+                  description: "Number ids to detach (max 100; alternative to numbers)."
+                  example: [502]
+            example:
+              numbers: ["+15559876543"]
+      responses:
+        '200':
+          description: At least one number detached (partial-success per number)
+          content:
+            application/json:
+              example:
+                status_code: 200
+                message: "Numbers detached."
+                data:
+                  numbers:
+                    - number_id: 502
+                      number: "+15559876543"
+                      ok: true
+        '400':
+          description: No number could be detached
+          content:
+            application/json:
+              example:
+                status_code: 400
+                message: "No numbers could be detached."
+                data:
+                  numbers:
+                    - number_id: 502
+                      ok: false
+                      error: "Number is not attached for this organization."
+        '206':
+          description: Org-Handle is missing or names no org
+          content:
+            application/json:
+              example:
+                status_code: 206
+                message: "Please provide Org-Handle in headers"
+                data: {}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/NotOrgMember'
+
+  /api/v2/platform/telephony/numbers/reassign/:
+    post:
+      operationId: reassignNumber
+      summary: Reassign Number
+      tags: [Numbers]
+      description: >
+        Move a number your org already attached to another agent of your org, without
+        detaching it. Works for a number attached with no agent. Inbound calls follow
+        the new agent.
+      security:
+        - TokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrgHandle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - agent_id
+              description: "Send number or number_id."
+              properties:
+                number:
+                  type: string
+                  example: "+15559876543"
+                number_id:
+                  type: integer
+                  example: 502
+                agent_id:
+                  type: string
+                  example: "asst_support"
+                attach_type:
+                  type: string
+                  enum: [agent, pipeline]
+                  default: agent
+                product_id:
+                  type: string
+            example:
+              number: "+15559876543"
+              agent_id: "asst_support"
+      responses:
+        '200':
+          description: Number moved to the new agent
+          content:
+            application/json:
+              example:
+                status_code: 200
+                message: "Success"
+                data:
+                  number_id: 502
+                  number: "+15559876543"
+                  agent_id: "asst_support"
+                  attach_type: "agent"
+                  ok: true
+        '404':
+          description: Number or agent not found (code not_found)
+          content:
+            application/json:
+              example:
+                code: "not_found"
+                message: "Agent not found."
+        '409':
+          description: >
+            code not_attached (free number, attach it first), unsupported_termination
+            (the number doesn't end on an agent or pipeline, e.g. human_call; detach
+            it first) or number_in_use (a call is in progress).
+          content:
+            application/json:
+              example:
+                code: "not_attached"
+                message: "Number is not attached yet; attach it first."
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/NotOrgMember'
 
   # ─── Bridges ──────────────────────────────────────────────────
   /api/v2/platform/telephony/bridges/:
@@ -1904,6 +2186,13 @@ components:
           example:
             status_code: 401
             message: "Authentication credentials were not provided."
+    NotOrgMember:
+      description: Forbidden - you are not a member of the Org-Handle organization
+      content:
+        application/json:
+          example:
+            status_code: 403
+            message: "You are not a member of this organization"
     NotFound:
       description: Resource not found
       content:

@@ -58,6 +58,12 @@ asyncio.run(main())
 +918071539118 assigned
 ```
 
+<Note>
+`client.telephony.*` is org-scoped: it needs `UNPOD_PLATFORM_TOKEN` (or a JWT) and
+`UNPOD_ORG_HANDLE`. A Bearer API key (`UNPOD_API_KEY`) alone is refused. A bare
+`AsyncClient()` uses the platform token when `UNPOD_PLATFORM_TOKEN` is set.
+</Note>
+
 ---
 
 ## Trunks
@@ -139,7 +145,7 @@ async def main():
         numbers = await client.numbers.list()
 
         # Filter by status or country
-        active = await client.numbers.list(status="active")
+        assigned = await client.numbers.list(status="assigned")
         us_numbers = await client.numbers.list(country="US")
         byon = await client.numbers.list(trunk_type="byo")
 
@@ -155,7 +161,7 @@ asyncio.run(main())
 |---|---|---|
 | `number_id` | `str` | Unique number ID (`num_...`) |
 | `number` | `str` | E.164 format, e.g. `+14155550100` |
-| `status` | `str` | `active`, `inactive`, `pending` |
+| `status` | `str` | `available` (default), `assigned`, `in_call` or `disabled` |
 | `trunk_type` | `str` | `unpod` or `byo` |
 | `pipe_id` | `str \| None` | The agent-voice row this number is attached to, or `None` if free. Still spelled `pipe_id` on the number record |
 | `country` | `str` | ISO 3166-1 alpha-2 country code |
@@ -223,7 +229,8 @@ import asyncio
 from unpod import AsyncClient
 
 async def attach_first_free(agent_id: str) -> None:
-    async with AsyncClient() as client:  # reads credentials from .env
+    # telephony needs UNPOD_PLATFORM_TOKEN + UNPOD_ORG_HANDLE in .env
+    async with AsyncClient() as client:
         numbers = await client.telephony.numbers.list()
         free = [n.number for n in numbers if n.status == "not_assigned"]
         if not free:
@@ -242,7 +249,8 @@ number=<attached_phone_number> agent_id=support-bot status=assigned
 ### Move a number to another agent
 
 A number already attached to one of your agents moves in one call - no
-detach first. Inbound calls follow it immediately.
+detach first. With a platform token or JWT (proxy mode), inbound calls follow
+it immediately.
 
 ```python
 import asyncio
@@ -259,10 +267,22 @@ async def main():
 asyncio.run(main())
 ```
 
+`numbers.agent.change(number, agent_id, *, attach_type=None)` takes the number
+id or its E.164. `attach_type` defaults to `"pipeline"` (a Speech Stack agent);
+pass `attach_type="agent"` to move the number to an agent handle such as `asst_sales`.
+
 Only your organization's numbers can be moved (`404` otherwise). A free
 number that was never attached returns `409 not_attached` from
 `numbers.agent.change()` - attach it first, or use
 `agents.update(number=)`, which attaches a free number for you.
+
+<Warning>
+With a Bearer API key (direct mode), `numbers.agent.change()` only sends
+`PATCH /v1/numbers/{id}`: the number record names the new agent, but inbound
+routing does not move. In that mode `agents.update(number=)` also doesn't attach
+a free number. Use `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` (or a JWT) to move
+numbers.
+</Warning>
 
 ### Rotate numbers across agents
 

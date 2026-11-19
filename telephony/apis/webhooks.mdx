@@ -26,7 +26,7 @@ call that returns it in full - and store it as `UNPOD_WEBHOOK_SECRET`. Then veri
 | `<GetDigits>` / `<GetInput>` and `<Record recordSession>` `action` requests (POST) | Yes |
 | Status callbacks, including `Incoming` | Yes |
 | Recording events (`MPCRecordingCompleted`, `ParticipantRecording...`) | Yes |
-| [Stream events](#stream-events) (POST) | Yes |
+| [Stream events](#stream-events) | Yes: a POST over its body, a GET over its full query string |
 | Any GET answer-URL request | No: there's no body to sign |
 | The audio-stream WebSocket connection | Yes, with a different header, `X-Unpod-Signature`. See [Audio Streaming](/telephony/apis/audio-streaming#verify-the-stream-signature) |
 
@@ -149,7 +149,7 @@ snake_case (`call_id`, `leg_id`, ...).
 | Field | Wire name | Notes |
 | --- | --- | --- |
 | `event` | `EventName` / `Event` | One of the [events](#events) above |
-| `call_id` | `MPCUUID` | The same on every event of a call, across all its legs |
+| `call_id` | `MPCUUID` | The same on every event of a call, across all its legs. Not sent on [stream events](#stream-events), so `ev.call_id` is `None` there |
 | `leg_id` | `CallUUID` | Differs per leg |
 | `role`, `direction`, `call_status` | `Role`, `Direction`, `CallStatus` | `role` is the label you set on the leg |
 | `from_`, `to` | `From`, `To` | Only on `Incoming` and answer-URL events. `None` on leg events, so outbound status callbacks never have them: put your own ids in `metadata` |
@@ -192,14 +192,14 @@ if ev.event in STREAM_EVENTS:  # ev from parse_call_event, as above
 | `started` | The stream started | - |
 | `stopped` | The stream ended. Also carries `Duration` | `completed`, `api_request`, `stream_timeout`, `call_hangup` |
 | `failed` | The stream couldn't start or broke off. Also carries `Duration` and `Error` (`ev.error`) | `start_failed`, `connection_failed`, `authentication_failed`, `connection_dropped`, `slow_connection`, `message_too_large` |
-| `degraded` | A warning: your WebSocket server is reading audio too slowly. The stream keeps running | `slow_connection_30`, `slow_connection_60`, `slow_connection_90` |
+| `degraded` | A warning: your WebSocket server is reading audio too slowly (12, 24 and 36 s without a successful write; the stream fails at 40 s), or the playback queue (about 40 s) is full. The stream keeps running | `slow_connection_30`, `slow_connection_60`, `slow_connection_90`, `buffer_overflow` |
 
 Every stream event also carries:
 
 | Field | Wire name | Notes |
 | --- | --- | --- |
 | `stream_id` | `StreamID` | Always set on a stream event |
-| `leg_id` | `CallUUID` | |
+| `leg_id` | `CallUUID` | `<call id>-caller` or `<call id>-callee` |
 | `event_time` | `Timestamp` | ISO 8601, for example `2024-01-15T10:30:00Z` (not Unix seconds) |
 | `from_`, `to`, `direction` | `From`, `To`, `Direction` | |
 | `service_url` | `ServiceURL` | The stream's WebSocket URL, query string removed |

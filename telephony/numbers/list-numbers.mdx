@@ -27,6 +27,8 @@ Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numb
 | Name             | Type    | Required | Description |
 |------------------|---------|----------|-------------|
 | include_assigned | boolean | No       | `true` also returns your organization's own assigned numbers (send `Org-Handle`). Without it, only unassigned pool numbers |
+| type             | string  | No       | `agent` returns only agent numbers. Omit for all numbers |
+| region           | string  | No       | Only numbers in this region, e.g. `IN` or `US` |
 
 ### Number object fields
 
@@ -36,6 +38,13 @@ Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numb
 | number  | string  | Phone number in E.164 format                 |
 | state   | string  | `NOT_ASSIGNED` or `ASSIGNED`                 |
 | active  | boolean | Whether the number is usable                 |
+
+### Errors
+
+| Status | When |
+|--------|------|
+| 401    | Missing or invalid API token |
+| 403    | `Org-Handle` names an organization you are not a member of: "You are not a member of this organization" |
 
 <ResponseExample>
 

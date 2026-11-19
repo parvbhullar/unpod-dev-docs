@@ -134,15 +134,23 @@ agent_id=my-support number=+918071539102
 - Only your organization's numbers can be used. Any other number returns
   `404`.
 
+This needs a platform token or JWT (`UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE`).
+With a Bearer API key (direct mode), `number=` doesn't attach a free number, and a
+move only updates the number record (`PATCH /v1/numbers/{id}`): inbound routing
+does not move.
+
 To move a number without editing anything else, call the numbers API
-directly:
+directly. The signature is `numbers.agent.change(number, agent_id, *,
+attach_type=None)`; `attach_type` defaults to `"pipeline"` (a Speech Stack agent, like this
+one):
 
 ```python
 await client.numbers.agent.change("+918071539102", "my-support")
 ```
 
 To release a number from its agent (it goes back to `not_assigned` and can
-be attached again):
+be attached again). `client.telephony.*` needs `UNPOD_PLATFORM_TOKEN` (or a JWT)
+and `UNPOD_ORG_HANDLE`, not a Bearer API key:
 
 ```python
 await client.telephony.numbers.detach("+918071539102")

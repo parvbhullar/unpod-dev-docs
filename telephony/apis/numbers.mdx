@@ -134,9 +134,11 @@ cURL response). If no number attaches, the whole request fails:
 | Status | Why |
 | --- | --- |
 | `400` | A bad request, for example `channels_count` below 1 |
+| `400` | `No valid unassigned numbers found.`: no number in the request is free, for example it's already attached |
 | `402` | No balance |
 | `402` | `Number entitlement exceeded for this plan`: the numbers your org holds plus this one are more than your plan allows |
 | `206` | Over your plan's channel quota |
+| `206` | `Org-Handle` is missing (`Please provide Org-Handle in headers`) or names no org (`Organization not found`) |
 
 The SDK raises `httpx.HTTPStatusError` on `400` and `402`, but not on `206`, so still
 check `ok`.
@@ -186,11 +188,15 @@ config again if you attach it later.
 
 <CodeGroup>
 ```python Python
+import httpx
 from unpod import Client
 
 with Client() as client:
-    result = client.telephony.numbers.detach("+919000000001")
-    for r in result.numbers:
+    try:
+        result = client.telephony.numbers.detach("+919000000001")
+    except httpx.HTTPStatusError as e:  # nothing detached: the body says why
+        raise SystemExit(e.response.text)
+    for r in result.numbers:  # one row per number
         print(r.number, r.ok, r.error)
 ```
 
@@ -201,6 +207,12 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/numbers/detach/" \
   -d '{"numbers": ["+919000000001"]}'
 ```
 </CodeGroup>
+
+Like attach, each number succeeds or fails on its own: check `ok` and `error` on every
+row. A number your org hasn't attached reports `Number is not attached for this
+organization.` If no number detaches, the request fails with `400` `No numbers could be
+detached.` and the SDK raises `httpx.HTTPStatusError`; the reason is in
+`e.response.text`. A missing or unknown `Org-Handle` returns `206`, as on attach.
 
 ## Number states
 
