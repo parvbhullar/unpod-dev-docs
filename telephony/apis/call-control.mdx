@@ -143,13 +143,14 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/transfer
 
 | Method | Notes |
 | --- | --- |
-| `send_dtmf(call_id, digits, *, leg_id)` | `digits` from `0-9 A-D * #`. Omit `leg_id` to send to the person you dialed (outbound) or who called in (inbound). Over HTTP the body also takes `duration_ms` (how long each tone plays) and `inter_digit_ms` (the gap between tones); API only, the SDK doesn't send them yet |
-| `transfer(call_id, target, *, type, leg_id)` | `target` is E.164 or a `sip:` / `sips:` URI. `type` is `"blind"` (default) or `"attended"`. `leg_id` defaults to `"callee"` |
+| `send_dtmf(call_id, digits, *, leg)` | `digits` from `0-9 A-D * #`. Omit `leg` to send to the person you dialed (outbound) or who called in (inbound) |
+| `transfer(call_id, target, *, type, leg)` | `target` is E.164 or a `sip:` / `sips:` URI. `type` is `"blind"` (default) or `"attended"`. `leg` defaults to `"callee"` |
 | `transfer_complete(call_id, consult_leg)` / `transfer_cancel(call_id, consult_leg)` | Finish or abandon an attended transfer. Body `{"consult_leg": ...}` |
 
-For DTMF and transfer, `leg_id` takes only `"caller"` or `"callee"` - not the `leg_id`
-from `create` or an event - and goes over HTTP as `leg`. Anything else returns
-`400 bad_request`.
+For DTMF and transfer, `leg` takes only `"caller"` or `"callee"` - not the `leg_id`
+from `create` or an event - and goes over HTTP as `leg` too. The SDK raises `ValueError`
+for any other value; over HTTP it returns `400 bad_request`. The old `leg_id=` argument
+still works for those two values but is deprecated and emits a `DeprecationWarning`.
 
 {/* TODO(verify): how to send DTMF to a participant added with add_participant (its dynamic leg_id is rejected) */}
 
