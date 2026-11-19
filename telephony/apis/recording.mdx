@@ -109,9 +109,25 @@ curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/recording" \
 </CodeGroup>
 
 A `200` means `call.wav` holds the audio. A call with no recording returns `404`, and
-`call.wav` then holds the error instead. The URL only works with your credentials, so
-download the file and serve it from your own storage rather than handing the URL to a
-browser.
+`call.wav` then holds the error instead.
+
+With `unpod` 0.7.0 or later, `download_recording` does the same in one call:
+
+```python
+from unpod import Client
+
+with Client() as client:
+    path = client.telephony.calls.download_recording(CALL_ID, "call.wav")
+```
+
+It streams the WAV to the path you give, with your credentials, and returns that path. It
+writes to a temporary file next to it and renames it when done, so a failed download leaves
+no partial file. It raises `TelephonyAPIError`: `404` when the call has no recording (for
+example, it was created with `record=False`) and `409` while the recording is still being
+written.
+
+The URL only works with your credentials, so download the file and serve it from your own
+storage rather than handing the URL to a browser.
 
 ## Format
 
@@ -212,6 +228,18 @@ the recording policy already records keeps that one recording. A call has one re
 after `stop_recording`, `record` is refused with `409 conflict`. Whether `get_recording`
 returns a recording started this way isn't confirmed yet. `transcribe=True` is accepted,
 but no transcript is made yet.
+
+You can also stop, pause and resume the recording while the call is going:
+
+| Method | Notes |
+| --- | --- |
+| `record(call_id, *, transcribe)` | `POST .../record`. Start recording. Starting while already recording succeeds |
+| `stop_recording(call_id)` | `DELETE .../record`. Stop for good; `204`. `409 conflict` when not recording or already stopped |
+| `pause_recording(call_id)` | `POST .../record/pause`. Drop audio until you resume; `204`. `409 conflict` when not recording or already paused |
+| `resume_recording(call_id)` | `POST .../record/resume`. Record again; `204`. The paused time is filled with silence, so the file keeps the call's timing. `409 conflict` when the recording isn't paused |
+
+A stopped recording is still the call's recording: get it with `get_recording` once the call
+ends. All three answer `404 not_found` for a call that has ended.
 
 {/* TODO(verify): whether a recording started with calls.record is what get_recording returns (calls.rs record_call dispatches without waiting; sip_session start_recording fails with "Recording already active" when the policy recorder runs); transcribe only drops a marker file (calls.rs maybe_drop_transcribe_marker) */}
 

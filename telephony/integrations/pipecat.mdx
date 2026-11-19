@@ -79,7 +79,7 @@ frames and back. The rest of your bot is plain Pipecat. The protocol underneath 
     ```bash
     python3 -m venv .venv
     source .venv/bin/activate
-    pip install "unpod[pipecat]" "pipecat-ai[websocket,silero,deepgram,anthropic,cartesia]" fastapi uvicorn
+    pip install "unpod[pipecat]>=0.7.0" "pipecat-ai[websocket,silero,deepgram,anthropic,cartesia]" fastapi uvicorn
     ```
 
     The bot below uses Deepgram, Anthropic and Cartesia; export `DEEPGRAM_API_KEY`,
@@ -214,8 +214,8 @@ frames and back. The rest of your bot is plain Pipecat. The protocol underneath 
   </Step>
 
   <Step title="Expose it">
-    Unpod only calls public https URLs and streams only to a public `wss://` host. In a
-    second terminal:
+    Unpod only calls public https URLs, and streams to a public `ws://` or `wss://` host
+    (use `wss://` in production). In a second terminal:
 
     ```bash
     ngrok http 8000

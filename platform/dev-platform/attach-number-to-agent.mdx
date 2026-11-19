@@ -31,7 +31,7 @@ reachable in direct/Bearer mode.
 |---|---|
 | **Leg B (agent attach)** | SuperSBC → agent/LiveKit. The **primary** flow — `numbers.attach(..., agent_id=...)`. |
 | **Leg A (BYO carrier)** | Your own SIP carrier → SuperSBC. The carrier leg is the hardcoded SuperSBC default today; bringing your own carrier (`client.telephony.trunks.*`) is **future/beta**. |
-| **`agent_id`** | The agent handle a number routes to. **Optional** — attach now, bind an agent later. |
+| **`agent_id`** | The handle of an agent your org owns. **Optional** — attach without one, then bind an agent with `client.numbers.agent.change` (see below). |
 | **Bridge** | The voice bridge a number rides on. **Auto-resolved and hidden** — one number maps to one bridge. |
 
 ---
@@ -78,6 +78,14 @@ Map one or more numbers to an agent **by E.164 number** (not id — Django resol
 it). The bridge is resolved automatically; each number reports its own outcome
 (partial-success), so one bad number never fails the rest.
 
+With the default `attach_type="agent"`, `agent_id` must be the handle of an agent
+your org owns. Otherwise the whole request fails with `400` `Agent not found for
+this organization.` and nothing is attached. (`attach_type="pipeline"` skips this
+check.)
+
+`list()` also returns numbers your org already attached, so pick the ones whose
+`status` is `not_assigned`:
+
 ```python
 import asyncio
 from unpod import AsyncClient, JWTAuth
@@ -85,8 +93,11 @@ from unpod import AsyncClient, JWTAuth
 async def main():
     async with AsyncClient(auth=JWTAuth("<jwt>", org_handle="acme")) as client:
         nums = await client.telephony.numbers.list()
+        free = [n.number for n in nums if n.status == "not_assigned"]
+        if not free:
+            raise RuntimeError("No free numbers")
         res = await client.telephony.numbers.attach(
-            [n.number for n in nums[:2]],
+            free[:2],
             agent_id="asst_sales",
         )
         print(res.agent_id, res.message)
@@ -122,26 +133,58 @@ The agent attach returns the per-number **lifecycle** — there is no carrier
 
 ### `agent_id` is optional
 
-Omit `agent_id` to wire a number for agent use without binding an agent yet —
-bind one later by calling `attach` again with the same number and an `agent_id`:
+Omit `agent_id` to wire a number for agent use without binding an agent yet.
+Don't call `attach` again to bind one: the number is already attached, so a second
+`attach` fails with `400` `No valid unassigned numbers found.` Change the agent on
+the attached number instead:
 
 ```python
 # provision now, bind later
 await client.telephony.numbers.attach(["+14155550100"])
-# ...later
-await client.telephony.numbers.attach(["+14155550100"], agent_id="asst_sales")
+# ...later: move the attached number to an agent
+await client.numbers.agent.change("+14155550100", "asst_sales", attach_type="agent")
 ```
+
+`numbers.agent.change(number, agent_id, *, attach_type=None)` defaults to
+`attach_type="pipeline"` (a Speech Stack agent). For an agent handle like the one
+above, pass `attach_type="agent"`, or the call fails with `404` `Agent not found.`
+You can also use `client.agents.update(agent_id, number=...)`, or over HTTP
+`POST /api/v2/platform/telephony/numbers/reassign/` with
+`{"number": "+14155550100", "agent_id": "asst_sales"}` (`attach_type` is `agent` by
+default there). A number attached without an agent can be moved this way. It fails
+with `409` and a `code`:
+
+| `code` | Why |
+|---|---|
+| `not_attached` | The number is free but not attached yet. Use `attach` |
+| `unsupported_termination` | The number doesn't end on an agent or pipeline, for example a `human_call` number. Detach it first |
+| `number_in_use` | A call is in progress on the number |
+
+Detach first if you want to re-attach.
 
 ### Attach to a pipe instead of an agent
 
 Pass `attach_type="pipeline"` with a `pipe_id` to terminate the number on a
-Speech Pipe rather than an agent. `attach_type` defaults to `"agent"`.
+Speech Pipe rather than an agent. `attach_type` defaults to `"agent"`. A pipeline
+attach without `pipe_id` fails with `400` (over HTTP the field is
+`supervoice_agent_id`; `pipe_id` is an accepted alias).
 
 ```python
 await client.telephony.numbers.attach(
     ["+14155550100"], attach_type="pipeline", pipe_id="pipe_xyz",
 )
 ```
+
+### Attach for your own app (`human_call`)
+
+Pass `attach_type="human_call"` when no agent answers: your app places and answers
+calls with the Telephony APIs. Leave out `agent_id`; passing one fails with `400`.
+
+```python
+await client.telephony.numbers.attach(["+14155550100"], attach_type="human_call")
+```
+
+See [Get a Number](/telephony/apis/numbers) for every attach option and error.
 
 ---
 
@@ -200,11 +243,12 @@ from unpod import AsyncClient, JWTAuth
 async def attach_first(agent_id: str) -> None:
     async with AsyncClient(auth=JWTAuth("<jwt>", org_handle="acme")) as client:
         nums = await client.telephony.numbers.list()
-        if not nums:
-            raise RuntimeError("No numbers available")
-        res = await client.telephony.numbers.attach([nums[0].number], agent_id=agent_id)
+        free = [n.number for n in nums if n.status == "not_assigned"]
+        if not free:
+            raise RuntimeError("No free numbers")
+        res = await client.telephony.numbers.attach([free[0]], agent_id=agent_id)
         row = res.numbers[0]
-        print("attached" if row.ok else f"failed: {row.error}", nums[0].number)
+        print("attached" if row.ok else f"failed: {row.error}", free[0])
 
 asyncio.run(attach_first("asst_sales"))
 ```

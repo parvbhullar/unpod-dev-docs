@@ -27,6 +27,8 @@ that id. Every method raises `TelephonyAPIError` on an error response - see
 | `transfer_complete` / `transfer_cancel` | `POST /sbc/v1/calls/{call_id}/transfer/complete` / `.../transfer/cancel` |
 | `send_dtmf` | `POST /sbc/v1/calls/{call_id}/dtmf` |
 | `record` / `get_recording` | `POST /sbc/v1/calls/{call_id}/record` / `GET .../recording` - see [Recording](/telephony/apis/recording) |
+| `stop_recording` / `pause_recording` / `resume_recording` | `DELETE /sbc/v1/calls/{call_id}/record`, `POST .../record/pause`, `POST .../record/resume` |
+| `download_recording` | `GET /sbc/v1/calls/{call_id}/recording?format=wav`, saved to a file |
 | `start_stream` / `list_streams` / `stop_stream` | `POST` / `GET` / `DELETE /sbc/v1/calls/{call_id}/stream` - see [Audio Streaming](/telephony/apis/audio-streaming#rest-stream-api) |
 | `get_stream` / `stop_stream` | `GET` / `DELETE /sbc/v1/calls/{call_id}/stream/{stream_id}` |
 | `hold` / `unhold` / `mute` / `unmute` | `POST /sbc/v1/calls/{call_id}/hold`, `.../unhold`, `.../mute`, `.../unmute` - see [Hold and mute](#hold-and-mute) |
@@ -57,11 +59,16 @@ the same name (`from_` is `from`), and `idempotency_key` is the `Idempotency-Key
 | `record_participant_track` | `bool` | Also send per-leg recording events. Needs `record=True` |
 | `answer_url` / `answer_method` | `str` / `"POST"` \| `"GET"` | Run an answer-URL app on this leg when it connects, instead of bridging it |
 | `metadata` | `dict[str, str]` | Echoed on every event as `ev.metadata` |
+| `time_limit` | `int` 1-86400 | Seconds the call may last once answered (default 14400, 4 hours). Then it hangs up with cause `Time Limit Reached` |
+| `sip_headers` | `dict[str, str]` \| `str` | A dict or `"k1=v1,k2=v2"`. Each is sent to the carrier as `X-PH-<k>`. At most 10; keys `A-Z a-z 0-9 -` up to 32 characters; values up to 256 characters, no commas |
+| `fallback_url` / `fallback_method` | `str` / `"POST"` \| `"GET"` | Requested once, with the same fields, when `answer_url` fails (error, timeout, non-2xx or an unusable reply). Needs `answer_url` |
+| `status_callback_events` | `list[str]` \| `str` | Which events go to `status_callback_url`: any of `mpc-state-changes`, `participant-state-changes`, `leg-state-changes`, as a list or a comma string. Omit it to get all of them |
+| `end_mpc_on_exit` | `bool` | When this participant leaves (hangs up, is busy or doesn't answer), the whole call ends. Default `false` |
 | `idempotency_key` | `str` | A fresh key is sent by default. Pass your own when you retry, so the call is not dialed twice |
 
 <Warning>
-Every callback and audio URL (`status_callback_url`, `recording_callback_url`, `answer_url`
-and the `play_audio` URL) must be **public https**. Unpod checks this before the call reaches
+Every callback and audio URL (`status_callback_url`, `recording_callback_url`, `answer_url`,
+`fallback_url` and the `play_audio` URL) must be **public https**. Unpod checks this before the call reaches
 the SBC: anything else returns `400 invalid_url`.
 </Warning>
 
@@ -101,7 +108,7 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
 
 | Method | Notes |
 | --- | --- |
-| `play_audio(call_id, *, url, leg_id, loop, mix, interrupt_on_dtmf)` → `PlayResult` | `url` is a public https MP3 or WAV. `loop` and `interrupt_on_dtmf` default to `false`. `mix` (default `true`) plays the file over the call audio on the leg you dialed (`callee`) of a call you started with `create`; on any other leg the file replaces that leg's audio. Answers `202` with a `play_id`. The SDK also accepts `file=`, but the API rejects it with `400 bad_request`: use `url` |
+| `play_audio(call_id, *, url, leg_id, loop, length, mix, interrupt_on_dtmf)` → `PlayResult` | `url` is a public https MP3 or WAV. `loop` is a `bool` or an `int`: `True` or `0` plays until stopped, `3` plays three times; default `false` (once). `length` stops the play after that many seconds (at least 1). `interrupt_on_dtmf` defaults to `false`. `mix` (default `true`) plays the file over the call audio on the leg you dialed (`callee`) of a call you started with `create`; on any other leg the file replaces that leg's audio. Answers `202` with a `play_id`. The SDK also accepts `file=`, but the API rejects it with `400 bad_request`: use `url` |
 | `stop_audio(call_id, *, leg_id, play_id)` | Stops one play, one leg's audio, or both omitted, all audio on the call. `202` even if nothing was playing |
 | `speak(call_id, text, *, voice, language, leg_id, loop)` → `PlayResult` | Text-to-speech, 1-1000 characters. `voice` and `language` default to the number's [`tts_voice` / `tts_language`](/telephony/apis/incoming-calls#inboundconfig-fields). Answers `202` with a `play_id` |
 
@@ -117,6 +124,12 @@ carries on) and `429 rate_limited` when your org sends too many at once.
 as soon as the request is queued, so a transfer that fails still looks like success. An attended transfer
 doesn't return the consult leg's id yet, so `transfer_complete` and `transfer_cancel` have
 nothing to act on.
+</Warning>
+
+<Warning>
+**`send_dtmf` is unreliable on a call you started with `create`.** The other side can
+hear fewer tones than you sent, and the first `send_dtmf` on a call can take about 24
+seconds to return. Don't rely on it to get through a phone menu yet.
 </Warning>
 
 {/* TODO(verify): blind transfer via the Call API, live. supersbc calls.rs transfer_call is fire-and-forget (dispatch_console_command), the adapter sends leg "<call_id>-callee" but sip_session.rs handle_transfer looks legs up as "callee" without canonical_leg_id, and pending_consult_leg_id is never set. */}
@@ -156,8 +169,8 @@ still works for those two values but is deprecated and emits a `DeprecationWarni
 
 ## Hold and mute
 
-The SDK methods `hold`, `unhold`, `mute` and `unmute` ship in the `unpod` release after
-0.7.0. Until then, call the HTTP routes.
+The SDK methods `hold`, `unhold`, `mute` and `unmute` need `unpod` 0.7.0 or later. On an
+older SDK, call the HTTP routes.
 
 <CodeGroup>
 ```python Python
@@ -280,5 +293,7 @@ reaches the SBC (`call_api_disabled`, `from_not_owned`).
 | 503 `sbc_target_not_configured` | Your org's telephony routing isn't set up; ask the Unpod team |
 | `not_supported` | Feature not available yet, e.g. a `dial_music` URL |
 
-The SDK raises `ValueError` before sending when `speak` text is over 1000 characters or
-`send_dtmf` digits fall outside `0-9 A-D * #`.
+The SDK raises `ValueError` before sending when `speak` text is over 1000 characters,
+`send_dtmf` digits fall outside `0-9 A-D * #`, or a `create` / `add_participant` option breaks
+the limits in [Options](#options) (`time_limit`, `sip_headers`, `status_callback_events`, or
+`fallback_url` without `answer_url`).

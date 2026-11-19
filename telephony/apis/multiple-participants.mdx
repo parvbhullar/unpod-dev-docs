@@ -287,6 +287,11 @@ The `add_participant` options most people need:
 | `status_callback_url` | Public https URL for this leg's events |
 | `record` | Doesn't override the recording policy (set by the Unpod team) today. See [Recording](/telephony/apis/recording) |
 | `metadata` | Dict of strings, echoed back on every event as `ev.metadata` |
+| `end_mpc_on_exit` | `True` ends the whole call when this person leaves (hangs up, is busy or doesn't answer). Default `false` |
+| `time_limit` | Seconds the call may last once answered, 1-86400 (default 14400, 4 hours) |
+| `sip_headers` | Dict or `"k1=v1,k2=v2"`, sent to the carrier as `X-PH-<k>` headers (at most 10) |
+| `fallback_url` / `fallback_method` | Requested when `answer_url` fails. Needs `answer_url` |
+| `status_callback_events` | Which events reach `status_callback_url`: any of `mpc-state-changes`, `participant-state-changes`, `leg-state-changes`. Omit it for all |
 | `idempotency_key` | Retry-safe: a repeat with the same key returns the first result instead of dialing again (kept for 24 h, unless Unpod restarts) |
 
 `create` takes the same options. Every URL must be public https, or you get

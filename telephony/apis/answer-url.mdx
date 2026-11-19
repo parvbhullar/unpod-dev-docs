@@ -175,7 +175,9 @@ collects digits:
 
 Unpod then requests `action` (with `method`, default `POST`) with `Digits`, `MPCUUID`,
 `CallUUID`, `From`, `To` and `Direction`. Verify and parse it with
-`parse_digits_request(body, headers, secret)`; reply with the next verbs. With
+`parse_digits_request(body, headers, secret)`, which returns a `DigitsRequest` with
+`digits` (empty when only `finishOnKey` was pressed), `call_id`, `leg_id`, `from_`, `to`,
+`direction`, `input_type` and `raw` (every field as received); reply with the next verbs. With
 `redirect="false"`, the reply is ignored and the next verb runs. If nothing is entered
 after every attempt, Unpod skips the request and runs the next verb.
 
