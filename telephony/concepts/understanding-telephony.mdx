@@ -10,7 +10,7 @@ icon: 'phone'
 </Info>
 
 <Warning>
-API examples use the production host `https://unpod.ai/`, the `/api/v2/platform/` path prefix, and `Authorization: Token`. The legacy `api.unpod.ai/api/v1/` + `Bearer` scheme is deprecated.
+API examples use the production host `https://unpod.dev/`, the `/api/v2/platform/` path prefix, and `Authorization: Token`. The legacy `api.unpod.ai/api/v1/` + `Bearer` scheme is deprecated.
 </Warning>
 
 ---
@@ -95,7 +95,7 @@ Go to **Dev Platform → Telephony → Bridges → Create Bridge**:
 ### Creating a Bridge via API
 
 ```bash
-curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/" \
+curl -X POST "https://unpod.dev/api/v2/platform/telephony/bridges/" \
   -H "Authorization: Token YOUR_API_KEY" \
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \
@@ -126,7 +126,7 @@ Unpod provisions real phone numbers through your connected SIP provider. Numbers
 Numbers are provisioned through your connected SIP provider (via the Dashboard or your provider's portal), then attached to trunks/bridges. The API exposes numbers as read-only - list them with:
 
 ```bash
-curl "https://unpod.ai/api/v2/platform/telephony/numbers/" \
+curl "https://unpod.dev/api/v2/platform/telephony/numbers/" \
   -H "Authorization: Token YOUR_API_KEY" \
   -H "Org-Handle: your-org-handle"
 ```
@@ -154,7 +154,7 @@ Total setup latency target: **under 300ms** from first word to agent response st
 For outbound (agent-initiated) calls, create a Task via API:
 
 ```bash
-curl -X POST "https://unpod.ai/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/" \
+curl -X POST "https://unpod.dev/api/v2/platform/spaces/8KZAMRAHSXXXXXXMAYNASMJC/tasks/" \
   -H "Authorization: Token YOUR_API_KEY" \
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \
@@ -177,7 +177,7 @@ Tasks are scoped to a space (`space_token` in the path) and take the agent `pilo
 One bridge can route to different agents based on custom logic. Use the API to update bridge routing dynamically:
 
 ```bash
-curl -X PATCH "https://unpod.ai/api/v2/platform/telephony/bridges/support-bridge/" \
+curl -X PATCH "https://unpod.dev/api/v2/platform/telephony/bridges/support-bridge/" \
   -H "Authorization: Token YOUR_API_KEY" \
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \

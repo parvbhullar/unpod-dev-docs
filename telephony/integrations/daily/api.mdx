@@ -11,7 +11,7 @@ what Daily uses to reach Unpod - see the [Dashboard guide](/telephony/integratio
 for the Daily-side setup.
 
 <Note>
-**Base URL:** `https://unpod.ai/api/v2/platform/`
+**Base URL:** `https://unpod.dev/api/v2/platform/`
 Every request needs `Authorization: Token <your-api-key>` and an `Org-Handle` header.
 See [Authentication](/api/get-started/authentication).
 </Note>
@@ -26,7 +26,7 @@ See [Authentication](/api/get-started/authentication).
 ## 1. Find your number
 
 ```bash cURL
-curl https://unpod.ai/api/v2/platform/telephony/numbers/ \
+curl https://unpod.dev/api/v2/platform/telephony/numbers/ \
   -H "Authorization: Token $UNPOD_TOKEN" \
   -H "Org-Handle: $ORG_HANDLE"
 ```
@@ -50,7 +50,7 @@ curl https://unpod.ai/api/v2/platform/telephony/numbers/ \
 Point the trunk's `sip_url` at your Daily room's `sip_uri`. One trunk carries both inbound and outbound.
 
 ```bash cURL
-curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/ \
+curl -X POST https://unpod.dev/api/v2/platform/telephony/trunks/ \
   -H "Authorization: Token $UNPOD_TOKEN" \
   -H "Org-Handle: $ORG_HANDLE" \
   -H "Content-Type: application/json" \
@@ -80,7 +80,7 @@ Map the number from step 1 (its `id`) to the trunk from step 2 (its `id`). The r
 returns the **origin endpoint** - the address + creds Daily uses to reach Unpod.
 
 ```bash cURL
-curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/21/attach-numbers/ \
+curl -X POST https://unpod.dev/api/v2/platform/telephony/trunks/21/attach-numbers/ \
   -H "Authorization: Token $UNPOD_TOKEN" \
   -H "Org-Handle: $ORG_HANDLE" \
   -H "Content-Type: application/json" \

@@ -42,7 +42,7 @@ starts with `<Hangup/>`), and no `Hangup` event reaches the answer URL.
 
 ## Point your number at your app
 
-**Dashboard:** open the number in the [Unpod dashboard](https://unpod.ai/) and set its
+**Dashboard:** open the number in the [Unpod dashboard](https://unpod.dev/) and set its
 answer URL.
 
 {/* TODO(verify): dashboard path to set a number's answer URL */}
@@ -69,14 +69,14 @@ with Client() as client:
 
 ```bash cURL
 # set
-curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
+curl -s -X PUT "https://unpod.dev/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"answer_url": "https://your-app.example.com/incoming", "answer_method": "POST",
        "status_callback_url": "https://your-app.example.com/incoming"}'
 
 # read the config in effect
-curl -s "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
+curl -s "https://unpod.dev/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -127,7 +127,7 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/webhook-secret/rotate" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/webhook-secret/rotate" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" -d '{}'
 ```
@@ -280,7 +280,7 @@ with Client() as client:
 
 ```bash cURL
 for N in %2B15551234567 %2B15559876543; do
-  curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/dids/$N/inbound" \
+  curl -s -X PUT "https://unpod.dev/api/v2/platform/sbc/v1/dids/$N/inbound" \
     -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
     -H "Content-Type: application/json" \
     -d '{"answer_url": "https://your-app.example.com/incoming",

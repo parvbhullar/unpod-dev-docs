@@ -60,7 +60,7 @@ Only want to make calls? You don't need a trunk - see the
     ```
 
     ```bash cURL
-    curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/trunks/" \
+    curl -s -X POST "https://unpod.dev/api/v2/platform/telephony/trunks/" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" \
       -d '{
@@ -128,7 +128,7 @@ Only want to make calls? You don't need a trunk - see the
     ```bash cURL
     # 1. list your numbers and copy your number's "id"
     curl -s \
-      "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
+      "https://unpod.dev/api/v2/platform/telephony/numbers/?include_assigned=true" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
     TRUNK_ID=21   # your trunk id from step 2
@@ -136,7 +136,7 @@ Only want to make calls? You don't need a trunk - see the
 
     # 2. map it to the trunk
     curl -s -X POST \
-      "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/attach-numbers/" \
+      "https://unpod.dev/api/v2/platform/telephony/trunks/$TRUNK_ID/attach-numbers/" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" \
       -d "{\"number_ids\": [$NUMBER_ID]}"
@@ -174,7 +174,7 @@ Only want to make calls? You don't need a trunk - see the
     ```
 
     ```bash cURL
-    curl -s "https://unpod.ai/api/v2/platform/telephony/overview/" \
+    curl -s "https://unpod.dev/api/v2/platform/telephony/overview/" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
     ```
     </CodeGroup>

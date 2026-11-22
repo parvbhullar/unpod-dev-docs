@@ -50,7 +50,7 @@ print(rec.available, rec.duration_secs)
 ```
 
 ```bash cURL
-curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/recording" \
+curl -s "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/recording" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -59,7 +59,7 @@ The response:
 
 ```json
 {"call_id": "...", "org_id": "...", "available": true,
- "url": "https://unpod.ai/api/v2/platform/sbc/v1/calls/<call_id>/recording",
+ "url": "https://unpod.dev/api/v2/platform/sbc/v1/calls/<call_id>/recording",
  "duration_secs": 64, "format": "wav", "channels": 2}
 ```
 
@@ -102,7 +102,7 @@ with httpx.stream("GET", rec.url, headers=headers, timeout=60) as resp:
 ```
 
 ```bash cURL
-curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/recording" \
+curl -s "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/recording" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Accept: audio/wav" -o call.wav -w "%{http_code}\n"
 ```
@@ -216,7 +216,7 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/record" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/record" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" -d '{}'
 ```

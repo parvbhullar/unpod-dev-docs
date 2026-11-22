@@ -60,7 +60,7 @@ with Client() as client:
 
 ```bash cURL
 # 1. dial FIRST -> {"call_id": "...", "state": "initiated", ...}
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
   -d '{"from": "+919000000001", "to": "+919000000002", "role": "agent"}'
@@ -68,12 +68,12 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
 # CALL_ID=<call_id from step 1>
 
 # 2. poll as in the Quick Start until "state": "talking"
-curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
+curl -s "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
 # 3. add SECOND -> the new leg's leg_id, "state": "initiated"
 curl -s -X POST \
-  "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/participants" \
+  "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/participants" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Idempotency-Key: $CALL_ID:customer" -H "Content-Type: application/json" \
   -d '{"from": "+919000000001", "to": "+919000000003", "role": "customer"}'
@@ -146,7 +146,7 @@ print("second person:", outcome)
 
 ```bash cURL
 # after adding SECOND (step 3): play your file, looping -> {"play_id": "play-..."}
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/play" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/play" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"source": {"type": "url", "url": "https://cdn.example.com/ringing.mp3"},
@@ -157,7 +157,7 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/play" \
 
 # then stop the sound
 curl -s -X DELETE \
-  "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/play?play_id=$PLAY_ID" \
+  "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/play?play_id=$PLAY_ID" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -175,7 +175,7 @@ calls.end(call.call_id)  # hangs up everyone on the call
 ```
 
 ```bash cURL
-curl -s -X DELETE "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
+curl -s -X DELETE "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -269,7 +269,7 @@ calls.remove_participant(call.call_id, leg.leg_id)
 ```bash cURL
 # LEG_ID=<leg_id from step 3>
 curl -s -X DELETE \
-  "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/participants/$LEG_ID" \
+  "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/participants/$LEG_ID" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>

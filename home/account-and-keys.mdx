@@ -9,16 +9,17 @@ credential for the surface you call. This page gets you both in a few
 minutes.
 
 <Steps>
-<Step title="Request access">
+<Step title="Sign up">
 
-Open [unpod.ai](https://unpod.ai/), click **Request a Call Back**, fill in the
-form and submit it. Your login credentials arrive by email.
+Create an account at [unpod.dev](https://unpod.dev/auth/signup/) with Google or
+your email.
 
 </Step>
 <Step title="Sign in and create your hub">
 
-Click **Sign In** on [unpod.ai](https://unpod.ai/). On first login you create
-a hub for your organization:
+{/* TODO(verify): unpod.dev first-login asks for the same hub fields as before */}
+On first login at [unpod.dev](https://unpod.dev/) you create a hub for your
+organization:
 
 | Field | What to enter |
 |---|---|
@@ -41,8 +42,8 @@ delete the old key to generate a new one.
 <Step title="Put both in your environment">
 
 ```bash .env
-UNPOD_BASE_URL="https://unpod.ai"
-UNPOD_SERVICE_BASE_URL="https://unpod.ai"   # bare host - no path
+UNPOD_BASE_URL="https://unpod.dev"
+UNPOD_SERVICE_BASE_URL="https://unpod.dev"   # bare host - no path
 UNPOD_PLATFORM_TOKEN="..."                  # the API key from step 3
 UNPOD_ORG_HANDLE="your-org"                 # your organization's domain handle
 ```
@@ -60,9 +61,9 @@ Unpod's credentials are not interchangeable:
 
 | You are calling | Host | Auth | Where it comes from |
 |---|---|---|---|
-| **Python SDK** (agents, numbers, calls) | `unpod.ai` | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | API key + org handle, above |
+| **Python SDK** (agents, numbers, calls) | `unpod.dev` | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | API key + org handle, above |
 | **AgentRunner** (your own brain) | the orchestrator | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | API key + org handle, above |
-| **Platform REST API** | `unpod.ai` | `Authorization: Token` + `Org-Handle` headers | API key + org handle, above |
+| **Platform REST API** | `unpod.dev` | `Authorization: Token` + `Org-Handle` headers | API key + org handle, above |
 | **Chat API** (your agent as a model) | `inference.unpod.ai` | `Authorization: Bearer` endpoint key | Playground → **Deploy as Endpoint** |
 
 Token auth (`UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE`) wins over

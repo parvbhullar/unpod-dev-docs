@@ -111,7 +111,7 @@ It ends `stopped` with `completed`.
 ## REST stream API
 
 Start, list and stop streams on a live call. Same host and headers as the other
-[call APIs](/telephony/apis/call-control): `https://unpod.ai/api/v2/platform/sbc/v1`,
+[call APIs](/telephony/apis/call-control): `https://unpod.dev/api/v2/platform/sbc/v1`,
 `Authorization: Token` and `Org-Handle`.
 
 | Method and path | Does | Returns |
@@ -158,14 +158,14 @@ asyncio.run(main())
 ```
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/CALL_ID/stream" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/CALL_ID/stream" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"service_url": "wss://bot.example.com/ws", "bidirectional": true,
        "content_type": "audio/x-mulaw;rate=8000",
        "status_callback_url": "https://app.example.com/stream-events"}'
 
-curl -s -X DELETE "https://unpod.ai/api/v2/platform/sbc/v1/calls/CALL_ID/stream" \
+curl -s -X DELETE "https://unpod.dev/api/v2/platform/sbc/v1/calls/CALL_ID/stream" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>

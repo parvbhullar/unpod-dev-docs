@@ -26,8 +26,8 @@ Put your credentials in a `.env` file in the folder you run the scripts
 from:
 
 ```bash .env
-UNPOD_BASE_URL="https://unpod.ai"
-UNPOD_SERVICE_BASE_URL="https://unpod.ai"   # bare host - no path
+UNPOD_BASE_URL="https://unpod.dev"
+UNPOD_SERVICE_BASE_URL="https://unpod.dev"   # bare host - no path
 UNPOD_PLATFORM_TOKEN="..."                  # org-scoped REST auth
 UNPOD_ORG_HANDLE="your-org"                 # your organization's handle
 ```
@@ -38,7 +38,7 @@ Plain `export` lines in your shell work too. Values already set in the
 shell win over `.env`.
 
 <Warning>
-Set **both** URLs, each to the **bare host** `https://unpod.ai` with no
+Set **both** URLs, each to the **bare host** `https://unpod.dev` with no
 path segment. Each one feeds a different part of the SDK: without
 `UNPOD_SERVICE_BASE_URL` the agent and call methods fail, and without
 `UNPOD_BASE_URL` the voice-profile and number listings fail. If your team
@@ -489,10 +489,10 @@ campaign.
 
 - **`httpx.ConnectError` (`Name or service not known` / `getaddrinfo failed`)** -
   the host in `UNPOD_BASE_URL` / `UNPOD_SERVICE_BASE_URL` does not exist.
-  Set both to `https://unpod.ai` (or the host your team gave you).
+  Set both to `https://unpod.dev` (or the host your team gave you).
 - **`404`, or an HTML page instead of JSON** - `UNPOD_SERVICE_BASE_URL` is
   missing or has a path on it. It must be the bare host, e.g.
-  `https://unpod.ai`.
+  `https://unpod.dev`.
 - **`401 Unauthorized`** - the token is wrong or `UNPOD_ORG_HANDLE` does not
   match the org the token belongs to.
 - **`ValueError` asking for `UNPOD_PLATFORM_TOKEN`** - the SDK found no

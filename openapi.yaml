@@ -5,10 +5,10 @@ info:
   version: 2.0.0
 
 servers:
+  - url: https://unpod.dev/
+    description: Developers (unpod.dev)
   - url: https://unpod.ai/
-    description: QA
-  - url: https://unpod.ai/
-    description: Production
+    description: Platform (unpod.ai)
 
 tags:
   - name: Organisation

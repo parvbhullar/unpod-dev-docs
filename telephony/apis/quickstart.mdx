@@ -56,11 +56,11 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
 
     ```bash cURL
     # 1. list: pick a number whose "state" is "NOT_ASSIGNED" and "active" is true
-    curl -s "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
+    curl -s "https://unpod.dev/api/v2/platform/telephony/numbers/?include_assigned=true" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
     # 2. attach it
-    curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/numbers/attach/" \
+    curl -s -X POST "https://unpod.dev/api/v2/platform/telephony/numbers/attach/" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" \
       -d '{"numbers": ["+919000000001"], "attach_type": "human_call"}'
@@ -120,7 +120,7 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
 
     ```bash cURL
     # 1. dial -> {"call_id": "...", "state": "initiated", ...}
-    curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+    curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
       -d '{"from": "+919000000001", "to": "+919000000002", "ring_timeout": 30}'
@@ -128,11 +128,11 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     # CALL_ID=<call_id from step 1>
 
     # 2. poll until "state": "talking"
-    curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
+    curl -s "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
     # 3. speak
-    curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
+    curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" -d '{"text": "Hello from Unpod!"}'
     ```
@@ -200,7 +200,7 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
     ```
 
     ```bash cURL
-    curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/webhook-secret/rotate" \
+    curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/webhook-secret/rotate" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" -d '{}'
     ```
@@ -278,7 +278,7 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
     ```
 
     ```bash cURL
-    curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
+    curl -s -X PUT "https://unpod.dev/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" \
       -d '{"answer_url": "https://abc123.ngrok.app/answer", "answer_method": "POST",

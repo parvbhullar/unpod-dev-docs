@@ -27,11 +27,11 @@ numbers - like Plivo or Twilio - and **SIP Trunking** lets you bring your own ca
 Both paths use the same two credentials, and you get both from the Unpod dashboard.
 
 1. **API key** (the SDK calls it a platform token). Open
-   [Settings → Security → API keys](https://unpod.ai/settings/security/api-keys/) and click
+   [Settings → Security → API keys](https://unpod.dev/settings/security/api-keys/) and click
    **Generate New**. Copy the key from the list. It's a personal key: it acts as you, in any
    org you're a member of, so keep it secret and generate a new one if it leaks.
 2. **Org handle**. Open
-   [Settings → Workspace → General](https://unpod.ai/settings/workspace/general/) and copy
+   [Settings → Workspace → General](https://unpod.dev/settings/workspace/general/) and copy
    the **Domain** value without the leading `@` (for example `acme`, not `@acme`). Org owners
    and editors can also use **Copy Org Handle** in the menu at the top of the org page.
    No API returns the handle for an API key yet, so copy it from the dashboard.
@@ -39,19 +39,19 @@ Both paths use the same two credentials, and you get both from the Unpod dashboa
 Export them with the base URL:
 
 ```bash
-export UNPOD_BASE_URL=https://unpod.ai
+export UNPOD_BASE_URL=https://unpod.dev
 export UNPOD_PLATFORM_TOKEN=<your-api-key>
 export UNPOD_ORG_HANDLE=<your-org-handle>
 ```
 
 The Python SDK reads all three when you create a client with no arguments. cURL samples call
-`https://unpod.ai/api/v2/platform/...` and send the token and org handle as
+`https://unpod.dev/api/v2/platform/...` and send the token and org handle as
 `Authorization: Token $UNPOD_PLATFORM_TOKEN` and `Org-Handle: $UNPOD_ORG_HANDLE`.
 
 Check your credentials:
 
 ```bash
-curl -s https://unpod.ai/api/v2/platform/telephony/overview/ \
+curl -s https://unpod.dev/api/v2/platform/telephony/overview/ \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
   -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```

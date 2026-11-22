@@ -35,7 +35,7 @@ there is no `pipecat` / `rtvi` client dependency.
 The harness (`harness/api.py`) picks a backend in this order:
 
 1. **`UNPOD_BASE_URL`** → the hosted `wss://<host>` speech service. For hosted
-   voice with zero local backend: `UNPOD_BASE_URL=api.unpod.ai` plus
+   voice with zero local backend: `UNPOD_BASE_URL=https://unpod.dev` plus
    `UNPOD_API_KEY=<key>`.
 2. Otherwise **`ws://127.0.0.1:9000`** → a local `supervoice-dev`.
 
@@ -127,7 +127,7 @@ unpod SDK resolver.
 
 | Setting | Purpose |
 |---|---|
-| `UNPOD_BASE_URL` | The one host every plane is derived from (e.g. `api.unpod.ai`). |
+| `UNPOD_BASE_URL` | The one host every plane is derived from (e.g. `https://unpod.dev`). |
 | `UNPOD_API_KEY` | Credential for hosted speech + platform APIs. |
 | `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | The LLM the agent and builder run on. |
 | `FLOWS_DIR` / `PLAYBOOKS_DIR` | Point at `../superdialog/examples/*` to drive live superdialog copies instead of the bundled ones. |

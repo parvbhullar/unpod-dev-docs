@@ -81,7 +81,7 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
+curl -s "https://unpod.dev/api/v2/platform/telephony/numbers/?include_assigned=true" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -120,7 +120,7 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/numbers/attach/" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/telephony/numbers/attach/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"numbers": ["+919000000001"], "attach_type": "human_call"}'
@@ -173,7 +173,7 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s "https://unpod.ai/api/v2/platform/telephony/overview/" \
+curl -s "https://unpod.dev/api/v2/platform/telephony/overview/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -201,7 +201,7 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/numbers/detach/" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/telephony/numbers/detach/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"numbers": ["+919000000001"]}'

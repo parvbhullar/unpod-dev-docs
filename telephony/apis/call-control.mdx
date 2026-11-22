@@ -14,7 +14,7 @@ examples use your [credentials](/telephony/introduction#credentials) with `CALL_
 that id. Every method raises `TelephonyAPIError` on an error response - see
 [Errors](#errors).
 
-| Method | Request, under `https://unpod.ai/api/v2/platform` |
+| Method | Request, under `https://unpod.dev/api/v2/platform` |
 | --- | --- |
 | `create` / `list` | `POST` / `GET /sbc/v1/calls` |
 | `get` / `end` | `GET` / `DELETE /sbc/v1/calls/{call_id}` |
@@ -85,7 +85,7 @@ calls.speak(call_id, "Please hold.", language="en-IN")
 
 ```bash cURL
 # play, looping -> 202 {"play_id": "play-..."}
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/play" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/play" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"source": {"type": "url", "url": "https://cdn.example.com/hold.mp3"},
@@ -95,11 +95,11 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/play" \
 
 # stop that play (drop the query to stop all audio) -> 202
 curl -s -X DELETE \
-  "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/play?play_id=$PLAY_ID" \
+  "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/play?play_id=$PLAY_ID" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
 # speak -> 202 {"play_id": "play-..."}
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"text": "Please hold.", "language": "en-IN"}'
@@ -142,12 +142,12 @@ calls.transfer(call_id, "+919000000004")  # not working yet - see the warning ab
 
 ```bash cURL
 # DTMF -> 200 {"message": "dispatched"}
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/dtmf" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/dtmf" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" -d '{"digits": "1234#"}'
 
 # blind transfer (not working yet - see the warning above)
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/transfer" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/transfer" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"type": "blind", "target": "+919000000004"}'
@@ -182,12 +182,12 @@ calls.unhold(call_id)
 
 ```bash cURL
 # mute the caller leg -> 200 {"message": "dispatched"}
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/mute" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/mute" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" -d '{"leg": "caller"}'
 
 # put the caller on hold -> 202 {"leg_id": "<call_id>-caller"}
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/hold" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/hold" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" -d '{}'
 ```
@@ -210,20 +210,20 @@ calls.end(call_id)                                 # every leg; safe to repeat
 
 ```bash cURL
 # get -> call_id, state, legs
-curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
+curl -s "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
 # list live calls -> items, page, page_size, total (your calls on this page)
-curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls?status=talking&page_size=20" \
+curl -s "https://unpod.dev/api/v2/platform/sbc/v1/calls?status=talking&page_size=20" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
 # hang up with a reason -> 200 {"message": "dispatched"}
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/hangup" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/hangup" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" -d '{"reason": "by_system"}'
 
 # end every leg -> 202
-curl -s -X DELETE "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
+curl -s -X DELETE "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -259,7 +259,7 @@ with Client() as client:
 
 ```bash cURL
 # -w prints the HTTP status after the body
-curl -s -w '\n%{http_code}\n' -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+curl -s -w '\n%{http_code}\n' -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
   -d '{"from": "+919000000001", "to": "+919000000002"}'

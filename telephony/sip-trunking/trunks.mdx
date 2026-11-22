@@ -39,7 +39,7 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s "https://unpod.ai/api/v2/platform/telephony/trunks/" \
+curl -s "https://unpod.dev/api/v2/platform/telephony/trunks/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -62,7 +62,7 @@ with Client() as client:
 
 ```bash cURL
 TRUNK_ID=21  # your trunk id
-curl -s "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/" \
+curl -s "https://unpod.dev/api/v2/platform/telephony/trunks/$TRUNK_ID/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -89,7 +89,7 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/trunks/" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/telephony/trunks/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{
@@ -149,7 +149,7 @@ with Client() as client:
 ```bash cURL
 TRUNK_ID=21  # your trunk id
 curl -s -X POST \
-  "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/attach-numbers/" \
+  "https://unpod.dev/api/v2/platform/telephony/trunks/$TRUNK_ID/attach-numbers/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"number_ids": [501]}'
@@ -181,7 +181,7 @@ with Client() as client:
 ```bash cURL
 TRUNK_ID=21  # your trunk id
 curl -s -X POST \
-  "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/detach-numbers/" \
+  "https://unpod.dev/api/v2/platform/telephony/trunks/$TRUNK_ID/detach-numbers/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"number_ids": [501]}'
@@ -217,13 +217,13 @@ with Client() as client:
 
 ```bash cURL
 # set (+ becomes %2B in the URL)
-curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B15551234567/inbound" \
+curl -s -X PUT "https://unpod.dev/api/v2/platform/sbc/v1/dids/%2B15551234567/inbound" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"answer_url": "https://your-app.example.com/incoming"}'
 
 # read
-curl -s "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B15551234567/inbound" \
+curl -s "https://unpod.dev/api/v2/platform/sbc/v1/dids/%2B15551234567/inbound" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -264,13 +264,13 @@ TRUNK_ID=21  # your trunk id
 
 # 1. unmap every number on the trunk
 curl -s -X POST \
-  "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/detach-numbers/" \
+  "https://unpod.dev/api/v2/platform/telephony/trunks/$TRUNK_ID/detach-numbers/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"number_ids": [501]}'
 
 # 2. delete the trunk
-curl -s -X DELETE "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/" \
+curl -s -X DELETE "https://unpod.dev/api/v2/platform/telephony/trunks/$TRUNK_ID/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>

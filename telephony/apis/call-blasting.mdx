@@ -127,7 +127,7 @@ asyncio.run(main())
 while read -r to || [ -n "$to" ]; do
   to=${to%$'\r'}; [ -z "$to" ] && continue
   curl -s -o /dev/null -w "$to %{http_code}\n" \
-    -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+    -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls" \
     -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
     -H "Org-Handle: $UNPOD_ORG_HANDLE" \
     -H "Idempotency-Key: reminder-nov:$to" -H "Content-Type: application/json" \
