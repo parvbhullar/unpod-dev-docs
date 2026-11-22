@@ -12,7 +12,7 @@ journeys already in flight.
 
 The point of the split is time. A single call lasts minutes; a real outreach
 sequence spans days. Journeys wait between steps - a fixed delay or smart
-timing - branch on the [outcome](/context/outcomes) of each step, and pause
+timing - branch on the [outcome](/intelligence/outcomes) of each step, and pause
 for a human to approve the next move. When the person replies on any channel,
 the inbound reply reaches the running journey as a signal and stops or branches
 it. Your agent never calls someone who already answered yesterday's email.
@@ -43,9 +43,9 @@ and what its outcome means for the next step.
 ## On the spine
 
 A journey is attached to one entity. It reads the entity's
-[context](/context/overview) when choosing a branch, dispatches
+[context](/intelligence/memory) when choosing a branch, dispatches
 interactions through the Talk layer as tasks, and consumes the structured
-[outcome](/context/outcomes) each interaction produces to decide the next
+[outcome](/intelligence/outcomes) each interaction produces to decide the next
 step. Every journey transition - started, step completed, waiting, signaled,
 exited - emits an [event](/core-engine/events), so the rest of your system can
 react without polling.
@@ -63,12 +63,12 @@ or holds a three-day timer is Unpod's problem, not a queue you operate.
 approval steps - is shipping in the open. Call steps are real today: dispatch
 them as [tasks](/api/execution/task-make-call-overview) and inspect
 [runs](/api/execution/runs-overview). Approval steps ship with the journey
-engine alongside [Teams & Policies](/context/teams-policies).
+engine alongside [Teams & Policies](/home/teams-and-permissions).
 
 ## Go deeper
 
 <CardGroup cols={2}>
-  <Card title="Outcomes" icon="clipboard-check" href="/context/outcomes">
+  <Card title="Outcomes" icon="clipboard-check" href="/intelligence/outcomes">
     The structured results journeys branch on.
   </Card>
   <Card title="Agent Workforce" icon="users" href="/agent-studio/agent-workforce">

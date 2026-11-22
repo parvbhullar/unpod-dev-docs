@@ -6,7 +6,7 @@ description: 'The channel-neutral thread - every interaction belongs to a conver
 
 A conversation is the channel-neutral thread. Every interaction - a call, a
 WhatsApp message, an email - belongs to a conversation, and the conversation
-belongs to an [entity](/context/entities). That one link is why an agent
+belongs to an [entity](/intelligence/entities). That one link is why an agent
 picking up a thread knows where things stand without being briefed: the
 history is attached to the person, not scattered across channel APIs.
 
@@ -31,7 +31,7 @@ Conversations sit at the center of the spine: channels deliver to an entity,
 and every touch lands as an interaction on that entity's conversation. The
 component reads entity identity to attach each interaction to the right
 thread, and writes the interaction record and its resulting
-[outcome](/context/outcomes). Every change - interaction created,
+[outcome](/intelligence/outcomes). Every change - interaction created,
 conversation updated, outcome recorded - emits an
 [event](/core-engine/events).
 
@@ -60,7 +60,7 @@ callable conversations API yet.
   <Card title="Recordings & Transcripts" icon="file-volume" href="/agent-sdk/recordings-transcripts">
     What each call produces today - the first interaction type.
   </Card>
-  <Card title="Entities" icon="users" href="/context/entities">
+  <Card title="Entities" icon="users" href="/intelligence/entities">
     The system-of-record identity every conversation belongs to.
   </Card>
   <Card title="Events" icon="radio" href="/core-engine/events">

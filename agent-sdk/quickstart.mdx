@@ -4,13 +4,13 @@ icon: 'phone-outgoing'
 description: 'Put your own process at the text boundary of a live call - an AgentRunner serving inbound and outbound phone calls.'
 ---
 
-The [Quickstart](/home/quickstart) placed a call with a `Prompt`
+The [Quickstart](/agent-sdk/agent-quickstart) placed a call with a `Prompt`
 brain and deployed nothing. This page is the `Runner` path: your own
 long-lived Python process at the text boundary - for DB reads mid-call, your
 own framework, or logic a prompt cannot carry.
 
 The deal is unchanged: your
-[`AgentRunner`](/get-started/core-concepts#agentrunner) receives a
+[`AgentRunner`](/home/how-it-fits#agentrunner) receives a
 transcribed turn as a string and returns a string. No frames, no codecs, no
 SIP - the speech pipeline and the carrier stay on Unpod's side.
 
@@ -19,7 +19,7 @@ SIP - the speech pipeline and the carrier stay on Unpod's side.
 - Python 3.12+ and `pip install unpod`
 - `UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE`, `UNPOD_BASE_URL` and
   `UNPOD_SERVICE_BASE_URL` in a `.env` file - the same four values as the
-  [Quickstart](/home/quickstart#prerequisites). The runner registers
+  [Quickstart](/agent-sdk/agent-quickstart#prerequisites). The runner registers
   with the platform token.
 - **A number in your account.** Provision one from the dashboard under
   **Dev Platform → Numbers**. No carrier account, no SIP trunk - see
@@ -40,7 +40,7 @@ runner uses - and sends REST calls to `UNPOD_SERVICE_BASE_URL`
 (`https://unpod.ai`, bare host).
 
 Provisioning is the same `agents.voice.create()` call as the
-[Quickstart](/home/quickstart) - the only difference is
+[Quickstart](/agent-sdk/agent-quickstart) - the only difference is
 `brain=Runner()`: your process answers the turns instead of a platform-run
 prompt.
 
@@ -114,7 +114,7 @@ Full setup: [Trunks](/speech-stack/numbers#trunks).
 The agent's `agent_id` (`"my-runner-agent"`) is the same string your
 `AgentRunner` registers under in Step 2. They must match exactly, or
 inbound calls never reach your runner. See
-[IDs You'll Meet](/get-started/core-concepts#ids-youll-meet).
+[IDs You'll Meet](/home/how-it-fits#ids-youll-meet).
 </Note>
 
 ## Step 2 - Answer an inbound call

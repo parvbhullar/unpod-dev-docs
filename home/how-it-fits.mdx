@@ -52,12 +52,12 @@ Teams and Policies govern it.
 | Talk | [Calling Engine](/telephony/concepts/calling-engine) | Programmable realtime voice runtime | Production |
 | Talk | [Channels](/telephony/concepts/channels) | Every channel writes to the same record | Voice, chat: production · messaging: in build |
 | Talk | [Models & Router](/agent-sdk/models-router) | Real-time STT, TTS and LLM with failover | Production |
-| Remember | [Context Engine](/context/overview) | One memory per customer | Per call: production · cross-channel: in build |
-| Remember | [People & identity](/context/entities) | System-of-record identity | People: production · cross-channel: in build |
-| Remember | [Conversations](/context/conversations) | Channel-neutral threads | In build |
-| Remember | [Outcomes](/context/outcomes) | The structured result of every interaction | Production |
-| Remember | [Permissions & tenancy](/context/teams-policies) | Multi-tenant authorization boundary | Production |
-| Remember | [Own your model](/context/intelligence) | Blocks today, your own model later | Blocks: production |
+| Remember | [Context Engine](/intelligence/memory) | One memory per customer | Per call: production · cross-channel: in build |
+| Remember | [People & identity](/intelligence/entities) | System-of-record identity | People: production · cross-channel: in build |
+| Remember | [Conversations](/intelligence/conversations) | Channel-neutral threads | In build |
+| Remember | [Outcomes](/intelligence/outcomes) | The structured result of every interaction | Production |
+| Remember | [Permissions & tenancy](/home/teams-and-permissions) | Multi-tenant authorization boundary | Production |
+| Remember | [Own your model](/intelligence/blocks) | Blocks today, your own model later | Blocks: production |
 | Act | [Agents](/agent-studio/agent-workforce) | Workers that communicate and act | Production |
 | Act | [Agent Harness](/agent-studio/agent-harness) | Everything around the brain in production | Production |
 | Act | [Flows & Journeys](/agent-studio/flows-journeys) | Durable communication workflows | Flows: production · journeys: in build |
@@ -86,7 +86,7 @@ third-party model, over whichever surface fits your stack:
 | Surface | I/O | Live in |
 |---|---|---|
 | [Chat](/get-started/chat) | text in, text out | 1 URL swap |
-| [Realtime](/telephony/streaming/unpod-speech-quickstart) | audio in, audio out | 1 WebSocket |
+| [Realtime](/agent-sdk/realtime) | audio in, audio out | 1 WebSocket |
 | [Phone](/agent-studio/quickstart) | a phone number | 1 click |
 
 Not sure which? See the [Introduction](/get-started/getting-started).
@@ -115,7 +115,7 @@ resolves to an entity, and reports a structured outcome when it ends.
 ## Glossary
 
 One canonical definition each. Headings are anchor-able, so other pages can deep
-link (for example `/get-started/core-concepts#pipe`). These are the speech
+link (for example `/home/how-it-fits#pipe`). These are the speech
 stack's terms; the spine's terms (entity, conversation, interaction, outcome,
 event, context) are defined on the pages linked from
 [Talk, remember, act](#talk-remember-act).
@@ -316,12 +316,12 @@ the spine, and the components at the top of this page.
 
 First call → one agent → memory of past calls → one more channel → one flow
 → a reply wakes the journey → context across every channel. Start with the
-first call: [Quickstart](/home/quickstart).
+first call: [Quickstart](/agent-sdk/agent-quickstart).
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Quickstart" icon="zap" href="/home/quickstart">
+  <Card title="Quickstart" icon="zap" href="/agent-sdk/agent-quickstart">
     Six SDK calls: your phone rings and an agent speaks.
   </Card>
   <Card title="Run Your Own Brain" icon="phone" href="/agent-sdk/quickstart">

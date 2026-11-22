@@ -5,8 +5,8 @@ description: 'The Connectivity API runtime: run an AgentRunner, control live cal
 ---
 
 The Connectivity half of the SDK. An
-[AgentRunner](/get-started/core-concepts#agentrunner) is the long-lived process
-that receives calls; a [Session](/get-started/core-concepts#session) is your
+[AgentRunner](/home/how-it-fits#agentrunner) is the long-lived process
+that receives calls; a [Session](/home/how-it-fits#session) is your
 control surface for one live call. This page is the reference for both.
 
 ## Install
@@ -25,7 +25,7 @@ export UNPOD_ORG_HANDLE="your-org"
 export UNPOD_BASE_URL="https://unpod.ai"   # one URL; the runner derives wss://<host>
 ```
 
-The [Quickstart](/home/quickstart#prerequisites) documents every
+The [Quickstart](/agent-sdk/agent-quickstart#prerequisites) documents every
 environment variable.
 
 ## The runner
@@ -63,7 +63,7 @@ runner.start()  # blocking
 <Note>
 `agent_id` is the runner agent ID - a short string you choose, matching the
 `agent_id` you passed to `client.agents.voice.create(...)`. Not a pipe UUID. See
-[IDs You'll Meet](/get-started/core-concepts#ids-youll-meet).
+[IDs You'll Meet](/home/how-it-fits#ids-youll-meet).
 </Note>
 
 ### Constructor
@@ -122,7 +122,7 @@ call and is where you read the telephony `end_reason` via
 ## CallContext
 
 Every call to your `entrypoint` receives a
-[CallContext](/get-started/core-concepts#callcontext):
+[CallContext](/home/how-it-fits#callcontext):
 
 ```python
 async def handle_call(ctx: CallContext) -> None:

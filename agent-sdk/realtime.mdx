@@ -46,7 +46,7 @@ voice = await client.agents.voice.create(
     ```
     Mint tokens server-side with `client.sessions.create_token(pipe_id=...)` -
     browser sessions still key on the pipe id of the agent-voice row.
-    Protocol and auth: [WebSocket sessions](/telephony/streaming/websocket).
+    Protocol and auth: [WebSocket sessions](/agent-sdk/websocket-sessions).
 
     <Warning>
     `@unpod/web-sdk` is **not yet published on npm**. Until it ships, reach a
@@ -74,7 +74,7 @@ transcripts land automatically - see
 ## Go deeper
 
 <CardGroup cols={2}>
-  <Card title="WebSocket sessions" icon="plug" href="/telephony/streaming/websocket">
+  <Card title="WebSocket sessions" icon="plug" href="/agent-sdk/websocket-sessions">
     Session tokens, events, capabilities.
   </Card>
   <Card title="Voice profiles" icon="audio-waveform" href="/agent-sdk/voice-profiles">

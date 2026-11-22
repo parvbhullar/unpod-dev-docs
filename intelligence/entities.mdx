@@ -51,10 +51,10 @@ and the [Space APIs](/api/space/organizations).
 ## On the spine
 
 Entities are where the spine starts: channels deliver every inbound touch
-to an entity, and every [conversation](/context/conversations) belongs
+to an entity, and every [conversation](/intelligence/conversations) belongs
 to one. Entities read identity handles from channel payloads, write the
 resolved person or organization record, and emit entity created, updated,
-and merged events. The [Context Engine](/context/overview) hangs
+and merged events. The [Context Engine](/intelligence/memory) hangs
 facts and history off the entity record.
 
 ## What stays hidden
@@ -78,10 +78,10 @@ resolution and merge: in build. Companies (organizations): in build.
   <Card title="Organizations API" icon="building" href="/api/space/organizations">
     Company records and rollup via the Space APIs.
   </Card>
-  <Card title="Conversations" icon="messages-square" href="/context/conversations">
+  <Card title="Conversations" icon="messages-square" href="/intelligence/conversations">
     The channel-neutral threads every entity's touches belong to.
   </Card>
-  <Card title="Context Engine" icon="waypoints" href="/context/overview">
+  <Card title="Context Engine" icon="waypoints" href="/intelligence/memory">
     Persistent memory attached to each entity.
   </Card>
 </CardGroup>

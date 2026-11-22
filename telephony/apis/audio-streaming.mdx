@@ -4,8 +4,8 @@ icon: 'audio-lines'
 description: "Stream a call's raw audio to your own WebSocket and play your bot's audio back: the <Stream> verb, the REST stream API, the WebSocket protocol and its signature."
 ---
 
-Unpod can run the whole conversation for you ([Realtime](/telephony/streaming/unpod-speech-quickstart)
-and [WebSocket sessions](/telephony/streaming/websocket): Unpod does STT, VAD, barge-in and
+Unpod can run the whole conversation for you ([Realtime](/agent-sdk/realtime)
+and [WebSocket sessions](/agent-sdk/websocket-sessions): Unpod does STT, VAD, barge-in and
 TTS, and your code sees only text). Audio streaming is the other way round: Unpod sends the
 call's audio to your WebSocket, 20 ms at a time, and plays back the audio your bot returns.
 You bring the speech pipeline.

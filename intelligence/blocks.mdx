@@ -50,8 +50,8 @@ production today; the rest is planned.
 
 Blocks read interactions, outcomes, and context; they never touch the audio
 path. What a block produces is written back to the spine - onto the
-[outcome](/context/outcomes) it analyzed or into the
-[Context Engine](/context/overview) - so downstream blocks and agents
+[outcome](/intelligence/outcomes) it analyzed or into the
+[Context Engine](/intelligence/memory) - so downstream blocks and agents
 read it as ordinary state, not as a side channel. Each insight written emits
 an event, like any other change on the spine.
 
@@ -77,10 +77,10 @@ training pipeline ships, its internals stay hidden the same way.
   <Card title="Post-call data" icon="file-text" href="/api/post-call-data">
     The API where extraction, scoring, and summarization results land today.
   </Card>
-  <Card title="Outcomes" icon="target" href="/context/outcomes">
+  <Card title="Outcomes" icon="target" href="/intelligence/outcomes">
     The structured records blocks read from and write back to.
   </Card>
-  <Card title="Context Engine" icon="waypoints" href="/context/overview">
+  <Card title="Context Engine" icon="waypoints" href="/intelligence/memory">
     Where insights persist as retrievable memory.
   </Card>
   <Card title="SuperDialog evals" icon="list-checks" href="/superdialog/evals">

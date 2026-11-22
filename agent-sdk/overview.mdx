@@ -9,7 +9,7 @@ import VoiceStack from '/snippets/voice-stack.mdx';
 
 ## What runs the call
 
-Unpod gives your agent voice. It handles everything between the user's audio and your agent's text logic. The Speech Stack is the developer surface of the [Calling Engine](/telephony/concepts/calling-engine) - one channel in the Talk layer of the [Core Engine](/get-started/core-concepts).
+Unpod gives your agent voice. It handles everything between the user's audio and your agent's text logic. The Speech Stack is the developer surface of the [Calling Engine](/telephony/concepts/calling-engine) - one channel in the Talk layer of the [Core Engine](/home/how-it-fits).
 
 Your agent receives plain text. It returns plain text. The Speech Stack handles everything else: transcription, synthesis, VAD, barge-in detection, endpointing, and transport.
 
@@ -77,16 +77,16 @@ Both paths run through the same managed speech pipeline (STT, TTS, VAD, barge-in
 
 | I want to... | Start here |
 |---|---|
-| Place your first call | [Quickstart](/home/quickstart) - six SDK calls, a Prompt brain, nothing to deploy |
+| Place your first call | [Quickstart](/agent-sdk/agent-quickstart) - six SDK calls, a Prompt brain, nothing to deploy |
 | Run my own brain on calls | [Run Your Own Brain](/agent-sdk/quickstart) - an AgentRunner serving inbound and outbound |
-| Add voice to a web app | [Realtime](/telephony/streaming/unpod-speech-quickstart) - browser sessions via the hosted Playground today (Web SDK not yet published) |
+| Add voice to a web app | [Realtime](/agent-sdk/realtime) - browser sessions via the hosted Playground today (Web SDK not yet published) |
 
 ---
 
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Quickstart" icon="bolt" href="/home/quickstart">
+  <Card title="Quickstart" icon="bolt" href="/agent-sdk/agent-quickstart">
     A named agent, a number, a live call - six SDK calls, one file.
   </Card>
   <Card title="Run a SuperDialog agent" icon="layers" href="/speech-stack/level-up-superdialog">
