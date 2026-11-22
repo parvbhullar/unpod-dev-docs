@@ -19,20 +19,14 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// EXACT-PAGE rules: UNPO-543 (docs dev flow, stage 1) page moves.
+// EXACT-PAGE rules: UNPO-543 (docs dev flow, stage 2) Home deletions.
 // Earlier stages' rules already ran; their links are rewritten.
 const EXACT_RULES = [
-  ["/context/overview", "/intelligence/memory"],
-  ["/context/intelligence", "/intelligence/blocks"],
-  ["/context/outcomes", "/intelligence/outcomes"],
-  ["/context/entities", "/intelligence/entities"],
-  ["/context/conversations", "/intelligence/conversations"],
-  ["/context/teams-policies", "/home/teams-and-permissions"],
-  ["/get-started/account-and-keys", "/home/account-and-keys"],
-  ["/get-started/core-concepts", "/home/how-it-fits"],
-  ["/home/quickstart", "/agent-sdk/agent-quickstart"],
-  ["/telephony/streaming/unpod-speech-quickstart", "/agent-sdk/realtime"],
-  ["/telephony/streaming/websocket", "/agent-sdk/websocket-sessions"],
+  ["/get-started/getting-started", "/home/overview"],
+  ["/get-started/why-unpod", "/home/overview"],
+  ["/get-started/who-its-for", "/home/overview"],
+  ["/get-started/vs-competition", "/home/overview"],
+  ["/guides/index", "/home/overview"],
 ];
 
 // PREFIX rules, longest "from" first.

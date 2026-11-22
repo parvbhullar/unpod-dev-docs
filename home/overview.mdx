@@ -1,0 +1,93 @@
+---
+title: 'Unpod Docs'
+sidebarTitle: 'Overview'
+icon: 'house'
+description: 'Telephony and voice agents: the backend for conversational apps.'
+---
+
+Numbers, calls and audio streaming, and voice agents that run on them. Each part
+works on its own, so start with the one you need.
+
+## Telephony
+
+<CardGroup cols={3}>
+  <Card title="Numbers & SIP" icon="hash" href="/telephony/quickstart">
+    Get a number, or connect your carrier or voice platform over SIP.
+  </Card>
+  <Card title="Calls" icon="phone-call" href="/telephony/apis/quickstart">
+    Place, receive, bridge and record calls from your code.
+  </Card>
+  <Card title="Audio Streaming" icon="audio-waveform" href="/telephony/apis/audio-streaming">
+    Stream call audio to your own agent, such as a Pipecat bot.
+  </Card>
+</CardGroup>
+
+## Voice agents
+
+<CardGroup cols={3}>
+  <Card title="Agent Studio" icon="palette" href="/agent-studio/quickstart">
+    Write and test voice and chat agents, then put one on a number.
+  </Card>
+  <Card title="Agent SDK" icon="code" href="/agent-sdk/agent-quickstart">
+    Run agents from code. Unpod handles the speech.
+  </Card>
+  <Card title="Intelligence" icon="sparkles" href="/intelligence/blocks">
+    Outcomes, extraction and memory from every call.
+  </Card>
+</CardGroup>
+
+## Make your first call
+
+<Steps>
+  <Step title="Get your keys">
+    Create an API key and copy your org handle ([Account & keys](/home/account-and-keys)),
+    then export them:
+
+    ```bash
+    export UNPOD_BASE_URL=https://unpod.ai
+    export UNPOD_PLATFORM_TOKEN=<your-api-key>
+    export UNPOD_ORG_HANDLE=<your-org-handle>
+    ```
+  </Step>
+
+  <Step title="Install the SDK">
+    Python 3.12 or later.
+
+    ```bash
+    pip install "unpod>=0.7.0"
+    ```
+  </Step>
+
+  <Step title="Call a phone">
+    `FROM` is a number on your org ([Get a number](/telephony/apis/numbers)). `TO` is a phone
+    you can answer. Both in E.164.
+
+    <CodeGroup>
+    ```python Python
+    from unpod import Client
+
+    FROM = "+919000000001"  # your Unpod number
+    TO = "+919000000002"    # who to call
+
+    with Client() as client:
+        call = client.telephony.calls.create(FROM, TO, ring_timeout=30)
+        print(call.call_id, call.state)
+    ```
+
+    ```bash cURL
+    curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+      -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
+      -d '{"from": "+919000000001", "to": "+919000000002", "ring_timeout": 30}'
+    ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+<Note>
+The Call API is in preview. Ask the Unpod team to switch it on for your org; until then
+calls return `403 call_api_disabled`.
+</Note>
+
+Next: the [Telephony quick start](/telephony/apis/quickstart) speaks on the call and
+receives one. Not writing code? Use the [Conversational Platform](/platform/introduction).

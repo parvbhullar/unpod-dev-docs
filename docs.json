@@ -48,22 +48,18 @@
                 "group": "Start Here",
                 "icon": "flag",
                 "pages": [
-                  "get-started/getting-started",
-                  "home/account-and-keys",
-                  "home/teams-and-permissions",
-                  "home/how-it-fits"
+                  "home/overview",
+                  "home/account-and-keys"
                 ]
               },
               {
-                "group": "About Unpod",
-                "icon": "info",
+                "group": "Concepts",
+                "icon": "lightbulb",
+                "expanded": false,
                 "pages": [
-                  "get-started/why-unpod",
-                  "get-started/who-its-for",
-                  "get-started/vs-competition",
-                  "guides/index"
-                ],
-                "expanded": false
+                  "home/how-it-fits",
+                  "home/teams-and-permissions"
+                ]
               }
             ]
           },
@@ -626,7 +622,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/get-started/getting-started"
+      "destination": "/home/overview"
     },
     {
       "source": "/blog/getting-started-with-unpod-api",
@@ -634,11 +630,11 @@
     },
     {
       "source": "/get-started/choose-your-path",
-      "destination": "/get-started/getting-started"
+      "destination": "/home/overview"
     },
     {
       "source": "/get-started/start-here",
-      "destination": "/get-started/getting-started"
+      "destination": "/home/overview"
     },
     {
       "source": "/get-started/slm-inference",
@@ -923,6 +919,26 @@
     {
       "source": "/telephony/streaming/websocket",
       "destination": "/agent-sdk/websocket-sessions"
+    },
+    {
+      "source": "/get-started/getting-started",
+      "destination": "/home/overview"
+    },
+    {
+      "source": "/get-started/vs-competition",
+      "destination": "/home/overview"
+    },
+    {
+      "source": "/get-started/who-its-for",
+      "destination": "/home/overview"
+    },
+    {
+      "source": "/get-started/why-unpod",
+      "destination": "/home/overview"
+    },
+    {
+      "source": "/guides/index",
+      "destination": "/home/overview"
     }
   ]
 }
