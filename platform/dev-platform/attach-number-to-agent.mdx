@@ -1,25 +1,25 @@
 ---
 title: 'Attach a Number to an Agent'
 icon: 'phone-forwarded'
-description: 'Map your phone numbers to a voice agent over the platform telephony plane — the primary external flow.'
+description: 'Map your phone numbers to a voice agent over the platform telephony plane - the primary external flow.'
 ---
 
 ## Overview
 
 The platform telephony plane (`client.telephony.*`) maps your phone numbers to
 voice **agents** on backend-core's `/api/v2/platform/telephony/*` surface. The
-primary flow is **attach a number to an agent** — what telephony calls the
+primary flow is **attach a number to an agent** - what telephony calls the
 **Leg-B** termination (Unpod's SuperSBC routes the inbound call through to your
 agent on LiveKit).
 
 You **list** your org's numbers, then **attach** one or many to an agent. The
-underlying voice bridge is resolved for you (hidden) — you work with numbers and
+underlying voice bridge is resolved for you (hidden) - you work with numbers and
 agents, not bridges.
 
 <Note>
 This plane (`client.telephony.*`) is distinct from the Speech Stack management
 plane at [`client.numbers`](/speech-stack/numbers) / `client.trunks`. The
-telephony plane is `Org-Handle`-scoped and requires proxy/JWT auth — it is **not**
+telephony plane is `Org-Handle`-scoped and requires proxy/JWT auth - it is **not**
 reachable in direct/Bearer mode.
 </Note>
 
@@ -29,10 +29,10 @@ reachable in direct/Bearer mode.
 
 | Concept | What it is |
 |---|---|
-| **Leg B (agent attach)** | SuperSBC → agent/LiveKit. The **primary** flow — `numbers.attach(..., agent_id=...)`. |
+| **Leg B (agent attach)** | SuperSBC → agent/LiveKit. The **primary** flow - `numbers.attach(..., agent_id=...)`. |
 | **Leg A (BYO carrier)** | Your own SIP carrier → SuperSBC. The carrier leg is the hardcoded SuperSBC default today; bringing your own carrier (`client.telephony.trunks.*`) is **future/beta**. |
-| **`agent_id`** | The handle of an agent your org owns. **Optional** — attach without one, then bind an agent with `client.numbers.agent.change` (see below). |
-| **Bridge** | The voice bridge a number rides on. **Auto-resolved and hidden** — one number maps to one bridge. |
+| **`agent_id`** | The handle of an agent your org owns. **Optional** - attach without one, then bind an agent with `client.numbers.agent.change` (see below). |
+| **Bridge** | The voice bridge a number rides on. **Auto-resolved and hidden** - one number maps to one bridge. |
 
 ---
 
@@ -63,7 +63,7 @@ numbers = await client.telephony.numbers.list()
 
 ### Number fields
 
-Every verb on this plane takes the **E.164 number** — the internal id is not exposed.
+Every verb on this plane takes the **E.164 number** - the internal id is not exposed.
 
 | Field | Type | Description |
 |---|---|---|
@@ -74,7 +74,7 @@ Every verb on this plane takes the **E.164 number** — the internal id is not e
 
 ## Attach Numbers to an Agent
 
-Map one or more numbers to an agent **by E.164 number** (not id — Django resolves
+Map one or more numbers to an agent **by E.164 number** (not id - Django resolves
 it). The bridge is resolved automatically; each number reports its own outcome
 (partial-success), so one bad number never fails the rest.
 
@@ -127,7 +127,7 @@ Each `NumberResult`:
 | `error` | `str \| None` | Why it failed, when `ok` is `False`. |
 
 <Note>
-The agent attach returns the per-number **lifecycle** — there is no carrier
+The agent attach returns the per-number **lifecycle** - there is no carrier
 `origin_endpoint`. That belongs to the BYO-carrier (Leg-A) path below.
 </Note>
 
@@ -190,7 +190,7 @@ See [Get a Number](/telephony/apis/numbers) for every attach option and error.
 
 ## Detach Numbers
 
-Release numbers by E.164 number — the inverse of `attach`. The termination,
+Release numbers by E.164 number - the inverse of `attach`. The termination,
 agent, and pipe are read from the stored record. The number is **released, not
 deleted**, so it stays available for a later re-attach.
 
@@ -212,16 +212,16 @@ for row in overview:
 
 ---
 
-## Bring Your Own Carrier (Leg A) — Future / Beta
+## Bring Your Own Carrier (Leg A) - Future / Beta
 
 Bringing your own SIP carrier (`client.telephony.trunks.*`) wires the **Leg-A**
 carrier leg. Today that leg is the hardcoded SuperSBC default, so this surface is
-**future/beta** — prefer the agent attach above for production. When enabled, the
+**future/beta** - prefer the agent attach above for production. When enabled, the
 flow is: create a trunk, attach numbers, and point your carrier at the returned
 origin endpoint.
 
 ```python
-# future / beta — BYO SIP carrier (Leg A)
+# future / beta - BYO SIP carrier (Leg A)
 trunk = await client.telephony.trunks.create(
     name="My Carrier", sip_url="sip:carrier.net",
     username="u", password="p", source_ips=["203.0.113.10"],

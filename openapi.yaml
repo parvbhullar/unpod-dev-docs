@@ -1609,9 +1609,9 @@ paths:
               properties:
                 name:
                   type: string
-                  example: "Sales Bridge — Updated"
+                  example: "Sales Bridge - Updated"
             example:
-              name: "Sales Bridge — Updated"
+              name: "Sales Bridge - Updated"
       responses:
         '200':
           description: Bridge updated
@@ -1622,7 +1622,7 @@ paths:
                 message: "Bridge updated successfully."
                 data:
                   id: 314
-                  name: "Sales Bridge — Updated"
+                  name: "Sales Bridge - Updated"
                   slug: "sales-bridge-001"
                   numbers:
                     - id: 501
