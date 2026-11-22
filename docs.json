@@ -222,6 +222,70 @@
             ]
           },
           {
+            "tab": "Agent SDK",
+            "groups": [
+              {
+                "group": "Get Started",
+                "icon": "rocket",
+                "pages": [
+                  "agent-sdk/overview",
+                  "agent-sdk/setup-checklist",
+                  "agent-sdk/quickstart",
+                  "agent-sdk/agent-quickstart",
+                  "agent-sdk/realtime",
+                  "agent-sdk/websocket-sessions"
+                ]
+              },
+              {
+                "group": "Build your agent",
+                "icon": "blocks",
+                "pages": [
+                  "agent-sdk/bring-your-agent",
+                  "agent-sdk/adapters",
+                  "speech-stack/agents",
+                  "platform/dev-platform/agents",
+                  "agent-sdk/agent-settings",
+                  "agent-sdk/agent-tools",
+                  "agent-sdk/voice-profiles",
+                  "agent-sdk/domain-dictionaries",
+                  "agent-sdk/pipes",
+                  "agent-sdk/models-router"
+                ]
+              },
+              {
+                "group": "Call runtime",
+                "icon": "activity",
+                "pages": [
+                  "agent-sdk/agent-runner",
+                  "agent-sdk/call-lifecycle",
+                  "speech-stack/hooks-events",
+                  "core-engine/events",
+                  "agent-sdk/outbound-calls"
+                ]
+              },
+              {
+                "group": "Operate",
+                "icon": "server",
+                "pages": [
+                  "agent-sdk/recordings-transcripts",
+                  "speech-stack/analytics",
+                  "platform/dev-platform/analytics-and-reporting",
+                  "speech-stack/observability",
+                  "core-engine/observability",
+                  "agent-sdk/deploy",
+                  "agent-sdk/load-testing"
+                ]
+              },
+              {
+                "group": "Next",
+                "icon": "arrow-right",
+                "pages": [
+                  "speech-stack/level-up-superdialog"
+                ]
+              }
+            ]
+          },
+          {
             "tab": "Agent Studio",
             "groups": [
               {
@@ -318,70 +382,6 @@
                   "agent-studio/actions",
                   "agent-studio/agent-workforce",
                   "agent-studio/agent-harness"
-                ]
-              }
-            ]
-          },
-          {
-            "tab": "Agent SDK",
-            "groups": [
-              {
-                "group": "Get Started",
-                "icon": "rocket",
-                "pages": [
-                  "agent-sdk/overview",
-                  "agent-sdk/setup-checklist",
-                  "agent-sdk/quickstart",
-                  "agent-sdk/agent-quickstart",
-                  "agent-sdk/realtime",
-                  "agent-sdk/websocket-sessions"
-                ]
-              },
-              {
-                "group": "Build your agent",
-                "icon": "blocks",
-                "pages": [
-                  "agent-sdk/bring-your-agent",
-                  "agent-sdk/adapters",
-                  "speech-stack/agents",
-                  "platform/dev-platform/agents",
-                  "agent-sdk/agent-settings",
-                  "agent-sdk/agent-tools",
-                  "agent-sdk/voice-profiles",
-                  "agent-sdk/domain-dictionaries",
-                  "agent-sdk/pipes",
-                  "agent-sdk/models-router"
-                ]
-              },
-              {
-                "group": "Call runtime",
-                "icon": "activity",
-                "pages": [
-                  "agent-sdk/agent-runner",
-                  "agent-sdk/call-lifecycle",
-                  "speech-stack/hooks-events",
-                  "core-engine/events",
-                  "agent-sdk/outbound-calls"
-                ]
-              },
-              {
-                "group": "Operate",
-                "icon": "server",
-                "pages": [
-                  "agent-sdk/recordings-transcripts",
-                  "speech-stack/analytics",
-                  "platform/dev-platform/analytics-and-reporting",
-                  "speech-stack/observability",
-                  "core-engine/observability",
-                  "agent-sdk/deploy",
-                  "agent-sdk/load-testing"
-                ]
-              },
-              {
-                "group": "Next",
-                "icon": "arrow-right",
-                "pages": [
-                  "speech-stack/level-up-superdialog"
                 ]
               }
             ]
