@@ -19,6 +19,8 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
   <Step title="Credentials">
     Export `UNPOD_BASE_URL`, `UNPOD_PLATFORM_TOKEN` and `UNPOD_ORG_HANDLE` as shown in
     [Credentials](/telephony/introduction#credentials).
+
+    **Sample code:** [`step1_credentials.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step1_credentials.py) checks your three variables and that the token and org handle reach the API.
   </Step>
 
   <Step title="Install">
@@ -29,6 +31,8 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     source .venv/bin/activate
     pip install "unpod>=0.7.0"
     ```
+
+    **Sample code:** [`step2_install.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step2_install.py) checks for Python 3.12+ and that `unpod` is installed.
   </Step>
 
   <Step title="Get a number">
@@ -78,6 +82,8 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     `human_call` (for example, it was moved to an agent): attach it again. A
     `400 from_not_owned` means it isn't one of your org's numbers.
     </Note>
+
+    **Sample code:** [`step3_get_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step3_get_number.py) lists your numbers; add `--attach` to attach a free pool number.
   </Step>
 
   <Step title="Call someone and speak">
@@ -137,6 +143,8 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     </CodeGroup>
 
     `speak` works once the call is `talking` - no server needed.
+
+    **Sample code:** [`step4_call_and_speak.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step4_call_and_speak.py) places the call and speaks once it's `talking`. As one script without the checks: [`outbound_call.py`](https://github.com/unpod-ai/sample-apps/blob/main/telephony/outbound_call.py).
   </Step>
 
   <Step title="What you get back">
@@ -166,6 +174,8 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     with `No Answer`, SIP `408` and `Duration` 0 means the call never reached the phone: place
     it again.
     </Tip>
+
+    **Sample code:** [`step5_call_result.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step5_call_result.py) reads the recording summary after the call ends (`<CALL_ID>` from step 4).
   </Step>
 </Steps>
 
@@ -202,6 +212,8 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
     `reveal()` only reads the secret, so every server already verifying with it keeps working.
     If your org has no secret yet, an org owner or editor creates the first one: see
     [Rotate the webhook secret](/telephony/concepts/security-and-compliance#rotate-the-webhook-secret).
+
+    **Sample code:** [`step6_webhook_secret.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step6_webhook_secret.py) checks that your org has a webhook secret.
   </Step>
 
   <Step title="Run a server">
@@ -238,6 +250,8 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
 
     Run it with `python app.py`. It rejects unsigned requests, greets new calls and returns 200
     for every other event.
+
+    **Sample code:** [`step7_app.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step7_app.py) is this `app.py` with check output, and [`test_step7_app.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/test_step7_app.py) tests it with signed and unsigned requests.
   </Step>
 
   <Step title="Expose it">
@@ -249,6 +263,8 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
     ```
 
     Copy the https forwarding URL, e.g. `https://abc123.ngrok.app`.
+
+    **Sample code:** [`step8_check_tunnel.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step8_check_tunnel.py) sends one unsigned request to your public URL: a `401` means the request reached your server and was rejected for having no signature, so the whole path works.
   </Step>
 
   <Step title="Point your number at it">
@@ -280,11 +296,15 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
     </CodeGroup>
 
     `set_did` sets the config for one number. In the URL, `+` becomes `%2B`.
+
+    **Sample code:** [`step9_point_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step9_point_number.py) sets the number's answer URL and reads it back; `--clear` undoes it.
   </Step>
 
   <Step title="Call your number">
     Call your Unpod number from any phone. You hear "Hello! Thanks for calling." and the call
     ends. For the full picture, see [Incoming Calls](/telephony/apis/incoming-calls).
+
+    **Sample code:** When the call comes in, the [`step7_app.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step7_app.py) terminal prints `PASS StartApp`, then `PASS Hangup`.
   </Step>
 </Steps>
 
