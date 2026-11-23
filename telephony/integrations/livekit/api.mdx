@@ -11,7 +11,7 @@ use to create the matching trunks in the LiveKit console - see the
 [Dashboard guide](/telephony/integrations/livekit/dashboard) for the LiveKit-side screens.
 
 <Note>
-**Base URL:** `https://unpod.ai/api/v2/platform/`
+**Base URL:** `https://unpod.dev/api/v2/platform/`
 Every request needs `Authorization: Token <your-api-key>` and an `Org-Handle` header.
 See [Authentication](/api/get-started/authentication).
 </Note>
@@ -26,9 +26,9 @@ See [Authentication](/api/get-started/authentication).
 ## 1. Find your number
 
 ```bash cURL
-curl https://unpod.ai/api/v2/platform/telephony/numbers/ \
-  -H "Authorization: Token $UNPOD_TOKEN" \
-  -H "Org-Handle: $ORG_HANDLE"
+curl https://unpod.dev/api/v2/platform/telephony/numbers/ \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
+  -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 
 ```json Response (200)
@@ -47,12 +47,12 @@ curl https://unpod.ai/api/v2/platform/telephony/numbers/ \
 
 ## 2. Create the SIP trunk to LiveKit
 
-Point the trunk's `sip_url` at your LiveKit SIP URI. One trunk carries both inbound and outbound.
+Point the trunk's `sip_url` at your LiveKit SIP URI.
 
 ```bash cURL
-curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/ \
-  -H "Authorization: Token $UNPOD_TOKEN" \
-  -H "Org-Handle: $ORG_HANDLE" \
+curl -X POST https://unpod.dev/api/v2/platform/telephony/trunks/ \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
+  -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "LiveKit trunk",
@@ -77,12 +77,12 @@ curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/ \
 ## 3. Attach your number to the trunk
 
 Map the number from step 1 (its `id`) to the trunk from step 2 (its `id`). The response
-returns the **origin endpoint** - the address + creds you use in LiveKit.
+returns the **origin endpoint** - the address you use in LiveKit.
 
 ```bash cURL
-curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/21/attach-numbers/ \
-  -H "Authorization: Token $UNPOD_TOKEN" \
-  -H "Org-Handle: $ORG_HANDLE" \
+curl -X POST https://unpod.dev/api/v2/platform/telephony/trunks/21/attach-numbers/ \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
+  -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{ "number_ids": [501] }'
 ```
@@ -94,17 +94,23 @@ curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/21/attach-numbers
   "data": {
     "trunk_id": 21,
     "origin_endpoint": {
-      "ingress": "sip:sip-lb1.unpod.tel",
+      "ingress": "sip-lb1.unpod.tel",
       "dids": ["+15551234567"],
       "accepted_source_ips": [],
       "region": "ap-south"
-    }
+    },
+    "numbers": [
+      { "number_id": 501, "number": "+15551234567", "connection_state": "NOT_LINKED", "ok": true }
+    ]
   }
 }
 ```
 
-The `origin_endpoint.ingress` (plus the trunk's `auth_username` / `auth_password`) is what
-you enter when creating the LiveKit outbound trunk.
+The `origin_endpoint.ingress` is the address you enter when creating the LiveKit outbound trunk.
+The username and password are the ones Unpod generates for your number: copy them from
+**Outbound Trunk Details** in the dashboard
+([Connect an Unpod Number](/telephony/integrations/unpod/dashboard#outbound-trunk)). The
+API doesn't return them.
 
 <Card title="Attach Numbers reference" icon="link" href="/telephony/trunks/attach-numbers">
   Path params, request body, and the full origin-endpoint response.
@@ -152,8 +158,8 @@ curl -X POST "$LIVEKIT_URL/twirp/livekit.SIP/CreateSIPOutboundTrunk" \
       "destination_country": "US",
       "transport": "SIP_TRANSPORT_TCP",
       "numbers": ["+15551234567"],
-      "auth_username": "<unpod trunk username>",
-      "auth_password": "<unpod trunk password>"
+      "auth_username": "<username from Outbound Trunk Details>",
+      "auth_password": "<password from Outbound Trunk Details>"
     }
   }'
 ```

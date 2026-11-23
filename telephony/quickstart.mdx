@@ -60,7 +60,7 @@ Only want to make calls? You don't need a trunk - see the
     ```
 
     ```bash cURL
-    curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/trunks/" \
+    curl -s -X POST "https://unpod.dev/api/v2/platform/telephony/trunks/" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" \
       -d '{
@@ -128,7 +128,7 @@ Only want to make calls? You don't need a trunk - see the
     ```bash cURL
     # 1. list your numbers and copy your number's "id"
     curl -s \
-      "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
+      "https://unpod.dev/api/v2/platform/telephony/numbers/?include_assigned=true" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
     TRUNK_ID=21   # your trunk id from step 2
@@ -136,7 +136,7 @@ Only want to make calls? You don't need a trunk - see the
 
     # 2. map it to the trunk
     curl -s -X POST \
-      "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/attach-numbers/" \
+      "https://unpod.dev/api/v2/platform/telephony/trunks/$TRUNK_ID/attach-numbers/" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" \
       -d "{\"number_ids\": [$NUMBER_ID]}"
@@ -149,8 +149,9 @@ Only want to make calls? You don't need a trunk - see the
     calls to (a bare host such as `sip-lb1.unpod.tel`, no `sip:` prefix), and
     `accepted_source_ips` are the addresses Unpod accepts them from. Each eligible number
     gets a row with its own `ok` and `error`, and ineligible ids are left out. If no id is
-    an active `NOT_ASSIGNED` number, or none of them maps, the request fails with `400`
-    (the SDK raises `httpx.HTTPStatusError` before the loop runs). See
+    an active `NOT_ASSIGNED` number, the request fails with `400`
+    `No valid unassigned numbers found.` (the SDK raises `httpx.HTTPStatusError` before the
+    loop runs). See
     [Attach Numbers to Trunk](/telephony/trunks/attach-numbers).
   </Step>
 
@@ -174,7 +175,7 @@ Only want to make calls? You don't need a trunk - see the
     ```
 
     ```bash cURL
-    curl -s "https://unpod.ai/api/v2/platform/telephony/overview/" \
+    curl -s "https://unpod.dev/api/v2/platform/telephony/overview/" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
     ```
     </CodeGroup>
@@ -190,6 +191,13 @@ Only want to make calls? You don't need a trunk - see the
 Calls to your number now reach Unpod. To answer them in your app, set an answer URL on
 each of the trunk's numbers. See
 [For a whole SIP trunk](/telephony/apis/incoming-calls#for-a-whole-sip-trunk).
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/quickstart/step3_get_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step3_get_number.py): list your org's numbers and their states.
+- [`sbc/quickstart/step9_point_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step9_point_number.py): set or clear a number's inbound config.
 
 ## Next
 

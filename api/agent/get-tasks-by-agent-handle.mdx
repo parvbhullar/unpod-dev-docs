@@ -344,7 +344,7 @@ You can get the `agent_handle` by hitting the [Get All Agents](/api/agent/get-al
 | page_size | integer | No       | Tasks per page. Defaults to `20`               |
 
 <Note>
-`count` is the **total** number of tasks for the agent, not the size of the current page — `data` holds at most `page_size` items. Page through until you have collected `count` tasks.
+`count` is the **total** number of tasks for the agent, not the size of the current page - `data` holds at most `page_size` items. Page through until you have collected `count` tasks.
 </Note>
 
 ### Headers
@@ -447,14 +447,14 @@ You can get the `agent_handle` by hitting the [Get All Agents](/api/agent/get-al
 | analytics       | object         | `sentiment`, `engagement`, `tone`, `contact_status`, `call_score`, `call_score_breakdown` |
 | summary         | object         | `headline` plus a `key_points` array                                                                |
 | lead            | object         | `name`, `labels`, `objections`, `pain_points`, `questions_asked`                                    |
-| structured_data | object         | Playbook-defined extraction fields — keys vary per agent                                            |
+| structured_data | object         | Playbook-defined extraction fields - keys vary per agent                                            |
 | next_action     | object         | `label`, `callback_requested`, `scheduled_at`                                                       |
 | follow_up       | object         | `required`, `state`, `reason`, `next_at`, `attempt`, `attempts_remaining`, `policy`                 |
 | evaluation      | object \| null | Playbook evaluation result (null when disabled)                                                      |
 | call_evaluation | object \| null | Call-quality evaluation result (null when disabled)                                                  |
 | redial          | object         | `status` of an automatic redial                                                                      |
 | skipped         | array          | Post-call stages that did not run, each `{stage, reason}`                                            |
-| post_call_usage | object         | Provider and token usage for billing — see below                                                     |
+| post_call_usage | object         | Provider and token usage for billing - see below                                                     |
 
 #### follow_up.policy
 
@@ -469,7 +469,7 @@ You can get the `agent_handle` by hitting the [Get All Agents](/api/agent/get-al
 
 | Field           | Type           | Description                                                                           |
 |-----------------|----------------|---------------------------------------------------------------------------------------|
-| thread_id       | string         | Thread the call ran on — matches `task_id`                                             |
+| thread_id       | string         | Thread the call ran on - matches `task_id`                                             |
 | room_name       | string         | Media room name (empty for calls that never connected)                                |
 | agent_id        | string         | Agent handle that served the call                                                     |
 | org_id          | string \| null | Organisation id resolved at billing time                                               |
@@ -479,7 +479,7 @@ You can get the `agent_handle` by hitting the [Get All Agents](/api/agent/get-al
 | call_duration_s | string         | Billed duration in seconds, sent as a string                                          |
 | providers       | object         | `llm_provider`, `llm_model`, `stt_provider`, `stt_model`, `tts_provider`, `tts_model` |
 | raw_counters    | object         | Raw meters: LLM prompt/completion/cached tokens, TTS characters, STT audio duration   |
-| sku_deltas      | array          | Billable units, each `{codename, raw, unit_scale}` — all values are strings            |
+| sku_deltas      | array          | Billable units, each `{codename, raw, unit_scale}` - all values are strings            |
 
 <Warning>
 Every numeric value under `post_call_usage` (`call_duration_s`, `raw_counters`, `sku_deltas`) is a **string**, not a number. Cast before doing arithmetic.

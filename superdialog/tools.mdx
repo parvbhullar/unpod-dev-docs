@@ -113,17 +113,26 @@ agent = PlaybookAgent(
 ```
 
 Through the unified `DialogMachine` entry point, pass any `Tool` and it is
-bridged automatically:
+bridged automatically under its id. The bridge calls the function with the tool
+args as **keyword arguments** (`fn(**args)`), so a bridged function takes named
+parameters, not `(args, state)`:
 
 ```python
 from superdialog import DialogMachine, PythonTool
 
+async def lookup_customer(phone_number: str) -> dict:
+    """Look up a customer by phone number."""
+    return await crm.get_by_phone(phone_number)
+
 agent = DialogMachine(
     "booking.yaml",
     llm="anthropic/claude-haiku-4-5",
-    tools=[PythonTool.of(lookup_customer)],   # bridged through the engine
+    tools=[PythonTool.of(lookup_customer)],   # bridged as id "lookup_customer"
 )
 ```
+
+Either way, the playbook must declare the `type: python` tool with the same id
+and run it from a `pipeline` or `on_enter`.
 
 ---
 
@@ -175,6 +184,7 @@ flows.
 ### `@tool` decorator and plain functions
 
 ```python
+from superdialog import DialogMachine
 from superdialog.tools import tool
 
 @tool
@@ -211,6 +221,7 @@ Attach functions to `ConversationFlow.tools` (flow-level) or `FlowNode.tools`
 
 ```python
 from superdialog.flow.models import ConversationFlow, FlowNode, Edge
+from superdialog.llm import resolve_llm
 from superdialog.machine.machine import DialogStateMachine
 from superdialog.tools import tool
 
@@ -238,7 +249,7 @@ flow = ConversationFlow(
     ],
 )
 
-machine = await DialogStateMachine.from_flow(flow, adapter)
+machine = await DialogStateMachine.from_flow(flow, llm=resolve_llm("openai/gpt-4.1-mini"))
 ```
 
 ### Tool results and flow transitions

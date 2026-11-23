@@ -48,7 +48,7 @@ splits them; a missing `llm` raises a clear `ValueError`. Graph-only methods
 Playbook mode, and `flow_state` returns `None`.
 
 ```python
-from superdialog import DialogMachine
+from superdialog import DialogMachine, Flow
 
 agent = DialogMachine("booking.yaml", llm="openai/gpt-4.1-mini")          # Playbook (default)
 agent = DialogMachine("booking.yaml", llm="anthropic/claude-haiku-4-5",
@@ -135,7 +135,8 @@ async create_dialog_flow(prompt, llm, **kwargs) -> Flow
 ```
 
 Bootstrap a legacy flow graph from a prompt. Prefer `generate_simple_playbook`
-for new agents; generated flows still run on the Playbook engine by default. The
+for new agents. Save the returned `Flow` and pass `DialogMachine` the JSON path to
+run it on the Playbook engine; the `Flow` object itself runs the graph engine. The
 `llm` is used **only at construction**.
 
 ---
@@ -180,8 +181,8 @@ agent = PlaybookAgent(
     director_llm=director,      # CompletesLLM
     http=httpx_http,            # HttpFn
     python_tools=None,          # dict[str, PythonToolFn] | None
-    token_budget=4000,          # Talker view budget (estimated tokens)
-    barrier_timeout=0.4,        # hard gate: wait this long for the Director
+    token_budget=40000,         # Talker view budget (estimated tokens; default)
+    barrier_timeout=4.0,        # hard gate: wait this long for the Director (default)
     hold_timeout=None,          # then filler + this much more before degrading
 )
 ```
@@ -209,7 +210,7 @@ agent = PlaybookAgent(
 | `never_say` | Hard prohibitions injected into the Talker view |
 | `exit_say` | One-shot line spoken on the turn that *leaves* this checkpoint via a director rule (post-capture pitch); never on interrupt/policy advances. Simple format authors it as `then_say` |
 | `advance_when` | Ordered `AdvanceRule` list (outcome gates) |
-| `gate` | `soft` (default) or `hard` (barrier; `requires` need *confirmed* slots) |
+| `gate` | `hard` (default; barrier, `requires` need *confirmed* slots) or `soft` |
 | `auto` | Speak verbatim once, then advance without user input |
 | `pipeline` | Pipeline run once on entry; routes on `pipeline.ok` / `pipeline.failed` |
 | `on_failure` | Route on pipeline failure or turn-budget exhaustion |
@@ -328,8 +329,8 @@ state = ConversationState.fold(agent.event_log, playbook)
 
 `EventLog` is append-only with contiguous versions from 1. Events are frozen,
 discriminated on `type`: `utterance`, `slot_write`, `advance`, `steering_note`,
-`tool_call`, `tool_result`, `env_write`, `scratchpad`, `summary`, `external`,
-`degraded`, `session_end`. `ConversationState.fold` derives `checkpoint_id`,
+`tool_call`, `tool_result`, `env_write`, `session_start`, `scratchpad`,
+`summary`, `external`, `degraded`, `revert`, `speech_correction`, `session_end`. `ConversationState.fold` derives `checkpoint_id`,
 `slots` (value + provisional/confirmed status), `transcript`, `env`,
 `tool_results`, `ended`, `outcome`, and helpers `slot_value`, `confirmed`,
 `filled`.
@@ -407,14 +408,16 @@ run in parallel; same id serialises. `SessionHandle` exposes `turn`, `assist`,
 
 <Note>
 `SessionWorker`'s `SessionRecord` persists `chat_ctx` / `flow_state` only. For
-durable Playbook-engine resume, persist `agent.event_log.to_jsonl()` and restore
-with `load_event_log` - see [Sessions](/superdialog/sessions).
+durable Playbook-engine resume, use a `PlaybookAgent` (DialogMachine has no
+`event_log`), persist `agent.event_log.to_jsonl()`, and restore with
+`load_event_log` - see [Sessions](/superdialog/sessions).
 </Note>
 
 ### Other agent brains
 
 ```python
-from superdialog import LLMAgent, LangChainAgent, SessionWorker, InMemorySessionStore
+from superdialog import LLMAgent, SessionWorker, InMemorySessionStore
+from superdialog.agents.langchain_agent import LangChainAgent
 
 worker = SessionWorker(
     agent_factory=lambda: LLMAgent(llm="openai/gpt-4.1-mini", system_prompt="Be helpful."),
@@ -481,7 +484,7 @@ Process-global. Once registered, `custom/<name>/<model>` works in
 |---|---|
 | `superdialog.adapters.livekit.DialogMachineLLM` | LiveKit `Agent(llm=...)` plugin (accepts any Agent) |
 | `superdialog.adapters.pipecat.make_processor` | Factory for PipeCat `FrameProcessor` |
-| `superdialog.adapters.fastapi.FastAPIRouter` | Mountable router: `/turn`, `/stream`, `/reset` |
+| `superdialog.adapters.fastapi.FastAPIRouter` | `FastAPIRouter(agent).mount(app, prefix=...)`: `/turn`, `/stream`, `/assist`, `/reset` (`make_router(agent)` returns the plain `APIRouter`) |
 | `superdialog.adapters.websocket.WebSocketRunner` | Standalone WSS server for Unpod Voice Infra |
 
 See [Embedding Guides](/superdialog/embedding-guides/overview) for complete

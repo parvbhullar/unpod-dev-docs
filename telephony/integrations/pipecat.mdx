@@ -74,12 +74,12 @@ frames and back. The rest of your bot is plain Pipecat. The protocol underneath 
 <Steps>
   <Step title="Credentials and install">
     Export `UNPOD_BASE_URL`, `UNPOD_PLATFORM_TOKEN` and `UNPOD_ORG_HANDLE` as shown in
-    [Credentials](/telephony/apis/quickstart). Python 3.12+.
+    [Credentials](/telephony/introduction#credentials). Python 3.12+.
 
     ```bash
     python3 -m venv .venv
     source .venv/bin/activate
-    pip install "unpod[pipecat]>=0.7.0" "pipecat-ai[websocket,silero,deepgram,anthropic,cartesia]" fastapi uvicorn
+    pip install "unpod[pipecat]>=0.7.0" "pipecat-ai[websocket,silero,deepgram,anthropic,cartesia]>=1.17" fastapi uvicorn
     ```
 
     The bot below uses Deepgram, Anthropic and Cartesia; export `DEEPGRAM_API_KEY`,
@@ -306,3 +306,10 @@ A fuller example, with outbound calls started from a `POST /start` route protect
     Back to the integrations overview.
   </Card>
 </CardGroup>
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/streaming/check_pipecat_offline.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/check_pipecat_offline.py): a real Pipecat bot against a stand-in SBC: signature, audio, DTMF, barge-in, hangup.
+- [`sbc/streaming/run_pipecat_call.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/run_pipecat_call.py): the same bot on a live call.

@@ -11,6 +11,14 @@ booking, triage, verification - level up to
 [SuperDialog](/superdialog/introduction): a runtime that executes a **playbook**
 (journeys of checkpoints that gate outcomes) turn by turn.
 
+Install the SDK with the `dialog` extra (`pip install "unpod[dialog]"`) and
+create the playbook once - `superdialog generate` writes it and calls an LLM, so
+set your provider key first:
+
+```bash
+superdialog generate "Book clinic appointments: collect name, date and reason, then confirm." --output clinic.yaml
+```
+
 Wiring is one assignment - the SDK auto-wraps it in a `SuperDialogAdapter`
 (see [Adapters](/agent-sdk/adapters#auto-wrapping)):
 

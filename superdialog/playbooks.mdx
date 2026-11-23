@@ -68,9 +68,8 @@ persona:
 opening: "Greet the caller warmly."
 closing: "Thank them and say goodbye."
 playbook:
-  - id: greet
+  - id: greet                  # no `say`, so `opening` becomes its guidance
     purpose: "Open the call."
-    say: "Greet the caller and ask how you can help."
     done_when: "Caller is ready to book."
   - id: collect
     purpose: "Get the booking details."
@@ -201,10 +200,10 @@ Everything the engine can do, stated explicitly. The conversation layer is
 ```yaml
 persona: "You are Asha, a friendly golf-course booking assistant."
 
-llm:                          # the model loads from here (top-level persona `llm` is deprecated)
+llm:                          # the model this playbook declares (DialogMachine still needs llm=)
   provider: anthropic
   model: claude-haiku-4-5
-  director: anthropic/claude-haiku-4-5    # optional: separate Director model
+  director: {provider: anthropic, model: claude-haiku-4-5}   # optional: separate Director model
 
 views:                        # computed, LLM-free exprs; shown as reference data
   hold_valid_until: "results.hold.data.valid_until"
@@ -284,7 +283,7 @@ policies:
 | **AdvanceRule** | `when` (prose or expr), `judge` (`llm`/`expr`), `to` (checkpoint ref), `requires` (slots that must be filled/confirmed), `set` (slot writes on advance) |
 | **ToolSpec** | `type` (`http`/`python`), `method`/`url`/`headers`/`body` (sandboxed Jinja), `store_response_as`, `env_updates`, `run_once`, `when`, `timeout` |
 | **PipelineSpec** | ordered `steps`, each with typed `on: {ok, failed, http_<code>}` branches and capped `retry` |
-| **LLMConfig** (`llm:`) | `provider`, `model`, optional `director` - the model-loading path (persona-level `llm` is deprecated and warns) |
+| **LLMConfig** (`llm:`) | `provider`, `model`, optional `director` (`{provider, model}`) - the model the playbook declares. Hosts read it with `await playbook.resolve_llm_providers()`; `DialogMachine` does not read it and still needs `llm=`. It replaces `guidelines.director_model` / `talker_model`, which are deprecated and warn |
 | **Policies** (`policies:`) | `silence`, `hold_timeout` (default 4.0), `filler` + `hold_line` (author-facing barrier lines spoken while the Director settles) |
 
 Validation runs on load and raises on unknown checkpoint/pipeline/tool refs,
@@ -306,7 +305,7 @@ superdialog generate "Book a tee time. Collect city, date, party size. \
   Confirm before holding the slot." --output booking.yaml
 
 # Chat against it - watch checkpoints advance
-superdialog chat booking.yaml
+superdialog chat --flow booking.yaml
 
 # Close the loop: paired persona evals score prose-only edits, output stays
 # in your source format

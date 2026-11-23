@@ -5,8 +5,8 @@ description: 'The Connectivity API runtime: run an AgentRunner, control live cal
 ---
 
 The Connectivity half of the SDK. An
-[AgentRunner](/get-started/core-concepts#agentrunner) is the long-lived process
-that receives calls; a [Session](/get-started/core-concepts#session) is your
+[AgentRunner](/home/how-it-fits#agentrunner) is the long-lived process
+that receives calls; a [Session](/home/how-it-fits#session) is your
 control surface for one live call. This page is the reference for both.
 
 ## Install
@@ -22,10 +22,10 @@ Source: [unpod-ai/unpod-python-sdk](https://github.com/unpod-ai/unpod-python-sdk
 ```bash
 export UNPOD_PLATFORM_TOKEN="..."      # the runner registers with your platform token
 export UNPOD_ORG_HANDLE="your-org"
-export UNPOD_BASE_URL="https://unpod.ai"   # one URL; the runner derives wss://<host>
+export UNPOD_BASE_URL="https://unpod.dev"   # one URL; the runner derives wss://<host>
 ```
 
-The [Quickstart](/home/quickstart#prerequisites) documents every
+The [Quickstart](/agent-sdk/agent-quickstart#prerequisites) documents every
 environment variable.
 
 ## The runner
@@ -63,7 +63,7 @@ runner.start()  # blocking
 <Note>
 `agent_id` is the runner agent ID - a short string you choose, matching the
 `agent_id` you passed to `client.agents.voice.create(...)`. Not a pipe UUID. See
-[IDs You'll Meet](/get-started/core-concepts#ids-youll-meet).
+[IDs You'll Meet](/home/how-it-fits#ids-youll-meet).
 </Note>
 
 ### Constructor
@@ -75,9 +75,9 @@ AgentRunner(
     platform_token: str | None = None,     # falls back to UNPOD_PLATFORM_TOKEN
     max_sessions: int = 50,                 # max concurrent sessions
     max_concurrent_calls: int | None = None, # alias for max_sessions
-    permits_per_minute: int = 120,          # rate of new call acceptance
+    permits_per_minute: int = 120,          # accepted; not enforced in SDK 0.7.0
     drain_timeout_s: int = 60,              # graceful shutdown window
-    dev_mode: bool = False,                 # local orchestrator, dev pool
+    dev_mode: bool = False,                 # register in the <agent_id>@dev pool
     base_url: str | None = None,            # override orchestrator URL
     serving_url: str | None = None,         # serve transport only; falls back to UNPOD_RUNNER_URL
     agent_secret: str | None = None,        # serve transport only; falls back to UNPOD_AGENT_SECRET
@@ -89,9 +89,9 @@ AgentRunner(
 | Parameter | Description |
 |---|---|
 | `max_sessions` | Max simultaneous sessions this runner accepts; the orchestrator will not dispatch beyond it. |
-| `permits_per_minute` | Rate of new call acceptance. Lower it to protect downstream systems. |
-| `drain_timeout_s` | On shutdown, wait this long for active calls to finish before force-exiting. |
-| `dev_mode` | Register in a dev pool against a local orchestrator. |
+| `permits_per_minute` | Accepted for compatibility. SDK 0.7.0 stores it but does not enforce a rate - use `max_sessions` to cap load. |
+| `drain_timeout_s` | How long `runner.shutdown()` waits when calls are still active. |
+| `dev_mode` | Register in a separate dev pool (`<agent_id>@dev`). It does not change the orchestrator URL - pass `base_url` for that. |
 | `transport` | `"dial_out"` (v2, default): the runner never listens - it dials **out** per call to the `bridge_url` delivered in the `job.assign` frame. `"serve"` (legacy, deprecated): the runner hosts a bridge server that media agents dial into. |
 | `serving_url` | Public `wss://` URL of the runner's bridge server. Only used with `transport="serve"`; **ignored** (warns) under the default `dial_out` transport, which never listens. |
 | `agent_secret` | Only used with `transport="serve"`: when set, inbound bridge connections are HMAC-verified; without it the runner accepts unsigned connections (dev default). **Ignored** (warns) under the default `dial_out` transport. |
@@ -111,18 +111,19 @@ async def on_call_end(ctx: CallContext, final_state: str) -> None:
 ```
 
 <Note>
-This is the **runner-level** `call_end` (signature `(ctx, final_state)`), fired
-once per call on the runner. The **session-level** `call_end`
-(`@ctx.session.on("call_end")`, signature `(final_state)`) fires inside a single
-call and is where you read the telephony `end_reason` via
-`ctx.session.data.get("end_reason")`. See
+This is the **runner-level** `call_end` (signature `(ctx, final_state)`, where
+`final_state` is `"ended"` or `"failed"`), fired once per call on the runner.
+The **session-level** `call_end` (`@ctx.session.on("call_end")`, signature
+`(final_state)`, `"hangup"` or `"error"`) fires inside a single call. Neither
+carries the telephony `end_reason` - read it from `client.calls.get(call_id)`
+after the call. See
 [Call Lifecycle](/agent-sdk/call-lifecycle#reacting-to-outcomes-in-your-agent).
 </Note>
 
 ## CallContext
 
 Every call to your `entrypoint` receives a
-[CallContext](/get-started/core-concepts#callcontext):
+[CallContext](/home/how-it-fits#callcontext):
 
 ```python
 async def handle_call(ctx: CallContext) -> None:
@@ -171,12 +172,21 @@ async def on_user_turn(text: str) -> None:
 ```python
 await ctx.session.transfer_to_human(queue="tier-2-support")   # cold transfer to a human queue
 await ctx.session.transfer_to_agent(agent_id="billing-agent") # cold transfer to another agent
+
+# Warm (announced) transfer to a number, with fallbacks tried in order
+await ctx.session.transfer(
+    "+15551230000",
+    mode="warm",
+    announcement="Transferring a caller about a billing dispute.",
+    fallback_targets=["+15551230001"],
+)
 ```
 
 <Tip>
-A cold transfer drops your session the moment it is initiated. For a warm
-handoff, use the out-of-band `client.sessions.transfer(..., mode="warm")` -
-see below.
+`mode="cold"` (the default) hands off immediately. `mode="warm"` is an
+announced transfer, not a private consult: the human is dialled into the same
+room, so the caller hears the ringing and the `announcement` too. On success
+the agent's job ends.
 </Tip>
 
 ### Ending
@@ -250,8 +260,9 @@ only `duration_s` is meaningful - for real per-turn numbers use the `llm_call` /
 | `say` | `async (text: str) → None` | Speak text via TTS |
 | `interrupt` | `async () → None` | Stop current utterance |
 | `set_filler` | `async (text: str) → None` | Set filler phrase |
-| `transfer_to_human` | `async (queue: str) → None` | Cold transfer to human queue |
-| `transfer_to_agent` | `async (agent_id: str) → None` | Cold transfer to another agent |
+| `transfer` | `async (target: str, *, transfer_type="number", mode="cold", announcement="", fallback_targets=None) → None` | Transfer to a number, agent or queue |
+| `transfer_to_human` | `async (queue: str, *, mode="cold", announcement="") → None` | Transfer to a human queue |
+| `transfer_to_agent` | `async (agent_id: str, *, mode="cold", announcement="") → None` | Transfer to another agent |
 | `end` | `async (reason: str = "completed") → None` | End the call |
 | `run` | `async () → None` | Main event loop |
 | `on` | `(event: str) → decorator` | Register hook |
@@ -265,6 +276,14 @@ only `duration_s` is meaningful - for real per-turn numbers use the `llm_call` /
 
 Act on a live session from outside the call - your backend, an ops tool -
 via the Management SDK, targeting it by session ID:
+
+<Warning>
+These three calls go to the separate orchestrator service, which the SDK
+does not reach through the token setup used on these pages
+(`UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE`). To end or transfer a live call
+from that setup, act from inside your entrypoint with `ctx.session.end()` and
+`ctx.session.transfer*()` - warm transfers included.
+</Warning>
 
 ```python
 from unpod import AsyncClient
@@ -293,18 +312,35 @@ async with AsyncClient() as client:  # reads credentials from .env; see setup-ch
 ```python
 s = runner.stats()        # RunnerStats snapshot
 s.in_flight               # current active calls
-s.queued                  # dispatches waiting for capacity
+s.queued                  # always 0 in SDK 0.7.0
 s.capacity                # your max_sessions setting
-s.completed_last_hour     # completed calls
-s.failed_last_hour        # failed calls
+s.completed_last_hour     # calls completed since the runner started
+s.failed_last_hour        # calls failed since the runner started
 s.mean_call_duration_s    # average call length
 ```
 
 ### Graceful shutdown
 
-Send `SIGTERM` (standard for containers and systemd). The runner stops
-accepting dispatches, waits up to `drain_timeout_s` for active calls, then
-exits. Or call `await runner.shutdown()` yourself.
+The runner does not install a signal handler, so a bare `SIGTERM` stops the
+process immediately. Catch the signal yourself and call `runner.shutdown()`:
+it marks the runner as shutting down, stops the heartbeat, and - if calls are
+still active - waits `drain_timeout_s` before it returns. Then cancel the run
+task:
+
+```python
+import asyncio
+import signal
+
+async def main() -> None:
+    run_task = asyncio.create_task(runner.run())
+    stop = asyncio.Event()
+    asyncio.get_running_loop().add_signal_handler(signal.SIGTERM, stop.set)
+    await stop.wait()
+    await runner.shutdown()   # drain window for active calls
+    run_task.cancel()
+
+asyncio.run(main())   # use this instead of runner.start()
+```
 
 ### Multiple runners
 

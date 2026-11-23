@@ -50,7 +50,7 @@ print(rec.available, rec.duration_secs)
 ```
 
 ```bash cURL
-curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/recording" \
+curl -s "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/recording" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -59,13 +59,13 @@ The response:
 
 ```json
 {"call_id": "...", "org_id": "...", "available": true,
- "url": "https://unpod.ai/api/v2/platform/sbc/v1/calls/<call_id>/recording",
+ "url": "https://unpod.dev/api/v2/platform/sbc/v1/calls/<call_id>/recording",
  "duration_secs": 64, "format": "wav", "channels": 2}
 ```
 
 | Field | Meaning |
 | --- | --- |
-| `available` | `true` when there's audio. `false` means the call wasn't recorded, and `url` and `duration_secs` are `null` |
+| `available` | `true` when there's audio. `false` means the call wasn't recorded, and `url` and `duration_secs` are `null`. A call nobody answered can also read `true` with `duration_secs` `0`; downloading it then returns `404` |
 | `url` | Where to [download the audio](#download-the-audio). It needs your credentials |
 | `duration_secs` | Length in seconds |
 | `format`, `channels` | Always `wav` and `2` today |
@@ -76,9 +76,9 @@ download from the `url` that `get_recording` returns.
 
 ## Download the audio
 
-Request the same URL with the header `Accept: audio/wav`, plus the same `Authorization`
-and `Org-Handle` headers as every other API call. Without `Accept: audio/wav` you get the
-JSON above. The file is about 1 MB per minute of call.
+Request the same URL with `?format=wav` (what the SDK's `download_recording` sends) or the
+header `Accept: audio/wav`, plus the same `Authorization` and `Org-Handle` headers as every
+other API call. With neither you get the JSON above. The file is about 1 MB per minute of call.
 
 <CodeGroup>
 ```python Python
@@ -102,7 +102,7 @@ with httpx.stream("GET", rec.url, headers=headers, timeout=60) as resp:
 ```
 
 ```bash cURL
-curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/recording" \
+curl -s "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/recording" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Accept: audio/wav" -o call.wav -w "%{http_code}\n"
 ```
@@ -184,9 +184,11 @@ handles the event this way.
 With `record_participant_track=True` (which needs `record=True`), the same URL also gets
 `ParticipantRecordingInitiated` and `ParticipantRecordingCompleted` for each leg. Both
 arrive together after the call ends, and both carry the leg's channel in
-`ev.metadata["channel"]`: `1` for the first leg (left), `2` for the second (right). Only
-`ParticipantRecordingCompleted` carries the recording, in `ev.metadata["recording_url"]`:
-the same 2-channel file, at the same path inside Unpod.
+`ev.metadata["channel"]`: `1` for the first leg (left), `2` for the second (right). On a call
+started with `create`, the `caller` leg reports channel `1` and the `callee` (the number you
+dialled) channel `2`. Only `ParticipantRecordingCompleted` carries the recording, in
+`ev.recording_url` and `ev.metadata["recording_url"]`: the same 2-channel file, at the same
+path inside Unpod.
 
 {/* TODO(verify): REST-originated calls can miss the event when the report loses the PendingOriginate removal race (reporter.rs recording_callback_target) */}
 
@@ -216,7 +218,7 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/record" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/record" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" -d '{}'
 ```
@@ -267,3 +269,9 @@ sends `Answered`.
 If the recording policy records the call, you don't need `<Record/>`. Never put `<Record/>`
 before `<Dial>`: Unpod waits for the recording to reach its `maxLength` (300 s by default)
 before dialing, and the caller hears silence.
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/call_test.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/call_test.py): records a call and downloads the recording after hangup.

@@ -9,7 +9,7 @@ The **programmatic** path: list providers → create a Twilio configuration → 
 it to your Bridge. Prefer clicks? See the [Dashboard guide](/telephony/integrations/twilio/dashboard).
 
 <Note>
-**Base URL:** `https://unpod.ai/api/v2/platform/`
+**Base URL:** `https://unpod.dev/api/v2/platform/`
 Every request needs `Authorization: Token <your-api-key>` and an `Org-Handle` header.
 See [Authentication](/api/get-started/authentication).
 </Note>
@@ -23,9 +23,9 @@ See [Authentication](/api/get-started/authentication).
 ## 1. Find the Twilio provider
 
 ```bash cURL
-curl https://unpod.ai/api/v2/platform/telephony/providers/ \
-  -H "Authorization: Token $UNPOD_TOKEN" \
-  -H "Org-Handle: $ORG_HANDLE"
+curl https://unpod.dev/api/v2/platform/telephony/providers/ \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
+  -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 
 ```json Response
@@ -39,9 +39,9 @@ curl https://unpod.ai/api/v2/platform/telephony/providers/ \
 
 <CodeGroup>
 ```bash cURL
-curl -X POST https://unpod.ai/api/v2/platform/telephony/providers-configurations/ \
-  -H "Authorization: Token $UNPOD_TOKEN" \
-  -H "Org-Handle: $ORG_HANDLE" \
+curl -X POST https://unpod.dev/api/v2/platform/telephony/provider-configurations/ \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
+  -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{
     "provider": "twilio",
@@ -60,7 +60,7 @@ payload = {
     "auth_token": TWILIO_AUTH_TOKEN,
 }
 r = requests.post(
-    "https://unpod.ai/api/v2/platform/telephony/providers-configurations/",
+    "https://unpod.dev/api/v2/platform/telephony/provider-configurations/",
     headers=H, json=payload)
 config_id = r.json()["data"]["id"]
 ```
@@ -78,9 +78,9 @@ config_id = r.json()["data"]["id"]
 
 ```bash cURL
 curl -X POST \
-  https://unpod.ai/api/v2/platform/telephony/bridges/$BRIDGE_SLUG/connect-provider/ \
-  -H "Authorization: Token $UNPOD_TOKEN" \
-  -H "Org-Handle: $ORG_HANDLE" \
+  https://unpod.dev/api/v2/platform/telephony/bridges/$BRIDGE_SLUG/connect-provider/ \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
+  -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{ "provider_config_id": 42 }'
 ```

@@ -17,7 +17,7 @@ after it ends.
 | Primitive | What it is | Where it lives today |
 |---|---|---|
 | Runtime | Runs each turn: your brain, the speech pair, the call | Production - Agent Studio agents ([build one](/agent-studio/build-an-agent)), or SDK agents via `client.agents.voice.create()` |
-| Tools | HTTP calls the agent makes mid-conversation | Production - [playbook tools](/superdialog/tools), or Agent Studio → Persona → Tools. MCP tools: in build |
+| Tools | HTTP calls the agent makes mid-conversation | Production - [playbook tools](/superdialog/tools), or Agent Studio → Persona → Tools. MCP tools in Agent Studio: in build (the SuperDialog framework has `MCPTool` for your own process) |
 | Retries | A capped retry, then a fallback route, when a tool fails | Production - `failed: {retry: N, on_exhaust: ...}` in a playbook pipeline |
 | Guardrails | Hard limits on what the agent may say | Production - `never_say` and hard gates per [playbook](/superdialog/playbooks) checkpoint. A policy layer: in build |
 | Human handoff | Transfer to a person mid-call | Production - Agent Studio → Advanced → **Enable Handover** |

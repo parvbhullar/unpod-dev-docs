@@ -31,16 +31,30 @@ The Playbook engine separates the **Talker** (`StreamsLLM`) and **Director**
 constructing `PlaybookAgent` with stub LLMs and asserting on
 `agent.runtime.state` - slots, checkpoint, ended/outcome.
 
+A scripted Talker only has to yield text; a scripted Director returns the verdict
+JSON the real Director would (`slots` to write, `advance`, `note`):
+
 ```python
+import json
 import pytest
 from superdialog.playbook import Playbook, PlaybookAgent, httpx_http
+
+class StubTalker:                     # StreamsLLM
+    async def stream(self, messages, **kwargs):
+        yield "Thanks, one moment."
+
+class StubDirector:                   # CompletesLLM
+    def __init__(self, slots: dict):
+        self.slots = slots
+    async def complete(self, messages, **kwargs) -> str:
+        return json.dumps({"slots": self.slots, "advance": None, "note": None})
 
 @pytest.mark.asyncio
 async def test_kyc_collects_aadhaar():
     agent = PlaybookAgent(
-        playbook=Playbook.load("kyc.yaml"),
-        talker_llm=stub_talker,       # scripted StreamsLLM
-        director_llm=stub_director,   # scripted CompletesLLM
+        playbook=Playbook.load("kyc.yaml"),   # collects aadhaar_last_4
+        talker_llm=StubTalker(),
+        director_llm=StubDirector({"aadhaar_last_4": "1234"}),
         http=httpx_http,
     )
     reply = await agent.turn("My Aadhaar starts with 1234.")
@@ -116,8 +130,28 @@ paired evals and proposes prose-only improvements.
 
 ## Testing tools
 
+A Python tool runs only when the playbook declares it and a checkpoint runs it
+(`on_enter` or a `pipeline`). This test reuses `StubTalker` / `StubDirector` from
+above:
+
 ```python
-from superdialog.playbook import Playbook, PlaybookAgent, httpx_http
+PLAYBOOK = """
+journeys:
+  main:
+    checkpoints:
+      - id: collect
+        goal: "Have the customer ID"
+        slots: {customer_id: {type: str, required: true}}
+        advance_when:
+          - {when: "slots.customer_id", judge: expr, to: main.lookup}
+      - id: lookup
+        goal: "Greet the customer by name"
+        on_enter: [lookup_customer]
+tools:
+  - id: lookup_customer
+    type: python
+    store_response_as: customer
+"""
 
 @pytest.mark.asyncio
 async def test_tool_is_called():
@@ -125,16 +159,19 @@ async def test_tool_is_called():
 
     async def lookup_customer(args, state) -> dict:
         """Look up customer by ID."""
-        calls.append(args["customer_id"])
+        calls.append(state.slot_value("customer_id"))
         return {"name": "Ravi Kumar", "verified": True}
 
     agent = PlaybookAgent(
-        playbook=Playbook.load("kyc.yaml"),
-        talker_llm=stub_talker, director_llm=stub_director, http=httpx_http,
+        playbook=Playbook.from_yaml(PLAYBOOK),
+        talker_llm=StubTalker(),
+        director_llm=StubDirector({"customer_id": "CUST-999"}),
+        http=httpx_http,
         python_tools={"lookup_customer": lookup_customer},
     )
     await agent.turn("My customer ID is CUST-999.")
     assert "CUST-999" in calls
+    assert agent.runtime.state.checkpoint_id == "main.lookup"
 ```
 
 ## Legacy graph engine

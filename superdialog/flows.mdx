@@ -1,14 +1,14 @@
 ---
 title: "Flows (legacy)"
 icon: 'workflow'
-description: "Author flow graphs - the legacy / compliance path. Flows run compiled on the Playbook engine by default; opt into the original graph runtime with engine=\"flow\"."
+description: "Author flow graphs - the legacy / compliance path. A flow JSON path runs compiled on the Playbook engine; a Flow object or engine=\"flow\" runs the original graph runtime."
 ---
 
 <Note>
 **Flows are the legacy authoring surface.** The default engine is the
-[Playbook](/superdialog/playbooks) runtime, and a flow graph **runs compiled
-onto it by default** - `Playbook.load` detects flow JSON and converts it
-(`compile_flow`). Reach for a hand-authored graph when you need an enumerable,
+[Playbook](/superdialog/playbooks) runtime, and a flow JSON file **runs compiled
+onto it by default** when you pass its path - `Playbook.load` detects flow JSON
+and converts it (`compile_flow`). Reach for a hand-authored graph when you need an enumerable,
 lintable spec for **compliance** or **strict determinism**. New conversational
 agents should start with [Thinking in Playbooks](/superdialog/thinking-in-playbooks).
 </Note>
@@ -17,18 +17,19 @@ agents should start with [Thinking in Playbooks](/superdialog/thinking-in-playbo
 
 A `Flow` is a directed graph: nodes (states) connected by edges (transitions), with metadata at each node (prompts, tool references, slot definitions). It's the static definition of what your dialog can do.
 
-By default, `DialogMachine` runs a flow **compiled onto the Playbook engine** -
-you pass the flow and get checkpoint semantics for free. To run the **original
-graph runtime** (one `turn()` at a time, every transition authored), pass
-`engine="flow"`:
+Pass `DialogMachine` the **path** to a flow JSON file and it runs the flow
+**compiled onto the Playbook engine** - checkpoint semantics for free. A loaded
+`Flow` object keeps the **original graph runtime** (one `turn()` at a time,
+every transition authored); `engine="flow"` makes that explicit, and
+`engine="playbook"` compiles a `Flow` object instead:
 
 ```python
 from superdialog import DialogMachine, Flow
 
-# Default: flow JSON is compiled and run on the Playbook engine
-agent = DialogMachine(Flow.load("kyc.json"), llm="anthropic/claude-haiku-4-5")
+# Path string: flow JSON is compiled and run on the Playbook engine
+agent = DialogMachine("kyc.json", llm="anthropic/claude-haiku-4-5")
 
-# Legacy graph runtime (opt-in)
+# Flow object: legacy graph runtime
 dm = DialogMachine(Flow.load("kyc.json"), llm="anthropic/claude-haiku-4-5", engine="flow")
 ```
 
@@ -73,35 +74,48 @@ Tips for prompts:
 For precise control over graph structure, construct nodes and edges directly:
 
 ```python
-from superdialog.flow import Flow, Node, Edge
+from superdialog.flow import Flow, FlowNode, Edge
 
 flow = Flow(
+    system_prompt="You are a friendly support assistant.",
+    initial_node="greet",
     nodes=[
-        Node(id="greet", prompt="Greet the customer and ask how you can help."),
-        Node(id="collect_name", prompt="Ask for the customer's full name."),
-        Node(id="done", prompt="Thank the customer and confirm the details.", terminal=True),
-    ],
-    edges=[
-        Edge(from_node="greet", to_node="collect_name", condition="customer_responded"),
-        Edge(from_node="collect_name", to_node="done", condition="name_collected"),
+        FlowNode(
+            id="greet", name="Greet",
+            instruction="Greet the customer and ask how you can help.",
+            edges=[Edge(id="e_name", condition="customer_responded", target_node_id="collect_name")],
+        ),
+        FlowNode(
+            id="collect_name", name="Collect name",
+            instruction="Ask for the customer's full name.",
+            edges=[Edge(id="e_done", condition="name_collected", target_node_id="done")],
+        ),
+        FlowNode(
+            id="done", name="Done",
+            instruction="Thank the customer and confirm the details.",
+            is_final=True,
+        ),
     ],
 )
 flow.save("manual.json")
 ```
 
+Edges live on their source node and point at `target_node_id`; a final node
+sets `is_final=True`.
+
 ## Saving and loading
 
-Flows support JSON and YAML formats - commit them to source control alongside your code.
+`save` and `load` are JSON-only - commit the files to source control alongside
+your code. Read YAML with the explicit YAML loaders.
 
 ```python
 from superdialog import Flow
 
-# Save as JSON
+# Save as JSON (always JSON, whatever the extension)
 flow.save("flows/kyc.json")
 
-# Load - auto-detects format from extension
+# Load JSON
 flow = Flow.load("flows/kyc.json")
-flow = Flow.load("flows/kyc.yaml")
 
 # Explicit format loaders
 flow = Flow.from_json_file("flows/kyc.json")
@@ -117,11 +131,13 @@ flow = Flow.from_config(config_dict)
 
 ### React Flow editor support
 
-Flows exported from the React Flow visual editor (camelCase JSON) are automatically detected and normalized:
+Flows exported from the React Flow visual editor (camelCase JSON) are detected and
+normalized by `from_json_file`, `from_json_string`, and `from_config`. `Flow.load`
+does not normalize them, so use the explicit loader:
 
 ```python
-# Works directly - no manual conversion needed
-flow = Flow.load("flows/kyc-react-flow-export.json")
+# No manual conversion needed
+flow = Flow.from_json_file("flows/kyc-react-flow-export.json")
 ```
 
 ## Multiple flows with FlowSet
@@ -172,12 +188,12 @@ superdialog flow draw kyc.json
 superdialog flow generate "Confirm KYC." --llm openai/gpt-5.1 --output kyc.json
 
 # Run the original graph runtime in the REPL
-superdialog chat kyc.json --mode flow
+superdialog chat --flow kyc.json --mode flow
 ```
 
 ## Migrating a flow to a playbook
 
-A flow already runs on the Playbook engine by default. To make the conversion
+A flow JSON path already runs on the Playbook engine. To make the conversion
 explicit - and to keep authoring in the playbook format going forward - compile
 it:
 

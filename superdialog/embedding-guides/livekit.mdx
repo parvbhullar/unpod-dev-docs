@@ -13,15 +13,25 @@ it accepts **any** superdialog `Agent`) that wires an agent into a LiveKit
 
 LiveKit's `AgentSession` drives the conversation (STT → LLM → TTS).
 `DialogMachineLLM` sits in the LLM slot and translates between LiveKit's
-`ChatContext` and SuperDialog's `turn()` API. On the Playbook engine (the
-default), **streaming is real**: the Talker's tokens reach TTS as they are
-generated, and a barge-in (the host aborting the stream mid-utterance) interrupts
-speech, never the state machine - the Director's decision still lands.
+`ChatContext` and SuperDialog's `turn()` API, consuming `turn(text, stream=True)`.
+
+<Warning>
+**Not working on livekit-agents 1.x today.** Tested with livekit-agents 1.8.13
+and superdialog 0.3.0: `DialogMachineLLM` duck-types LiveKit's LLM instead of
+subclassing `livekit.agents.llm.LLM`, and its stream is not an async context
+manager. LiveKit 1.x checks `isinstance(agent.llm, llm.LLM)` and opens the stream
+with `async with`, so the first LLM turn fails even though the code below
+constructs. Until the adapter is fixed, run SuperDialog on
+[Unpod voice](/superdialog/embedding-guides/unpod-voice) or
+[PipeCat](/superdialog/embedding-guides/pipecat), or point LiveKit's
+OpenAI-compatible LLM plugin at a [Chat API](/agent-studio/api) endpoint.
+</Warning>
 
 ## Install
 
 ```bash
 pip install superdialog livekit-agents
+pip install livekit-plugins-deepgram livekit-plugins-cartesia   # for the STT/TTS example
 ```
 
 ## Minimal example
@@ -34,7 +44,8 @@ from superdialog.adapters.livekit import DialogMachineLLM
 dm = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")  # any format
 
 async def entrypoint(ctx: JobContext):
-    agent = Agent(llm=DialogMachineLLM(dm))
+    # livekit-agents 1.x requires instructions=; the playbook supplies the real ones
+    agent = Agent(instructions="", llm=DialogMachineLLM(dm))
     await AgentSession().start(agent=agent, room=ctx.room)
 
 if __name__ == "__main__":
@@ -54,6 +65,7 @@ dm = DialogMachine("kyc.yaml", llm="anthropic/claude-haiku-4-5")
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
     agent = Agent(
+        instructions="",
         llm=DialogMachineLLM(dm),
         stt=deepgram.STT(),
         tts=cartesia.TTS(),
@@ -69,7 +81,9 @@ if __name__ == "__main__":
 For production, create a fresh agent per call so conversation state is isolated:
 
 ```python
+from livekit.agents import Agent, AgentSession, JobContext
 from superdialog import DialogMachine, PythonTool
+from superdialog.adapters.livekit import DialogMachineLLM
 
 async def entrypoint(ctx: JobContext):
     await ctx.connect()
@@ -81,7 +95,7 @@ async def entrypoint(ctx: JobContext):
         tools=[PythonTool.of(lookup_customer)],
     )
 
-    agent = Agent(llm=DialogMachineLLM(dm))
+    agent = Agent(instructions="", llm=DialogMachineLLM(dm))
     await AgentSession().start(agent=agent, room=ctx.room)
 ```
 

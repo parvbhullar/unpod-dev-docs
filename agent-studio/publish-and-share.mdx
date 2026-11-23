@@ -123,7 +123,10 @@ snippet in cURL, Python, JavaScript, and Go.
   </Step>
   <Step title="Copy the snippet">
     Pick your language tab. Each snippet is pre-filled with your endpoint, your
-    `model` id, and the `Authorization: Bearer $UNPOD_API_KEY` header.
+    `model` id, and an `Authorization: Bearer $UNPOD_API_KEY` header. That is the
+    same variable name the Python SDK reads for its own credential, so the
+    examples on these pages use `UNPOD_ENDPOINT_KEY` instead - rename it in the
+    snippet if both live in one environment.
   </Step>
   <Step title="Call it from your app">
     Point any OpenAI SDK at the base URL. The agent runs the exact playbook you
@@ -133,14 +136,15 @@ snippet in cURL, Python, JavaScript, and Go.
 
 ```bash Example
 curl https://inference.unpod.ai/v1/chat/completions \
-  -H "Authorization: Bearer $UNPOD_API_KEY" \
+  -H "Authorization: Bearer $UNPOD_ENDPOINT_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"public:PB_7ZRMzCA1ojQ9LlcK","messages":[{"role":"user","content":"hi"}]}'
 ```
 
 <Warning>
 API keys carry your account's access. Store them in a secret manager or
-environment variable (`UNPOD_API_KEY`), never in client-side code or a committed
+environment variable (`UNPOD_ENDPOINT_KEY` in these examples - not `UNPOD_API_KEY`,
+which the Python SDK reads for a different credential), never in client-side code or a committed
 file. Revoke and regenerate immediately if one is exposed.
 </Warning>
 

@@ -1,0 +1,104 @@
+---
+title: 'Account & keys'
+icon: 'key-round'
+description: 'Get an Unpod account, find your org handle and API key, and know which credential each path needs.'
+---
+
+Every developer path needs the same two things: an Unpod org, and the right
+credential for the surface you call. This page gets you both in a few
+minutes.
+
+<Steps>
+<Step title="Sign up">
+
+Create an account at [unpod.dev](https://unpod.dev/auth/signup/) with Google or
+your email.
+
+</Step>
+<Step title="Sign in and create your hub">
+
+{/* TODO(verify): unpod.dev first-login asks for the same hub fields as before */}
+On first login at [unpod.dev](https://unpod.dev/) you create a hub for your
+organization:
+
+| Field | What to enter |
+|---|---|
+| **Hub name** | Your organization's name |
+| **Domain name** | Your org's domain, e.g. `acme.com` |
+| **Privacy type** | **Private** (only people on your domain see it) or **Public** |
+| **Type of account** | The option closest to how you use Unpod |
+
+</Step>
+<Step title="Generate an API key">
+
+1. Open [Settings → Security → API keys](https://unpod.dev/settings/security/api-keys/).
+2. Click **Generate New**, then copy the key.
+
+You can hold one key at a time: delete the old key to generate a new one.
+
+</Step>
+<Step title="Copy your org handle">
+
+Open [Settings → Workspace → General](https://unpod.dev/settings/workspace/general/) and
+copy the **Domain** value without the leading `@` (for example `acme`, not `@acme`).
+
+</Step>
+<Step title="Put both in your environment">
+
+```bash .env
+UNPOD_BASE_URL="https://unpod.dev"
+UNPOD_PLATFORM_TOKEN="..."                  # the API key from step 3
+UNPOD_ORG_HANDLE="your-org"                 # the org handle from step 4
+```
+
+Set `UNPOD_BASE_URL`: without it the SDK falls back to a default host that does not
+resolve. `UNPOD_SERVICE_BASE_URL` is an optional override; you don't need it.
+
+The SDK reads these from the environment. Export them, or load the `.env` file
+yourself before you create a client (`python-dotenv` ships with `unpod`):
+
+```python
+from dotenv import load_dotenv
+from unpod import Client
+
+load_dotenv()  # finds .env next to your script or in a parent folder
+client = Client()
+```
+
+The SDK sends them as `Authorization: Token <key>` and `Org-Handle: <handle>`; call
+the REST API directly with the same two headers.
+
+</Step>
+</Steps>
+
+## Which credential is which
+
+Unpod's credentials are not interchangeable:
+
+| You are calling | Host | Auth | Where it comes from |
+|---|---|---|---|
+| **Python SDK** (agents, numbers, calls) | `unpod.dev` | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | API key + org handle, above |
+| **AgentRunner** (your own brain) | the orchestrator | `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` | API key + org handle, above |
+| **Platform REST API** | `unpod.dev` | `Authorization: Token` + `Org-Handle` headers | API key + org handle, above |
+| **Chat API** (your agent as a model) | `inference.unpod.ai` | `Authorization: Bearer` endpoint key | Playground → **Deploy as Endpoint** |
+
+Token auth (`UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE`) wins over
+`UNPOD_API_KEY` when both are set. Analytics and telephony calls need token
+auth, so use the token.
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/quickstart/step1_credentials.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step1_credentials.py): checks that `UNPOD_BASE_URL`, `UNPOD_PLATFORM_TOKEN` and `UNPOD_ORG_HANDLE` are set and reach the API.
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Make your first call" icon="phone-call" href="/telephony/apis/quickstart">
+    Call a phone, speak on the call, then receive one.
+  </Card>
+  <Card title="Put an agent on a number" icon="zap" href="/agent-sdk/agent-quickstart">
+    Six SDK calls: your phone rings and an agent speaks.
+  </Card>
+</CardGroup>

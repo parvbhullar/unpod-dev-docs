@@ -38,7 +38,7 @@
     "products": [
       {
         "product": "Developers",
-        "description": "Telephony, SIP trunking, agents and context",
+        "description": "Numbers, calls, audio streaming, intelligence and agents",
         "icon": "code",
         "tabs": [
           {
@@ -48,86 +48,47 @@
                 "group": "Start Here",
                 "icon": "flag",
                 "pages": [
-                  "get-started/getting-started",
-                  "get-started/account-and-keys",
-                  "home/quickstart",
-                  "get-started/core-concepts"
-                ]
-              },
-              {
-                "group": "About Unpod",
-                "icon": "info",
-                "expanded": false,
-                "pages": [
-                  "get-started/why-unpod",
-                  "get-started/who-its-for",
-                  "get-started/vs-competition"
-                ]
-              }
-            ]
-          },
-          {
-            "tab": "Telephony",
-            "groups": [
-              {
-                "group": "Getting Started",
-                "icon": "book-open",
-                "pages": [
-                  "telephony/introduction"
-                ]
-              },
-              {
-                "group": "Telephony APIs",
-                "icon": "phone-call",
-                "pages": [
-                  "telephony/apis/quickstart",
-                  "telephony/apis/multiple-participants",
-                  "telephony/apis/answer-url",
-                  "telephony/apis/audio-streaming",
-                  "telephony/apis/incoming-calls",
-                  "telephony/apis/call-blasting",
-                  "telephony/apis/number-masking",
-                  "telephony/apis/recording",
-                  "telephony/apis/numbers",
-                  "platform/dev-platform/numbers",
-                  "platform/dev-platform/attach-number-to-agent",
-                  "telephony/apis/call-control",
-                  "telephony/apis/webhooks",
-                  "telephony/calls/call-logs",
-                  "telephony/apis/migrate-from-plivo"
-                ]
-              },
-              {
-                "group": "Audio Streaming",
-                "icon": "audio-waveform",
-                "pages": [
-                  "telephony/integrations/websockets",
-                  "telephony/streaming/unpod-speech-quickstart",
-                  "telephony/streaming/websocket"
+                  "home/overview",
+                  "home/account-and-keys"
                 ]
               },
               {
                 "group": "Concepts",
                 "icon": "lightbulb",
+                "expanded": false,
                 "pages": [
-                  "telephony/concepts/understanding-telephony",
-                  "telephony/concepts/calling-engine",
-                  "telephony/concepts/channels",
-                  "telephony/concepts/security-and-compliance"
+                  "home/how-it-fits",
+                  "home/teams-and-permissions"
                 ]
               }
             ]
           },
           {
-            "tab": "SIP Trunking",
+            "tab": "Numbers & SIP",
             "groups": [
               {
                 "group": "Getting Started",
                 "icon": "book-open",
                 "pages": [
-                  "telephony/quickstart",
-                  "telephony/integrations/unpod/dashboard",
+                  "telephony/quickstart"
+                ]
+              },
+              {
+                "group": "Numbers",
+                "icon": "hash",
+                "pages": [
+                  "telephony/apis/numbers",
+                  "platform/dev-platform/numbers",
+                  "platform/dev-platform/attach-number-to-agent",
+                  "speech-stack/numbers"
+                ]
+              },
+              {
+                "group": "Trunks",
+                "icon": "git-branch",
+                "pages": [
                   "telephony/sip-trunking/trunks",
+                  "telephony/integrations/unpod/dashboard",
                   "platform/dev-platform/telephony",
                   "platform/dev-platform/provider"
                 ]
@@ -137,13 +98,6 @@
                 "icon": "blocks",
                 "pages": [
                   "telephony/integrations/overview",
-                  {
-                    "group": "Vapi",
-                    "pages": [
-                      "telephony/integrations/vapi/dashboard",
-                      "telephony/integrations/vapi/api"
-                    ]
-                  },
                   {
                     "group": "LiveKit",
                     "pages": [
@@ -156,6 +110,13 @@
                     "pages": [
                       "telephony/integrations/elevenlabs/dashboard",
                       "telephony/integrations/elevenlabs/api"
+                    ]
+                  },
+                  {
+                    "group": "Vapi",
+                    "pages": [
+                      "telephony/integrations/vapi/dashboard",
+                      "telephony/integrations/vapi/api"
                     ]
                   },
                   {
@@ -191,6 +152,76 @@
             ]
           },
           {
+            "tab": "Telephony",
+            "groups": [
+              {
+                "group": "Getting Started",
+                "icon": "book-open",
+                "pages": [
+                  "telephony/introduction",
+                  "telephony/apis/quickstart"
+                ]
+              },
+              {
+                "group": "Calls",
+                "icon": "phone-call",
+                "pages": [
+                  "telephony/apis/answer-url",
+                  "telephony/apis/incoming-calls",
+                  "telephony/apis/multiple-participants",
+                  "telephony/apis/number-masking",
+                  "telephony/apis/call-blasting",
+                  "telephony/apis/recording",
+                  "telephony/apis/call-control",
+                  "telephony/apis/webhooks",
+                  "telephony/calls/call-logs",
+                  "telephony/apis/migrate-from-plivo"
+                ]
+              },
+              {
+                "group": "Audio Streaming",
+                "icon": "audio-waveform",
+                "pages": [
+                  "telephony/apis/audio-streaming",
+                  "telephony/integrations/pipecat",
+                  "telephony/integrations/websockets"
+                ]
+              },
+              {
+                "group": "Concepts",
+                "icon": "lightbulb",
+                "pages": [
+                  "telephony/concepts/understanding-telephony",
+                  "telephony/concepts/calling-engine",
+                  "telephony/concepts/channels",
+                  "telephony/concepts/security-and-compliance"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Intelligence",
+            "groups": [
+              {
+                "group": "Analyse calls",
+                "icon": "sparkles",
+                "pages": [
+                  "intelligence/blocks",
+                  "intelligence/outcomes"
+                ]
+              },
+              {
+                "group": "Memory",
+                "icon": "brain",
+                "pages": [
+                  "intelligence/memory",
+                  "intelligence/entities",
+                  "intelligence/conversations"
+                ]
+              }
+            ]
+          },
+          {
             "tab": "Agent SDK",
             "groups": [
               {
@@ -199,7 +230,10 @@
                 "pages": [
                   "agent-sdk/overview",
                   "agent-sdk/setup-checklist",
-                  "agent-sdk/quickstart"
+                  "agent-sdk/quickstart",
+                  "agent-sdk/agent-quickstart",
+                  "agent-sdk/realtime",
+                  "agent-sdk/websocket-sessions"
                 ]
               },
               {
@@ -215,8 +249,7 @@
                   "agent-sdk/voice-profiles",
                   "agent-sdk/domain-dictionaries",
                   "agent-sdk/pipes",
-                  "agent-sdk/models-router",
-                  "speech-stack/numbers"
+                  "agent-sdk/models-router"
                 ]
               },
               {
@@ -261,17 +294,6 @@
                 "pages": [
                   "agent-studio/playground",
                   "agent-studio/quickstart"
-                ]
-              },
-              {
-                "group": "Concepts",
-                "icon": "lightbulb",
-                "pages": [
-                  "agent-studio/what-is-a-playbook",
-                  "agent-studio/flows-journeys",
-                  "agent-studio/actions",
-                  "agent-studio/agent-workforce",
-                  "agent-studio/agent-harness"
                 ]
               },
               {
@@ -350,40 +372,16 @@
                     "expanded": false
                   }
                 ]
-              }
-            ]
-          },
-          {
-            "tab": "Context",
-            "groups": [
-              {
-                "group": "Overview",
-                "icon": "brain",
-                "pages": [
-                  "context/overview"
-                ]
               },
               {
                 "group": "Concepts",
                 "icon": "lightbulb",
                 "pages": [
-                  "context/entities",
-                  "context/conversations",
-                  "context/outcomes",
-                  "context/intelligence",
-                  "context/teams-policies"
-                ]
-              }
-            ]
-          },
-          {
-            "tab": "Guides",
-            "groups": [
-              {
-                "group": "Guides",
-                "icon": "newspaper",
-                "pages": [
-                  "guides/index"
+                  "agent-studio/what-is-a-playbook",
+                  "agent-studio/flows-journeys",
+                  "agent-studio/actions",
+                  "agent-studio/agent-workforce",
+                  "agent-studio/agent-harness"
                 ]
               }
             ]
@@ -624,7 +622,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/get-started/getting-started"
+      "destination": "/home/overview"
     },
     {
       "source": "/blog/getting-started-with-unpod-api",
@@ -632,11 +630,11 @@
     },
     {
       "source": "/get-started/choose-your-path",
-      "destination": "/get-started/getting-started"
+      "destination": "/home/overview"
     },
     {
       "source": "/get-started/start-here",
-      "destination": "/get-started/getting-started"
+      "destination": "/home/overview"
     },
     {
       "source": "/get-started/slm-inference",
@@ -644,7 +642,7 @@
     },
     {
       "source": "/get-started/sts-inference",
-      "destination": "/telephony/streaming/unpod-speech-quickstart"
+      "destination": "/agent-sdk/realtime"
     },
     {
       "source": "/get-started/voice-agent",
@@ -668,11 +666,11 @@
     },
     {
       "source": "/core-engine/context-graph",
-      "destination": "/context/overview"
+      "destination": "/intelligence/memory"
     },
     {
       "source": "/get-started/quickstart",
-      "destination": "/home/quickstart"
+      "destination": "/agent-sdk/agent-quickstart"
     },
     {
       "source": "/guides/understanding-telephony",
@@ -692,11 +690,11 @@
     },
     {
       "source": "/get-started/realtime",
-      "destination": "/telephony/streaming/unpod-speech-quickstart"
+      "destination": "/agent-sdk/realtime"
     },
     {
       "source": "/speech-stack/websocket",
-      "destination": "/telephony/streaming/websocket"
+      "destination": "/agent-sdk/websocket-sessions"
     },
     {
       "source": "/speech-stack/introduction",
@@ -824,27 +822,27 @@
     },
     {
       "source": "/core-engine/context-engine",
-      "destination": "/context/overview"
+      "destination": "/intelligence/memory"
     },
     {
       "source": "/core-engine/entities",
-      "destination": "/context/entities"
+      "destination": "/intelligence/entities"
     },
     {
       "source": "/core-engine/conversations",
-      "destination": "/context/conversations"
+      "destination": "/intelligence/conversations"
     },
     {
       "source": "/core-engine/outcomes",
-      "destination": "/context/outcomes"
+      "destination": "/intelligence/outcomes"
     },
     {
       "source": "/core-engine/intelligence",
-      "destination": "/context/intelligence"
+      "destination": "/intelligence/blocks"
     },
     {
       "source": "/core-engine/teams-policies",
-      "destination": "/context/teams-policies"
+      "destination": "/home/teams-and-permissions"
     },
     {
       "source": "/apps/overview",
@@ -864,19 +862,83 @@
     },
     {
       "source": "/platform/dev-platform/introduction",
-      "destination": "/get-started/account-and-keys"
+      "destination": "/home/account-and-keys"
     },
     {
       "source": "/platform/dev-platform/register",
-      "destination": "/get-started/account-and-keys"
+      "destination": "/home/account-and-keys"
     },
     {
       "source": "/platform/dev-platform/login",
-      "destination": "/get-started/account-and-keys"
+      "destination": "/home/account-and-keys"
     },
     {
       "source": "/core-engine/overview",
-      "destination": "/get-started/core-concepts"
+      "destination": "/home/how-it-fits"
+    },
+    {
+      "source": "/context/overview",
+      "destination": "/intelligence/memory"
+    },
+    {
+      "source": "/context/intelligence",
+      "destination": "/intelligence/blocks"
+    },
+    {
+      "source": "/context/outcomes",
+      "destination": "/intelligence/outcomes"
+    },
+    {
+      "source": "/context/entities",
+      "destination": "/intelligence/entities"
+    },
+    {
+      "source": "/context/conversations",
+      "destination": "/intelligence/conversations"
+    },
+    {
+      "source": "/context/teams-policies",
+      "destination": "/home/teams-and-permissions"
+    },
+    {
+      "source": "/get-started/account-and-keys",
+      "destination": "/home/account-and-keys"
+    },
+    {
+      "source": "/get-started/core-concepts",
+      "destination": "/home/how-it-fits"
+    },
+    {
+      "source": "/home/quickstart",
+      "destination": "/agent-sdk/agent-quickstart"
+    },
+    {
+      "source": "/telephony/streaming/unpod-speech-quickstart",
+      "destination": "/agent-sdk/realtime"
+    },
+    {
+      "source": "/telephony/streaming/websocket",
+      "destination": "/agent-sdk/websocket-sessions"
+    },
+    {
+      "source": "/get-started/getting-started",
+      "destination": "/home/overview"
+    },
+    {
+      "source": "/get-started/vs-competition",
+      "destination": "/home/overview"
+    },
+    {
+      "source": "/get-started/who-its-for",
+      "destination": "/home/overview"
+    },
+    {
+      "source": "/get-started/why-unpod",
+      "destination": "/home/overview"
+    },
+    {
+      "source": "/guides/index",
+      "destination": "/home/overview"
     }
   ]
 }

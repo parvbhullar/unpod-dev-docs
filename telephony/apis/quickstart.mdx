@@ -22,7 +22,7 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
   </Step>
 
   <Step title="Install">
-    Python 3.12+ (`unpod` 0.6.2 requires it). cURL needs nothing.
+    Python 3.12+ (`unpod` 0.7.0 requires it). cURL needs nothing.
 
     ```bash
     python3 -m venv .venv
@@ -56,11 +56,11 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
 
     ```bash cURL
     # 1. list: pick a number whose "state" is "NOT_ASSIGNED" and "active" is true
-    curl -s "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
+    curl -s "https://unpod.dev/api/v2/platform/telephony/numbers/?include_assigned=true" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
     # 2. attach it
-    curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/numbers/attach/" \
+    curl -s -X POST "https://unpod.dev/api/v2/platform/telephony/numbers/attach/" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" \
       -d '{"numbers": ["+919000000001"], "attach_type": "human_call"}'
@@ -71,13 +71,11 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     already attached to an AI agent can also be the `from` of an outbound call; `human_call`
     matters for inbound calls, where it decides that your app answers instead of the agent.
 
-    {/* TODO(verify): full list of connection_state values that can place calls (PENDING_VERIFY worked; NOT_LINKED was rejected) */}
-
     <Note>
-    Dial from a number whose `connection_state` is not `NOT_LINKED` (for example
-    `PENDING_VERIFY` or `LINKED`). See it with the overview request from the
-    [credentials check](/telephony/introduction#credentials). A `403 forbidden: from is not
-    a number available to this organization` means the number isn't ready yet; a
+    Dial from a number you attached in step 3 with `attach_type="human_call"`. The SBC picks
+    up a newly attached number in about a minute. A `403 forbidden: from is not a number
+    available to this organization` means the number is yours but not attached as
+    `human_call` (for example, it was moved to an agent): attach it again. A
     `400 from_not_owned` means it isn't one of your org's numbers.
     </Note>
   </Step>
@@ -120,7 +118,7 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
 
     ```bash cURL
     # 1. dial -> {"call_id": "...", "state": "initiated", ...}
-    curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+    curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
       -d '{"from": "+919000000001", "to": "+919000000002", "ring_timeout": 30}'
@@ -128,11 +126,11 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     # CALL_ID=<call_id from step 1>
 
     # 2. poll until "state": "talking"
-    curl -s "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID" \
+    curl -s "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 
     # 3. speak
-    curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
+    curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" -d '{"text": "Hello from Unpod!"}'
     ```
@@ -159,11 +157,14 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     That `url` is a path inside Unpod. To download the audio, see
     [Recording](/telephony/apis/recording).
 
-    {/* TODO(verify): GET after an unanswered call - summary or 404? */}
+    After a call nobody answered, `get` still returns the summary, with `available: true` and
+    `duration_secs: 0`, and downloading the recording returns `404`.
 
     <Tip>
-    No ring? Check that `to` is E.164 (`+` and country code), that the `from` number isn't
-    `NOT_LINKED`, and that `ring_timeout` gives the phone long enough.
+    No ring? Check that `to` is E.164 (`+` and country code), that the `from` number is
+    attached as `human_call`, and that `ring_timeout` gives the phone long enough. A `Hangup`
+    with `No Answer`, SIP `408` and `Duration` 0 means the call never reached the phone: place
+    it again.
     </Tip>
   </Step>
 </Steps>
@@ -180,13 +181,13 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
 
 <Steps>
   <Step title="Get your webhook secret">
-    One signing key for all call events in your org. Create it once with `rotate()` (org
-    owner or editor) - the only call that returns it in full - and store it as
-    `UNPOD_WEBHOOK_SECRET`:
+    One signing key for all call events in your org. If your org already has one, read it with
+    `reveal()` (org admin): nothing else changes. Otherwise create it with `rotate()` (org
+    owner or editor). Both return it in full. Store it as `UNPOD_WEBHOOK_SECRET`:
 
     <Warning>
     Rotating invalidates the previous secret, so any server already verifying with it stops
-    working.
+    working. Rotate only to create your first secret or after a leak.
     </Warning>
 
     <CodeGroup>
@@ -194,19 +195,25 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
     from unpod import Client
 
     with Client() as client:
-        s = client.telephony.webhook_secret.rotate()
-        print(s.pushed_to_sbc)  # False: still syncing, Unpod retries it
-        print(s.secret)         # shown in full only here
+        ws = client.telephony.webhook_secret
+        s = ws.reveal()     # your org already has a secret (org admin)
+        # s = ws.rotate()   # no secret yet, or it leaked
+        print(s.secret)
     ```
 
     ```bash cURL
-    curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/webhook-secret/rotate" \
+    # your org already has a secret (org admin)
+    curl -s "https://unpod.dev/api/v2/platform/sbc/webhook-secret/reveal" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+
+    # no secret yet, or it leaked
+    curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/webhook-secret/rotate" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" -d '{}'
     ```
     </CodeGroup>
 
-    If `pushed_to_sbc` comes back `false`, Unpod retries the update in the background. Until it
+    If a `rotate()` comes back with `pushed_to_sbc` `false`, Unpod retries the update in the background. Until it
     lands, events aren't signed with the new secret and your server answers `401`, so wait a
     minute before the test call.
   </Step>
@@ -278,7 +285,7 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
     ```
 
     ```bash cURL
-    curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
+    curl -s -X PUT "https://unpod.dev/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" \
       -d '{"answer_url": "https://abc123.ngrok.app/answer", "answer_method": "POST",
@@ -294,6 +301,19 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
     ends. For the full picture, see [Incoming Calls](/telephony/apis/incoming-calls).
   </Step>
 </Steps>
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/quickstart/`](https://github.com/unpod-ai/sample-apps/tree/feat/sbc-call-tests/sbc/quickstart): one script per step of this page, each printing PASS or FAIL ([README](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/README.md)).
+- [`sbc/quickstart/step3_get_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step3_get_number.py): step 3, list numbers and attach a free pool number.
+- [`sbc/quickstart/step4_call_and_speak.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step4_call_and_speak.py): step 4, call and speak; `step5_call_result.py` reads the result.
+- [`sbc/quickstart/step6_webhook_secret.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step6_webhook_secret.py): receive step 1, read or rotate the webhook secret.
+- [`sbc/quickstart/step7_app.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step7_app.py): receive step 2, the `app.py` answer server; `step8_check_tunnel.py` checks the tunnel.
+- [`sbc/quickstart/step9_point_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step9_point_number.py): receive step 4, point your number's inbound calls at the server.
+- [`telephony/outbound_call.py`](https://github.com/unpod-ai/sample-apps/blob/main/telephony/outbound_call.py): the outbound call as one script.
+- [`telephony/answer_url.py`](https://github.com/unpod-ai/sample-apps/blob/main/telephony/answer_url.py): a minimal answer server with tests.
 
 ## Next
 

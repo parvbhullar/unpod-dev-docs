@@ -34,7 +34,7 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
   -d '{"from": "+919000000001", "to": "+919000000002",
@@ -59,15 +59,19 @@ On an inbound call, your answer URL receives:
 Each `StartApp` also carries:
 
 - `MPCUUID` (`ev.call_id`): the id you use with the call APIs
-- `CallUUID` (`ev.leg_id`), `From` (`ev.from_`), `To` and `Direction=inbound`
+- `CallUUID` (`ev.leg_id`), `From` (`ev.from_`), `To` and `Direction` (`inbound` here)
 - `SessionStart` (`ev.raw["SessionStart"]`)
 
+`From` is the caller's number as the carrier sent it, so on Indian numbers it can arrive in
+national format (`09000000002`) while `To` is E.164 (`+919000000001`). Normalise `From`
+before you match it against numbers you store.
+
 On an outbound leg the request is also a `StartApp`, sent once the person answers. It
-carries the same fields, with the fixed values `Direction=inbound` and
-`CallStatus=ringing`, so don't branch on `Direction`. Its `CallUUID` ends in `-caller`, so it
-doesn't match the `leg_id` that `create` returned: match outbound requests on `MPCUUID`
-(`ev.call_id`). When the call ends, the same URL also gets a `Hangup` with `Duration`,
-`StartTime`, `EndTime`, `AnswerTime` and `HangupCause`; reply `200` to it.
+carries the same fields, with `Direction=outbound` and `CallStatus=ringing`. Its `CallUUID`
+is `<call id>-callee`, so match outbound requests on `MPCUUID` (`ev.call_id`), not on the
+`leg_id` that `create` returned. When the call ends, the same URL also gets a `Hangup` with
+`Duration`, `BillDuration`, `StartTime`, `AnswerTime`, `EndTime`, `HangupCause` and
+`HangupSource`; reply `200` to it.
 
 POST requests, inbound and outbound, are signed once your org has a webhook secret
 (create it as in the [Quick Start](/telephony/apis/quickstart#receive-your-first-call)).
@@ -290,3 +294,11 @@ A GET sends the call's fields as query parameters and is not signed. The URL mus
 redirect: Unpod doesn't follow redirects.
 
 {/* TODO(verify): static .xml file with answer_method="GET" - confirm live */}
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`telephony/answer_url.py`](https://github.com/unpod-ai/sample-apps/blob/main/telephony/answer_url.py): answer server that verifies signed callbacks and replies with XML.
+- [`sbc/webhook_receiver.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/webhook_receiver.py): receiver that logs every answer-URL request and callback.
+- [`sbc/quickstart/step7_app.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step7_app.py): the Quick Start answer server.

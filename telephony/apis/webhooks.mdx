@@ -6,8 +6,8 @@ description: 'Verify and parse call, recording and inbound events with parse_cal
 
 Unpod signs the requests it sends your app with one org-level key, the **webhook secret**.
 It's the same key for status callbacks, recording events, answer-URL requests and audio
-streams, with no secret per number or per call. Create it once with `rotate()` - the only
-call that returns it in full - and store it as `UNPOD_WEBHOOK_SECRET`. Then verify each request with
+streams, with no secret per number or per call. Create it once with `rotate()`, or read
+the current one with `reveal()` (org admin), and store it as `UNPOD_WEBHOOK_SECRET`. Then verify each request with
 `parse_call_event`.
 
 | Event type | Goes to |
@@ -43,7 +43,8 @@ from unpod import Client
 with Client() as client:
     s = client.telephony.webhook_secret.rotate()  # org owner or editor only
     print(s.version, s.pushed_to_sbc)  # False: still syncing, Unpod retries it
-    print(s.secret)  # full secret, shown only here: store as UNPOD_WEBHOOK_SECRET
+    print(s.secret)  # full secret: store as UNPOD_WEBHOOK_SECRET
+    # client.telephony.webhook_secret.reveal() returns it again (org admin)
 
     print(client.telephony.webhook_secret.get().secret)  # masked, e.g. '****ab12'
 ```
@@ -152,7 +153,7 @@ snake_case (`call_id`, `leg_id`, ...).
 | `call_id` | `MPCUUID` | The same on every event of a call, across all its legs. Not sent on [stream events](#stream-events), so `ev.call_id` is `None` there |
 | `leg_id` | `CallUUID` | Differs per leg |
 | `role`, `direction`, `call_status` | `Role`, `Direction`, `CallStatus` | `role` is the label you set on the leg |
-| `from_`, `to` | `From`, `To` | Only on `Incoming` and answer-URL events. `None` on leg events, so outbound status callbacks never have them: put your own ids in `metadata` |
+| `from_`, `to` | `From`, `To` | Only on `Incoming` and answer-URL events. `None` on leg events, so outbound status callbacks never have them: put your own ids in `metadata`. On inbound calls `From` can be in national format (`09000000002`) while `To` is E.164 |
 | `start_time`, `answer_time`, `end_time`, `timestamp` | `StartTime`, ... | Unix seconds |
 | `initiation_time`, `hangup_time`, `duration` | `InitiationTime`, `HangupTime`, `Duration` | `duration` is answered seconds, `0` if never answered |
 | `hangup_cause`, `hangup_by`, `sip_code` | `HangupCause` / `PlivoHangupCause`, `HangupBy`, `SipCode` | `Hangup` only. See [Hangup causes](#hangup-causes) |
@@ -165,12 +166,12 @@ snake_case (`call_id`, `leg_id`, ...).
 
 <Warning>
 `ev.metadata` works only with the default form format. With
-`status_callback_format="json"`, `parse_call_event` (SDK 0.6.2) leaves it empty because it
+`status_callback_format="json"`, `parse_call_event` (SDK 0.7.0 and earlier) leaves it empty because it
 reads only the form field `Metadata`. Keep the form format, or read
 `ev.raw["metadata"]`.
 </Warning>
 
-{/* TODO(verify): SDK 0.6.2 events.py _normalize reads raw.get("Metadata") only, while leg_delivery.rs encode_body sends JSON key "metadata" - drop this warning once the SDK reads both */}
+{/* TODO(verify): SDK 0.7.0 events.py _normalize reads raw.get("Metadata") only, while leg_delivery.rs encode_body sends JSON key "metadata" - drop this warning once the SDK reads both */}
 
 ## Stream events
 
@@ -211,7 +212,7 @@ Every stream event also carries:
 | --- | --- | --- |
 | `"Normal Hangup"` | `None` | The leg was answered. `ev.hangup_by` says who hung up: the person on that leg (`callee`), or Unpod (`system`), for example after `hangup()` or when the first person left a two-person call |
 | `"Busy Line"` | 486 or 600 | Busy. End the call or retry later |
-| `"No Answer"` | 408 or 480 | The far end reported no answer. Treat like a ring timeout |
+| `"No Answer"` | 408 or 480 | The far end reported no answer. Treat like a ring timeout. A 408 with `Duration` 0 can also mean the call never reached the phone: [Call Logs](/telephony/calls/call-logs) then show `failure_source: sbc` and `sip_cause: Request Timeout` |
 | `"Ring Timeout Reached"` | 487, or `None` | The leg rang for `ring_timeout` seconds without an answer |
 | `"Rejected"` | 603, or `None` | Declined, or the callee ended the leg before answering |
 | `"Cancelled"` | 487, or `None` | The caller (or your app) ended the leg before it was answered |
@@ -228,3 +229,10 @@ The strings are exact. Match on `ev.hangup_cause` first. `ev.sip_code` is always
 from cancelling the ringing leg, so 487 alone doesn't mean a cancel.
 
 {/* TODO(verify): full list from leg_lifecycle.rs hangup_cause(); sip_code is HangupFacts.sip_code filtered to unanswered legs */}
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/webhook_receiver.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/webhook_receiver.py): verifies and logs every call event with `parse_call_event`.
+- [`sbc/quickstart/step6_webhook_secret.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step6_webhook_secret.py): read or rotate the webhook secret.

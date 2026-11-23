@@ -66,12 +66,12 @@ await client.agents.numbers.attach("my-bot", "+14155550101")
 | `client.pipes.delete(pipe_id)` | `client.agents.delete(agent_id)` |
 | a second pipe for a second language | `client.agents.voice.add(agent_id, voice_profile=...)` |
 | `client.numbers.attach(number_id=, pipe_id=)` | `client.numbers.attach(number_id, agent_id)` or `client.agents.numbers.attach(agent_id, number)` |
-| `agent_endpoint="wss://..."` (legacy `serve` fallback) | `brain=Endpoint("https://.../v1")` - an HTTP brain Unpod calls, or keep a `Runner()` brain |
+| `agent_endpoint="wss://..."` (legacy `serve` fallback) | `brain=Endpoint("https://.../v1/chat/completions")` - an HTTP brain Unpod calls, or keep a `Runner()` brain |
 
 <Note>
 `client.sessions.create_token(pipe_id=...)` is **unchanged** - browser sessions
 still mint a token against a pipe id. See
-[Browser & WebSocket](/telephony/streaming/websocket).
+[Browser & WebSocket](/agent-sdk/websocket-sessions).
 </Note>
 
 ---
@@ -150,12 +150,12 @@ from unpod import Endpoint
 
 await client.agents.voice.create(
     "my-bot",
-    brain=Endpoint("https://your-api.example.com/v1", model="my-model"),
+    brain=Endpoint("https://your-api.example.com/v1/chat/completions", model="my-model"),
     voice_profile="vp_en_female_hd",
 )
 ```
 
-That endpoint must be **OpenAI-compatible** chat completions.
+Pass the full **OpenAI-compatible** chat-completions URL.
 
 **Your runner calls you** - the `HTTPAdapter`, if your API is not
 OpenAI-shaped:
@@ -177,14 +177,15 @@ AgentRunner(entrypoint=handle_call, agent_id="my-bot").start()
 // POST https://your-api.example.com/dialog/turn
 {
   "text": "I'd like to reschedule my appointment",
-  "context": { },
-  "session_id": "sess_xyz789",
+  "context": { },                  // always empty during a call
   "system_instructions": ["..."]   // only after assist() is called
 }
 // 200 response
 { "text": "Sure - what date works for you?" }
 ```
 
+The request carries no session id. To key per-call state, pass
+`headers={"X-Session-Id": ctx.session_id}` when you create the adapter.
 Streaming, `assist()`, and error surfaces:
 [Adapters](/agent-sdk/adapters).
 

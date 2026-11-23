@@ -5,10 +5,10 @@ info:
   version: 2.0.0
 
 servers:
+  - url: https://unpod.dev/
+    description: Developers (unpod.dev)
   - url: https://unpod.ai/
-    description: QA
-  - url: https://unpod.ai/
-    description: Production
+    description: Platform (unpod.ai)
 
 tags:
   - name: Organisation
@@ -962,7 +962,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v2/platform/telephony/providers-configurations/:
+  /api/v2/platform/telephony/provider-configurations/:
     get:
       operationId: getAllProviders
       summary: Get All Providers
@@ -1039,7 +1039,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v2/platform/telephony/providers-configurations/{id}/:
+  /api/v2/platform/telephony/provider-configurations/{id}/:
     get:
       operationId: getProviderById
       summary: Get Provider by ID
@@ -1609,9 +1609,9 @@ paths:
               properties:
                 name:
                   type: string
-                  example: "Sales Bridge — Updated"
+                  example: "Sales Bridge - Updated"
             example:
-              name: "Sales Bridge — Updated"
+              name: "Sales Bridge - Updated"
       responses:
         '200':
           description: Bridge updated
@@ -1622,7 +1622,7 @@ paths:
                 message: "Bridge updated successfully."
                 data:
                   id: 314
-                  name: "Sales Bridge — Updated"
+                  name: "Sales Bridge - Updated"
                   slug: "sales-bridge-001"
                   numbers:
                     - id: 501
@@ -1888,7 +1888,7 @@ paths:
                   transport: "tcp"
                   port: "5060"
                   auth_username: "user"
-                  auth_password: "pass"
+                  auth_password: "************pass"
                   allowed_ips: "1.2.3.4,5.6.7.0/24"
                   active: true
                   org_handle: "acme.co"
@@ -2033,23 +2033,32 @@ paths:
                       connection_state: "NOT_LINKED"
                       ok: true
         '400':
-          description: No numbers could be mapped
+          description: No eligible numbers, or none of the eligible numbers could be mapped
           content:
             application/json:
-              example:
-                status_code: 400
-                message: "No numbers could be mapped."
-                data:
-                  trunk_id: 21
-                  origin_endpoint:
-                    ingress: "sip-lb1.unpod.tel"
-                    dids: []
-                    accepted_source_ips: ["1.2.3.4", "5.6.7.0/24"]
-                    region: null
-                  numbers:
-                    - number_id: 501
-                      ok: false
-                      error: "Failed to map number."
+              examples:
+                no_eligible_numbers:
+                  summary: No id is an active NOT_ASSIGNED number (seen live)
+                  value:
+                    status_code: 400
+                    message: "No valid unassigned numbers found."
+                    data: {}
+                mapping_failed:
+                  summary: Eligible numbers, but mapping failed
+                  value:
+                    status_code: 400
+                    message: "No numbers could be mapped."
+                    data:
+                      trunk_id: 21
+                      origin_endpoint:
+                        ingress: "sip-lb1.unpod.tel"
+                        dids: []
+                        accepted_source_ips: ["1.2.3.4", "5.6.7.0/24"]
+                        region: null
+                      numbers:
+                        - number_id: 501
+                          ok: false
+                          error: "Failed to map number."
         '404':
           description: Trunk not found
           content:

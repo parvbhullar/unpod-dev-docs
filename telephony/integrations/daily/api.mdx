@@ -11,7 +11,7 @@ what Daily uses to reach Unpod - see the [Dashboard guide](/telephony/integratio
 for the Daily-side setup.
 
 <Note>
-**Base URL:** `https://unpod.ai/api/v2/platform/`
+**Base URL:** `https://unpod.dev/api/v2/platform/`
 Every request needs `Authorization: Token <your-api-key>` and an `Org-Handle` header.
 See [Authentication](/api/get-started/authentication).
 </Note>
@@ -20,100 +20,12 @@ See [Authentication](/api/get-started/authentication).
 
 - An Unpod **API Token** and **Org-Handle**.
 - A number in your org (we'll fetch its `id` below).
-- A Daily room with **SIP dial-in enabled** - note its `sip_uri`
-  (`sip:<endpoint>@<your-subdomain>.sip.daily.co`).
+- A Daily room and your Daily API key. Step 1 turns on **SIP dial-in** for it.
 
-## 1. Find your number
+## 1. Enable SIP dial-in on the Daily room
 
-```bash cURL
-curl https://unpod.ai/api/v2/platform/telephony/numbers/ \
-  -H "Authorization: Token $UNPOD_TOKEN" \
-  -H "Org-Handle: $ORG_HANDLE"
-```
-
-```json Response (200)
-{
-  "status_code": 200,
-  "message": "Telephony numbers fetched successfully.",
-  "data": [
-    { "id": 501, "number": "+15551234567", "state": "NOT_ASSIGNED", "active": true }
-  ]
-}
-```
-
-<Card title="List Numbers reference" icon="hash" href="/telephony/numbers/list-numbers">
-  Full request/response schema.
-</Card>
-
-## 2. Create the SIP trunk to Daily
-
-Point the trunk's `sip_url` at your Daily room's `sip_uri`. One trunk carries both inbound and outbound.
-
-```bash cURL
-curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/ \
-  -H "Authorization: Token $UNPOD_TOKEN" \
-  -H "Org-Handle: $ORG_HANDLE" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Daily trunk",
-    "sip_url": "sip:endpoint@your-subdomain.sip.daily.co",
-    "transport": "udp",
-    "port": "5060"
-  }'
-```
-
-```json Response (201)
-{
-  "status_code": 201,
-  "message": "Trunk created successfully.",
-  "data": { "id": 21, "name": "Daily trunk", "sip_url": "sip:endpoint@your-subdomain.sip.daily.co", "transport": "udp", "port": "5060", "active": true }
-}
-```
-
-<Card title="Create Trunk reference" icon="circle-plus" href="/telephony/trunks/create-trunk">
-  All request fields (`sip_url`, `auth_username`, `auth_password`, `transport`, `port`, `source_ips`).
-</Card>
-
-## 3. Attach your number to the trunk
-
-Map the number from step 1 (its `id`) to the trunk from step 2 (its `id`). The response
-returns the **origin endpoint** - the address + creds Daily uses to reach Unpod.
-
-```bash cURL
-curl -X POST https://unpod.ai/api/v2/platform/telephony/trunks/21/attach-numbers/ \
-  -H "Authorization: Token $UNPOD_TOKEN" \
-  -H "Org-Handle: $ORG_HANDLE" \
-  -H "Content-Type: application/json" \
-  -d '{ "number_ids": [501] }'
-```
-
-```json Response (201)
-{
-  "status_code": 201,
-  "message": "Numbers mapped to trunk.",
-  "data": {
-    "trunk_id": 21,
-    "origin_endpoint": {
-      "ingress": "sip:sip-lb1.unpod.tel",
-      "dids": ["+15551234567"],
-      "accepted_source_ips": [],
-      "region": "ap-south"
-    }
-  }
-}
-```
-
-<Card title="Attach Numbers reference" icon="link" href="/telephony/trunks/attach-numbers">
-  Path params, request body, and the full origin-endpoint response.
-</Card>
-
-## Configure the Daily side
-
-Enable **SIP dial-in** on your Daily room. This is **Daily's own API** (`api.daily.co`,
-`Authorization: Bearer` with your Daily key). Run this **first** - the `sip_uri` it returns
-is exactly what you put in the trunk's `sip_url` in step 2.
-
-### 4. Enable SIP dial-in on the room
+Do this first: the `sip_uri` it returns is what you put in the trunk's `sip_url` in step 3.
+This is **Daily's own API** (`api.daily.co`, `Authorization: Bearer` with your Daily key).
 
 ```bash cURL
 curl -X POST https://api.daily.co/v1/rooms/your-room-name \
@@ -141,10 +53,97 @@ curl -X POST https://api.daily.co/v1/rooms/your-room-name \
 ```
 
 `config.sip_uri.endpoint` is the address you point the Unpod trunk at (the `sip_url` in
-step 2). Route that room to your agent so calls from Unpod connect to it.
+step 3). Route that room to your agent so calls from Unpod connect to it.
 
 <Card title="Daily SIP dial-in docs" icon="external-link" href="https://docs.daily.co/guides/products/dial-in-dial-out/sip">
   Full room `sip` properties + `sip_uri` response (this is Daily's API).
+</Card>
+
+## 2. Find your number
+
+```bash cURL
+curl https://unpod.dev/api/v2/platform/telephony/numbers/ \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
+  -H "Org-Handle: $UNPOD_ORG_HANDLE"
+```
+
+```json Response (200)
+{
+  "status_code": 200,
+  "message": "Telephony numbers fetched successfully.",
+  "data": [
+    { "id": 501, "number": "+15551234567", "state": "NOT_ASSIGNED", "active": true }
+  ]
+}
+```
+
+<Card title="List Numbers reference" icon="hash" href="/telephony/numbers/list-numbers">
+  Full request/response schema.
+</Card>
+
+## 3. Create the SIP trunk to Daily
+
+Point the trunk's `sip_url` at your Daily room's `sip_uri`.
+
+```bash cURL
+curl -X POST https://unpod.dev/api/v2/platform/telephony/trunks/ \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
+  -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Daily trunk",
+    "sip_url": "sip:endpoint@your-subdomain.sip.daily.co",
+    "transport": "udp",
+    "port": "5060"
+  }'
+```
+
+```json Response (201)
+{
+  "status_code": 201,
+  "message": "Trunk created successfully.",
+  "data": { "id": 21, "name": "Daily trunk", "sip_url": "sip:endpoint@your-subdomain.sip.daily.co", "transport": "udp", "port": "5060", "active": true }
+}
+```
+
+<Card title="Create Trunk reference" icon="circle-plus" href="/telephony/trunks/create-trunk">
+  All request fields (`sip_url`, `auth_username`, `auth_password`, `transport`, `port`, `source_ips`).
+</Card>
+
+## 4. Attach your number to the trunk
+
+Map the number from step 2 (its `id`) to the trunk from step 3 (its `id`). The response
+returns the **origin endpoint** - the address Daily uses to reach Unpod.
+
+```bash cURL
+curl -X POST https://unpod.dev/api/v2/platform/telephony/trunks/21/attach-numbers/ \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
+  -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{ "number_ids": [501] }'
+```
+
+```json Response (201)
+{
+  "status_code": 201,
+  "message": "Numbers mapped to trunk.",
+  "data": {
+    "trunk_id": 21,
+    "origin_endpoint": {
+      "ingress": "sip-lb1.unpod.tel",
+      "dids": ["+15551234567"],
+      "accepted_source_ips": [],
+      "region": "ap-south"
+    },
+    "numbers": [
+      { "number_id": 501, "number": "+15551234567", "connection_state": "NOT_LINKED", "ok": true }
+    ]
+  }
+}
+```
+
+<Card title="Attach Numbers reference" icon="link" href="/telephony/trunks/attach-numbers">
+  Path params, request body, and the full origin-endpoint response.
 </Card>
 
 ## Troubleshooting

@@ -7,6 +7,10 @@ description: 'Make and control phone calls, or connect your own carrier'
 Unpod Telephony has two products. **Telephony APIs** give you programmable calls on Unpod
 numbers - like Plivo or Twilio - and **SIP Trunking** lets you bring your own carrier.
 
+<Frame caption="Telephony → Overview on unpod.dev - calls, numbers and spend">
+  <img src="/images/console/telephony-overview.png" alt="unpod.dev Telephony Overview with call totals, a usage chart and inbound versus outbound calls" />
+</Frame>
+
 ## Which path?
 
 <CardGroup cols={2}>
@@ -23,11 +27,11 @@ numbers - like Plivo or Twilio - and **SIP Trunking** lets you bring your own ca
 Both paths use the same two credentials, and you get both from the Unpod dashboard.
 
 1. **API key** (the SDK calls it a platform token). Open
-   [Settings → Security → API keys](https://unpod.ai/settings/security/api-keys/) and click
+   [Settings → Security → API keys](https://unpod.dev/settings/security/api-keys/) and click
    **Generate New**. Copy the key from the list. It's a personal key: it acts as you, in any
    org you're a member of, so keep it secret and generate a new one if it leaks.
 2. **Org handle**. Open
-   [Settings → Workspace → General](https://unpod.ai/settings/workspace/general/) and copy
+   [Settings → Workspace → General](https://unpod.dev/settings/workspace/general/) and copy
    the **Domain** value without the leading `@` (for example `acme`, not `@acme`). Org owners
    and editors can also use **Copy Org Handle** in the menu at the top of the org page.
    No API returns the handle for an API key yet, so copy it from the dashboard.
@@ -35,19 +39,19 @@ Both paths use the same two credentials, and you get both from the Unpod dashboa
 Export them with the base URL:
 
 ```bash
-export UNPOD_BASE_URL=https://unpod.ai
+export UNPOD_BASE_URL=https://unpod.dev
 export UNPOD_PLATFORM_TOKEN=<your-api-key>
 export UNPOD_ORG_HANDLE=<your-org-handle>
 ```
 
 The Python SDK reads all three when you create a client with no arguments. cURL samples call
-`https://unpod.ai/api/v2/platform/...` and send the token and org handle as
+`https://unpod.dev/api/v2/platform/...` and send the token and org handle as
 `Authorization: Token $UNPOD_PLATFORM_TOKEN` and `Org-Handle: $UNPOD_ORG_HANDLE`.
 
 Check your credentials:
 
 ```bash
-curl -s https://unpod.ai/api/v2/platform/telephony/overview/ \
+curl -s https://unpod.dev/api/v2/platform/telephony/overview/ \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" \
   -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
@@ -79,3 +83,10 @@ it is unset, the SDK falls back to a legacy host that no longer resolves.
 - **Answer URL** - the https URL Unpod calls when a call starts on a leg (an inbound call is fetched while it's still ringing). You reply with XML or JSON telling Unpod what to do.
 - **Trunk** - a SIP carrier credential (`sip_url`, `transport`, `port`, auth, source-IP allow-list). Secrets are always masked in responses.
 - **Origin endpoint** - the shared SBC ingress host (for example `sip-lb1.unpod.tel`) the carrier sends inbound calls to, plus the accepted source IPs and mapped numbers.
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/quickstart/step1_credentials.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step1_credentials.py): checks your three credentials against the telephony API.
+- [`telephony/outbound_call.py`](https://github.com/unpod-ai/sample-apps/blob/main/telephony/outbound_call.py): a complete outbound call in one file.

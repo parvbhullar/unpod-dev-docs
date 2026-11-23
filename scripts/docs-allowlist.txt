@@ -5,7 +5,6 @@ telephony/integrations/bolna
 telephony/integrations/dograh
 telephony/integrations/elevenlabs
 telephony/integrations/openai-realtime
-telephony/integrations/pipecat
 telephony/integrations/retell
 telephony/integrations/twilio/api
 telephony/integrations/twilio/dashboard

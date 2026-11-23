@@ -55,7 +55,7 @@ through, and how it can end.
 Inbound calls skip `pending` and dialing - the caller is already on the line,
 so the call starts at `ringing`/`active`. Only outbound calls pass through the
 full sequence. You never drive these states yourself; you observe them via the
-call `status`, the `call_end` hook, and the final `end_reason`.
+call `status` and the final `end_reason` on the call record.
 </Note>
 
 ## Outbound: what happens after `calls.create()`
@@ -67,7 +67,7 @@ concurrency limit.
 
 <Steps>
   <Step title="You enqueue the call">
-    `calls.create(pipe_id, to_number, ...)` records the call and returns `201`
+    `calls.create(agent_id=..., to_number=...)` records the call and returns `201`
     with `status: "pending"`. Your request is never blocked on the network.
   </Step>
   <Step title="Unpod gates on concurrency">
@@ -140,7 +140,7 @@ Unpod's side, text crosses into your runner, and reply text comes back for TTS.
 <Note>
 Your `agent_id` selects **which dialog brain** runs for the call - it is not
 how Unpod routes the phone number. Number routing is handled by the
-[agent](/get-started/core-concepts#agent) the number is attached to.
+[agent](/home/how-it-fits#agent) the number is attached to.
 </Note>
 
 ## Voicemail detection
@@ -190,16 +190,23 @@ generic failure and log them.
 
 ## Reacting to outcomes in your agent
 
-Observe telephony outcomes through hooks rather than polling:
+Your runner does not receive the telephony `end_reason`: the session-level
+`call_end` hook only reports `"hangup"` or `"error"`, and a call that never
+connects (busy, pre-connect voicemail, wrong number) never reaches your runner
+at all. Read the outcome from the call record once the call is terminal - poll
+as in [the Quickstart](/agent-sdk/agent-quickstart), or run this from your
+backend after the call:
 
 ```python
-@ctx.session.on("call_end")
-async def on_end(final_state: str) -> None:
-    reason = ctx.session.data.get("end_reason")
-    if reason == "VOICEMAIL_DETECTED_PRECONNECT":
-        await schedule_retry(ctx.user_number, after_minutes=120)
-    elif reason in ("SIP_FAILED_WRONG_NUMBER", "SIP_FAILED_NUMBER_BLOCKED"):
-        await mark_unreachable(ctx.user_number)
+from unpod import AsyncClient
+
+async def handle_outcome(call_id: str) -> None:
+    async with AsyncClient() as client:
+        call = await client.calls.get(call_id)
+        if call.end_reason == "VOICEMAIL_DETECTED_PRECONNECT":
+            await schedule_retry(call.to_number, after_minutes=120)
+        elif call.end_reason in ("SIP_FAILED_WRONG_NUMBER", "SIP_FAILED_NUMBER_BLOCKED"):
+            await mark_unreachable(call.to_number)
 ```
 
 ## Related

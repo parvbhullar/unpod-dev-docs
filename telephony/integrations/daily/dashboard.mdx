@@ -6,7 +6,7 @@ description: 'Connect Daily to Unpod with no code - create a SIP trunk on your U
 ---
 
 The **no-code** path. Create a SIP trunk on your Unpod number, point it at your **Daily
-SIP dial-in** address, then copy the trunk's origin-endpoint credentials so Daily can reach
+SIP dial-in** address, then copy the number's outbound trunk credentials so Daily can reach
 Unpod. One trunk carries inbound and outbound. Prefer code? See the
 [API guide](/telephony/integrations/daily/api).
 
@@ -23,25 +23,26 @@ secrets - never paste them into shared docs or screenshots.
 ## Part 1 - Create the trunk in Unpod
 
 <Steps>
-  <Step title="Open Configure → New trunk on your number">
-    In **Telephony**, select your number and click **Configure**. On the **New trunk** tab,
-    set a **Name** you'll recognise and the **trunk origin endpoint**:
+  <Step title="Open Inbound Trunk Details → Connect on your number">
+    In **Telephony**, select your number. If it shows **Not Linked**, click **Connect to → SIP
+    Trunk** first. Then click **Connect** under **Inbound Trunk Details**.
+    On the **New trunk** tab, set a **Name** you'll recognise and the SIP host:
     - **SIP URI / address** - your **Daily SIP dial-in** address
       (e.g. `sip:endpoint@your-subdomain.sip.daily.co`).
     - **Port** `5060` and **Transport** (`TCP` / `UDP` / `TLS`).
     - **Allowed IPs / CIDR** - optional source allow-list.
 
     Click **Test** to validate, then **Create Trunk**.
-    <img src="/images/vapi/unpod-new-trunk.png" alt="Unpod - configure a new trunk pointing at Daily" />
+    <img src="/images/unpod-numbers/06-inbound-configure.png" alt="Unpod - configure a new trunk pointing at Daily" />
   </Step>
 
-  <Step title="Copy the origin-endpoint credentials">
-    The number now shows **Linked · Daily**. Under **Origin Endpoint Details** copy the
+  <Step title="Copy the outbound trunk credentials">
+    The number now shows **Linked · Daily**. Under **Outbound Trunk Details** copy the
     values - Daily uses them to reach Unpod:
     - **Address** - e.g. `sip-lb1.unpod.tel`
     - **Port** / **Protocol** - `5060` / `UDP`
     - **Username** and **Password** (under **Authentication**)
-    <img src="/images/vapi/unpod-trunk-linked.png" alt="Unpod - linked trunk origin endpoint credentials" />
+    <img src="/images/unpod-numbers/04-outbound-ready.png" alt="Unpod - Outbound Trunk Details with address, port, protocol, username and password" />
   </Step>
 </Steps>
 
@@ -79,7 +80,7 @@ then ready for inbound and outbound calls.
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Trunk **Test** fails in Unpod | Wrong Daily `sip_uri` or transport | Re-copy the room's `sip_uri`; match transport |
-| Daily can't reach the trunk | Wrong origin-endpoint address or auth | Re-copy **Address** + **Username/Password** from the Unpod origin endpoint |
+| Daily can't reach the trunk | Wrong outbound trunk address or auth | Re-copy **Address** + **Username/Password** from the Unpod **Outbound Trunk Details** |
 | Call connects, agent silent | No agent bound to the room | Route the SIP dial-in room to an agent |
 | Inbound not arriving | SIP dial-in not enabled | Set `sip_mode: "dial-in"` on the Daily room |
 | Number not reachable | Config not published | Click **Publish** in the Unpod Studio |

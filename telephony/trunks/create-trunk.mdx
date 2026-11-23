@@ -6,7 +6,8 @@ openapi: 'POST /api/v2/platform/telephony/trunks/'
 ---
 
 Create a SIP trunk - your carrier credential. Once created, [map numbers to it](/telephony/trunks/attach-numbers)
-to receive inbound calls. The response masks `auth_password`.
+to receive inbound calls. The response masks `auth_password` (only the last 4 characters
+show) and returns `source_ips` as `allowed_ips`, a comma-separated string.
 
 <Note>
 **Prerequisites:** API Token + Org-Handle. See [Authentication](/api/get-started/authentication).
@@ -45,7 +46,7 @@ to receive inbound calls. The response masks `auth_password`.
     "transport": "tcp",
     "port": "5060",
     "auth_username": "user",
-    "auth_password": "pass",
+    "auth_password": "************pass",
     "allowed_ips": "1.2.3.4,5.6.7.0/24",
     "active": true,
     "org_handle": "acme.co"
@@ -64,7 +65,7 @@ to receive inbound calls. The response masks `auth_password`.
 </ResponseExample>
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/trunks/" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/telephony/trunks/" \
   -H "Authorization: Token <your-api-key>" \
   -H "Org-Handle: <your-org-handle>" \
   -H "Content-Type: application/json" \

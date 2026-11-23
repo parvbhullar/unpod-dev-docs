@@ -42,7 +42,7 @@ starts with `<Hangup/>`), and no `Hangup` event reaches the answer URL.
 
 ## Point your number at your app
 
-**Dashboard:** open the number in the [Unpod dashboard](https://unpod.ai/) and set its
+**Dashboard:** open the number in the [Unpod dashboard](https://unpod.dev/) and set its
 answer URL.
 
 {/* TODO(verify): dashboard path to set a number's answer URL */}
@@ -69,14 +69,14 @@ with Client() as client:
 
 ```bash cURL
 # set
-curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
+curl -s -X PUT "https://unpod.dev/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"answer_url": "https://your-app.example.com/incoming", "answer_method": "POST",
        "status_callback_url": "https://your-app.example.com/incoming"}'
 
 # read the config in effect
-curl -s "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
+curl -s "https://unpod.dev/api/v2/platform/sbc/v1/dids/%2B919000000001/inbound" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -113,8 +113,8 @@ requests, status callbacks and recording events (see
 [Which requests are signed](/telephony/apis/webhooks#which-requests-are-signed)). Audio
 streams are signed with the same secret in their own header,
 [`X-Unpod-Signature`](/telephony/apis/audio-streaming#verify-the-stream-signature).
-Create the key with `webhook_secret.rotate()` (org owner or editor).
-The full secret is shown only in that response, so store it as `UNPOD_WEBHOOK_SECRET`.
+Create the key with `webhook_secret.rotate()` (org owner or editor), or, if your org already
+has one, read it with `webhook_secret.reveal()` (org admin). Store it as `UNPOD_WEBHOOK_SECRET`.
 
 <CodeGroup>
 ```python Python
@@ -123,11 +123,11 @@ from unpod import Client
 with Client() as client:
     s = client.telephony.webhook_secret.rotate()
     print(s.pushed_to_sbc)  # False: still syncing, Unpod retries it
-    print(s.secret)         # shown in full only here
+    print(s.secret)         # full secret: reveal() also returns it
 ```
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/webhook-secret/rotate" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/webhook-secret/rotate" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" -d '{}'
 ```
@@ -280,7 +280,7 @@ with Client() as client:
 
 ```bash cURL
 for N in %2B15551234567 %2B15559876543; do
-  curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/dids/$N/inbound" \
+  curl -s -X PUT "https://unpod.dev/api/v2/platform/sbc/v1/dids/$N/inbound" \
     -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
     -H "Content-Type: application/json" \
     -d '{"answer_url": "https://your-app.example.com/incoming",
@@ -302,3 +302,10 @@ return yet. The name you gave the trunk (for example `my-trunk`) returns `404`. 
 
 To create a trunk and attach numbers to it, see
 [Manage Trunks](/telephony/sip-trunking/trunks).
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/inbound_test.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/inbound_test.py): point a number at your answer URL, call it, and see each request.
+- [`sbc/quickstart/step9_point_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step9_point_number.py): set, show or clear a number's inbound config.

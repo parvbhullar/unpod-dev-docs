@@ -4,23 +4,25 @@ icon: 'phone-outgoing'
 description: 'Put your own process at the text boundary of a live call - an AgentRunner serving inbound and outbound phone calls.'
 ---
 
-The [Quickstart](/home/quickstart) placed a call with a `Prompt`
+The [Quickstart](/agent-sdk/agent-quickstart) placed a call with a `Prompt`
 brain and deployed nothing. This page is the `Runner` path: your own
 long-lived Python process at the text boundary - for DB reads mid-call, your
 own framework, or logic a prompt cannot carry.
 
 The deal is unchanged: your
-[`AgentRunner`](/get-started/core-concepts#agentrunner) receives a
+[`AgentRunner`](/home/how-it-fits#agentrunner) receives a
 transcribed turn as a string and returns a string. No frames, no codecs, no
 SIP - the speech pipeline and the carrier stay on Unpod's side.
 
 ## Prerequisites
 
-- Python 3.12+ and `pip install unpod`
-- `UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE`, `UNPOD_BASE_URL` and
-  `UNPOD_SERVICE_BASE_URL` in a `.env` file - the same four values as the
-  [Quickstart](/home/quickstart#prerequisites). The runner registers
-  with the platform token.
+- Python 3.12+ and `pip install "unpod[dialog]"` - the `dialog` extra installs
+  `superdialog`, which Step 2 uses
+- `UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE` and `UNPOD_BASE_URL` in a `.env`
+  file - the same three values as the
+  [Quickstart](/agent-sdk/agent-quickstart#prerequisites). Each script below
+  calls `load_dotenv()` to read it. The runner registers with the platform
+  token.
 - **A number in your account.** Provision one from the dashboard under
   **Dev Platform → Numbers**. No carrier account, no SIP trunk - see
   [Numbers](/speech-stack/numbers).
@@ -36,16 +38,17 @@ carrier credentials.
 Provisioning uses the **Management API** - the REST half of the [SDK](https://github.com/unpod-ai/unpod-python-sdk), reached
 through `AsyncClient`. It authenticates with the org-scoped
 `UNPOD_PLATFORM_TOKEN` (with `UNPOD_ORG_HANDLE`) - the same token the
-runner uses - and sends REST calls to `UNPOD_SERVICE_BASE_URL`
-(`https://unpod.ai`, bare host).
+runner uses - and sends REST calls to the host in `UNPOD_BASE_URL`
+(`https://unpod.dev`).
 
 Provisioning is the same `agents.voice.create()` call as the
-[Quickstart](/home/quickstart) - the only difference is
+[Quickstart](/agent-sdk/agent-quickstart) - the only difference is
 `brain=Runner()`: your process answers the turns instead of a platform-run
 prompt.
 
-If you need one-off overrides in code, pass `base_url=` to `AsyncClient` or
-`AgentRunner`; those arguments win over `.env` for that process only.
+If you need one-off overrides in code, pass `base_url=` to `AsyncClient` (the
+REST base, `https://...`) or to `AgentRunner` (the orchestrator host,
+`wss://...`); those arguments win over `.env` for that process only.
 
 Run this once to pick a voice profile, create the agent, and attach a free
 number from your account:
@@ -53,7 +56,10 @@ number from your account:
 ```python
 # setup.py - run once to provision your phone number
 import asyncio
+from dotenv import load_dotenv
 from unpod import AsyncClient, Runner
+
+load_dotenv()
 
 async def setup() -> None:
     async with AsyncClient() as client:
@@ -114,7 +120,7 @@ Full setup: [Trunks](/speech-stack/numbers#trunks).
 The agent's `agent_id` (`"my-runner-agent"`) is the same string your
 `AgentRunner` registers under in Step 2. They must match exactly, or
 inbound calls never reach your runner. See
-[IDs You'll Meet](/get-started/core-concepts#ids-youll-meet).
+[IDs You'll Meet](/home/how-it-fits#ids-youll-meet).
 </Note>
 
 ## Step 2 - Answer an inbound call
@@ -123,13 +129,17 @@ One `entrypoint`, one `AgentRunner`. The brain here is SuperDialog's
 `LLMAgent`; any adapter works - Anthropic, OpenAI, LangChain, an HTTP
 endpoint, or a playbook (see
 [Bring your agent](/agent-sdk/bring-your-agent)) - and nothing about the
-call path changes:
+call path changes. `LLMAgent` calls the model from your process, so add that
+provider's key (here `ANTHROPIC_API_KEY`) to the same `.env`:
 
 ```python
 # agent.py - your process at the text boundary
 import os
+from dotenv import load_dotenv
 from unpod import AgentRunner, CallContext
 from superdialog import LLMAgent
+
+load_dotenv()
 
 async def entrypoint(ctx: CallContext) -> None:
     ctx.session.dialog_machine = LLMAgent(
@@ -185,7 +195,10 @@ with the `agent_id` and the destination number:
 ```python
 # call_out.py - dispatch an outbound call
 import asyncio
+from dotenv import load_dotenv
 from unpod import AsyncClient
+
+load_dotenv()
 
 AGENT_ID = "my-runner-agent"   # from setup.py
 TO_NUMBER = "+19995550001"

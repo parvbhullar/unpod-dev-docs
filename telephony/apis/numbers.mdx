@@ -81,7 +81,7 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
+curl -s "https://unpod.dev/api/v2/platform/telephony/numbers/?include_assigned=true" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -115,12 +115,14 @@ with Client() as client:
         result = client.telephony.numbers.attach(NUMBER, attach_type="human_call")
     except httpx.HTTPStatusError as e:  # nothing attached: the body says why
         raise SystemExit(e.response.text)
+    if not result.numbers:  # 206: nothing attached
+        raise SystemExit("Nothing attached: check UNPOD_ORG_HANDLE and your channel quota")
     for r in result.numbers:  # one row per number
         print(r.number, r.ok, r.connection_state, r.error)
 ```
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/numbers/attach/" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/telephony/numbers/attach/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"numbers": ["+919000000001"], "attach_type": "human_call"}'
@@ -140,8 +142,9 @@ cURL response). If no number attaches, the whole request fails:
 | `206` | Over your plan's channel quota |
 | `206` | `Org-Handle` is missing (`Please provide Org-Handle in headers`) or names no org (`Organization not found`) |
 
-The SDK raises `httpx.HTTPStatusError` on `400` and `402`, but not on `206`, so still
-check `ok`.
+The SDK raises `httpx.HTTPStatusError` on `400` and `402`, but not on `206`: then
+`result.numbers` is empty, so check for that (the reason is in `message` in the cURL
+response). Otherwise check `ok` on each row.
 
 Each attached number takes its channels from your plan. Over HTTP, `channels_count` (on
 `numbers/attach/` and on a trunk's `attach-numbers/`) sets how many: at least 1, default 1.
@@ -173,7 +176,7 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s "https://unpod.ai/api/v2/platform/telephony/overview/" \
+curl -s "https://unpod.dev/api/v2/platform/telephony/overview/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -196,12 +199,14 @@ with Client() as client:
         result = client.telephony.numbers.detach("+919000000001")
     except httpx.HTTPStatusError as e:  # nothing detached: the body says why
         raise SystemExit(e.response.text)
+    if not result.numbers:  # 206: nothing detached
+        raise SystemExit("Nothing detached: check UNPOD_ORG_HANDLE")
     for r in result.numbers:  # one row per number
         print(r.number, r.ok, r.error)
 ```
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/numbers/detach/" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/telephony/numbers/detach/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"numbers": ["+919000000001"]}'
@@ -225,11 +230,19 @@ detached.` and the SDK raises `httpx.HTTPStatusError`; the reason is in
 | `LINKED` | A real inbound call has connected through it |
 | `ERROR` | Routing failed; Unpod retries it in the background |
 
-{/* TODO(verify): which connection_state values can place calls */}
-
 On a call, `400 from_not_owned` means `from` isn't one of your org's numbers at all. A
 `403 forbidden: from is not a number available to this organization` means it is yours but
-isn't ready: check its `connection_state`.
+not attached for API calls: attach it with `numbers.attach(number, attach_type="human_call")`
+and wait about a minute for the SBC to pick it up. `connection_state` alone doesn't decide this:
+on QA a number attached as `human_call` placed calls while `NOT_LINKED`, and a `PENDING_VERIFY`
+number that had been taken off an agent answered `403` until it was attached again.
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`telephony/outbound_call.py`](https://github.com/unpod-ai/sample-apps/blob/main/telephony/outbound_call.py): lists numbers with `numbers.list()` and picks a caller ID.
+- [`sbc/quickstart/step3_get_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step3_get_number.py): lists numbers and attaches a free pool number with `numbers.attach()`.
 
 ## Reference
 

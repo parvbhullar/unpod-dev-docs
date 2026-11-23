@@ -7,7 +7,7 @@ openapi: 'GET /api/v2/platform/telephony/numbers/'
 
 <ResponseExample>
 
-```json Success Response (200) — With Org-Handle and include_assigned=true
+```json Success Response (200) - With Org-Handle and include_assigned=true
 {
   "status_code": 200,
   "message": "Telephony numbers fetched successfully.",
@@ -28,7 +28,7 @@ openapi: 'GET /api/v2/platform/telephony/numbers/'
 }
 ```
 
-```json Success Response (200) — Without Org-Handle
+```json Success Response (200) - Without Org-Handle
 {
   "status_code": 200,
   "message": "Telephony numbers fetched successfully.",
@@ -63,8 +63,8 @@ openapi: 'GET /api/v2/platform/telephony/numbers/'
 
 Retrieve a list of telephony numbers. By default it returns only unassigned (`NOT_ASSIGNED`, active) numbers:
 
-- **With Org-Handle** — the shared pool plus your organization's own unassigned numbers.
-- **Without Org-Handle** — only the shared pool.
+- **With Org-Handle** - the shared pool plus your organization's own unassigned numbers.
+- **Without Org-Handle** - only the shared pool.
 
 Add `include_assigned=true` (with `Org-Handle`) to also get your organization's `ASSIGNED` numbers.
 Another organization's assigned numbers are never returned. The SDK's `client.telephony.numbers.list()`
@@ -131,7 +131,7 @@ const axios = require('axios');
 
 const headers = {
   'Authorization': 'Token your-api-token',
-  'Org-Handle': 'your-org-handle'  // optional — omit for pool numbers only
+  'Org-Handle': 'your-org-handle'  // optional - omit for pool numbers only
 };
 
 // Get pool numbers + your org's numbers, assigned ones included
@@ -166,7 +166,7 @@ import requests
 
 headers = {
     'Authorization': 'Token your-api-token',
-    'Org-Handle': 'your-org-handle'  # optional — omit for pool numbers only
+    'Org-Handle': 'your-org-handle'  # optional - omit for pool numbers only
 }
 
 def get_telephony_numbers():
@@ -192,12 +192,12 @@ get_telephony_numbers()
 ```
 
 ```bash cURL
-# With Org-Handle — pool + your org's numbers, assigned ones included
+# With Org-Handle - pool + your org's numbers, assigned ones included
 curl -X GET "https://unpod.ai/api/v2/platform/telephony/numbers/?include_assigned=true" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle"
 
-# Without Org-Handle — pool numbers only
+# Without Org-Handle - pool numbers only
 curl -X GET "https://unpod.ai/api/v2/platform/telephony/numbers/" \
   -H "Authorization: Token your-api-token"
 ```
@@ -209,5 +209,5 @@ curl -X GET "https://unpod.ai/api/v2/platform/telephony/numbers/" \
 1. **Org Scoping**: Pass `Org-Handle` to see your org's unassigned numbers; omit it to see only pool numbers
 2. **Number Assignment**: Use a number's `id` when attaching it to a [trunk](/telephony/trunks/attach-numbers)
 3. **State Awareness**: Check `state` to know if a number is `NOT_ASSIGNED` (available) or `ASSIGNED` (in use). `ASSIGNED` rows appear only with `include_assigned=true`
-4. **E.164 Format**: All numbers are returned in E.164 format — use this format consistently in all API calls
+4. **E.164 Format**: All numbers are returned in E.164 format - use this format consistently in all API calls
 5. **Security**: Keep API tokens secure and rotate them regularly

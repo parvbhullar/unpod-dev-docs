@@ -131,8 +131,13 @@ The long-lived runner process. Agent and number are provisioned once beforehand
 - see [Provisioning checklist](/agent-sdk/setup-checklist).
 
 ```python
+from dotenv import load_dotenv
 from superdialog import DialogMachine, PythonTool
 from unpod import AgentRunner, CallContext
+
+# AgentRunner reads UNPOD_PLATFORM_TOKEN and UNPOD_ORG_HANDLE from the
+# environment; a .env file is not loaded unless you call load_dotenv().
+load_dotenv()
 
 # --- Tools (playbook built with `superdialog generate`) ---
 

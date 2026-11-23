@@ -75,7 +75,11 @@ the full status progression and how to poll for completion.
 
 ## Accessing Outbound Data in Your Entrypoint
 
-The `data` and `instructions` you pass to `calls.create()` are available on the `CallContext`:
+The `data` and `instructions` you pass to `calls.create()` are available on the `CallContext`.
+The example runs a superdialog playbook (`pip install "unpod[dialog]"`). Create
+`reminder.yaml` once with
+`superdialog generate "Call a patient to confirm or reschedule a dental appointment." --output reminder.yaml`
+(it calls an LLM, so set your provider key first):
 
 ```python
 from superdialog import DialogMachine

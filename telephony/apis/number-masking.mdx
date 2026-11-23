@@ -95,7 +95,7 @@ would let anyone dial from your number.
 The same request over REST:
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/sbc/v1/calls" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Idempotency-Key: $(uuidgen)" -H "Content-Type: application/json" \
   -d '{"from": "+919000000001", "to": "+919000000002", "role": "agent",
@@ -227,7 +227,7 @@ with a 2xx quickly, within 10 s.
 | --- | --- | --- |
 | `Initiated` | `agent`, later `customer` | The leg is being dialed. Optional: save `ev.leg_id` with your record |
 | `Ringing` | `agent` | Optional: show "calling the agent" in your app. Not always sent, so don't wait for it |
-| `Ringing` | `customer` | The agent hears the customer's phone ringing. `dial_music` plays nothing yet; to play your own sound, see [ringing sound](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
+| `Ringing` | `customer` | The agent hears the customer's phone ringing. To play your own sound, pass `dial_music` or see [ringing sound](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
 | `Answered` | `agent` | Add the customer with `add_participant` |
 | `Answered` | `customer` | They're talking. Optional: mark the call connected |
 | `Hangup` | `customer` | End the call. `Busy Line`, `Ring Timeout Reached`, `No Answer` or `Rejected`: the customer wasn't reached. `Cancelled`: the agent hung up while the customer's phone was ringing. `Normal Hangup`: they answered |
@@ -243,7 +243,8 @@ people, so a masked call is always one agent and one customer.
 The other direction: the customer calls your Unpod number back and you connect them to
 their agent. Point the number's answer URL at your app (see
 [Incoming Calls](/telephony/apis/incoming-calls#point-your-number-at-your-app)), look up the
-agent from the caller's number (`ev.from_` on `StartApp`) in your own data, and reply:
+agent from the caller's number (`ev.from_` on `StartApp`) in your own data, and reply. Normalise
+`ev.from_` to E.164 first: it can arrive in national format (`09000000002`).
 
 ```xml
 <Response>
@@ -263,3 +264,9 @@ it.
 </Warning>
 
 {/* TODO(verify): caller ID the agent sees on an inbound <Dial> (Dial callerId is parsed but not applied; sip_session.rs try_single_target uses dialplan.caller) */}
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/call_test.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/call_test.py): the two-leg call and event handling that masking builds on.

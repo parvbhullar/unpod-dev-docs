@@ -27,7 +27,7 @@ A production deployment should have:
 
 - A stable `UNPOD_PLATFORM_TOKEN` + `UNPOD_ORG_HANDLE` - **required by the `AgentRunner`** for the orchestrator connection ([full variable table](/agent-sdk/setup-checklist#environment-variables))
 - A clear `agent_id` shared by every replica of the same agent
-- Capacity limits (`max_sessions`, `permits_per_minute`) that match your traffic
+- A capacity limit (`max_sessions`) that matches your traffic
 - Shutdown handling so active calls can drain before the process exits
 - Observability for active calls, failures, and latency
 - **(legacy `serve` transport only)** a public `serving_url` so Unpod can reach the runner bridge, and an `agent_secret` so inbound bridge connections are signed and verified
@@ -83,7 +83,7 @@ AgentRunner(
     entrypoint=handle_call,
     agent_id="my-agent",
     max_sessions=50,          # orchestrator never dispatches beyond this
-    permits_per_minute=120,   # rate of new call acceptance
+    permits_per_minute=120,   # accepted, but not enforced in SDK 0.7.0
     drain_timeout_s=60,
 )
 ```
@@ -96,13 +96,15 @@ reported capacity. No shared state, no coordination needed.
 
 ```bash
 # replica 1, replica 2, ... identical:
-UNPOD_PLATFORM_TOKEN=... UNPOD_ORG_HANDLE=your-org python agent.py
+UNPOD_BASE_URL=https://unpod.dev UNPOD_PLATFORM_TOKEN=... UNPOD_ORG_HANDLE=your-org python agent.py
 ```
 
 ### 5. Shutdown and supervision
 
-On `SIGTERM` the runner stops accepting dispatches and drains active calls for
-up to `drain_timeout_s` before exiting - container- and systemd-friendly.
+The SDK does not install a `SIGTERM` handler. Catch the signal and call
+`runner.shutdown()`, which waits `drain_timeout_s` when calls are still active -
+see [Graceful shutdown](/agent-sdk/agent-runner#graceful-shutdown). Without
+that handler, `SIGTERM` stops the process at once.
 
 <Note>
 Under the default `dial_out` transport the runner **auto-reconnects** its
@@ -123,8 +125,7 @@ The minimum production `.env` - every variable defined in the
 ```bash
 UNPOD_PLATFORM_TOKEN="..."                  # AgentRunner + management client
 UNPOD_ORG_HANDLE="acme"                     # required with the token
-UNPOD_BASE_URL="https://unpod.ai"           # runner derives wss://<host>
-UNPOD_SERVICE_BASE_URL="https://unpod.ai"   # management REST, bare host
+UNPOD_BASE_URL="https://unpod.dev"           # every endpoint, incl. wss://<host>
 
 # Legacy transport="serve" only (ignored under the default dial_out transport):
 UNPOD_AGENT_SECRET="long-random-secret"

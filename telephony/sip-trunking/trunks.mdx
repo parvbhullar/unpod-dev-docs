@@ -39,12 +39,12 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s "https://unpod.ai/api/v2/platform/telephony/trunks/" \
+curl -s "https://unpod.dev/api/v2/platform/telephony/trunks/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
 
-Returns your org's trunks, newest first. `auth_password` is masked. See
+Returns your org's trunks, newest first. `auth_password` is masked: only its last 4 characters show. See
 [List Trunks](/telephony/trunks/list-trunks).
 
 ## Get a trunk
@@ -62,7 +62,7 @@ with Client() as client:
 
 ```bash cURL
 TRUNK_ID=21  # your trunk id
-curl -s "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/" \
+curl -s "https://unpod.dev/api/v2/platform/telephony/trunks/$TRUNK_ID/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -89,7 +89,7 @@ with Client() as client:
 ```
 
 ```bash cURL
-curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/trunks/" \
+curl -s -X POST "https://unpod.dev/api/v2/platform/telephony/trunks/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{
@@ -111,7 +111,7 @@ curl -s -X POST "https://unpod.ai/api/v2/platform/telephony/trunks/" \
 | `username`, `password` | `auth_username`, `auth_password` | No | SIP auth credentials. The password is masked on every read |
 | `transport` | `transport` | No | `tcp` (default), `udp` or `tls` |
 | `port` | `port` | No | SIP port as a string (default `5060`) |
-| `source_ips` | `source_ips` | No | Addresses your carrier sends calls from. CIDR ranges allowed. Read back as `allowed_ips` |
+| `source_ips` | `source_ips` | No | Addresses your carrier sends calls from. CIDR ranges allowed. Read back as `allowed_ips`, a comma-separated string |
 
 Keep the returned `id` (`data.id` in the cURL response): you need it to map numbers, get
 or delete the trunk. The API has no call to update a trunk. See
@@ -149,7 +149,7 @@ with Client() as client:
 ```bash cURL
 TRUNK_ID=21  # your trunk id
 curl -s -X POST \
-  "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/attach-numbers/" \
+  "https://unpod.dev/api/v2/platform/telephony/trunks/$TRUNK_ID/attach-numbers/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"number_ids": [501]}'
@@ -181,7 +181,7 @@ with Client() as client:
 ```bash cURL
 TRUNK_ID=21  # your trunk id
 curl -s -X POST \
-  "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/detach-numbers/" \
+  "https://unpod.dev/api/v2/platform/telephony/trunks/$TRUNK_ID/detach-numbers/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"number_ids": [501]}'
@@ -217,13 +217,13 @@ with Client() as client:
 
 ```bash cURL
 # set (+ becomes %2B in the URL)
-curl -s -X PUT "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B15551234567/inbound" \
+curl -s -X PUT "https://unpod.dev/api/v2/platform/sbc/v1/dids/%2B15551234567/inbound" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"answer_url": "https://your-app.example.com/incoming"}'
 
 # read
-curl -s "https://unpod.ai/api/v2/platform/sbc/v1/dids/%2B15551234567/inbound" \
+curl -s "https://unpod.dev/api/v2/platform/sbc/v1/dids/%2B15551234567/inbound" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
@@ -235,9 +235,9 @@ gave the trunk returns `404`. For every config field and how to answer the call,
 
 ## Delete a trunk
 
-Delete detaches every number on the trunk back to `NOT_ASSIGNED` and removes the trunk, all
-or nothing: if one number fails, nothing changes. Unmapping first shows you which number
-failed and why, so the sample unmaps, then deletes only once every number has unmapped. Running it again after a partial failure? Drop
+Delete removes the trunk and its number bindings. Unmap the numbers first if you want them
+returned cleanly to `NOT_ASSIGNED`: unmapping also shows you which number failed and why, so
+the sample unmaps, then deletes only once every number has unmapped. Running it again after a partial failure? Drop
 the ids that already unmapped: they now report `ok: false`, and if none unmap the request
 fails with `400`.
 
@@ -264,19 +264,24 @@ TRUNK_ID=21  # your trunk id
 
 # 1. unmap every number on the trunk
 curl -s -X POST \
-  "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/detach-numbers/" \
+  "https://unpod.dev/api/v2/platform/telephony/trunks/$TRUNK_ID/detach-numbers/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
   -d '{"number_ids": [501]}'
 
 # 2. delete the trunk
-curl -s -X DELETE "https://unpod.ai/api/v2/platform/telephony/trunks/$TRUNK_ID/" \
+curl -s -X DELETE "https://unpod.dev/api/v2/platform/telephony/trunks/$TRUNK_ID/" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
 
-Delete returns `204`, or `404` for a trunk that isn't your org's. If a number can't be
-detached it returns `400` (or `206`) with the reason in `message` and the trunk stays.
-`trunks.delete()` raises on the `400` but **not** on a `206`, so check with
+Delete returns `204`, or `404` for a trunk that isn't your org's. To confirm, call
 `trunks.get(TRUNK_ID)`: it raises `httpx.HTTPStatusError` with `404` once the trunk is gone. See
 [Delete Trunk](/telephony/trunks/delete-trunk).
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/quickstart/step9_point_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step9_point_number.py): per-number inbound config with `inbound.set_did()` / `get_did()`.
+- [`sbc/inbound_test.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/inbound_test.py): points a number at an answer URL and shows what the SBC sends.

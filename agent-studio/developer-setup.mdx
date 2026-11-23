@@ -8,8 +8,9 @@ description: "Run the Playground on your own machine, point it at hosted or loca
 
 The Playground is a Vite + React SPA (`playground/web/`) served by a small Python
 **harness** that runs the agent in-process. It ships inside the **supervoice**
-repo, which pins `unpod` and `superdialog` as editable sibling deps, plus bundled
-example flows and playbooks - so it runs self-contained.
+repo, which installs `unpod` and `superdialog` from PyPI at the versions its
+`pyproject.toml` pins, plus bundled example flows and playbooks - so it runs
+self-contained.
 
 <Note>
 Agent flows are authored with **superdialog**; the call runtime is the **unpod**
@@ -35,7 +36,7 @@ there is no `pipecat` / `rtvi` client dependency.
 The harness (`harness/api.py`) picks a backend in this order:
 
 1. **`UNPOD_BASE_URL`** → the hosted `wss://<host>` speech service. For hosted
-   voice with zero local backend: `UNPOD_BASE_URL=api.unpod.ai` plus
+   voice with zero local backend: `UNPOD_BASE_URL=https://unpod.dev` plus
    `UNPOD_API_KEY=<key>`.
 2. Otherwise **`ws://127.0.0.1:9000`** → a local `supervoice-dev`.
 
@@ -79,7 +80,7 @@ Run the harness on `:9100` and Vite separately on `:5173` (it proxies
 `/playground/*` to the harness):
 
 ```bash
-uv run python -m playground.run          # terminal 1 - harness :9100
+uv run --extra playground python -m playground.run   # terminal 1 - harness :9100
 cd playground/web && npm run dev          # terminal 2 - Vite :5173
 ```
 
@@ -127,7 +128,7 @@ unpod SDK resolver.
 
 | Setting | Purpose |
 |---|---|
-| `UNPOD_BASE_URL` | The one host every plane is derived from (e.g. `api.unpod.ai`). |
+| `UNPOD_BASE_URL` | The one host every plane is derived from (e.g. `https://unpod.dev`). |
 | `UNPOD_API_KEY` | Credential for hosted speech + platform APIs. |
 | `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | The LLM the agent and builder run on. |
 | `FLOWS_DIR` / `PLAYBOOKS_DIR` | Point at `../superdialog/examples/*` to drive live superdialog copies instead of the bundled ones. |
