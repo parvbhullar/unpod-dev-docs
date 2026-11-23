@@ -357,12 +357,26 @@ if ev.event in STREAM_EVENTS:
 
 Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
 
-- [`sbc/streaming/bot.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/bot.py): answer URL plus a WebSocket bot that verifies the upgrade signature.
-- [`sbc/streaming/check_signatures.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/check_signatures.py): offline checks of the `X-Unpod-Signature` rules.
-- [`sbc/streaming/fake_stream_sbc.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/fake_stream_sbc.py): a stand-in SBC to develop your bot without a call.
-- [`sbc/streaming/run_case.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/run_case.py): one live call answered with `<Stream>`, with status callbacks.
-- [`sbc/streaming/run_rest.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/run_rest.py): start, list, get and stop streams mid-call with the REST API.
-- [`sbc/streaming/`](https://github.com/unpod-ai/sample-apps/tree/feat/sbc-call-tests/sbc/streaming): all streaming drivers and how to run them ([README](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/README.md)).
+<CardGroup cols={2}>
+  <Card title="sbc/streaming/bot.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/bot.py">
+    Answer URL plus a WebSocket bot that verifies the upgrade signature.
+  </Card>
+  <Card title="sbc/streaming/check_signatures.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/check_signatures.py">
+    Offline checks of the `X-Unpod-Signature` rules.
+  </Card>
+  <Card title="sbc/streaming/fake_stream_sbc.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/fake_stream_sbc.py">
+    A stand-in SBC to develop your bot without a call.
+  </Card>
+  <Card title="sbc/streaming/run_case.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/run_case.py">
+    One live call answered with `<Stream>`, with status callbacks.
+  </Card>
+  <Card title="sbc/streaming/run_rest.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/run_rest.py">
+    Start, list, get and stop streams mid-call with the REST API.
+  </Card>
+  <Card title="sbc/streaming/" icon="folder-code" href="https://github.com/unpod-ai/sample-apps/tree/feat/sbc-call-tests/sbc/streaming">
+    All streaming drivers and how to run them.
+  </Card>
+</CardGroup>
 
 ## Next
 

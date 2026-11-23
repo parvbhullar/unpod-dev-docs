@@ -312,14 +312,32 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
 
 Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
 
-- [`sbc/quickstart/`](https://github.com/unpod-ai/sample-apps/tree/feat/sbc-call-tests/sbc/quickstart): one script per step of this page, each printing PASS or FAIL ([README](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/README.md)).
-- [`sbc/quickstart/step3_get_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step3_get_number.py): step 3, list numbers and attach a free pool number.
-- [`sbc/quickstart/step4_call_and_speak.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step4_call_and_speak.py): step 4, call and speak; `step5_call_result.py` reads the result.
-- [`sbc/quickstart/step6_webhook_secret.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step6_webhook_secret.py): receive step 1, read the webhook secret.
-- [`sbc/quickstart/step7_app.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step7_app.py): receive step 2, the `app.py` answer server; `step8_check_tunnel.py` checks the tunnel.
-- [`sbc/quickstart/step9_point_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step9_point_number.py): receive step 4, point your number's inbound calls at the server.
-- [`telephony/outbound_call.py`](https://github.com/unpod-ai/sample-apps/blob/main/telephony/outbound_call.py): the outbound call as one script.
-- [`telephony/answer_url.py`](https://github.com/unpod-ai/sample-apps/blob/main/telephony/answer_url.py): a minimal answer server with tests.
+<CardGroup cols={2}>
+  <Card title="sbc/quickstart/" icon="folder-code" href="https://github.com/unpod-ai/sample-apps/tree/feat/sbc-call-tests/sbc/quickstart">
+    One script per step of this page, each printing PASS or FAIL.
+  </Card>
+  <Card title="sbc/quickstart/step3_get_number.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step3_get_number.py">
+    Step 3, list numbers and attach a free pool number.
+  </Card>
+  <Card title="sbc/quickstart/step4_call_and_speak.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step4_call_and_speak.py">
+    Step 4, call and speak; `step5_call_result.py` reads the result.
+  </Card>
+  <Card title="sbc/quickstart/step6_webhook_secret.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step6_webhook_secret.py">
+    Receive step 1, read the webhook secret.
+  </Card>
+  <Card title="sbc/quickstart/step7_app.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step7_app.py">
+    Receive step 2, the `app.py` answer server; `step8_check_tunnel.py` checks the tunnel.
+  </Card>
+  <Card title="sbc/quickstart/step9_point_number.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step9_point_number.py">
+    Receive step 4, point your number's inbound calls at the server.
+  </Card>
+  <Card title="telephony/outbound_call.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/main/telephony/outbound_call.py">
+    The outbound call as one script.
+  </Card>
+  <Card title="telephony/answer_url.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/main/telephony/answer_url.py">
+    A minimal answer server with tests.
+  </Card>
+</CardGroup>
 
 ## Next
 
