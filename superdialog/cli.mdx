@@ -47,15 +47,15 @@ Runs on the **Playbook engine**; defaults to `./playbook.yaml`, then
 `./flow.json` - any format is auto-detected.
 
 ```bash
-superdialog chat kyc.yaml
+superdialog chat --flow kyc.yaml
 ```
 
 ```
 > Hello, I need to verify my KYC.
-Agent: Sure! Could you please provide the last 4 digits of your Aadhaar?
+Sure! Could you please provide the last 4 digits of your Aadhaar?
 > 1234
-Agent: Thank you. Could you also confirm your date of birth?
-[checkpoint=collect_dob ended=False]
+Thank you. Could you also confirm your date of birth?
+[checkpoint=main.collect_dob ended=False]
 ```
 
 The per-turn status line names the live checkpoint, so you can watch outcomes
@@ -63,11 +63,11 @@ advance.
 
 | Flag | Default | Description |
 |---|---|---|
-| `--flow` | `playbook.yaml` → `flow.json` | Path to the artifact (any format) |
+| `--flow` | `playbook.yaml` → `flow.json` | Path to the artifact (any format). The path is always passed with this flag, never as a bare argument |
+| `--playbook` / `--simple` | - | Force the playbook REPL for a full-format or simple-format file |
 | `--llm` | `openai/gpt-4.1-mini` | Model URI for the runtime |
 | `--mode` | `playbook` | `playbook` (default) or `flow` (legacy graph engine) |
 | `--adapter` | `toolcall` | Applies **only in `--mode flow`**: `toolcall` (1 call/turn) or `llm` (2 calls/turn) |
-| `--traversal-dir` | - | Save session JSON on completion (graph engine) |
 
 **When to use:** during playbook (or legacy flow) design, prompt tuning, and
 eval-dataset collection - before any voice infrastructure is involved.
@@ -247,7 +247,7 @@ The `flow` sub-tree authors and inspects **flow graphs**. These still work;
 `superdialog generate` writes a playbook instead.
 
 ```bash
-# Validate graph structure (unreachable nodes, missing edges, undefined slots)
+# Validate graph structure (every edge points at a node that exists)
 superdialog flow lint kyc.json
 
 # Render a Mermaid diagram of the graph
@@ -258,7 +258,7 @@ superdialog flow generate "Confirm KYC. Ask for Aadhaar last 4." \
   --llm openai/gpt-5.1 --output kyc.json
 
 # Run the original graph runtime in the REPL
-superdialog chat kyc.json --mode flow
+superdialog chat --flow kyc.json --mode flow
 ```
 
 By default a flow JSON runs **compiled onto the Playbook engine** -
@@ -269,12 +269,20 @@ By default a flow JSON runs **compiled onto the Playbook engine** -
 
 ## Traversal history (graph engine)
 
-Any command running the legacy graph engine supports `--traversal-dir`. When
-set, a timestamped JSON file is written per completed session capturing every
-node visited, every turn, and all collected slot values:
+The `chat` command has no traversal flag. Set `traversal_dir` on a graph-engine
+`DialogMachine` in code instead. A timestamped JSON file is then written per
+completed session capturing every node visited, every turn, and all collected
+slot values:
 
-```bash
-superdialog chat kyc.json --mode flow --traversal-dir ./traversal_history
+```python
+from superdialog import DialogMachine, Flow
+
+dm = DialogMachine(
+    Flow.load("kyc.json"),
+    llm="openai/gpt-4.1-mini",
+    engine="flow",
+    traversal_dir="./traversal_history",
+)
 ```
 
 Use these files to build eval corpora, debug flow paths, and audit

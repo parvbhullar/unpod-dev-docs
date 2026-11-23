@@ -94,7 +94,7 @@ asyncio.run(chat())
 Or use the bundled CLI - no Python code needed:
 
 ```bash
-superdialog chat appointment.yaml
+superdialog chat --flow appointment.yaml
 ```
 
 The REPL runs on the Playbook engine and prints a per-turn status line
@@ -104,24 +104,27 @@ The REPL runs on the Playbook engine and prints a per-turn status line
 
 On the Playbook engine, tools live in the playbook's **process layer** - HTTP
 or registered Python callables the Director runs off the speech path. For a
-quick local function, register it by id:
+quick local function, wrap it in a `PythonTool`; it is registered under the
+function name and called with keyword arguments:
 
 ```python
-from superdialog import DialogMachine
+from superdialog import DialogMachine, PythonTool
 
-async def lookup_customer(args, state) -> dict:
+async def lookup_customer(phone_number: str) -> dict:
     """Look up customer record by phone number."""
-    return await crm.get_by_phone(args["phone_number"])
+    return await crm.get_by_phone(phone_number)
 
 agent = DialogMachine(
     "appointment.yaml",
     llm="anthropic/claude-haiku-4-5",
-    tools=[...],   # see the Tools guide for HTTP / Python / MCP shapes
+    tools=[PythonTool.of(lookup_customer)],   # registered as id "lookup_customer"
 )
 ```
 
-See [Tools](/superdialog/tools) for declaring tools in the playbook, pipelines,
-and the legacy `DialogMachine(tools=[...])` bridge.
+The playbook must also declare a `type: python` tool with that id and run it from
+a `pipeline` or `on_enter` - both are full-format keys, so this step needs a
+[full-format playbook](/superdialog/playbooks#the-full-format). See [Tools](/superdialog/tools) for declaring tools in
+the playbook, pipelines, and HTTP / MCP shapes.
 
 ## Step 5 - Deploy anywhere
 
@@ -130,7 +133,7 @@ contract:
 
 <CardGroup cols={2}>
   <Card title="LiveKit" icon="phone" href="/superdialog/embedding-guides/livekit">
-    Plug in as an `Agent(llm=...)` plugin - real token streaming
+    `Agent(llm=...)` plugin - not yet working on livekit-agents 1.x
   </Card>
   <Card title="PipeCat" icon="mic" href="/superdialog/embedding-guides/pipecat">
     Drop in as a `FrameProcessor` in your pipeline
@@ -147,8 +150,9 @@ contract:
 **Prefer a graph?** The legacy path still works:
 `superdialog flow generate "..." --output appointment.json` writes a flow graph,
 and `DialogMachine(Flow.load("appointment.json"), llm=..., engine="flow")` runs
-the original graph engine. See [Flows](/superdialog/flows). By default a flow
-JSON runs compiled on the Playbook engine - no `engine="flow"` needed.
+the original graph engine. See [Flows](/superdialog/flows). Pass the path
+instead - `DialogMachine("appointment.json", llm=...)` - and the flow runs
+compiled on the Playbook engine.
 </Note>
 
 ## What's next

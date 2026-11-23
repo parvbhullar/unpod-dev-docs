@@ -43,8 +43,9 @@ engine is the default everywhere**:
   where new investment goes.
 - **DialogMachine (supported legacy)** - the graph-railed state machine: nodes,
   edges, and criteria, where every transition is authored. Still fully
-  supported, opt-in via `engine="flow"`. Existing flow graphs run **compiled
-  on the Playbook engine by default**, so nothing breaks.
+  supported, opt-in via `engine="flow"`. Existing flow JSON files run **compiled
+  on the Playbook engine** when you pass their path, so nothing breaks. A loaded
+  `Flow` object keeps the graph runtime.
 
 Turn ordering, the event-sourced log, gates, and degradation are covered in
 [Architecture](/superdialog/architecture).
@@ -87,7 +88,7 @@ platform composable.
 
 | Audience | Why they care |
 |---|---|
-| **Voice developer using LiveKit / PipeCat** | Drop SuperDialog in as the brain; `PlaybookAgent` gives real token streaming through the same adapters |
+| **Voice developer using LiveKit / PipeCat** | Drop SuperDialog in as the brain through the PipeCat adapter (the LiveKit adapter does not run on livekit-agents 1.x yet - see [LiveKit](/superdialog/embedding-guides/livekit)) |
 | **Chatbot developer (text-only)** | `superdialog generate` a playbook, chat against it from the CLI, embed it with FastAPI through the `Agent` protocol |
 | **Developer with compliance / scripted flows** | Author the flow graph as the spec - every path enumerable and lintable - and run it compiled on the Playbook engine, or on DialogMachine via `--mode flow` |
 | **Enterprise dev with a custom LLM** | Plug any LLM URI and get the full framework for free |

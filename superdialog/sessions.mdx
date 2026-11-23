@@ -103,18 +103,19 @@ async def turn(payload: dict):
 |---|---|---|
 | `InMemorySessionStore` | ✅ v0.2 | Development, single-process |
 | `NullSessionStore` | ✅ v0.2 | Voice (ephemeral, no persistence) |
-| `RedisSessionStore` | 🔜 v0.3 | Multi-process, distributed |
-| `FileSessionStore` | 🔜 v0.3 | Lightweight persistence |
-| `SQLiteSessionStore` | 🔜 v0.3 | Local single-server |
+| `RedisSessionStore` | 🔜 planned (not in 0.3.0) | Multi-process, distributed |
+| `FileSessionStore` | 🔜 planned (not in 0.3.0) | Lightweight persistence |
+| `SQLiteSessionStore` | 🔜 planned (not in 0.3.0) | Local single-server |
 
-Switch stores by changing one line - the rest of the code stays the same:
+Switch stores by changing one line - the rest of the code stays the same. For
+durable storage today, implement the `SessionStore` protocol yourself:
 
 ```python
 # Development
 store = InMemorySessionStore()
 
-# Production (v0.3)
-# store = RedisSessionStore(url="redis://localhost:6379")
+# Production: your own SessionStore implementation
+# store = MySessionStore(...)
 ```
 
 ## Lock backends
@@ -122,7 +123,7 @@ store = InMemorySessionStore()
 | Backend | Status | Use case |
 |---|---|---|
 | `AsyncioLockBackend` | ✅ v0.2 | Single-process (default) |
-| `RedisLockBackend` | 🔜 v0.3 | Multi-process / distributed |
+| `RedisLockBackend` | 🔜 planned (not in 0.3.0) | Multi-process / distributed |
 
 ## Other agent brains
 
@@ -145,7 +146,8 @@ worker = SessionWorker(
 Or with LangChain (requires `pip install superdialog[langchain]`):
 
 ```python
-from superdialog import LangChainAgent, SessionWorker, InMemorySessionStore
+from superdialog import SessionWorker, InMemorySessionStore
+from superdialog.agents.langchain_agent import LangChainAgent
 
 worker = SessionWorker(
     agent_factory=lambda: LangChainAgent(runnable=my_langchain_chain),
@@ -172,17 +174,19 @@ class ChatContext:
 Beyond the transcript, each engine carries its own runtime state:
 
 - **Playbook engine** - the source of truth is the **event-sourced log**
-  (`agent.event_log`); `ConversationState.fold(log, playbook)` derives the
-  checkpoint, slots, and outcome. Persist `event_log.to_jsonl()` and restore via
-  `load_event_log` for full fidelity.
+  (`agent.event_log` on a `PlaybookAgent`); `ConversationState.fold(log, playbook)`
+  derives the checkpoint, slots, and outcome. Persist `event_log.to_jsonl()` and
+  restore via `load_event_log` for full fidelity. `DialogMachine` does not expose
+  `event_log` / `load_event_log`, so use a `PlaybookAgent` factory when you need
+  this.
 - **Legacy DialogMachine** - `FlowState` (current node, slot values). Present
   only when the brain is a `DialogMachine`; `None` otherwise.
 
 <Warning>
 `SessionWorker`'s built-in `SessionRecord` persists `chat_ctx` / `flow_state`
-only. For durable or multi-worker resume on the Playbook engine, persist
-`agent.event_log.to_jsonl()` yourself and restore with `load_event_log` -
-otherwise playbook state fidelity (provisional vs confirmed slots, tool results)
+only. For durable or multi-worker resume on the Playbook engine, build the
+session's agent as a `PlaybookAgent`, persist `agent.event_log.to_jsonl()`
+yourself, and restore with `load_event_log` - otherwise playbook state fidelity (provisional vs confirmed slots, tool results)
 is lost.
 </Warning>
 

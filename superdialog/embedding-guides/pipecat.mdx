@@ -14,7 +14,7 @@ right subclass against whichever PipeCat version is installed.
 ## Install
 
 ```bash
-pip install superdialog pipecat-ai
+pip install superdialog "pipecat-ai[deepgram,cartesia]"   # extras for the full pipeline below
 ```
 
 ## Minimal example
@@ -40,8 +40,8 @@ or a hand-built `PlaybookAgent` - same factory, same pipeline position.
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineTask
-from pipecat.services.deepgram import DeepgramSTTService
-from pipecat.services.cartesia import CartesiaTTSService
+from pipecat.services.deepgram.stt import DeepgramSTTService
+from pipecat.services.cartesia.tts import CartesiaTTSService
 from superdialog import DialogMachine
 from superdialog.adapters.pipecat import make_processor
 

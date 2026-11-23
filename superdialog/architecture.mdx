@@ -35,7 +35,8 @@ adapters do not know which engine they are driving.
 - **Engine B - Playbook (default).** Checkpoint-compound runtime: a Talker and a
   Director over an event-sourced log. Internals below.
 - **Engine A - DialogMachine (legacy).** Graph-railed state machine, fully
-  supported; flow JSON runs compiled onto Engine B by default.
+  supported; a flow JSON path runs compiled onto Engine B by default, a loaded
+  `Flow` object stays on Engine A.
 
 `DialogMachine(source, llm, *, engine=...)` is the recommended way in and drives
 either engine - the Playbook engine by default, the legacy graph runtime with
@@ -211,9 +212,9 @@ reply = await dm.turn("hello")
 
 Each turn costs a route decision plus a speak call - the friction Engine B
 removes, and the trade-off is weighed in
-[Thinking in Playbooks](/superdialog/thinking-in-playbooks). By default, flow
-JSON runs **compiled onto Engine B** (`compile_flow`); you only opt into the
-original runtime with `engine="flow"`. See [Flows](/superdialog/flows) for graph
+[Thinking in Playbooks](/superdialog/thinking-in-playbooks). A flow JSON *path*
+runs **compiled onto Engine B** (`compile_flow`); a loaded `Flow` object, or
+`engine="flow"`, runs the original runtime. See [Flows](/superdialog/flows) for graph
 authoring and migration.
 
 ## Model URI resolver
@@ -234,9 +235,10 @@ LiveKit/litellm-style URIs route to any provider:
 
 On the Playbook engine, `llm` drives both the Talker and the Director unless you
 split them with `director_llm=` (a strong model to judge, a fast model to speak).
-The model now loads from the playbook YAML `llm:` block (`{provider, model,
-director}`) - see [Playbooks](/superdialog/playbooks#the-full-format); the
-persona-level `llm` setting is deprecated and warns.
+A playbook can also declare its model in a YAML `llm:` block (`{provider, model,
+director}`) - see [Playbooks](/superdialog/playbooks#the-full-format). Hosts read
+it with `Playbook.resolve_llm_providers()`; `DialogMachine` does not, so pass
+`llm=` either way.
 
 ## Adapter pattern
 
@@ -247,7 +249,7 @@ Adapters live in `superdialog.adapters` and are thin shims. The same agent -
 |---|---|
 | `DialogMachineLLM` (LiveKit) | Plug into `Agent(llm=...)` (accepts any Agent) |
 | `make_processor` (PipeCat) | Factory for `FrameProcessor` in a pipeline |
-| `FastAPIRouter` | Mountable router with `/turn`, `/stream`, `/reset` |
+| `FastAPIRouter` | Mountable router with `/turn`, `/stream`, `/assist`, `/reset` |
 | `WebSocketRunner` | Standalone WSS server for Unpod Voice Infra |
 
 ## What lives outside this library

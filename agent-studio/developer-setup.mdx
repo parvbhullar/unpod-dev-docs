@@ -8,8 +8,9 @@ description: "Run the Playground on your own machine, point it at hosted or loca
 
 The Playground is a Vite + React SPA (`playground/web/`) served by a small Python
 **harness** that runs the agent in-process. It ships inside the **supervoice**
-repo, which pins `unpod` and `superdialog` as editable sibling deps, plus bundled
-example flows and playbooks - so it runs self-contained.
+repo, which installs `unpod` and `superdialog` from PyPI at the versions its
+`pyproject.toml` pins, plus bundled example flows and playbooks - so it runs
+self-contained.
 
 <Note>
 Agent flows are authored with **superdialog**; the call runtime is the **unpod**
@@ -79,7 +80,7 @@ Run the harness on `:9100` and Vite separately on `:5173` (it proxies
 `/playground/*` to the harness):
 
 ```bash
-uv run python -m playground.run          # terminal 1 - harness :9100
+uv run --extra playground python -m playground.run   # terminal 1 - harness :9100
 cd playground/web && npm run dev          # terminal 2 - Vite :5173
 ```
 

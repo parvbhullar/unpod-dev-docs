@@ -27,11 +27,11 @@ conversation. See [SuperDialog](/superdialog/introduction) for that engine.
 
 | Primitive | What it is | Where it lives today |
 |---|---|---|
-| Flows | The versioned step sequence - the plan | In build (journey engine) |
-| Steps | One unit in the sequence: a call, a message, a wait, a branch, an approval, an exit | Call steps run as tasks - [Make Call task](/api/execution/task-make-call-overview) |
-| Journeys | One entity's traversal of one flow, with the plan copied per entity | In build; step executions surface as [runs](/api/execution/runs-overview) |
+| Flows | The versioned step sequence - the plan | Python SDK: `unpod.flows` builder, `client.flows` (create, validate, activate, pause, archive, versions) |
+| Steps | One unit in the sequence: a call, a message, a wait, a branch, an approval, an exit | SDK builder: message and agent steps on a channel (`MessageStep`, `AgentStep`). Call steps run as tasks - [Make Call task](/api/execution/task-make-call-overview) |
+| Journeys | One entity's traversal of one flow, with the plan copied per entity | `client.journeys` (start, get, list, cancel, resume); call steps surface as [runs](/api/execution/runs-overview) |
 | Waits | The gap between steps - a fixed duration or smart timing | In build |
-| Signals | External input a running journey reacts to: an inbound reply, a human approval, a cancel | In build |
+| Signals | External input a running journey reacts to: an inbound reply, a human approval, a cancel | `client.journeys.send_event`, `approve`, `cancel` |
 
 Tasks are the unit of work inside Execution. A call step does not reimplement
 calling - it dispatches a task to the
@@ -39,6 +39,46 @@ calling - it dispatches a task to the
 [Make Call task](/api/execution/task-make-call-overview) you can dispatch
 directly today. The journey adds the before and after: when to place the call,
 and what its outcome means for the next step.
+
+## Build a flow in Python
+
+The `unpod` Python SDK (0.7.0) ships a flow builder. `Flow(...).to_definition()`
+is the JSON body `client.flows.create(space, flow)` sends:
+
+```python
+from unpod.flows import AgentStep, Flow, MessageStep
+
+flow = Flow(
+    name="Demo follow-up",
+    goal="Book a 20-minute product demo.",      # the agent's objective
+    steps=[
+        MessageStep(account_id="acc_123", action="email", connector="gmail",
+                    subject="Quick question", body="Would a short demo next week help?"),
+        AgentStep(account_id="acc_123", action="email", connector="gmail"),
+    ],
+)
+print(flow.to_definition())
+```
+
+In a real flow, pass `channel=` (one of `client.flows.channels.list(space)`)
+instead of the account fields. Then:
+
+- `client.flows.create(space, flow)` saves it, and `client.flows.activate(flow)`
+  switches it on.
+- `client.journeys.start(flow_id, participant_id=..., contact={...})` starts a
+  journey per contact; `get`, `list`, `cancel`, and `resume` manage it.
+- `client.journeys.send_event(journey_id, type=...)` signals a running journey,
+  such as a reply.
+- `client.journeys.set_approval(space_id, level)` sets how much the space's
+  agent may do on its own: `autonomous`, `human_review` (the default), `shadow`,
+  or `blocked`. Under `human_review`, `client.journeys.draft(journey_id)` shows the
+  held message and `client.journeys.approve(journey_id)` sends it.
+
+<Note>
+Channel lookup and space resolution need proxy-mode auth: a signed-in user's JWT
+through `JWTAuth(token, org_handle=...)`. The platform token alone is refused
+for those calls.
+</Note>
 
 ## On the spine
 
@@ -59,11 +99,13 @@ or holds a three-day timer is Unpod's problem, not a queue you operate.
 
 ## Status
 
-**In build.** The journey engine - waits, outcome branching, and human
-approval steps - is shipping in the open. Call steps are real today: dispatch
-them as [tasks](/api/execution/task-make-call-overview) and inspect
-[runs](/api/execution/runs-overview). Approval steps ship with the journey
-engine alongside [Teams & Policies](/home/teams-and-permissions).
+**Partly shipped.** The Python SDK builds and runs channel flows today: message
+and agent steps, journeys you can start, signal, and cancel, and space-level
+agent approval (`human_review` drafts you approve). Call steps are real too:
+dispatch them as [tasks](/api/execution/task-make-call-overview) and inspect
+[runs](/api/execution/runs-overview). Still in build: waits as authored steps,
+outcome branching, and the policy layer of
+[Teams & Policies](/home/teams-and-permissions).
 
 ## Go deeper
 

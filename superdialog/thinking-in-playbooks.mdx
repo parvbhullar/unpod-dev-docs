@@ -105,7 +105,7 @@ journeys).
 
 ```bash
 superdialog generate "Book a haircut and confirm it." --output salon.yaml
-superdialog chat salon.yaml
+superdialog chat --flow salon.yaml
 ```
 
 Full interactive REPL against your playbook. No Unpod account, no phone number,
@@ -115,7 +115,7 @@ no voice setup required.
 > I'd like to book a haircut
 Hi! I'd be happy to help. May I have your name?
 > Mira, and I'd like a colour
-[checkpoint=collect ended=False]
+[checkpoint=main.collect ended=False]
 ```
 
 The status line names the live checkpoint, so you can watch the conversation
@@ -126,13 +126,13 @@ takes seconds.
 
 Every checkpoint has a `gate`. This is where fluidity meets reliability:
 
-- **Soft gate (default)** - provisional values are enough; the agent never
-  blocks. The model keeps the conversation moving and the extracted data settles
-  in the background. Use it for everything that isn't irreversible.
-- **Hard gate** - for payments, identity, anything you can't undo. Required
+- **Hard gate (default)** - for payments, identity, anything you can't undo. Required
   slots must be **confirmed** (not just provisionally extracted), and the agent
   briefly waits for that confirmation before it speaks the gated line. A single
   model guess can never push past a hard gate on its own.
+- **Soft gate** (`gate: soft`) - provisional values are enough; the agent never
+  blocks. The model keeps the conversation moving and the extracted data settles
+  in the background. Opt in on pure-talk steps where nothing is irreversible.
 
 ```yaml
 playbook:
@@ -141,7 +141,7 @@ playbook:
     say: "Confirm the amount, then take the card."
     collect: [card_token, amount]
     require: [card_token, amount]   # must be confirmed, not just extracted
-    gate: hard                      # waits for that before the gated line
+    gate: hard                      # the default; waits for that before the gated line
     done_when: "Deposit charged."
 ```
 
@@ -169,10 +169,10 @@ conversations. A hand-authored **flow graph** still earns its place when:
 - **Strict determinism** - the conversation truly is a fixed decision tree with
   no room for the model to improvise.
 
-You don't lose anything by authoring a graph: by default it runs **compiled onto
-the Playbook engine** (`Playbook.load` detects flow JSON and converts it), and
-you can still run the original graph runtime with `engine="flow"` /
-`superdialog chat --mode flow`. See [Flows](/superdialog/flows) for graph
+You don't lose anything by authoring a graph: pass the flow JSON path and it
+runs **compiled onto the Playbook engine** (`Playbook.load` detects flow JSON and
+converts it). A loaded `Flow` object, `engine="flow"`, or
+`superdialog chat --flow kyc.json --mode flow` runs the original graph runtime. See [Flows](/superdialog/flows) for graph
 authoring and the migration path.
 
 ## Next steps
