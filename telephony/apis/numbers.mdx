@@ -234,7 +234,10 @@ detached.` and the SDK raises `httpx.HTTPStatusError`; the reason is in
 
 On a call, `400 from_not_owned` means `from` isn't one of your org's numbers at all. A
 `403 forbidden: from is not a number available to this organization` means it is yours but
-isn't ready: check its `connection_state`.
+not attached for API calls: attach it with `numbers.attach(number, attach_type="human_call")`
+and wait about a minute for the SBC to pick it up. `connection_state` alone doesn't decide this:
+on QA a number attached as `human_call` placed calls while `NOT_LINKED`, and a `PENDING_VERIFY`
+number that had been taken off an agent answered `403` until it was attached again.
 
 ## Sample code
 

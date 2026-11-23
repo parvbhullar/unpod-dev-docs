@@ -74,10 +74,10 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     {/* TODO(verify): full list of connection_state values that can place calls (PENDING_VERIFY worked; NOT_LINKED was rejected) */}
 
     <Note>
-    Dial from a number whose `connection_state` is not `NOT_LINKED` (for example
-    `PENDING_VERIFY` or `LINKED`). See it with the overview request from the
-    [credentials check](/telephony/introduction#credentials). A `403 forbidden: from is not
-    a number available to this organization` means the number isn't ready yet; a
+    Dial from a number you attached in step 3 with `attach_type="human_call"`. The SBC picks
+    up a newly attached number in about a minute. A `403 forbidden: from is not a number
+    available to this organization` means the number is yours but not attached as
+    `human_call` (for example, it was moved to an agent): attach it again. A
     `400 from_not_owned` means it isn't one of your org's numbers.
     </Note>
   </Step>
