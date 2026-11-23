@@ -1,7 +1,7 @@
 ---
 title: 'Call Control'
 icon: 'sliders-horizontal'
-description: 'Every call action in one place - play, speak, transfer, DTMF, hang up'
+description: 'Every call action in one place - play, speak, hold, record, hang up'
 ---
 
 Look up any action on a call here. To place a call, start with the
@@ -23,9 +23,6 @@ that id. Every method raises `TelephonyAPIError` on an error response - see
 | `remove_participant` | `DELETE /sbc/v1/calls/{call_id}/participants/{leg_id}` |
 | `play_audio` / `stop_audio` | `POST` / `DELETE /sbc/v1/calls/{call_id}/play` |
 | `speak` | `POST /sbc/v1/calls/{call_id}/speak` |
-| `transfer` | `POST /sbc/v1/calls/{call_id}/transfer` |
-| `transfer_complete` / `transfer_cancel` | `POST /sbc/v1/calls/{call_id}/transfer/complete` / `.../transfer/cancel` |
-| `send_dtmf` | `POST /sbc/v1/calls/{call_id}/dtmf` |
 | `record` / `get_recording` | `POST /sbc/v1/calls/{call_id}/record` / `GET .../recording` - see [Recording](/telephony/apis/recording) |
 | `stop_recording` / `pause_recording` / `resume_recording` | `DELETE /sbc/v1/calls/{call_id}/record`, `POST .../record/pause`, `POST .../record/resume` |
 | `download_recording` | `GET /sbc/v1/calls/{call_id}/recording?format=wav`, saved to a file |
@@ -116,56 +113,6 @@ curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" 
 `callee`); omit it to play to everyone on the call. Each leg gets `PlayStarted` / `PlayStopped` events with the same
 `play_id`. `speak` answers `503 tts_unavailable` when speech can't be made (the call
 carries on) and `429 rate_limited` when your org sends too many at once.
-
-## Transfer and DTMF
-
-<Warning>
-**`transfer` doesn't work yet through the API - don't rely on it.** It answers `200`
-as soon as the request is queued, so a transfer that fails still looks like success. In live
-tests (blind and attended) the request returned `200`, but no leg to the target appeared in
-[Call Logs](/telephony/calls/call-logs) and no event arrived for it. An attended transfer
-doesn't return the consult leg's id yet, so `transfer_complete` and `transfer_cancel` have
-nothing to act on.
-</Warning>
-
-<Warning>
-**`send_dtmf` is unreliable on a call you started with `create`.** The other side can
-hear fewer tones than you sent, and the first `send_dtmf` on a call can take about 24
-seconds to return. Don't rely on it to get through a phone menu yet.
-</Warning>
-
-<CodeGroup>
-```python Python
-calls.send_dtmf(call_id, "1234#")         # to the person you dialed
-calls.transfer(call_id, "+919000000004")  # not working yet - see the warning above
-```
-
-```bash cURL
-# DTMF -> 200 {"message": "dispatched"}
-curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/dtmf" \
-  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
-  -H "Content-Type: application/json" -d '{"digits": "1234#"}'
-
-# blind transfer (not working yet - see the warning above)
-curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/transfer" \
-  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
-  -H "Content-Type: application/json" \
-  -d '{"type": "blind", "target": "+919000000004"}'
-```
-</CodeGroup>
-
-| Method | Notes |
-| --- | --- |
-| `send_dtmf(call_id, digits, *, leg)` | `digits` from `0-9 A-D * #`. Omit `leg` to send to the person you dialed (outbound) or who called in (inbound) |
-| `transfer(call_id, target, *, type, leg)` | `target` is E.164 or a `sip:` / `sips:` URI. `type` is `"blind"` (default) or `"attended"`. `leg` defaults to `"callee"` |
-| `transfer_complete(call_id, consult_leg)` / `transfer_cancel(call_id, consult_leg)` | Finish or abandon an attended transfer. Body `{"consult_leg": ...}` |
-
-For DTMF and transfer, `leg` takes only `"caller"` or `"callee"` - not the `leg_id`
-from `create` or an event - and goes over HTTP as `leg` too. The SDK raises `ValueError`
-for any other value; over HTTP it returns `400 bad_request`. The old `leg_id=` argument
-still works for those two values but is deprecated and emits a `DeprecationWarning`.
-
-{/* TODO(verify): how to send DTMF to a participant added with add_participant (its dynamic leg_id is rejected) */}
 
 ## Hold and mute
 
@@ -281,7 +228,7 @@ reaches the SBC (`call_api_disabled`, `from_not_owned`).
 | 402 | `create` / `add_participant` while your org's access is suspended (billing) |
 | 400 `from_not_owned` | `from_` is not one of your org's numbers |
 | 400 `invalid_url` | A callback or audio URL is not public https |
-| 400 `bad_request` | Malformed body, unknown field, or a DTMF / transfer leg other than `caller` / `callee` |
+| 400 `bad_request` | Malformed body or unknown field |
 | 404 `not_found` | Unknown call, leg or number, one that belongs to another org, or a call that just ended |
 | 409 `participant_limit` | A third participant |
 | 409 `conflict` | Recording not finished yet, or `end` on a call that is still being set up |
@@ -291,10 +238,9 @@ reaches the SBC (`call_api_disabled`, `from_not_owned`).
 | 503 `tts_unavailable` | `speak` couldn't make speech; the call carries on |
 | 503 `webhook_secret_unavailable` | The webhook secret can't be made right now; retry later |
 | 503 `sbc_target_not_configured` | Your org's telephony routing isn't set up; ask the Unpod team |
-| `not_supported` | Feature not available yet |
 
 The SDK raises `ValueError` before sending when `speak` text is over 1000 characters,
-`send_dtmf` digits fall outside `0-9 A-D * #`, or a `create` / `add_participant` option breaks
+or a `create` / `add_participant` option breaks
 the limits in [Options](#options) (`time_limit`, `sip_headers`, `status_callback_events`, or
 `fallback_url` without `answer_url`).
 
@@ -303,5 +249,5 @@ the limits in [Options](#options) (`time_limit`, `sip_headers`, `status_callback
 Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
 
 - [`sbc/call_test.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/call_test.py): places a call, speaks into it and ends it, logging every webhook.
-- [`sbc/streaming/tbot/rest_call_control.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/tbot/rest_call_control.py): mute, unmute, hold, play audio, send DTMF and hang up on a live call.
-- [`sbc/streaming/run_ctrl.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/run_ctrl.py): hold (expect `400` on a `create` call), `play_audio` with `mix` on and off, and `send_dtmf` during a stream.
+- [`sbc/streaming/tbot/rest_call_control.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/tbot/rest_call_control.py): mute, unmute, hold, play audio and hang up on a live call.
+- [`sbc/streaming/run_ctrl.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/run_ctrl.py): hold (expect `400` on a `create` call), and `play_audio` with `mix` on and off during a stream.

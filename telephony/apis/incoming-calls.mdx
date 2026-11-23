@@ -288,13 +288,6 @@ done
 trunk are in `origin_endpoint.dids` of the
 [attach response](/telephony/sip-trunking/trunks#map-numbers-to-a-trunk).
 
-<Note>
-`inbound.set_trunk(name, ...)` / `PUT /sbc/v1/trunks/{name}/inbound` set one config for a
-whole trunk, but `name` is the trunk's internal Unpod name, which the trunk API doesn't
-return yet. The name you gave the trunk (for example `my-trunk`) returns `404`. Use
-`set_did` per number until then.
-</Note>
-
 To create a trunk and attach numbers to it, see
 [Manage Trunks](/telephony/sip-trunking/trunks).
 
