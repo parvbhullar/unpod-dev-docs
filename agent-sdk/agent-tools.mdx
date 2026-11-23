@@ -32,7 +32,7 @@ So always read, change, and write back:
 ```python
 agent = await client.agents.get("my-support")
 tools = dict(getattr(agent, "tools", None) or {})   # current settings
-tools["handover"] = {...}                            # change one tool
+tools["handover"] = {"enabled": True, "numbers": ["+919876543210"]}  # change one tool
 await client.agents.update("my-support", tools=tools)
 ```
 

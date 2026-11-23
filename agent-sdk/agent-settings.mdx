@@ -374,6 +374,10 @@ SDK yet.
 | `automatic_followup_enabled` | `bool` | [Automatic follow-up calls](/agent-sdk/agent-tools#automatic-follow-up-calls) |
 | `cache_mode` | `"active"` / `"shadow"` / `"off"` | Response cache for this agent |
 
+`voice_profile` and `automatic_followup_enabled` are not named parameters of
+`update()` in SDK 0.7.0. They pass through as extra keyword fields and are sent
+to the server as written, so spell them exactly as shown.
+
 ---
 
 ## Next steps

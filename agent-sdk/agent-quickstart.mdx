@@ -15,7 +15,9 @@ boundary is text.
 
 - **Python 3.12+**
 - **An Unpod org** with a platform token and at least one phone number -
-  provision a number from the dashboard under **Dev Platform → Numbers**
+  create the token under **Settings → Security → API keys**
+  ([unpod.dev/settings/security/api-keys](https://unpod.dev/settings/security/api-keys/)),
+  and provision a number from the dashboard under **Dev Platform → Numbers**
 - **The SDK:**
 
 ```bash
@@ -27,23 +29,21 @@ from:
 
 ```bash .env
 UNPOD_BASE_URL="https://unpod.dev"
-UNPOD_SERVICE_BASE_URL="https://unpod.dev"   # bare host - no path
 UNPOD_PLATFORM_TOKEN="..."                  # org-scoped REST auth
 UNPOD_ORG_HANDLE="your-org"                 # your organization's handle
 ```
 
-`import unpod` loads `.env` from the current working directory, and
-`AsyncClient()` reads every value from it - no `load_dotenv()` call needed.
-Plain `export` lines in your shell work too. Values already set in the
-shell win over `.env`.
+`AsyncClient()` reads these values from the environment. The SDK does not
+reliably find a `.env` in your working folder on its own, so every script
+on this page starts with `load_dotenv()` (`python-dotenv` installs with the
+SDK). Plain `export` lines in your shell work too. Values already set in
+the shell win over `.env`.
 
 <Warning>
-Set **both** URLs, each to the **bare host** `https://unpod.dev` with no
-path segment. Each one feeds a different part of the SDK: without
-`UNPOD_SERVICE_BASE_URL` the agent and call methods fail, and without
-`UNPOD_BASE_URL` the voice-profile and number listings fail. If your team
-gave you a staging or dedicated host, use that host for both values
-instead.
+`UNPOD_BASE_URL` is required. The SDK derives every endpoint from it, and
+its built-in default host does not resolve. If your team gave you a staging
+or dedicated host, use that host instead. `UNPOD_SERVICE_BASE_URL` is an
+optional override for the management REST base only - leave it unset.
 </Warning>
 
 <Note>
@@ -79,7 +79,10 @@ choosing an instance type than choosing a ringtone.
 
 ```python step1_voices.py
 import asyncio
+from dotenv import load_dotenv
 from unpod import AsyncClient
+
+load_dotenv()   # reads the .env next to this script
 
 async def main() -> None:
     async with AsyncClient() as client:
@@ -138,7 +141,10 @@ brain and you deploy nothing:
 
 ```python step2_agent.py
 import asyncio
+from dotenv import load_dotenv
 from unpod import AsyncClient, Prompt
+
+load_dotenv()
 
 PROMPT_TEXT = (
     "You are Riya, a support agent for an online electronics store. "
@@ -183,7 +189,10 @@ playbook cannot answer calls.
 
 ```python step2_agent_playbook.py
 import asyncio
+from dotenv import load_dotenv
 from unpod import AsyncClient, Playbook
+
+load_dotenv()
 
 PLAYBOOK_ID = "PB_..."   # your published playbook's id
 
@@ -254,7 +263,10 @@ else has claimed.
 
 ```python step3_numbers.py
 import asyncio
+from dotenv import load_dotenv
 from unpod import AsyncClient
+
+load_dotenv()
 
 async def main() -> None:
     async with AsyncClient() as client:
@@ -299,7 +311,10 @@ it, so you never copy a number by hand.
 
 ```python step4_attach.py
 import asyncio
+from dotenv import load_dotenv
 from unpod import AsyncClient
+
+load_dotenv()
 
 AGENT_ID = "my-support"
 
@@ -341,7 +356,10 @@ and `data` - the per-call context the brain can read. It is what turns
 
 ```python step5_call.py
 import asyncio
+from dotenv import load_dotenv
 from unpod import AsyncClient
+
+load_dotenv()
 
 async def main() -> None:
     async with AsyncClient() as client:
@@ -383,7 +401,10 @@ your script for the full budget.
 
 ```python step6_result.py
 import asyncio
+from dotenv import load_dotenv
 from unpod import AsyncClient
+
+load_dotenv()
 
 CALL_ID = "..."   # from step 5
 
@@ -488,15 +509,17 @@ campaign.
 ## Troubleshooting
 
 - **`httpx.ConnectError` (`Name or service not known` / `getaddrinfo failed`)** -
-  the host in `UNPOD_BASE_URL` / `UNPOD_SERVICE_BASE_URL` does not exist.
-  Set both to `https://unpod.dev` (or the host your team gave you).
+  `UNPOD_BASE_URL` is unset (the SDK then falls back to a default host that
+  does not resolve) or names a host that does not exist. Set it to
+  `https://unpod.dev` (or the host your team gave you).
 - **`404`, or an HTML page instead of JSON** - `UNPOD_SERVICE_BASE_URL` is
-  missing or has a path on it. It must be the bare host, e.g.
-  `https://unpod.dev`.
+  set to a wrong value. Unset it and let the SDK derive the URL from
+  `UNPOD_BASE_URL`.
 - **`401 Unauthorized`** - the token is wrong or `UNPOD_ORG_HANDLE` does not
   match the org the token belongs to.
 - **`ValueError` asking for `UNPOD_PLATFORM_TOKEN`** - the SDK found no
-  credentials. Check that `.env` sits in the folder you run `python` from.
+  credentials. Call `load_dotenv()` before creating the client, check that
+  `.env` sits in the folder you run `python` from, or `export` the values.
 - **`409 Conflict` from `agents.voice.create()`** - that `agent_id` already
   exists with a different brain. Use `agents.update()` or a new id.
 - **The call stays `pending` and `from_number` is `None`** - no number is

@@ -189,10 +189,23 @@ adapter = HTTPAdapter(
 Request body your endpoint receives, and the response it must return:
 
 ```json
-// request - session_id and system_instructions are included when present
-{"text": "what the caller said", "context": {}, "session_id": "...", "system_instructions": ["..."]}
+// request - system_instructions is included only after assist() was called
+{"text": "what the caller said", "context": {}, "system_instructions": ["..."]}
 // response
 {"text": "your agent's reply"}
+```
+
+`context` is always `{}` during a call, and the request carries no session id.
+If your endpoint keeps per-call state, create the adapter inside the entrypoint
+and send the id yourself in a header:
+
+```python
+async def entrypoint(ctx: CallContext) -> None:
+    ctx.session.dialog_machine = HTTPAdapter(
+        url="https://agent.example.com/respond",
+        headers={"X-Session-Id": ctx.session_id},
+    )
+    await ctx.session.run()
 ```
 
 <Warning>
@@ -219,9 +232,10 @@ async def entrypoint(ctx: CallContext) -> None:
     await ctx.session.run()
 ```
 
-Common hooks: `call_start`, `user_turn`, `agent_turn`, `user_partial`,
-`interruption`, `call_end`, `error` (the registry also accepts `tool_call`,
-`tool_result`, `silence`, `state`, `metric`, `llm_call`, and `turn_complete`). See
+Hooks the session fires: `call_start`, `user_turn`, `agent_turn`,
+`interruption`, `call_end`, `error`, `state`, `metric`, `llm_call`, and
+`turn_complete`. The registry also accepts `user_partial`, `tool_call`,
+`tool_result` and `silence`, but SDK 0.7.0 never fires them. See
 [Session](/home/how-it-fits#session) for the full control surface.
 
 ## Writing a custom adapter

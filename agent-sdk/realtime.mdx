@@ -45,7 +45,9 @@ voice = await client.agents.voice.create(
     session.on("agent_reply", (text) => console.log("Agent:", text));
     ```
     Mint tokens server-side with `client.sessions.create_token(pipe_id=...)` -
-    browser sessions still key on the pipe id of the agent-voice row.
+    browser sessions still key on the pipe id of the agent-voice row. Look it up
+    with the deprecated `client.pipes.list()` (it warns), filtering on
+    `p.agent_id == "my-bot"`.
     Protocol and auth: [WebSocket sessions](/agent-sdk/websocket-sessions).
 
     <Warning>

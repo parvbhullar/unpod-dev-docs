@@ -99,6 +99,16 @@ async def get_session_token(pipe_id: str, user_id: str) -> str:
         return token.token   # single-use, expires in 60s
 ```
 
+`client.agents` does not return pipe ids. Look one up with the deprecated
+`client.pipes.list()` - pipes and agents are the same rows, and the call warns:
+
+```python
+async def pipe_id_for(agent_id: str) -> str:
+    async with AsyncClient() as client:
+        pipes = await client.pipes.list()   # DeprecationWarning
+        return next(p.pipe_id for p in pipes if p.agent_id == agent_id)
+```
+
 Return the token to your frontend via your own API. The client passes it to `UnpodSession`.
 
 ---
@@ -113,7 +123,7 @@ The `CallContext` tells you how the session arrived:
 
 ```python
 from unpod import CallContext
-from superdialog import DialogMachine
+from superdialog import LLMAgent   # pip install "unpod[dialog]"
 
 async def handle_call(ctx: CallContext) -> None:
     if ctx.direction == "inbound":
@@ -121,7 +131,10 @@ async def handle_call(ctx: CallContext) -> None:
     elif ctx.direction == "outbound":
         print("your backend initiated the call")
 
-    ctx.session.dialog_machine = DialogMachine("agent.yaml", llm="anthropic/claude-haiku-4-5")
+    ctx.session.dialog_machine = LLMAgent(
+        llm="anthropic/claude-haiku-4-5",
+        system_prompt="You are a helpful voice assistant. Keep answers short.",
+    )
     await ctx.session.run()
 ```
 

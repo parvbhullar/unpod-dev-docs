@@ -8,29 +8,33 @@ Layers of visibility, from inside a call out to your dashboards and billing.
 
 ## 1. Per-turn timing & token hooks
 
-The real per-turn timing and token numbers arrive on two hooks the core fires
-every turn. Register them on the session:
+The real per-turn timing and token numbers arrive on two hooks. Register them
+on the session. Both pass keyword arguments, so end each signature with `**_`
+to stay compatible when fields are added:
 
 ```python
 @ctx.session.on("llm_call")
 async def _(turn_id, node_id, model, call_type, latency_ms,
-            tokens_in, tokens_out, prompt_messages, response_json, edge_id) -> None:
-    # fired once per LLM call within a turn
+            tokens_in, tokens_out, prompt_messages, response_json, edge_id,
+            cached=0, cache_write=0, estimated=False, **_) -> None:
+    # fired once per LLM call within a turn (superdialog brains only)
     push_to_grafana({"model": model, "latency_ms": latency_ms,
                      "tokens_in": tokens_in, "tokens_out": tokens_out})
 
 @ctx.session.on("turn_complete")
 async def _(turn_id, ttfa_ms, asr_ms, llm_ttft_ms, tts_ttfb_ms, stt_ms, tts_ms,
             from_node, to_node, llm_call_count, llm_total_ms,
-            user_text, agent_text) -> None:
-    # fired once per completed user->agent turn, with full stage latencies
+            user_text, agent_text, **_) -> None:
+    # fired when the reply ends (only ttfa_ms set), and again for each
+    # timing report from the media worker (stage latencies set)
     print(turn_id, ttfa_ms, llm_total_ms)
 ```
 
 <Note>
 `llm_call` and `turn_complete` carry the actual per-turn latency and token data.
-The `CallMetrics` snapshot below (`metrics.live()`) only populates if you feed it
-from these hooks - see the caveat in Layer 2.
+`turn_complete` can fire twice for one `turn_id` - dedupe on `turn_id` before
+you aggregate. The `CallMetrics` snapshot below (`metrics.live()`) only
+populates if you feed it from these hooks - see the caveat in Layer 2.
 </Note>
 
 ## 2. Live per-call snapshot (opt-in)
@@ -55,8 +59,7 @@ m.active_llm      # str: model used on the last turn
 The latency/cost/token fields populate **only if you call
 `metrics.record_turn(...)` yourself** - typically from the `turn_complete` hook
 above. The SDK does not auto-fill them, so out of the box only `duration_s` is
-meaningful. For real numbers, use the per-turn hooks (Layer 1) or the post-call
-transcript timing (Layer 5).
+meaningful. For real numbers, use the per-turn hooks (Layer 1).
 </Warning>
 
 ## 3. Usage & billing ledger
@@ -85,13 +88,20 @@ correct (lower) rate.
 
 ## 4. Langfuse tracing
 
-When `LANGFUSE_SECRET_KEY` is set, the SDK emits per-turn spans plus a generation
-span per LLM call (with token usage). No wiring needed - set the key and traces
-appear in Langfuse. When unset, tracing is a no-op.
+Install the extra, then set the Langfuse keys. The SDK emits per-turn spans
+plus a generation span per LLM call (with token usage):
 
 ```bash
+pip install "unpod[observability]"      # installs langfuse
+
 LANGFUSE_SECRET_KEY="sk-lf-..."
+LANGFUSE_PUBLIC_KEY="pk-lf-..."
+LANGFUSE_HOST="https://cloud.langfuse.com"   # only for a non-default host
 ```
+
+Tracing turns on only when `LANGFUSE_SECRET_KEY` is set. Without the extra, or
+if the Langfuse client cannot start, the SDK skips tracing silently - hooks
+still fire.
 
 ## 5. Runner pool stats
 
@@ -99,10 +109,10 @@ LANGFUSE_SECRET_KEY="sk-lf-..."
 s = runner.stats()        # RunnerStats snapshot
 
 s.in_flight               # current active calls
-s.queued                  # dispatches waiting for capacity
+s.queued                  # always 0 in SDK 0.7.0
 s.capacity                # your max_sessions setting
-s.completed_last_hour
-s.failed_last_hour
+s.completed_last_hour     # since the runner started
+s.failed_last_hour        # since the runner started
 s.mean_call_duration_s
 ```
 
@@ -111,11 +121,15 @@ Poll this on a timer for liveness dashboards - see
 
 ## 6. Post-call timing
 
-After the call, the transcript carries a per-turn, per-stage latency breakdown
-(`audio_ingress_ms`, `stt_ms`, `bridge_to_dev_ms`, `dev_brain_ms`, `tts_ms`) - see [Recordings & Transcripts](/agent-sdk/recordings-transcripts).
+The SDK defines a per-stage breakdown model (`unpod.models.TurnTiming`:
+`audio_ingress_ms`, `stt_ms`, `bridge_to_dev_ms`, `dev_brain_ms`, `tts_ms`), but
+SDK 0.7.0 has no client method that returns it: `calls.get()` and
+`transcripts.get()` return turns without timing (see
+[Recordings & Transcripts](/agent-sdk/recordings-transcripts)). For stage
+latencies, record the `turn_complete` hook (Layer 1) during the call.
 
 <Tip>
-High `dev_brain_ms` with healthy `stt_ms`/`tts_ms` means the latency is in
+High `llm_ttft_ms` with healthy `asr_ms`/`tts_ttfb_ms` means the latency is in
 YOUR brain - usually a `stream()` that is not actually streaming. See
 [Streaming is the hot path](/agent-sdk/bring-your-agent#streaming-is-the-hot-path).
 </Tip>

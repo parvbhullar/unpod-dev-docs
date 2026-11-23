@@ -1,7 +1,7 @@
 ---
 title: 'Hooks & Events'
 icon: 'webhook'
-description: 'React to every call lifecycle event - turns, interruptions, silences, tool calls, and more.'
+description: 'React to call lifecycle events - turns, interruptions, LLM calls, per-turn timings, and more.'
 ---
 
 ## Overview
@@ -20,14 +20,6 @@ The hook system lets you register `async` handlers that fire at specific points 
 ```python
 from unpod import AgentRunner, CallContext
 
-runner = AgentRunner(entrypoint=handle_call, agent_id="my-agent")
-
-# Runner-level hook
-@runner.on("call_start")
-async def on_any_call_start(ctx: CallContext) -> None:
-    print(f"Runner received call: {ctx.call_id}")
-
-
 async def handle_call(ctx: CallContext) -> None:
     # Session-level hook - registered inside the entrypoint
     @ctx.session.on("user_turn")
@@ -35,6 +27,13 @@ async def handle_call(ctx: CallContext) -> None:
         print(f"User said: {text}")
 
     await ctx.session.run()
+
+runner = AgentRunner(entrypoint=handle_call, agent_id="my-agent")
+
+# Runner-level hook
+@runner.on("call_start")
+async def on_any_call_start(ctx: CallContext) -> None:
+    print(f"Runner received call: {ctx.call_id}")
 ```
 
 ---
@@ -146,16 +145,24 @@ async def on_call_end(final_state: str) -> None:
 | Runner | `call_end` | `ctx: CallContext, state: str` | Call finished - `state` is `"ended"` or `"failed"` |
 | Session | `call_start` | _(none)_ | Session loop started |
 | Session | `user_turn` | `text: str` | User utterance transcribed |
-| Session | `user_partial` | `text: str` | Interim (partial) transcription |
 | Session | `agent_turn` | `text: str` | Full agent reply generated |
 | Session | `interruption` | _(none)_ | User interrupted agent |
 | Session | `state` | `event: StateEvent` | Dialog state transition |
 | Session | `metric` | `event: MetricEvent` | Metric emitted |
-| Session | `llm_call` | `turn_id, node_id, model, call_type, latency_ms, tokens_in, tokens_out, prompt_messages, response_json, edge_id` | One LLM call within a turn (timing + tokens) |
-| Session | `turn_complete` | `turn_id, ttfa_ms, asr_ms, llm_ttft_ms, tts_ttfb_ms, stt_ms, tts_ms, from_node, to_node, llm_call_count, llm_total_ms, user_text, agent_text` | Turn finished, full stage latencies |
-| Session | `tool_call` / `tool_result` / `silence` | _(varies)_ | Also registrable |
+| Session | `llm_call` | keyword args: `turn_id, node_id, model, call_type, latency_ms, tokens_in, tokens_out, prompt_messages, response_json, edge_id, cached, cache_write, estimated` | One LLM call within a turn (timing + tokens). Fired only for superdialog brains |
+| Session | `turn_complete` | keyword args: `turn_id, ttfa_ms, asr_ms, llm_ttft_ms, tts_ttfb_ms, stt_ms, tts_ms, from_node, to_node, llm_call_count, llm_total_ms, user_text, agent_text` | Turn timings. Can fire more than once per turn - see below |
+| Session | `user_partial` / `tool_call` / `tool_result` / `silence` | - | Accepted by `on()`, but SDK 0.7.0 never fires them |
 | Session | `error` | `code, message, severity, source` | Session-level error |
 | Session | `call_end` | `state: str` | Session loop exited - `state` is `"hangup"` or `"error"` (distinct from the runner-level `"ended"`/`"failed"`) |
+
+`llm_call` and `turn_complete` call your handler with keyword arguments, and new
+fields get added. Accept `**kwargs` (or end the signature with `**_`) so an
+added field does not raise `TypeError` inside the call.
+
+`turn_complete` fires once when the agent's reply ends (only `ttfa_ms` is set),
+and again each time the media worker reports timings for that turn (stage
+latencies set). Expect up to two events per turn; dedupe on `turn_id` if you
+aggregate.
 
 ---
 
@@ -178,39 +185,54 @@ async def check_escalation(text: str) -> None:
 
 ## Practical Patterns
 
+The patterns below use superdialog's `DialogMachine` (`pip install "unpod[dialog]"`)
+with a playbook file. Create `support.yaml` once with
+`superdialog generate "Customer support for an electronics store." --output support.yaml`
+(it calls an LLM, so set your provider key first) - see
+[Authoring the playbook](/speech-stack/level-up-superdialog#authoring-the-playbook).
+
 ### Silence detection with timeout
+
+Platform agents already have a [built-in silence timeout](/agent-sdk/agent-settings#silence-timeout-built-in).
+Use this pattern when you want your own rule:
 
 ```python
 import asyncio
 
 async def handle_call(ctx: CallContext) -> None:
-    last_activity = asyncio.get_event_loop().time()
+    loop = asyncio.get_running_loop()
+    last_activity = loop.time()
+    asked = False
 
     @ctx.session.on("user_turn")
     async def on_user_turn(text: str) -> None:
-        nonlocal last_activity
-        last_activity = asyncio.get_event_loop().time()
+        nonlocal last_activity, asked
+        last_activity = loop.time()
+        asked = False
 
     @ctx.session.on("agent_turn")
     async def on_agent_turn(text: str) -> None:
         nonlocal last_activity
-        last_activity = asyncio.get_event_loop().time()
+        last_activity = loop.time()
 
     async def silence_watchdog() -> None:
+        nonlocal asked
         while True:
             await asyncio.sleep(5)
-            idle = asyncio.get_event_loop().time() - last_activity
-            if idle > 30:
-                await ctx.session.say("Are you still there?")
+            idle = loop.time() - last_activity
             if idle > 60:
                 await ctx.session.end(reason="no_response")
                 break
+            if idle > 30 and not asked:
+                asked = True
+                await ctx.session.say("Are you still there?")
 
     ctx.session.dialog_machine = my_machine
-    await asyncio.gather(
-        ctx.session.run(),
-        silence_watchdog(),
-    )
+    watchdog = asyncio.create_task(silence_watchdog())
+    try:
+        await ctx.session.run()
+    finally:
+        watchdog.cancel()   # stop it as soon as the call ends
 ```
 
 ### CRM enrichment at call start
@@ -227,7 +249,7 @@ async def handle_call(ctx: CallContext) -> None:
                 f"Their open ticket count is {account['open_tickets']}."
             )
 
-    ctx.session.dialog_machine = DialogMachine("support.yaml", llm="...")
+    ctx.session.dialog_machine = DialogMachine("support.yaml", llm="anthropic/claude-haiku-4-5")
     await ctx.session.run()
 ```
 
@@ -244,7 +266,7 @@ async def handle_call(ctx: CallContext) -> None:
             )
             await ctx.session.transfer_to_human(queue="tier-1")
 
-    ctx.session.dialog_machine = DialogMachine("support.yaml", llm="...")
+    ctx.session.dialog_machine = DialogMachine("support.yaml", llm="anthropic/claude-haiku-4-5")
     await ctx.session.run()
 ```
 
@@ -252,7 +274,26 @@ async def handle_call(ctx: CallContext) -> None:
 
 ```python
 import time
+from superdialog import DialogMachine
 from unpod import AgentRunner, CallContext
+
+async def handle_call(ctx: CallContext) -> None:
+    transcript: list[dict] = []
+
+    @ctx.session.on("user_turn")
+    async def capture_user(text: str) -> None:
+        transcript.append({"speaker": "user", "text": text})
+
+    @ctx.session.on("agent_turn")
+    async def capture_agent(text: str) -> None:
+        transcript.append({"speaker": "agent", "text": text})
+
+    @ctx.session.on("call_end")
+    async def save_transcript(state: str) -> None:
+        await db.save_transcript(ctx.call_id, transcript)
+
+    ctx.session.dialog_machine = DialogMachine("support.yaml", llm="anthropic/claude-haiku-4-5")
+    await ctx.session.run()
 
 runner = AgentRunner(entrypoint=handle_call, agent_id="my-agent")
 
@@ -277,23 +318,7 @@ async def runner_end(ctx: CallContext, final_state: str) -> None:
         tokens_out=m.tokens.output,
     )
 
-async def handle_call(ctx: CallContext) -> None:
-    transcript: list[dict] = []
-
-    @ctx.session.on("user_turn")
-    async def capture_user(text: str) -> None:
-        transcript.append({"speaker": "user", "text": text})
-
-    @ctx.session.on("agent_turn")
-    async def capture_agent(text: str) -> None:
-        transcript.append({"speaker": "agent", "text": text})
-
-    @ctx.session.on("call_end")
-    async def save_transcript(state: str) -> None:
-        await db.save_transcript(ctx.call_id, transcript)
-
-    ctx.session.dialog_machine = DialogMachine("support.yaml", llm="...")
-    await ctx.session.run()
+runner.start()
 ```
 
 ---
