@@ -28,7 +28,7 @@ async with AsyncClient() as client:
 | `multiPartyCalls.stop({ uuid })` | `calls.end(call_id)` | `None` |
 | `calls.playMusic(callUuid, url, { loop })` | `calls.play_audio(call_id, url=, leg_id=, loop=)` | `PlayResult` |
 | `calls.stopPlayingMusic(callUuid)` | `calls.stop_audio(call_id, leg_id=, play_id=)` | `None` |
-| `GET` on `RecordingURL` | `calls.get_recording(call_id).url`, then a `GET` with your auth headers and `Accept: audio/wav` ([Recording](/telephony/apis/recording#download-the-audio)) | `Recording` |
+| `GET` on `RecordingURL` | `calls.get_recording(call_id).url`, then a `GET` with your auth headers and `?format=wav` or `Accept: audio/wav` ([Recording](/telephony/apis/recording#download-the-audio)) | `Recording` |
 | Call Status / Recording / Incoming webhooks | `parse_call_event(body, headers, secret)` | `CallEvent` |
 | Number answer URL | `telephony.inbound.set_did(number, InboundConfig(answer_url=…))` | `InboundConfig` |
 | `X-Plivo-Signature-V3` | Callbacks: `X-Webhook-Signature`, checked by `parse_call_event`. Stream WebSocket: `X-Unpod-Signature`, checked by `verify_stream_request`. Plivo SDK validators accept neither | - |
@@ -89,7 +89,7 @@ leg = await calls.add_participant(
 | Plivo | Unpod SDK |
 | --- | --- |
 | `dialMusic: "NONE"` | `dial_music="none"` |
-| `dialMusic: <url>` | Not supported yet. Play the file with `play_audio(..., loop=True)` after `add_participant` and stop it when the leg answers - see [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
+| `dialMusic: <url>` | `dial_music="https://…"`, a public https MP3 or WAV. Or play the file with `play_audio(..., loop=True)` after `add_participant` and stop it when the leg answers - see [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
 | No participant limit | **At most two participants** per call. A third raises `409 participant_limit` |
 
 ## 3. Play and stop audio

@@ -50,7 +50,7 @@ the same name (`from_` is `from`), and `idempotency_key` is the `Idempotency-Key
 | `caller_name` | `str` | Caller name shown where supported |
 | `friendly_name` | `str` | Your label for the leg |
 | `ring_timeout` | `int` 1-120 | Seconds to ring before giving up (default 30) |
-| `dial_music` | `str` | Only `"none"` is accepted today; an audio URL is rejected as not supported. To play a sound while a leg rings, see [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
+| `dial_music` | `str` | `"none"` for silence, or a public https MP3 or WAV URL to play while the leg rings. See also [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
 | `status_callback_url` | `str` | Public https URL for this leg's events. Its query string is echoed back |
 | `status_callback_method` | `"POST"` \| `"GET"` | `POST` only today: status callbacks are always POSTed, and `GET` is ignored |
 | `status_callback_format` | `"form"` \| `"json"` | Default `form` (keys such as `CallUUID`); `json` uses snake_case |
@@ -231,7 +231,7 @@ curl -s -X DELETE "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID" \
 | Method | Notes |
 | --- | --- |
 | `get(call_id)` → `TelephonyCall` | `state` (`initiated`, `ringing`, `talking`) and `legs`. After the call ends: the recording summary, with no `state` |
-| `list(*, page, page_size, status, direction, caller, callee, number, since)` → `CallList` | Live calls only. Filters: `status` (`ringing` or `talking`), `direction` (`inbound` or `outbound`), `since` (RFC 3339). In the rows, `to` / `from` are SIP URIs, and a call you started with `create` can read `direction: "inbound"`, so don't rely on a row's `direction`. Pages are cut before Unpod filters them to your org, so a page can hold fewer than `page_size` of your calls (even none) while later pages hold more, and `total` counts only your calls on this page. To find every live call, request pages until one comes back empty |
+| `list(*, page, page_size, status, direction, caller, callee, number, since)` → `CallList` | Live calls only. Filters: `status` (`ringing` or `talking`), `direction` (`inbound` or `outbound`), `since` (RFC 3339). In the rows, `to` / `from` are SIP URIs, and a call you started with `create` can read `direction: "inbound"`, so don't rely on a row's `direction`. Pages are cut before Unpod filters them to your org, so a page can hold fewer than `page_size` of your calls (even none) while later pages hold more, and `total` counts only your calls on this page. To find every live call, request pages until one comes back empty. Calls that have ended are in [Call Logs](/telephony/calls/call-logs) |
 | `hangup(call_id, *, reason, code)` | Ends every leg of a live call. It's asynchronous: `get` can still show `talking` for a few seconds, and a repeat in that time also answers `200`; after that, `404 not_found`. The `Hangup` events read `Normal Hangup` with `HangupBy` `system`. `reason` is one of `by_caller`, `by_callee`, `by_system`, `no_answer`, `rejected`, `canceled` or `failed` (others are ignored); it isn't sent back on the events. `code` is a SIP status |
 | `end(call_id)` | Ends every leg. A call that already ended answers `202` again; `409 conflict` while a call you just created is still being set up (retry) |
 
@@ -291,7 +291,7 @@ reaches the SBC (`call_api_disabled`, `from_not_owned`).
 | 503 `tts_unavailable` | `speak` couldn't make speech; the call carries on |
 | 503 `webhook_secret_unavailable` | The webhook secret can't be made right now; retry later |
 | 503 `sbc_target_not_configured` | Your org's telephony routing isn't set up; ask the Unpod team |
-| `not_supported` | Feature not available yet, e.g. a `dial_music` URL |
+| `not_supported` | Feature not available yet |
 
 The SDK raises `ValueError` before sending when `speak` text is over 1000 characters,
 `send_dtmf` digits fall outside `0-9 A-D * #`, or a `create` / `add_participant` option breaks

@@ -22,7 +22,7 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
   </Step>
 
   <Step title="Install">
-    Python 3.12+ (`unpod` 0.6.2 requires it). cURL needs nothing.
+    Python 3.12+ (`unpod` 0.7.0 requires it). cURL needs nothing.
 
     ```bash
     python3 -m venv .venv
@@ -180,13 +180,13 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
 
 <Steps>
   <Step title="Get your webhook secret">
-    One signing key for all call events in your org. Create it once with `rotate()` (org
-    owner or editor) - the only call that returns it in full - and store it as
-    `UNPOD_WEBHOOK_SECRET`:
+    One signing key for all call events in your org. If your org already has one, read it with
+    `reveal()` (org admin): nothing else changes. Otherwise create it with `rotate()` (org
+    owner or editor). Both return it in full. Store it as `UNPOD_WEBHOOK_SECRET`:
 
     <Warning>
     Rotating invalidates the previous secret, so any server already verifying with it stops
-    working.
+    working. Rotate only to create your first secret or after a leak.
     </Warning>
 
     <CodeGroup>
@@ -194,19 +194,25 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
     from unpod import Client
 
     with Client() as client:
-        s = client.telephony.webhook_secret.rotate()
-        print(s.pushed_to_sbc)  # False: still syncing, Unpod retries it
-        print(s.secret)         # shown in full only here
+        ws = client.telephony.webhook_secret
+        s = ws.reveal()     # your org already has a secret (org admin)
+        # s = ws.rotate()   # no secret yet, or it leaked
+        print(s.secret)
     ```
 
     ```bash cURL
+    # your org already has a secret (org admin)
+    curl -s "https://unpod.dev/api/v2/platform/sbc/webhook-secret/reveal" \
+      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
+
+    # no secret yet, or it leaked
     curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/webhook-secret/rotate" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
       -H "Content-Type: application/json" -d '{}'
     ```
     </CodeGroup>
 
-    If `pushed_to_sbc` comes back `false`, Unpod retries the update in the background. Until it
+    If a `rotate()` comes back with `pushed_to_sbc` `false`, Unpod retries the update in the background. Until it
     lands, events aren't signed with the new secret and your server answers `401`, so wait a
     minute before the test call.
   </Step>

@@ -59,15 +59,15 @@ On an inbound call, your answer URL receives:
 Each `StartApp` also carries:
 
 - `MPCUUID` (`ev.call_id`): the id you use with the call APIs
-- `CallUUID` (`ev.leg_id`), `From` (`ev.from_`), `To` and `Direction=inbound`
+- `CallUUID` (`ev.leg_id`), `From` (`ev.from_`), `To` and `Direction` (`inbound` here)
 - `SessionStart` (`ev.raw["SessionStart"]`)
 
 On an outbound leg the request is also a `StartApp`, sent once the person answers. It
-carries the same fields, with the fixed values `Direction=inbound` and
-`CallStatus=ringing`, so don't branch on `Direction`. Its `CallUUID` ends in `-caller`, so it
-doesn't match the `leg_id` that `create` returned: match outbound requests on `MPCUUID`
-(`ev.call_id`). When the call ends, the same URL also gets a `Hangup` with `Duration`,
-`StartTime`, `EndTime`, `AnswerTime` and `HangupCause`; reply `200` to it.
+carries the same fields, with `Direction=outbound` and `CallStatus=ringing`. Its `CallUUID`
+is `<call id>-callee`, so match outbound requests on `MPCUUID` (`ev.call_id`), not on the
+`leg_id` that `create` returned. When the call ends, the same URL also gets a `Hangup` with
+`Duration`, `BillDuration`, `StartTime`, `AnswerTime`, `EndTime`, `HangupCause` and
+`HangupSource`; reply `200` to it.
 
 POST requests, inbound and outbound, are signed once your org has a webhook secret
 (create it as in the [Quick Start](/telephony/apis/quickstart#receive-your-first-call)).

@@ -80,17 +80,8 @@ Think of it as a switchboard. When a call arrives at a number, the bridge decide
 
 ### Creating a Bridge via Dashboard
 
-Go to **Dev Platform → Telephony → Bridges → Create Bridge**:
-
-```json
-{
-  "name": "support-bridge",
-  "provider": "livekit",
-  "agent_handle": "aria-support",
-  "inbound_enabled": true,
-  "outbound_enabled": true
-}
-```
+Go to **Dev Platform → Telephony → Bridges → Create Bridge**, give the bridge a name, then
+connect a provider and an agent to it.
 
 ### Creating a Bridge via API
 
@@ -123,7 +114,7 @@ Unpod provisions real phone numbers through your connected SIP provider. Numbers
 
 ### Listing Your Numbers
 
-Numbers are provisioned through your connected SIP provider (via the Dashboard or your provider's portal), then attached to trunks/bridges. The API exposes numbers as read-only - list them with:
+Numbers are provisioned through your connected SIP provider (via the Dashboard or your provider's portal), then attached to trunks/bridges. List them with the call below; to attach a pool number to your org, use `POST /api/v2/platform/telephony/numbers/attach/` (see the [Quick Start](/telephony/apis/quickstart#make-your-first-call)):
 
 ```bash
 curl "https://unpod.dev/api/v2/platform/telephony/numbers/" \

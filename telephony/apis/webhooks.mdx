@@ -6,8 +6,8 @@ description: 'Verify and parse call, recording and inbound events with parse_cal
 
 Unpod signs the requests it sends your app with one org-level key, the **webhook secret**.
 It's the same key for status callbacks, recording events, answer-URL requests and audio
-streams, with no secret per number or per call. Create it once with `rotate()` - the only
-call that returns it in full - and store it as `UNPOD_WEBHOOK_SECRET`. Then verify each request with
+streams, with no secret per number or per call. Create it once with `rotate()`, or read
+the current one with `reveal()` (org admin), and store it as `UNPOD_WEBHOOK_SECRET`. Then verify each request with
 `parse_call_event`.
 
 | Event type | Goes to |
@@ -43,7 +43,8 @@ from unpod import Client
 with Client() as client:
     s = client.telephony.webhook_secret.rotate()  # org owner or editor only
     print(s.version, s.pushed_to_sbc)  # False: still syncing, Unpod retries it
-    print(s.secret)  # full secret, shown only here: store as UNPOD_WEBHOOK_SECRET
+    print(s.secret)  # full secret: store as UNPOD_WEBHOOK_SECRET
+    # client.telephony.webhook_secret.reveal() returns it again (org admin)
 
     print(client.telephony.webhook_secret.get().secret)  # masked, e.g. '****ab12'
 ```
@@ -165,12 +166,12 @@ snake_case (`call_id`, `leg_id`, ...).
 
 <Warning>
 `ev.metadata` works only with the default form format. With
-`status_callback_format="json"`, `parse_call_event` (SDK 0.6.2) leaves it empty because it
+`status_callback_format="json"`, `parse_call_event` (SDK 0.7.0 and earlier) leaves it empty because it
 reads only the form field `Metadata`. Keep the form format, or read
 `ev.raw["metadata"]`.
 </Warning>
 
-{/* TODO(verify): SDK 0.6.2 events.py _normalize reads raw.get("Metadata") only, while leg_delivery.rs encode_body sends JSON key "metadata" - drop this warning once the SDK reads both */}
+{/* TODO(verify): SDK 0.7.0 events.py _normalize reads raw.get("Metadata") only, while leg_delivery.rs encode_body sends JSON key "metadata" - drop this warning once the SDK reads both */}
 
 ## Stream events
 

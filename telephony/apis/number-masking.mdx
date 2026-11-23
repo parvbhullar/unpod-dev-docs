@@ -227,7 +227,7 @@ with a 2xx quickly, within 10 s.
 | --- | --- | --- |
 | `Initiated` | `agent`, later `customer` | The leg is being dialed. Optional: save `ev.leg_id` with your record |
 | `Ringing` | `agent` | Optional: show "calling the agent" in your app. Not always sent, so don't wait for it |
-| `Ringing` | `customer` | The agent hears the customer's phone ringing. `dial_music` plays nothing yet; to play your own sound, see [ringing sound](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
+| `Ringing` | `customer` | The agent hears the customer's phone ringing. To play your own sound, pass `dial_music` or see [ringing sound](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
 | `Answered` | `agent` | Add the customer with `add_participant` |
 | `Answered` | `customer` | They're talking. Optional: mark the call connected |
 | `Hangup` | `customer` | End the call. `Busy Line`, `Ring Timeout Reached`, `No Answer` or `Rejected`: the customer wasn't reached. `Cancelled`: the agent hung up while the customer's phone was ringing. `Normal Hangup`: they answered |

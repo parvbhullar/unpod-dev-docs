@@ -76,9 +76,9 @@ download from the `url` that `get_recording` returns.
 
 ## Download the audio
 
-Request the same URL with the header `Accept: audio/wav`, plus the same `Authorization`
-and `Org-Handle` headers as every other API call. Without `Accept: audio/wav` you get the
-JSON above. The file is about 1 MB per minute of call.
+Request the same URL with `?format=wav` (what the SDK's `download_recording` sends) or the
+header `Accept: audio/wav`, plus the same `Authorization` and `Org-Handle` headers as every
+other API call. With neither you get the JSON above. The file is about 1 MB per minute of call.
 
 <CodeGroup>
 ```python Python
