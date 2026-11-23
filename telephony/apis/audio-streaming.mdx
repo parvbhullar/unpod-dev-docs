@@ -347,6 +347,15 @@ if ev.event in STREAM_EVENTS:
 | Caller hears nothing | `bidirectional` is off, or `playAudio` is in an unsupported format: μ-law or A-law not at 8000 Hz, or L16 outside 8000-48000 Hz or big-endian |
 | No stream callbacks | No `statusCallbackUrl` on the stream |
 
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/streaming/bot.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/bot.py): answer URL plus a WebSocket bot that verifies the upgrade signature.
+- [`sbc/streaming/check_signatures.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/check_signatures.py): offline checks of the `X-Unpod-Signature` rules.
+- [`sbc/streaming/fake_stream_sbc.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/fake_stream_sbc.py): a stand-in SBC to develop your bot without a call.
+- [`sbc/streaming/`](https://github.com/unpod-ai/sample-apps/tree/feat/sbc-call-tests/sbc/streaming): all streaming drivers and how to run them ([README](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/README.md)).
+
 ## Next
 
 <CardGroup cols={2}>

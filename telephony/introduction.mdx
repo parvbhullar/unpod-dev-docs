@@ -83,3 +83,10 @@ it is unset, the SDK falls back to a legacy host that no longer resolves.
 - **Answer URL** - the https URL Unpod calls when a call starts on a leg (an inbound call is fetched while it's still ringing). You reply with XML or JSON telling Unpod what to do.
 - **Trunk** - a SIP carrier credential (`sip_url`, `transport`, `port`, auth, source-IP allow-list). Secrets are always masked in responses.
 - **Origin endpoint** - the shared SBC ingress host (for example `sip-lb1.unpod.tel`) the carrier sends inbound calls to, plus the accepted source IPs and mapped numbers.
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/quickstart/step1_credentials.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step1_credentials.py): checks your three credentials against the telephony API.
+- [`telephony/outbound_call.py`](https://github.com/unpod-ai/sample-apps/blob/main/telephony/outbound_call.py): a complete outbound call in one file.

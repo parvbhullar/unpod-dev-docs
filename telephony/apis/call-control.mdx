@@ -297,3 +297,10 @@ The SDK raises `ValueError` before sending when `speak` text is over 1000 charac
 `send_dtmf` digits fall outside `0-9 A-D * #`, or a `create` / `add_participant` option breaks
 the limits in [Options](#options) (`time_limit`, `sip_headers`, `status_callback_events`, or
 `fallback_url` without `answer_url`).
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/call_test.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/call_test.py): places a call, speaks into it and ends it, logging every webhook.
+- [`sbc/streaming/tbot/rest_call_control.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/tbot/rest_call_control.py): mute, unmute, hold, play audio, send DTMF and hang up on a live call.

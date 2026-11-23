@@ -297,3 +297,10 @@ The `add_participant` options most people need:
 
 `create` takes the same options. Every URL must be public https, or you get
 `400 invalid_url`. Full list: [Call Control](/telephony/apis/call-control#options).
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/call_test.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/call_test.py): places a call, adds a participant and logs every webhook.
+- [`sbc/streaming/run_conf.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/run_conf.py): two-party conference: call A, then add B when A answers.

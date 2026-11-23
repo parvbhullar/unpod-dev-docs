@@ -236,6 +236,13 @@ On a call, `400 from_not_owned` means `from` isn't one of your org's numbers at 
 `403 forbidden: from is not a number available to this organization` means it is yours but
 isn't ready: check its `connection_state`.
 
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`telephony/outbound_call.py`](https://github.com/unpod-ai/sample-apps/blob/main/telephony/outbound_call.py): lists numbers with `numbers.list()` and picks a caller ID.
+- [`sbc/quickstart/step3_get_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step3_get_number.py): lists numbers and attaches a free pool number with `numbers.attach()`.
+
 ## Reference
 
 - [List Numbers](/telephony/numbers/list-numbers) - `GET /telephony/numbers/`

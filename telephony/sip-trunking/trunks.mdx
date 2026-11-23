@@ -278,3 +278,10 @@ curl -s -X DELETE "https://unpod.dev/api/v2/platform/telephony/trunks/$TRUNK_ID/
 Delete returns `204`, or `404` for a trunk that isn't your org's. To confirm, call
 `trunks.get(TRUNK_ID)`: it raises `httpx.HTTPStatusError` with `404` once the trunk is gone. See
 [Delete Trunk](/telephony/trunks/delete-trunk).
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/quickstart/step9_point_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step9_point_number.py): per-number inbound config with `inbound.set_did()` / `get_did()`.
+- [`sbc/inbound_test.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/inbound_test.py): points a number at an answer URL and shows what the SBC sends.

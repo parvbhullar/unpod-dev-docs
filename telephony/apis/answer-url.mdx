@@ -290,3 +290,11 @@ A GET sends the call's fields as query parameters and is not signed. The URL mus
 redirect: Unpod doesn't follow redirects.
 
 {/* TODO(verify): static .xml file with answer_method="GET" - confirm live */}
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`telephony/answer_url.py`](https://github.com/unpod-ai/sample-apps/blob/main/telephony/answer_url.py): answer server that verifies signed callbacks and replies with XML.
+- [`sbc/webhook_receiver.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/webhook_receiver.py): receiver that logs every answer-URL request and callback.
+- [`sbc/quickstart/step7_app.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step7_app.py): the Quick Start answer server.

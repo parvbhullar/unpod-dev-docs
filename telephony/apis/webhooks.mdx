@@ -229,3 +229,10 @@ The strings are exact. Match on `ev.hangup_cause` first. `ev.sip_code` is always
 from cancelling the ringing leg, so 487 alone doesn't mean a cancel.
 
 {/* TODO(verify): full list from leg_lifecycle.rs hangup_cause(); sip_code is HangupFacts.sip_code filtered to unanswered legs */}
+
+## Sample code
+
+Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
+
+- [`sbc/webhook_receiver.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/webhook_receiver.py): verifies and logs every call event with `parse_call_event`.
+- [`sbc/quickstart/step6_webhook_secret.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step6_webhook_secret.py): read or rotate the webhook secret.
