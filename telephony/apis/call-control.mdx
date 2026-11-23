@@ -120,10 +120,11 @@ carries on) and `429 rate_limited` when your org sends too many at once.
 ## Transfer and DTMF
 
 <Warning>
-**`transfer` doesn't work yet through the API - don't rely on it.** It answers `200`
-as soon as the request is queued, so a transfer that fails still looks like success. An attended transfer
-doesn't return the consult leg's id yet, so `transfer_complete` and `transfer_cancel` have
-nothing to act on.
+**`transfer` rings the target, but you can't track it through the API yet.** In a live test
+both a blind and an attended transfer rang the target phone. The call answers `200` as soon
+as the request is queued and Unpod sends no events for the target's leg, so a transfer that
+fails looks the same as one that connects. An attended transfer doesn't return the consult
+leg's id yet, so `transfer_complete` and `transfer_cancel` have nothing to act on.
 </Warning>
 
 <Warning>
@@ -132,12 +133,10 @@ hear fewer tones than you sent, and the first `send_dtmf` on a call can take abo
 seconds to return. Don't rely on it to get through a phone menu yet.
 </Warning>
 
-{/* TODO(verify): blind transfer via the Call API, live. supersbc calls.rs transfer_call is fire-and-forget (dispatch_console_command), the adapter sends leg "<call_id>-callee" but sip_session.rs handle_transfer looks legs up as "callee" without canonical_leg_id, and pending_consult_leg_id is never set. */}
-
 <CodeGroup>
 ```python Python
 calls.send_dtmf(call_id, "1234#")         # to the person you dialed
-calls.transfer(call_id, "+919000000004")  # not working yet - see the warning above
+calls.transfer(call_id, "+919000000004")  # rings the target; no events for its leg
 ```
 
 ```bash cURL
@@ -146,7 +145,7 @@ curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/dtmf" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" -d '{"digits": "1234#"}'
 
-# blind transfer (not working yet - see the warning above)
+# blind transfer (rings the target; see the warning above)
 curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/transfer" \
   -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
   -H "Content-Type: application/json" \
