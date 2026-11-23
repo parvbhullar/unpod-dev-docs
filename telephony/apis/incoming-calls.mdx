@@ -113,31 +113,26 @@ requests, status callbacks and recording events (see
 [Which requests are signed](/telephony/apis/webhooks#which-requests-are-signed)). Audio
 streams are signed with the same secret in their own header,
 [`X-Unpod-Signature`](/telephony/apis/audio-streaming#verify-the-stream-signature).
-Create the key with `webhook_secret.rotate()` (org owner or editor), or, if your org already
-has one, read it with `webhook_secret.reveal()` (org admin). Store it as `UNPOD_WEBHOOK_SECRET`.
+Read the key with `webhook_secret.reveal()` (org admin) and store it as
+`UNPOD_WEBHOOK_SECRET`.
 
 <CodeGroup>
 ```python Python
 from unpod import Client
 
 with Client() as client:
-    s = client.telephony.webhook_secret.rotate()
-    print(s.pushed_to_sbc)  # False: still syncing, Unpod retries it
-    print(s.secret)         # full secret: reveal() also returns it
+    s = client.telephony.webhook_secret.reveal()  # org admin
+    print(s.version, s.secret)  # full secret
 ```
 
 ```bash cURL
-curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/webhook-secret/rotate" \
-  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
-  -H "Content-Type: application/json" -d '{}'
+curl -s "https://unpod.dev/api/v2/platform/sbc/webhook-secret/reveal" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
 ```
 </CodeGroup>
 
-<Warning>
-Rotating creates a new key and invalidates the old one. A server still verifying with the
-old key rejects every request with 401 until you give it the new one, and on inbound calls
-that 401 makes Unpod apply the [fallback](#when-your-server-is-down).
-</Warning>
+`reveal()` only reads the key. If your org has no key yet, or it leaked, see
+[Rotate the webhook secret](/telephony/concepts/security-and-compliance#rotate-the-webhook-secret).
 
 Unpod signs inbound POST requests once your org has a secret, so create it before you point a
 number at a server that verifies. GET requests are not signed. Verify each request with

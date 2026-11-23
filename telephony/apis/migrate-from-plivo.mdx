@@ -131,7 +131,7 @@ except WebhookSignatureError:
     return Response(status_code=401)
 ```
 
-The secret comes from `client.telephony.webhook_secret.rotate()`. See [Webhooks](/telephony/apis/webhooks).
+The secret comes from `client.telephony.webhook_secret.reveal()`. See [Webhooks](/telephony/apis/webhooks).
 
 ### Call Status
 

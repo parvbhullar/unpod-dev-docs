@@ -285,7 +285,7 @@ reaches the SBC (`call_api_disabled`, `from_not_owned`).
 | 404 `not_found` | Unknown call, leg or number, one that belongs to another org, or a call that just ended |
 | 409 `participant_limit` | A third participant |
 | 409 `conflict` | Recording not finished yet, or `end` on a call that is still being set up |
-| 403 `forbidden` | `webhook_secret.rotate()` by someone who isn't an org owner or editor, or a caller ID not provisioned for your org |
+| 403 `forbidden` | `webhook_secret.reveal()` by someone who isn't an org admin, or a caller ID not provisioned for your org |
 | 429 | `create` / `add_participant` over **60 per minute per org**. `detail` is `Request was throttled. Expected available in N seconds.`, so branch on `e.status_code == 429` |
 | 429 `rate_limited` | Too many `speak` requests |
 | 503 `tts_unavailable` | `speak` couldn't make speech; the call carries on |

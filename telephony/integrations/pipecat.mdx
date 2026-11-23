@@ -88,14 +88,9 @@ frames and back. The rest of your bot is plain Pipecat. The protocol underneath 
 
   <Step title="Get a number and your webhook secret">
     Attach a number with `attach_type="human_call"` so your app answers it. Then get your
-    org's [webhook secret](/telephony/apis/incoming-calls#the-webhook-secret): create it once
-    with `webhook_secret.rotate()`, or read the current one with `webhook_secret.reveal()`
-    (org admin). Store it as `UNPOD_WEBHOOK_SECRET`. Unpod signs the stream's WebSocket
-    upgrade with it, so your bot only accepts streams from Unpod.
-
-    <Warning>
-    Rotating invalidates the previous secret. If your org already has one, use `reveal()`.
-    </Warning>
+    org's [webhook secret](/telephony/apis/incoming-calls#the-webhook-secret) with
+    `webhook_secret.reveal()` (org admin) and store it as `UNPOD_WEBHOOK_SECRET`. Unpod signs
+    the stream's WebSocket upgrade with it, so your bot only accepts streams from Unpod.
   </Step>
 
   <Step title="Run the bot">

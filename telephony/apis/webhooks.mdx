@@ -6,9 +6,8 @@ description: 'Verify and parse call, recording and inbound events with parse_cal
 
 Unpod signs the requests it sends your app with one org-level key, the **webhook secret**.
 It's the same key for status callbacks, recording events, answer-URL requests and audio
-streams, with no secret per number or per call. Create it once with `rotate()`, or read
-the current one with `reveal()` (org admin), and store it as `UNPOD_WEBHOOK_SECRET`. Then verify each request with
-`parse_call_event`.
+streams, with no secret per number or per call. Read it with `reveal()` (org admin) and store
+it as `UNPOD_WEBHOOK_SECRET`. Then verify each request with `parse_call_event`.
 
 | Event type | Goes to |
 | --- | --- |
@@ -31,7 +30,7 @@ the current one with `reveal()` (org admin), and store it as `UNPOD_WEBHOOK_SECR
 | The audio-stream WebSocket connection | Yes, with a different header, `X-Unpod-Signature`. See [Audio Streaming](/telephony/apis/audio-streaming#verify-the-stream-signature) |
 
 "Yes" applies once your org has a secret: until then every request goes out unsigned, so
-create it before you point anything at a server that verifies. `parse_call_event` rejects
+create it ([Rotate the webhook secret](/telephony/concepts/security-and-compliance#rotate-the-webhook-secret)) before you point anything at a server that verifies. `parse_call_event` rejects
 an unsigned request. Parse a GET request with `verify=False` and trust only what the API
 returns.
 
@@ -41,20 +40,16 @@ returns.
 from unpod import Client
 
 with Client() as client:
-    s = client.telephony.webhook_secret.rotate()  # org owner or editor only
-    print(s.version, s.pushed_to_sbc)  # False: still syncing, Unpod retries it
-    print(s.secret)  # full secret: store as UNPOD_WEBHOOK_SECRET
-    # client.telephony.webhook_secret.reveal() returns it again (org admin)
+    s = client.telephony.webhook_secret.reveal()  # org admin
+    print(s.version, s.secret)  # full secret: store as UNPOD_WEBHOOK_SECRET
 
     print(client.telephony.webhook_secret.get().secret)  # masked, e.g. '****ab12'
 ```
 
-Each `rotate()` creates a new version and invalidates the previous one, so a server still
-verifying with the old key rejects every request until you give it the new one.
-`pushed_to_sbc` is `true` when the new key is already in use for signing. When it's `false`,
-Unpod keeps retrying the update in the background; until it lands, requests are still
-signed with the previous key (or unsigned, for your first secret). See
-[The webhook secret](/telephony/apis/incoming-calls#the-webhook-secret) for the cURL call.
+`reveal()` and `get()` only read the secret; nothing changes for servers already verifying
+with it. To create the first secret or replace a leaked one, see
+[Rotate the webhook secret](/telephony/concepts/security-and-compliance#rotate-the-webhook-secret). For the cURL call, see
+[The webhook secret](/telephony/apis/incoming-calls#the-webhook-secret).
 
 ## Verify and parse
 
@@ -113,8 +108,8 @@ to the last is roughly 27-75 s. Then the event is marked failed and never sent a
 
 - Events for one leg arrive in order (`ev.sequence`). While one is being retried, that
   leg's later events wait behind it; other legs aren't held up.
-- An event queued before you call `rotate()` is retried signed with the old key, so a
-  server that already has the new key rejects it.
+- An event queued before the secret is [rotated](/telephony/concepts/security-and-compliance#rotate-the-webhook-secret) is retried signed with the old key,
+  so a server that already has the new key rejects it.
 - Return 2xx fast and do slow work afterwards. A reply slower than 10 s is a failure.
 - Make handlers idempotent: the same `ev.event_id` can arrive twice, for example when
   your 2xx is lost.
@@ -235,4 +230,4 @@ from cancelling the ringing leg, so 487 alone doesn't mean a cancel.
 Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-ai/sample-apps):
 
 - [`sbc/webhook_receiver.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/webhook_receiver.py): verifies and logs every call event with `parse_call_event`.
-- [`sbc/quickstart/step6_webhook_secret.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step6_webhook_secret.py): read or rotate the webhook secret.
+- [`sbc/quickstart/step6_webhook_secret.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step6_webhook_secret.py): read the webhook secret.

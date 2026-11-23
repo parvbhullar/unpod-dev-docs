@@ -181,41 +181,27 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
 
 <Steps>
   <Step title="Get your webhook secret">
-    One signing key for all call events in your org. If your org already has one, read it with
-    `reveal()` (org admin): nothing else changes. Otherwise create it with `rotate()` (org
-    owner or editor). Both return it in full. Store it as `UNPOD_WEBHOOK_SECRET`:
-
-    <Warning>
-    Rotating invalidates the previous secret, so any server already verifying with it stops
-    working. Rotate only to create your first secret or after a leak.
-    </Warning>
+    One signing key for all call events in your org. Read it with `reveal()` (org admin) and
+    store it as `UNPOD_WEBHOOK_SECRET`:
 
     <CodeGroup>
     ```python Python
     from unpod import Client
 
     with Client() as client:
-        ws = client.telephony.webhook_secret
-        s = ws.reveal()     # your org already has a secret (org admin)
-        # s = ws.rotate()   # no secret yet, or it leaked
-        print(s.secret)
+        s = client.telephony.webhook_secret.reveal()  # org admin
+        print(s.version, s.secret)
     ```
 
     ```bash cURL
-    # your org already has a secret (org admin)
     curl -s "https://unpod.dev/api/v2/platform/sbc/webhook-secret/reveal" \
       -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE"
-
-    # no secret yet, or it leaked
-    curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/webhook-secret/rotate" \
-      -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
-      -H "Content-Type: application/json" -d '{}'
     ```
     </CodeGroup>
 
-    If a `rotate()` comes back with `pushed_to_sbc` `false`, Unpod retries the update in the background. Until it
-    lands, events aren't signed with the new secret and your server answers `401`, so wait a
-    minute before the test call.
+    `reveal()` only reads the secret, so every server already verifying with it keeps working.
+    If your org has no secret yet, an org owner or editor creates the first one: see
+    [Rotate the webhook secret](/telephony/concepts/security-and-compliance#rotate-the-webhook-secret).
   </Step>
 
   <Step title="Run a server">
@@ -309,7 +295,7 @@ Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-a
 - [`sbc/quickstart/`](https://github.com/unpod-ai/sample-apps/tree/feat/sbc-call-tests/sbc/quickstart): one script per step of this page, each printing PASS or FAIL ([README](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/README.md)).
 - [`sbc/quickstart/step3_get_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step3_get_number.py): step 3, list numbers and attach a free pool number.
 - [`sbc/quickstart/step4_call_and_speak.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step4_call_and_speak.py): step 4, call and speak; `step5_call_result.py` reads the result.
-- [`sbc/quickstart/step6_webhook_secret.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step6_webhook_secret.py): receive step 1, read or rotate the webhook secret.
+- [`sbc/quickstart/step6_webhook_secret.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step6_webhook_secret.py): receive step 1, read the webhook secret.
 - [`sbc/quickstart/step7_app.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step7_app.py): receive step 2, the `app.py` answer server; `step8_check_tunnel.py` checks the tunnel.
 - [`sbc/quickstart/step9_point_number.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step9_point_number.py): receive step 4, point your number's inbound calls at the server.
 - [`telephony/outbound_call.py`](https://github.com/unpod-ai/sample-apps/blob/main/telephony/outbound_call.py): the outbound call as one script.

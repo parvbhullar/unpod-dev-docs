@@ -33,6 +33,49 @@ Unpod is built with enterprise-grade security and compliance as foundational pri
 
 ---
 
+## Rotate the webhook secret
+
+Your org has one webhook secret: Unpod signs answer-URL requests, status callbacks, recording
+events and audio streams with it (see [Webhooks](/telephony/apis/webhooks)). To read the
+current secret, use `webhook_secret.reveal()`. Rotate only in two cases: your org has no
+secret yet, or the secret leaked.
+
+<Warning>
+Rotating creates a new secret and invalidates the old one at once. A server still verifying
+with the old secret answers `401` to every request until you give it the new one, and on
+inbound calls that `401` makes Unpod apply the
+[fallback](/telephony/apis/answer-url#timeouts-and-fallback). Update every receiver right after
+you rotate.
+</Warning>
+
+An org owner or editor rotates; anyone else gets `403 forbidden`.
+
+<CodeGroup>
+```python Python
+from unpod import Client
+
+with Client() as client:
+    s = client.telephony.webhook_secret.rotate()  # org owner or editor
+    print(s.version, s.pushed_to_sbc)  # False: still syncing, Unpod retries it
+    print(s.secret)  # full secret: store as UNPOD_WEBHOOK_SECRET
+```
+
+```bash cURL
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/webhook-secret/rotate" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" -d '{}'
+```
+</CodeGroup>
+
+- `pushed_to_sbc` is `true` when the new secret is already used for signing. When it's
+  `false`, Unpod keeps retrying in the background; until it lands, requests are still signed
+  with the previous secret (or unsigned, for your first secret). Wait a minute before testing.
+- An event queued before the rotation is retried signed with the old secret, so a server
+  that already has the new one rejects it.
+- Afterwards, servers read the new secret with `reveal()`, as before.
+
+---
+
 ## Compliance Certifications
 
 Built-in compliance with ISO-27001, and telecom regulations.
