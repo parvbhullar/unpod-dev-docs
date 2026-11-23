@@ -31,28 +31,28 @@ Unpod trunk next so outbound calls reach LiveKit.
 
 <Steps>
   <Step title="Connect your number">
-    In **Telephony**, select your number (shown as **Not Linked**) and click **Connect**
-    to set up its SIP trunk.
+    In **Telephony**, select your number (shown as **Not Linked**) and click **Connect to → SIP
+    Trunk**. Unpod creates its outbound trunk.
     <img src="/images/unpod-numbers/03-connect-to.png" alt="Unpod - number Not Linked, Connect" />
   </Step>
 
   <Step title="Point the trunk at LiveKit">
-    In the trunk panel, set the **Trunk Origin Endpoint Details**:
+    Under **Inbound Trunk Details**, click **Connect** and fill in the trunk form:
     - **SIP URI / address** - paste the **LiveKit SIP URI** from Part 1
       (e.g. `sip:<project-id>.sip.livekit.cloud`).
     - **Port** `5060`, **Transport** `TCP` (or `UDP` / `TLS` to match LiveKit).
     - **Allowed IPs / CIDR** - optional source allow-list.
 
-    Click **Save**. The number then shows **Linked · Unpod SIP Trunk**.
+    Click **Test**, then **Create Trunk**.
     <img src="/images/unpod-numbers/06-inbound-configure.png" alt="Unpod - trunk SIP URI pointing at LiveKit" />
   </Step>
 
-  <Step title="Copy the origin-endpoint credentials">
-    Under **Origin Endpoint Details** copy these - you'll use them in LiveKit next:
+  <Step title="Copy the outbound trunk credentials">
+    Under **Outbound Trunk Details** copy these - you'll use them in LiveKit next:
     - **Address** - e.g. `sip-lb1.unpod.tel`
     - **Port** / **Protocol** - `5060` / `UDP`
     - **Username** and **Password** (under **Authentication**)
-    <img src="/images/unpod-numbers/04-outbound-ready.png" alt="Unpod - linked trunk origin endpoint credentials" />
+    <img src="/images/unpod-numbers/04-outbound-ready.png" alt="Unpod - Outbound Trunk Details with address, port, protocol, username and password" />
   </Step>
 </Steps>
 
@@ -78,7 +78,7 @@ Unpod values from Part 2.
     - **Transport** - `TCP` (match your trunk).
     - **Numbers** - your Unpod phone number(s).
 
-    Under **Optional settings**, add the **Auth username / password** from the Unpod origin endpoint.
+    Under **Optional settings**, add the **Auth username / password** from the Unpod **Outbound Trunk Details**.
     <img src="/images/livekit/lk-trunk-outbound.png" alt="LiveKit - create outbound SIP trunk" />
   </Step>
 </Steps>
@@ -107,7 +107,7 @@ is then ready for inbound and outbound calls.
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| LiveKit can't place calls | Wrong outbound address or auth | Re-copy **Address** + **Username/Password** from the Unpod origin endpoint |
+| LiveKit can't place calls | Wrong outbound address or auth | Re-copy **Address** + **Username/Password** from the Unpod **Outbound Trunk Details** |
 | Inbound not arriving | Number not on the inbound trunk | Confirm the Unpod number is in the inbound trunk's `numbers` (E.164) |
 | Call connects, agent silent | Dispatch rule / agent name mismatch | Make **Agent Name** match the deployed agent exactly |
 | Number not reachable | Config not published | Click **Publish** in the Unpod Studio |

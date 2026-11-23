@@ -149,8 +149,9 @@ Only want to make calls? You don't need a trunk - see the
     calls to (a bare host such as `sip-lb1.unpod.tel`, no `sip:` prefix), and
     `accepted_source_ips` are the addresses Unpod accepts them from. Each eligible number
     gets a row with its own `ok` and `error`, and ineligible ids are left out. If no id is
-    an active `NOT_ASSIGNED` number, or none of them maps, the request fails with `400`
-    (the SDK raises `httpx.HTTPStatusError` before the loop runs). See
+    an active `NOT_ASSIGNED` number, the request fails with `400`
+    `No valid unassigned numbers found.` (the SDK raises `httpx.HTTPStatusError` before the
+    loop runs). See
     [Attach Numbers to Trunk](/telephony/trunks/attach-numbers).
   </Step>
 

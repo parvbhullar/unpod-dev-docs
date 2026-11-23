@@ -35,7 +35,7 @@ Support for Twilio, Telnyx, and Plivo numbers is coming soon - you will be able 
 
 ## Getting Numbers from Unpod
 
-Numbers provisioned through Unpod are immediately available in your account. You can browse and acquire them from the dashboard under **Dev Platform -> Numbers**.
+Numbers provisioned through Unpod are immediately available in your account. You can browse and add them from the dashboard under **Telephony → Numbers** ([Get a Number](/telephony/apis/numbers)).
 
 Once provisioned, list them via the SDK. To see which numbers are free to
 attach, use the telephony listing - its `status` is `not_assigned` only when
@@ -46,7 +46,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads credentials from .env
+    async with AsyncClient() as client:  # reads credentials from the environment
         for n in await client.telephony.numbers.list():
             print(n.number, n.status)   # not_assigned | assigned | closed
 
@@ -59,9 +59,11 @@ asyncio.run(main())
 ```
 
 <Note>
-`client.telephony.*` is org-scoped: it needs `UNPOD_PLATFORM_TOKEN` (or a JWT) and
+`client.telephony.*` is org-scoped: it needs `UNPOD_PLATFORM_TOKEN` and
 `UNPOD_ORG_HANDLE`. A Bearer API key (`UNPOD_API_KEY`) alone is refused. A bare
-`AsyncClient()` uses the platform token when `UNPOD_PLATFORM_TOKEN` is set.
+`AsyncClient()` uses the platform token when `UNPOD_PLATFORM_TOKEN` is set. Set
+`UNPOD_BASE_URL=https://unpod.dev` too, and export the variables or load your `.env`
+yourself ([Account & keys](/home/account-and-keys)).
 </Note>
 
 ---
@@ -74,48 +76,46 @@ once with its SIP credentials, then work with numbers, not SIP. BYON numbers
 arrive this way.
 
 <Steps>
-  <Step title="Add the trunk">
-    **Dev Platform -> Telephony -> Add Trunk -> BYO SIP**. Provide the carrier's
-    **SIP domain** (e.g. `sip.your-carrier.com`) and **auth username / password**.
+  <Step title="Create the trunk">
+    Give it your carrier's SIP URL, credentials and the addresses it sends calls from.
+  </Step>
+  <Step title="Map your numbers to it">
+    Mapping returns the **origin endpoint**: the host your carrier sends calls to.
   </Step>
   <Step title="Point the carrier at Unpod">
-    Set inbound routing to the Unpod SIP endpoint shown in the dashboard.
-  </Step>
-  <Step title="Sync">
-    Click **Sync** on the trunk, or run `await client.numbers.sync()`. The trunk's
-    numbers appear in your account, ready to attach to an [agent](/speech-stack/agents).
+    Set the number's inbound destination in your carrier's console to that host.
   </Step>
 </Steps>
 
-### Register a trunk via the SDK
+The [SIP Trunking Quick Start](/telephony/quickstart) walks through each step.
 
-Field names match the dashboard.
+### Register a trunk via the SDK
 
 ```python
 from unpod import AsyncClient
-from unpod.models import TrunkCreate, ByoConfigCreate
 
 client = AsyncClient()
 
-trunk = await client.trunks.create(TrunkCreate(
-    name="tata-byo",
-    type="byo",
-    byo_config=ByoConfigCreate(
-        provider="tata",
-        sip_domain="sip.tata.in",
-        auth_username="user",
-        auth_password="secret",
-        transport="tls",   # default
-    ),
-))
+trunk = await client.telephony.trunks.create(
+    "tata-byo",
+    "sip:sip.tata.in",
+    username="user",
+    password="secret",
+    transport="tls",   # tcp (default), udp or tls
+    source_ips=["203.0.113.10"],
+)
+mapped = await client.telephony.trunks.attach_numbers(trunk.id, [501])  # number ids
+print(mapped.origin_endpoint.ingress)  # point your carrier here
 ```
 
 ### List and delete trunks
 
 ```python
-trunks = await client.trunks.list()
-await client.trunks.delete(trunk.trunk_id)
+trunks = await client.telephony.trunks.list()
+await client.telephony.trunks.delete(trunk.id)
 ```
+
+See [Manage Trunks](/telephony/sip-trunking/trunks) for every operation.
 
 ### Sync numbers off a trunk
 
@@ -140,7 +140,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads credentials from .env
+    async with AsyncClient() as client:  # reads credentials from the environment
         # All numbers
         numbers = await client.numbers.list()
 
@@ -162,7 +162,7 @@ asyncio.run(main())
 | `number_id` | `str` | Unique number ID (`num_...`) |
 | `number` | `str` | E.164 format, e.g. `+14155550100` |
 | `status` | `str` | `available` (default), `assigned`, `in_call` or `disabled` |
-| `trunk_type` | `str` | `unpod` or `byo` |
+| `trunk_type` | `str` | The trunk the number rides on, e.g. `livekit` (the default) |
 | `pipe_id` | `str \| None` | The agent-voice row this number is attached to, or `None` if free. Still spelled `pipe_id` on the number record |
 | `country` | `str` | ISO 3166-1 alpha-2 country code |
 
@@ -178,7 +178,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads credentials from .env
+    async with AsyncClient() as client:  # reads credentials from the environment
         number = await client.numbers.attach("num_...", "support-bot")
         print("Attached:", number.number, "-> agent support-bot")
 
@@ -211,7 +211,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads credentials from .env
+    async with AsyncClient() as client:  # reads credentials from the environment
         number = await client.numbers.detach("num_...")
         print("Detached:", number.number)
 
@@ -229,7 +229,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def attach_first_free(agent_id: str) -> None:
-    # telephony needs UNPOD_PLATFORM_TOKEN + UNPOD_ORG_HANDLE in .env
+    # telephony needs UNPOD_PLATFORM_TOKEN + UNPOD_ORG_HANDLE in the environment
     async with AsyncClient() as client:
         numbers = await client.telephony.numbers.list()
         free = [n.number for n in numbers if n.status == "not_assigned"]
@@ -257,7 +257,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient() as client:  # reads credentials from .env
+    async with AsyncClient() as client:  # reads credentials from the environment
         # Either: as part of an agent update
         await client.agents.update("sales-bot", number="+918071539102")
 
@@ -291,7 +291,7 @@ import asyncio
 from unpod import AsyncClient
 
 async def rotate(numbers: list[str], agents: list[str]) -> None:
-    async with AsyncClient() as client:  # reads credentials from .env
+    async with AsyncClient() as client:  # reads credentials from the environment
         for number, agent_id in zip(numbers, agents):
             await client.agents.update(agent_id, number=number)
             print(f"{number} -> {agent_id}")

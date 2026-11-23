@@ -31,26 +31,42 @@ organization:
 </Step>
 <Step title="Generate an API key">
 
-1. Click **Settings** at the bottom of the left sidebar.
-2. Under **Access**, click **API keys**.
-3. Click **Generate New**, then copy the key.
+1. Open [Settings → Security → API keys](https://unpod.dev/settings/security/api-keys/).
+2. Click **Generate New**, then copy the key.
 
-Only the workspace owner sees **Access**. You can hold one key at a time:
-delete the old key to generate a new one.
+You can hold one key at a time: delete the old key to generate a new one.
+
+</Step>
+<Step title="Copy your org handle">
+
+Open [Settings → Workspace → General](https://unpod.dev/settings/workspace/general/) and
+copy the **Domain** value without the leading `@` (for example `acme`, not `@acme`).
 
 </Step>
 <Step title="Put both in your environment">
 
 ```bash .env
 UNPOD_BASE_URL="https://unpod.dev"
-UNPOD_SERVICE_BASE_URL="https://unpod.dev"   # bare host - no path
 UNPOD_PLATFORM_TOKEN="..."                  # the API key from step 3
-UNPOD_ORG_HANDLE="your-org"                 # your organization's domain handle
+UNPOD_ORG_HANDLE="your-org"                 # the org handle from step 4
 ```
 
-`import unpod` loads `.env` from the working directory. The SDK sends them as
-`Authorization: Token <key>` and `Org-Handle: <handle>`; call the REST API
-directly with the same two headers.
+Set `UNPOD_BASE_URL`: without it the SDK falls back to a default host that does not
+resolve. `UNPOD_SERVICE_BASE_URL` is an optional override; you don't need it.
+
+The SDK reads these from the environment. Export them, or load the `.env` file
+yourself before you create a client (`python-dotenv` ships with `unpod`):
+
+```python
+from dotenv import load_dotenv
+from unpod import Client
+
+load_dotenv()  # finds .env next to your script or in a parent folder
+client = Client()
+```
+
+The SDK sends them as `Authorization: Token <key>` and `Org-Handle: <handle>`; call
+the REST API directly with the same two headers.
 
 </Step>
 </Steps>

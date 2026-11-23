@@ -24,19 +24,19 @@ secrets - never paste them into shared docs or screenshots.
 
 <Steps>
   <Step title="Connect your number">
-    In **Telephony**, select your number (shown as **Not Linked**) and click **Connect**
-    to set up its SIP trunk.
+    In **Telephony**, select your number (shown as **Not Linked**) and click **Connect to → SIP
+    Trunk**. Unpod creates its outbound trunk.
     <img src="/images/unpod-numbers/03-connect-to.png" alt="Unpod - number Not Linked, Connect" />
   </Step>
 
   <Step title="Point the trunk at ElevenLabs (inbound)">
-    In the trunk panel, set the **Trunk Origin Endpoint Details** to ElevenLabs' SIP host:
+    Under **Inbound Trunk Details**, click **Connect** and point the trunk form at ElevenLabs' SIP host:
     - **SIP URI / address** - `sip:sip.rtc.elevenlabs.io:5060;transport=tcp`
       (or port `5061` with `transport=tls` for TLS).
     - **Port** `5060` (TCP) / `5061` (TLS).
     - **Allowed IPs / CIDR** - optional source allow-list.
 
-    Click **Save**. The number then shows **Linked · Unpod SIP Trunk**.
+    Click **Test**, then **Create Trunk**.
 
     <Note>
     Calls Unpod sends to ElevenLabs use the form
@@ -44,12 +44,12 @@ secrets - never paste them into shared docs or screenshots.
     </Note>
   </Step>
 
-  <Step title="Copy the origin-endpoint credentials">
-    Under **Origin Endpoint Details** copy these - you'll paste them into ElevenLabs next:
+  <Step title="Copy the outbound trunk credentials">
+    Under **Outbound Trunk Details** copy these - you'll paste them into ElevenLabs next:
     - **Address** - e.g. `sip-lb1.unpod.tel`
     - **Port** / **Protocol** - `5060` / `TCP`
     - **Username** and **Password** (under **Authentication**)
-    <img src="/images/unpod-numbers/04-outbound-ready.png" alt="Unpod - linked trunk origin endpoint credentials" />
+    <img src="/images/unpod-numbers/04-outbound-ready.png" alt="Unpod - Outbound Trunk Details with address, port, protocol, username and password" />
   </Step>
 </Steps>
 
@@ -80,7 +80,7 @@ In the **ElevenLabs Agents** dashboard, open the **Phone Numbers** section.
   </Step>
 
   <Step title="Outbound trunk - point back at Unpod">
-    So ElevenLabs can send calls to Unpod, enter the Unpod origin-endpoint values from Part 1:
+    So ElevenLabs can send calls to Unpod, enter the Unpod **Outbound Trunk Details** values from Part 1:
     - **Address** - your Unpod address, **hostname only, no `sip:` prefix** (e.g. `sip-lb1.unpod.tel`).
     - **Transport Type** - `TCP` (or `TLS`).
     - **Media Encryption** - `Allowed` (use `Required` with TLS for production).
@@ -115,7 +115,7 @@ Your system must support **G711 or G722** codecs (8 kHz / 16 kHz) or resample.
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | SIP `408` timeout | Wrong trunk address or transport | Confirm the Unpod address and **TCP** transport on both sides |
-| Authentication failed | Wrong / mis-cased credentials | Re-copy the **Username/Password** from the Unpod origin endpoint (case-sensitive) |
+| Authentication failed | Wrong / mis-cased credentials | Re-copy the **Username/Password** from the Unpod **Outbound Trunk Details** (case-sensitive) |
 | Call connects, silent | Agent missing First Message or voice | Set a **First Message** and a valid voice on the agent |
 | Inbound not arriving | Unpod trunk SIP URI wrong | Set it to `sip:sip.rtc.elevenlabs.io:5060` (TCP) |
 | Number not reachable | Config not published | Click **Publish** in the Unpod Studio |

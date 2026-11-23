@@ -41,7 +41,7 @@ production today; the rest is planned.
 
 | Primitive | What it is | Where it lives today |
 |---|---|---|
-| Blocks | A defined unit of analysis (extraction, scoring, summarization, sentiment & intent, evaluation, custom) attached to a step, a conversation, or the stream | Extraction, scoring, and summarization run on call outcomes - see [Post-call data](/api/post-call-data) |
+| Blocks | A defined unit of analysis (extraction, scoring, summarization, sentiment & intent, evaluation, custom) attached to a step, a conversation, or the stream | Extraction, scoring, and summarization run on call outcomes - see [Post-call data](/api/post-call-data). SDK agents define their own with `client.analytics.create()` - see [Analytics](/speech-stack/analytics) |
 | Datasets | Outcome history, assembled by the dataset builder into training data | Not available yet |
 | Evaluations | Blocks that score whether a conversation did its job, per turn or per outcome | [SuperDialog evals](/superdialog/evals) is the callable surface today |
 | Trained models | A per-org SLM (~1B) trained on your outcomes | Not available yet |
@@ -57,14 +57,16 @@ an event, like any other change on the spine.
 
 ## What stays hidden
 
-How a block is prompted and scored. You define blocks and ratify
-evaluations; how a block runs is not a surface you configure. When the
+How a block runs. You write a block's prompt and fields (and can pick its
+model) and ratify evaluations; the pipeline that runs it is not a surface you
+configure. When the
 training pipeline ships, its internals stay hidden the same way.
 
 ## Status
 
 - Definable blocks: extraction, scoring, and summarization run on call
-  outcomes in production today via [Post-call data](/api/post-call-data);
+  outcomes in production today via [Post-call data](/api/post-call-data), and
+  SDK agents author them with [`client.analytics`](/speech-stack/analytics);
   placement on arbitrary steps and streams is in build.
 - Evaluations: conversation-level evals callable today through
   [SuperDialog evals](/superdialog/evals).

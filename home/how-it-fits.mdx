@@ -234,18 +234,18 @@ using.
 | Entry point | `Client` / `AsyncClient` | `AgentRunner` / `Session` |
 | Purpose | Provision resources | Handle live calls |
 | You call it | Before calls | During calls |
-| Examples | `client.agents`, `client.numbers`, `client.voice_profiles`, `client.calls`, `client.analytics`, `client.trunks` | `AgentRunner(...).start()`, `ctx.session.say(...)` |
+| Examples | `client.agents`, `client.numbers`, `client.voice_profiles`, `client.calls`, `client.analytics`, `client.telephony` | `AgentRunner(...).start()`, `ctx.session.say(...)` |
 
 **Management API** is for setup and orchestration: register a trunk, sync
 numbers, create an agent, trigger an outbound call, fetch transcripts and
 analytics. You construct a `Client` (sync) or `AsyncClient` (async); it reads
-`UNPOD_PLATFORM_TOKEN`, `UNPOD_ORG_HANDLE` and the host URLs from the
-environment or a `.env` file.
+`UNPOD_BASE_URL`, `UNPOD_PLATFORM_TOKEN` and `UNPOD_ORG_HANDLE` from the
+environment (see [Account & keys](/home/account-and-keys) to load a `.env` file).
 
 ```python
 from unpod import AsyncClient, Runner
 
-client = AsyncClient()                       # REST, reads credentials from .env / env
+client = AsyncClient()                       # REST, reads credentials from the environment
 await client.agents.voice.create("support-bot", brain=Runner(), name="Support")
 ```
 

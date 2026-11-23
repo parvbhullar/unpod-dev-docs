@@ -18,9 +18,9 @@ agents, not bridges.
 
 <Note>
 This plane (`client.telephony.*`) is distinct from the Speech Stack management
-plane at [`client.numbers`](/speech-stack/numbers) / `client.trunks`. The
-telephony plane is `Org-Handle`-scoped and requires proxy/JWT auth - it is **not**
-reachable in direct/Bearer mode.
+plane at [`client.numbers`](/speech-stack/numbers). The telephony plane is
+`Org-Handle`-scoped and needs your API key and org handle (Token auth) - a Bearer
+`UNPOD_API_KEY` alone is refused.
 </Note>
 
 ---
@@ -38,14 +38,21 @@ reachable in direct/Bearer mode.
 
 ## Authenticate
 
-The telephony plane is org-scoped. Authenticate with a JWT and your org handle:
+The telephony plane is org-scoped. Export your host, API key and org handle
+([Account & keys](/home/account-and-keys)); a client with no arguments reads them:
+
+```bash
+export UNPOD_BASE_URL=https://unpod.dev
+export UNPOD_PLATFORM_TOKEN=<your-api-key>
+export UNPOD_ORG_HANDLE=<your-org-handle>
+```
 
 ```python
 import asyncio
-from unpod import AsyncClient, JWTAuth
+from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(auth=JWTAuth("<jwt>", org_handle="acme")) as client:
+    async with AsyncClient() as client:
         numbers = await client.telephony.numbers.list()
         for n in numbers:
             print(n.number, n.status)
@@ -88,10 +95,10 @@ check.)
 
 ```python
 import asyncio
-from unpod import AsyncClient, JWTAuth
+from unpod import AsyncClient
 
 async def main():
-    async with AsyncClient(auth=JWTAuth("<jwt>", org_handle="acme")) as client:
+    async with AsyncClient() as client:
         nums = await client.telephony.numbers.list()
         free = [n.number for n in nums if n.status == "not_assigned"]
         if not free:
@@ -148,7 +155,8 @@ await client.numbers.agent.change("+14155550100", "asst_sales", attach_type="age
 `numbers.agent.change(number, agent_id, *, attach_type=None)` defaults to
 `attach_type="pipeline"` (a Speech Stack agent). For an agent handle like the one
 above, pass `attach_type="agent"`, or the call fails with `404` `Agent not found.`
-You can also use `client.agents.update(agent_id, number=...)`, or over HTTP
+For a Speech Stack agent you can also use `client.agents.update(agent_id, number=...)`
+(it sends no `attach_type`, so it takes the `"pipeline"` default). Over HTTP, use
 `POST /api/v2/platform/telephony/numbers/reassign/` with
 `{"number": "+14155550100", "agent_id": "asst_sales"}` (`attach_type` is `agent` by
 default there). A number attached without an agent can be moved this way. It fails
@@ -238,10 +246,10 @@ print(res.origin_endpoint.ingress)  # point your carrier here
 
 ```python
 import asyncio
-from unpod import AsyncClient, JWTAuth
+from unpod import AsyncClient
 
 async def attach_first(agent_id: str) -> None:
-    async with AsyncClient(auth=JWTAuth("<jwt>", org_handle="acme")) as client:
+    async with AsyncClient() as client:
         nums = await client.telephony.numbers.list()
         free = [n.number for n in nums if n.status == "not_assigned"]
         if not free:
@@ -257,10 +265,10 @@ asyncio.run(attach_first("asst_sales"))
 
 ```python
 import asyncio
-from unpod import AsyncClient, JWTAuth
+from unpod import AsyncClient
 
 async def attach_all(numbers: list[str], agent_id: str) -> None:
-    async with AsyncClient(auth=JWTAuth("<jwt>", org_handle="acme")) as client:
+    async with AsyncClient() as client:
         res = await client.telephony.numbers.attach(numbers, agent_id=agent_id)
         ok = [r.number for r in res.numbers if r.ok]
         bad = [(r.number_id, r.error) for r in res.numbers if not r.ok]

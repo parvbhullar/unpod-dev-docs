@@ -6,7 +6,7 @@ description: 'Connect Vapi to Unpod with no code - configure the provider and ro
 ---
 
 This is the **no-code** path. You create a SIP trunk on your Unpod number, copy its
-origin-endpoint credentials into Vapi as a **BYO SIP trunk**, then point a Vapi
+outbound trunk credentials into Vapi as a **BYO SIP trunk**, then point a Vapi
 number and assistant at it. One trunk carries both inbound and outbound calls - no
 separate provider setup. Prefer code? See the [API guide](/telephony/integrations/vapi/api).
 
@@ -19,25 +19,25 @@ outbound to `sip.vapi.ai`, and Vapi sends inbound to your Unpod endpoint.
 ## Part 1 - Create the trunk in Unpod
 
 <Steps>
-  <Step title="Open Configure → New trunk on your number">
-    In **Telephony**, select your number and click **Configure**. On the **New trunk** tab,
-    set a **Name** you'll recognise and the **trunk origin endpoint**:
+  <Step title="Open Inbound Trunk Details → Connect on your number">
+    In **Telephony**, select your number. If it shows **Not Linked**, click **Connect to → SIP
+    Trunk** first. Then click **Connect** under **Inbound Trunk Details**.
+    On the **New trunk** tab, set a **Name** you'll recognise and the SIP host:
     - **SIP URI / address** - `sip.vapi.ai` (Vapi's inbound SIP host).
     - **Port** `5060` and **Transport** (`TCP` / `UDP` / `TLS`).
     - **Allowed IPs / CIDR** - optional source allow-list.
 
-    Click **Test** to validate, then **Create Trunk**. This one trunk handles **both
-    inbound and outbound** calls for the number.
+    Click **Test** to validate, then **Create Trunk**.
     <img src="/images/unpod-numbers/06-inbound-configure.png" alt="Unpod - configure a new trunk pointing at Vapi" />
   </Step>
 
-  <Step title="Copy the origin-endpoint credentials">
-    The number now shows **Linked · Vapi**. Under **Origin Endpoint Details** copy the
+  <Step title="Copy the outbound trunk credentials">
+    The number now shows **Linked · Vapi**. Under **Outbound Trunk Details** copy the
     values - you'll paste them into Vapi next:
     - **Address** - e.g. `sip-lb1.unpod.tel`
     - **Port** / **Protocol** - `5060` / `UDP`
     - **Username** and **Password** (under **Authentication**)
-    <img src="/images/unpod-numbers/04-outbound-ready.png" alt="Unpod - linked trunk origin endpoint credentials" />
+    <img src="/images/unpod-numbers/04-outbound-ready.png" alt="Unpod - Outbound Trunk Details with address, port, protocol, username and password" />
   </Step>
 </Steps>
 
@@ -103,7 +103,7 @@ is then ready for inbound and outbound calls.
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | Trunk **Test** fails in Unpod | Wrong SIP URI / transport | Use `sip.vapi.ai`; try `UDP`/`TCP` to match Vapi |
-| Vapi can't reach the trunk | Wrong gateway address or auth | Re-copy **Address** + **Username/Password** from the Unpod origin endpoint |
+| Vapi can't reach the trunk | Wrong gateway address or auth | Re-copy **Address** + **Username/Password** from the Unpod **Outbound Trunk Details** |
 | Call connects, assistant silent | No assistant bound | Set the **Assistant** in the number's **Inbound Settings** |
 | Inbound not arriving | Source IP blocked | Add Vapi's IPs to **Allowed IPs / CIDR** on the Unpod trunk |
 | Number not reachable | Config not published | Click **Publish** in the Unpod Studio |

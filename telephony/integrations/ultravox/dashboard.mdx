@@ -11,7 +11,7 @@ reaching regular phone numbers worldwide. Prefer raw requests? See the
 [API guide](/telephony/integrations/ultravox/api).
 
 <Note>
-**You need:** an Unpod number on a Bridge, and an Ultravox account with an **agent**
+**You need:** an Unpod number in your org, and an Ultravox account with an **agent**
 and an **API key**.
 </Note>
 
@@ -26,9 +26,9 @@ docs or screenshots.
 |---|---|---|
 | Ultravox | **API key** | Ultravox dashboard |
 | Ultravox | **Agent ID** | Ultravox dashboard |
-| Unpod | **SIP domain / address** | Number's trunk → Origin Endpoint |
-| Unpod | **Username** | Number's trunk → Origin Endpoint |
-| Unpod | **Password** | Number's trunk → Origin Endpoint |
+| Unpod | **SIP domain / address** | Number → **Outbound Trunk Details** |
+| Unpod | **Username** | Number → **Outbound Trunk Details** |
+| Unpod | **Password** | Number → **Outbound Trunk Details** |
 | Unpod | **Phone number** | Telephony → Numbers |
 
 ## Part 1 - Get your Ultravox agent + API key
@@ -49,17 +49,17 @@ docs or screenshots.
 
 <Steps>
   <Step title="Connect your number">
-    In **Telephony**, select your number (shown as **Not Linked**) and click **Connect**
-    to set up its SIP trunk.
+    In **Telephony**, select your number (shown as **Not Linked**) and click **Connect to → SIP
+    Trunk**. Unpod creates its outbound trunk.
     <img src="/images/unpod-numbers/03-connect-to.png" alt="Unpod - number Not Linked, Connect" />
   </Step>
 
-  <Step title="Copy the origin-endpoint credentials">
-    Open the trunk panel and under **Origin Endpoint Details** copy:
+  <Step title="Copy the outbound trunk credentials">
+    Open the trunk panel and under **Outbound Trunk Details** copy:
     - **Address** - your Unpod SIP domain (e.g. `sip-lb1.unpod.tel`).
     - **Username** and **Password** (under **Authentication**).
     - Your **phone number** in E.164 (e.g. `+918071539111`).
-    <img src="/images/unpod-numbers/04-outbound-ready.png" alt="Unpod - trunk origin endpoint credentials" />
+    <img src="/images/unpod-numbers/04-outbound-ready.png" alt="Unpod - Outbound Trunk Details with address, port, protocol, username and password" />
   </Step>
 </Steps>
 
@@ -90,7 +90,7 @@ curl -X POST https://api.ultravox.ai/api/agents/YOUR_AGENT_ID/calls \
 
 - **`to`** - destination number as a SIP URI at your Unpod domain.
 - **`from`** - your Unpod number (caller ID).
-- **`username` / `password`** - the Unpod origin-endpoint credentials.
+- **`username` / `password`** - from the Unpod **Outbound Trunk Details**.
 
 The agent answers when the callee picks up. See the
 [API guide](/telephony/integrations/ultravox/api) for the full request/response and debugging.
@@ -102,7 +102,7 @@ The agent answers when the callee picks up. See the
 | SIP `403` | Auth rejected | Re-copy the Unpod **Username/Password** (case-sensitive) |
 | SIP `407` | Proxy auth required | Confirm `username`/`password` are sent in `sip.outgoing` |
 | SIP `480` | Destination unavailable | Verify the `to` number and that your Unpod number is active |
-| Call never rings | Wrong SIP domain | Use the exact **Address** from the Unpod origin endpoint |
+| Call never rings | Wrong SIP domain | Use the exact **Address** from the Unpod **Outbound Trunk Details** |
 
 <CardGroup cols={2}>
   <Card title="Do it with code" icon="terminal" href="/telephony/integrations/ultravox/api">
