@@ -71,8 +71,6 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     already attached to an AI agent can also be the `from` of an outbound call; `human_call`
     matters for inbound calls, where it decides that your app answers instead of the agent.
 
-    {/* TODO(verify): full list of connection_state values that can place calls (PENDING_VERIFY worked; NOT_LINKED was rejected) */}
-
     <Note>
     Dial from a number you attached in step 3 with `attach_type="human_call"`. The SBC picks
     up a newly attached number in about a minute. A `403 forbidden: from is not a number
@@ -159,11 +157,14 @@ org; until then every call returns `403 call_api_disabled`. Coming from Plivo? S
     That `url` is a path inside Unpod. To download the audio, see
     [Recording](/telephony/apis/recording).
 
-    {/* TODO(verify): GET after an unanswered call - summary or 404? */}
+    After a call nobody answered, `get` still returns the summary, with `available: true` and
+    `duration_secs: 0`, and downloading the recording returns `404`.
 
     <Tip>
-    No ring? Check that `to` is E.164 (`+` and country code), that the `from` number isn't
-    `NOT_LINKED`, and that `ring_timeout` gives the phone long enough.
+    No ring? Check that `to` is E.164 (`+` and country code), that the `from` number is
+    attached as `human_call`, and that `ring_timeout` gives the phone long enough. A `Hangup`
+    with `No Answer`, SIP `408` and `Duration` 0 means the call never reached the phone: place
+    it again.
     </Tip>
   </Step>
 </Steps>

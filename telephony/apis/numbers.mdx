@@ -230,8 +230,6 @@ detached.` and the SDK raises `httpx.HTTPStatusError`; the reason is in
 | `LINKED` | A real inbound call has connected through it |
 | `ERROR` | Routing failed; Unpod retries it in the background |
 
-{/* TODO(verify): which connection_state values can place calls */}
-
 On a call, `400 from_not_owned` means `from` isn't one of your org's numbers at all. A
 `403 forbidden: from is not a number available to this organization` means it is yours but
 not attached for API calls: attach it with `numbers.attach(number, attach_type="human_call")`

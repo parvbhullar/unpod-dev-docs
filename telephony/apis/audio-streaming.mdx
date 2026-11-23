@@ -116,7 +116,7 @@ Start, list and stop streams on a live call. Same host and headers as the other
 
 | Method and path | Does | Returns |
 | --- | --- | --- |
-| `POST /calls/{id}/stream` | Start a stream | `202 {"stream_id", "message"}`. `400` ("a stream is already active") when the call already has one; `400 invalid_url` for a bad `service_url`. A start sent while the call is still ringing is accepted and the stream opens once the call's audio is up. A refused start sends no `failed` callback |
+| `POST /calls/{id}/stream` | Start a stream | `202 {"stream_id", "message"}`. `400` ("a stream is already active") when the call already has one; `400 invalid_url` for a bad `service_url`. A start sent while the call is still ringing is accepted and the stream opens once the call's audio is up; until then `GET` lists it as `[]` and `GET .../{stream_id}` returns `404`. A refused start sends no `failed` callback |
 | `GET /calls/{id}/stream` | Every stream the call has had | `{"streams": [...]}` |
 | `GET /calls/{id}/stream/{stream_id}` | One stream | The stream object below. `404` for an unknown `stream_id` |
 | `DELETE /calls/{id}/stream` | Stop the active stream | `204`. The stream ends with `api_request`; the call carries on. `400` ("no active stream") when none is running |
@@ -334,6 +334,10 @@ if ev.event in STREAM_EVENTS:
 - About 40 s of `playAudio` can wait to play; more is dropped (`degraded` with
   `buffer_overflow`).
 - Noise cancellation is accepted but not applied yet.
+- An invalid `<Stream>` attribute (for example `bidirectional="true"` with `audioTrack="both"`,
+  `streamTimeout="0"`, or an `http://`, empty or over-long URL) fails the whole reply. No
+  `failed` callback is sent, and on a call you started with `create` the person stays on a
+  silent line until you end the call.
 - The answer URL rules still apply: public https, 3000 ms to reply, and the
   [fallback](/telephony/apis/answer-url#timeouts-and-fallback) on a failure.
 

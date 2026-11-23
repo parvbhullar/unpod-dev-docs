@@ -65,7 +65,7 @@ The response:
 
 | Field | Meaning |
 | --- | --- |
-| `available` | `true` when there's audio. `false` means the call wasn't recorded, and `url` and `duration_secs` are `null` |
+| `available` | `true` when there's audio. `false` means the call wasn't recorded, and `url` and `duration_secs` are `null`. A call nobody answered can also read `true` with `duration_secs` `0`; downloading it then returns `404` |
 | `url` | Where to [download the audio](#download-the-audio). It needs your credentials |
 | `duration_secs` | Length in seconds |
 | `format`, `channels` | Always `wav` and `2` today |
