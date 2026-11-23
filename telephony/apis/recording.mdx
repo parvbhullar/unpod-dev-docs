@@ -184,9 +184,11 @@ handles the event this way.
 With `record_participant_track=True` (which needs `record=True`), the same URL also gets
 `ParticipantRecordingInitiated` and `ParticipantRecordingCompleted` for each leg. Both
 arrive together after the call ends, and both carry the leg's channel in
-`ev.metadata["channel"]`: `1` for the first leg (left), `2` for the second (right). Only
-`ParticipantRecordingCompleted` carries the recording, in `ev.metadata["recording_url"]`:
-the same 2-channel file, at the same path inside Unpod.
+`ev.metadata["channel"]`: `1` for the first leg (left), `2` for the second (right). On a call
+started with `create`, the `caller` leg reports channel `1` and the `callee` (the number you
+dialled) channel `2`. Only `ParticipantRecordingCompleted` carries the recording, in
+`ev.recording_url` and `ev.metadata["recording_url"]`: the same 2-channel file, at the same
+path inside Unpod.
 
 {/* TODO(verify): REST-originated calls can miss the event when the report loses the PendingOriginate removal race (reporter.rs recording_callback_target) */}
 

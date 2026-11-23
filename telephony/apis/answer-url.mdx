@@ -62,6 +62,10 @@ Each `StartApp` also carries:
 - `CallUUID` (`ev.leg_id`), `From` (`ev.from_`), `To` and `Direction` (`inbound` here)
 - `SessionStart` (`ev.raw["SessionStart"]`)
 
+`From` is the caller's number as the carrier sent it, so on Indian numbers it can arrive in
+national format (`09000000002`) while `To` is E.164 (`+919000000001`). Normalise `From`
+before you match it against numbers you store.
+
 On an outbound leg the request is also a `StartApp`, sent once the person answers. It
 carries the same fields, with `Direction=outbound` and `CallStatus=ringing`. Its `CallUUID`
 is `<call id>-callee`, so match outbound requests on `MPCUUID` (`ev.call_id`), not on the

@@ -243,7 +243,8 @@ people, so a masked call is always one agent and one customer.
 The other direction: the customer calls your Unpod number back and you connect them to
 their agent. Point the number's answer URL at your app (see
 [Incoming Calls](/telephony/apis/incoming-calls#point-your-number-at-your-app)), look up the
-agent from the caller's number (`ev.from_` on `StartApp`) in your own data, and reply:
+agent from the caller's number (`ev.from_` on `StartApp`) in your own data, and reply. Normalise
+`ev.from_` to E.164 first: it can arrive in national format (`09000000002`).
 
 ```xml
 <Response>

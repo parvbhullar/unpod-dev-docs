@@ -153,7 +153,7 @@ snake_case (`call_id`, `leg_id`, ...).
 | `call_id` | `MPCUUID` | The same on every event of a call, across all its legs. Not sent on [stream events](#stream-events), so `ev.call_id` is `None` there |
 | `leg_id` | `CallUUID` | Differs per leg |
 | `role`, `direction`, `call_status` | `Role`, `Direction`, `CallStatus` | `role` is the label you set on the leg |
-| `from_`, `to` | `From`, `To` | Only on `Incoming` and answer-URL events. `None` on leg events, so outbound status callbacks never have them: put your own ids in `metadata` |
+| `from_`, `to` | `From`, `To` | Only on `Incoming` and answer-URL events. `None` on leg events, so outbound status callbacks never have them: put your own ids in `metadata`. On inbound calls `From` can be in national format (`09000000002`) while `To` is E.164 |
 | `start_time`, `answer_time`, `end_time`, `timestamp` | `StartTime`, ... | Unix seconds |
 | `initiation_time`, `hangup_time`, `duration` | `InitiationTime`, `HangupTime`, `Duration` | `duration` is answered seconds, `0` if never answered |
 | `hangup_cause`, `hangup_by`, `sip_code` | `HangupCause` / `PlivoHangupCause`, `HangupBy`, `SipCode` | `Hangup` only. See [Hangup causes](#hangup-causes) |
