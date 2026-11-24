@@ -159,8 +159,8 @@ Only want to make calls? You don't need a trunk - see the
     In your carrier's console, set the number's inbound destination to the `ingress` value.
     Make sure the carrier sends from an address in `accepted_source_ips` - these are the
     `source_ips` you gave the trunk. Have the carrier put the number in E.164 (`+91...`)
-    in the `To` header: Unpod matches the call to your number by the `To` header. Your
-    carrier may also ask for the SIP port and transport; these aren't documented yet.
+    in the `To` header: Unpod matches the call to your number by the `To` header. For the
+    SIP port and transport to give your carrier, ask the Unpod team.
 
     {/* TODO(verify): ingress port and transport (ops) */}
   </Step>

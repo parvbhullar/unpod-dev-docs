@@ -146,7 +146,7 @@ rest.
 Point `status_callback_url` at the same route, as in the config above. Unpod sends the
 answer URL's `Hangup` only once, but retries a status callback a few times over about a
 minute ([Delivery and retries](/telephony/apis/webhooks#delivery-and-retries)), so a
-missed `Hangup` usually arrives again. The route then also receives call events, such as
+`Hangup` your server missed is sent again. The route then also receives call events, such as
 `Incoming`, `Ringing`, `Answered` and a `Hangup` per leg: return 200 for them. `Hangup` can
 arrive more than once, which `on_call.pop(ev.call_id, None)` below handles. Every event
 for a call carries the same `ev.call_id`; `ev.leg_id` differs per leg.
@@ -229,8 +229,8 @@ if __name__ == "__main__":
 
 Run it with `python app.py` and expose it as in the
 [Quick Start](/telephony/apis/quickstart#receive-your-first-call). After a valid signature it
-always returns 2xx: Unpod treats any other status as a failure and may
-[fall back](#when-your-server-is-down).
+always returns 2xx: Unpod treats any other status as a failure and applies
+the [fallback](#when-your-server-is-down).
 
 `<Dial>` rings the agent while the caller hears ringback, then connects them. If the agent
 is busy or doesn't answer, the caller stays on the line and the next verb runs; after the

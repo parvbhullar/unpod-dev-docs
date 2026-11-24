@@ -251,16 +251,16 @@ always returns one after a valid signature, and the `idempotency_key` keeps a re
 for signatures and every event, and [Number Masking](/telephony/apis/number-masking) for
 the full production flow.
 
-The key is best effort. Don't send two requests with the same key at the same time: both
-can dial, or the later one gets `409 participant_limit`. Wait for the first answer before
+Unpod stores the key only after the dial, so don't send two requests with the same key at
+the same time: both can dial, or the later one gets `409 participant_limit`. Wait for the first answer before
 you retry, and de-duplicate on your side too (for example, skip a `call_id` you already
 added someone to).
 
 ## Remove a participant
 
 Remove a participant and the call stays up with the other person. If you also run the
-webhook server above, it ends the call on every `Hangup` event, which may include the leg
-you removed (it does: the removed leg gets a `Hangup` with `Normal Hangup`). Track the
+webhook server above, it ends the call on every `Hangup` event, and the removed leg gets
+one too (`Hangup` with `Normal Hangup`). Track the
 removed `leg_id` and skip it in the handler to keep the call up.
 
 <CodeGroup>
@@ -294,7 +294,7 @@ The `add_participant` options most people need:
 | `sip_headers` | Dict or `"k1=v1,k2=v2"`, sent to the carrier as `X-PH-<k>` headers (at most 10) |
 | `fallback_url` / `fallback_method` | Requested when `answer_url` fails. Needs `answer_url` |
 | `status_callback_events` | Which events reach `status_callback_url`: any of `mpc-state-changes`, `participant-state-changes`, `leg-state-changes`. Omit it for all |
-| `idempotency_key` | Retry-safe: a repeat with the same key returns the first result instead of dialing again (kept for 24 h, unless Unpod restarts). Best effort: don't send two requests with the same key at the same time |
+| `idempotency_key` | Retry-safe: a repeat with the same key returns the first result instead of dialing again (kept in memory for 24 h; a restart clears it). Don't send two requests with the same key at the same time |
 
 `create` takes the same options. Every URL must be public https, or you get
 `400 invalid_url`. Full list: [Call Control](/telephony/apis/call-control#options).
