@@ -11,11 +11,10 @@ credentials.
 <Note>
 Whether a call is recorded follows the recording policy (set by the Unpod team). To
 change it, ask them. `record=True` on `create` records that call even if the policy
-doesn't. `record=False` doesn't stop a policy recording, but hides it from the API. The
-`record` setting in a number's inbound config is stored but not applied yet.
+doesn't. `record=False` doesn't stop a policy recording, but hides it from the API.
 </Note>
 
-{/* TODO(verify): whether the Prod recording policy records inbound calls (its directions filter wasn't read; InboundConfig.record is never read). Check one recent inbound Prod CDR for a recording, then state yes or no */}
+{/* TODO(verify): whether the Prod recording policy records inbound calls. On QA (2026-11-24) inbound calls were recorded with and without record; InboundConfig.record is never read. Check one recent inbound Prod CDR, then state yes or no */}
 
 ## Get a recording
 
@@ -65,7 +64,7 @@ The response:
 
 | Field | Meaning |
 | --- | --- |
-| `available` | `true` when there's audio. `false` means the call wasn't recorded, and `url` and `duration_secs` are `null`. A call nobody answered can also read `true` with `duration_secs` `0`; downloading it then returns `404`, so treat `0` as no recording |
+| `available` | `true` when there's audio. `false` means the call wasn't recorded, and `url` and `duration_secs` are `null`. Download only when `duration_secs` is above `0` |
 | `url` | Where to [download the audio](#download-the-audio). It needs your credentials |
 | `duration_secs` | Length in seconds |
 | `format`, `channels` | Always `wav` and `2` today |
@@ -135,16 +134,20 @@ storage rather than handing the URL to a browser.
 | --- | --- |
 | File | WAV |
 | Audio | G.711 μ-law or A-law, whichever the call used, 8-bit, 8000 Hz |
-| Channels | 2, one person on each |
+| Channels | 2: the person on the phone, and Unpod's side (what that person hears) |
 
-To see which one a file uses, read the format code in its WAV header: `7` is μ-law, `6` is
-A-law.
+A call you start with `create` is recorded in μ-law. An inbound call from the phone network
+is usually A-law. To check a file, read the format code in its WAV header: `7` is μ-law, `6`
+is A-law.
 
-Which person is on which channel isn't confirmed yet. Listen to one of your own recordings
-before you rely on the order.
+| Call | Left channel | Right channel |
+| --- | --- | --- |
+| Started with `create` | Unpod's side: what your app plays | The person you dialed |
+| Inbound | The caller | Unpod's side: what the caller hears, such as your app's audio and ringback |
 
-{/* TODO(verify): codec of the recording on a call started with create (the recorder follows SIP leg A, which is Unpod's own side there); not checked on a real file */}
-{/* TODO(verify): channel order on a live two-person call. Code suggests SIP leg A (caller) left and leg B (callee; on create, the dialled number) right; not confirmed on a real file. Listen to each channel of one live call, then state the order */}
+On a call with a second person (`add_participant`), each person's leg is recorded on its
+own. `get_recording(call_id)` has the first person; the second person is in the recording of
+their own leg, `get_recording(leg_id)` with the `leg_id` that `add_participant` returned.
 
 To get each person in their own file, split the channels with sox or ffmpeg:
 

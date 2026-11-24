@@ -162,11 +162,11 @@ The secret comes from `client.telephony.webhook_secret.reveal()`. See [Webhooks]
 | `ParticipantRecordingCompleted` | `ev.metadata["recording_url"]` and `ev.metadata["channel"]`: the same 2-channel WAV - split it if you need per-leg audio |
 | `MPCRecordingCompleted` | Same name, but without `metadata`. `ev.recording_url` is a path inside Unpod: fetch with `get_recording(ev.call_id)` |
 
-Each recording is a **2-channel WAV**, one leg on each channel. Whether a call is
+Each recording is a **2-channel WAV**: on a call you start with `create`, the person you
+dialed is on the right and Unpod's side on the left (see
+[Recording](/telephony/apis/recording#format) for inbound calls). Whether a call is
 recorded follows the recording policy (set by the Unpod team); `record=True` on `create`
 turns recording on for that call. See [Recording](/telephony/apis/recording).
-
-{/* TODO(verify): channel order on a live two-person call - code suggests the dialled (agent) leg is on the right; confirm on a real file before naming sides */}
 
 ### Incoming Call
 
@@ -176,7 +176,6 @@ from unpod.telephony import InboundConfig
 await client.telephony.inbound.set_did("+919000000001", InboundConfig(
     answer_url="https://your-app.example.com/incoming",
     status_callback_url="https://your-app.example.com/incoming",
-    record=True,  # not applied yet for inbound: see Recording
 ))
 ```
 

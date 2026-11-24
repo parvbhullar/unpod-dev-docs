@@ -213,13 +213,11 @@ your `/call-status` route hasn't seen (which also skips a resent event once the 
 is saved), then asks the API for the recording with your credentials. Save the `call_id`
 and duration; to download the audio, see [Recording](/telephony/apis/recording).
 
-You may get one recording event per answered leg, so match each one on `ev.call_id` or
-`ev.leg_id`. As a backstop in case an event is lost, you can also call `get_recording`
+Each answered leg sends its own recording event. The second person's event carries their
+own leg id as `ev.call_id`, and `get_recording(ev.call_id)` returns their side of the call. As a backstop in case an event is lost, you can also call `get_recording`
 yourself after the last `Hangup`. Run it from a background task (FastAPI's
 `BackgroundTasks`, or your job queue), not inside `/call-status`: the handler must answer
 with a 2xx quickly, within 10 s.
-
-{/* TODO(verify): one MPCRecordingCompleted per answered leg session, the customer's with its own leg id as MPCUUID (code only, not seen live); which ev.call_id the SDK gives that event and what get_recording returns for it */}
 
 ## Event map
 

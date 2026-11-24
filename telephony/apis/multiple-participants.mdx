@@ -97,8 +97,6 @@ What `FIRST` hears while `SECOND`'s phone rings:
 MP3 or WAV URL to play while `SECOND` rings. If Unpod can't fetch the URL, `FIRST` hears the
 ringback instead.
 
-{/* TODO(verify): ringback on a REST add_participant call (heard live through <Dial> and transfer, same dial path; add_participant alone not re-tested) */}
-
 To play the file yourself instead, start it right after `add_participant` and stop it when `SECOND`'s
 leg is `answered` (or hung up). Without a `leg_id`, `play_audio` plays to everyone on the
 call, which until `SECOND` answers is only `FIRST`. The file must be a public https MP3 or
