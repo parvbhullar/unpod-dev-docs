@@ -48,7 +48,7 @@ the same name (`from_` is `from`), and `idempotency_key` is the `Idempotency-Key
 | `caller_name` | `str` | Caller name shown where supported |
 | `friendly_name` | `str` | Your label for the leg |
 | `ring_timeout` | `int` 1-120 | Seconds to ring before giving up (default 30) |
-| `dial_music` | `str` | `"none"` for silence, or a public https MP3 or WAV URL to play while the leg rings. See also [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
+| `dial_music` | `str` | `"real"` (default ringback), `"none"` for silence, or a public https MP3 or WAV URL to play while the leg rings. See also [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
 | `status_callback_url` | `str` | Public https URL for this leg's events. Its query string is echoed back |
 | `status_callback_method` | `"POST"` \| `"GET"` | `POST` only today: status callbacks are always POSTed, and `GET` is ignored |
 | `status_callback_format` | `"form"` \| `"json"` | Default `form` (keys such as `CallUUID`); `json` uses snake_case |
