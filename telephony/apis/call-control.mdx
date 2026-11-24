@@ -117,14 +117,14 @@ carries on) and `429 rate_limited` when your org sends too many at once.
 
 ## Transfer
 
-`transfer` hands the person you dialed on a call you started with `create` to another number
-and takes your app off the call. Only a blind transfer works today.
-
-{/* TODO(verify): transfer on an inbound call (which leg to pass; UNPO-853 inbound DID test) */}
+`transfer` hands the person on the call to another number and takes your app off the call:
+the person you dialed on a call you started with `create` (`leg="callee"`, the default), or
+the caller on an inbound call (`leg="caller"`). Only a blind transfer works today.
 
 <CodeGroup>
 ```python Python
-calls.transfer(call_id, "+919000000004")   # blind; returns None
+calls.transfer(call_id, "+919000000004")                 # create call; returns None
+calls.transfer(call_id, "+919000000004", leg="caller")   # inbound call
 ```
 
 ```bash cURL
@@ -138,19 +138,19 @@ curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/transfe
 
 | Method | Notes |
 | --- | --- |
-| `transfer(call_id, target, *, type, leg)` | `target` is an E.164 number. `type` is `"blind"` (default); `"attended"` answers `501 not_implemented`. `leg` is `"caller"` or `"callee"` and defaults to `"callee"`, the right value for a `create` call |
+| `transfer(call_id, target, *, type, leg)` | `target` is an E.164 number. `type` is `"blind"` (default); `"attended"` answers `501 not_implemented`. `leg` is the side to hand over: `"callee"` (default) on a `create` call, `"caller"` on an inbound call |
 
 What happens on the call:
 
 1. Unpod dials `target` as a new leg. Its [events](/telephony/apis/webhooks#events) carry
-   `Role=customer`. There is no separate transfer event.
+   `Role=customer`. There is no separate transfer event. On a `create` call you also get
+   `ParticipantJoin` / `ParticipantExit` for it; on an inbound call only the leg events.
 2. While the target rings, the person hears a ringback tone: their leg gets `PlayStarted`,
    then `PlayStopped` when the target answers. Then the two are connected.
 3. Whatever ran on the call stops. A [`<Stream>`](/telephony/apis/audio-streaming) ends
    `stopped` with `completed`, and the verbs after it in your answer XML don't run.
-4. When the person hangs up, Unpod hangs up the target (`HangupBy=system`) and the call ends.
-
-{/* TODO(verify): what happens to the person when the target hangs up first (live tests only covered the person hanging up) */}
+4. When either side hangs up, Unpod hangs up the other (`HangupBy=system`) and the call ends.
+   When the target hangs up first, the person's leg ends with `HangupCause=End Of XML Instructions`.
 
 ## Hold and mute
 
@@ -299,5 +299,8 @@ Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-a
   </Card>
   <Card title="sbc/streaming/run_transfer2.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/run_transfer2.py">
     Blind transfer of a `create` call to a second phone, with or without a `<Stream>` running.
+  </Card>
+  <Card title="sbc/streaming/run_transfer_inbound.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/run_transfer_inbound.py">
+    Blind transfer of an inbound call running a `<Stream>` bot, then restores the number's inbound config.
   </Card>
 </CardGroup>
