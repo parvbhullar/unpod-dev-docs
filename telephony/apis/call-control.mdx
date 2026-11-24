@@ -1,7 +1,7 @@
 ---
 title: 'Call Control'
 icon: 'sliders-horizontal'
-description: 'Every call action in one place - play, speak, hold, record, hang up'
+description: 'Every call action in one place - play, speak, transfer, hold, record, hang up'
 ---
 
 Look up any action on a call here. To place a call, start with the
@@ -23,6 +23,7 @@ that id. Every method raises `TelephonyAPIError` on an error response - see
 | `remove_participant` | `DELETE /sbc/v1/calls/{call_id}/participants/{leg_id}` |
 | `play_audio` / `stop_audio` | `POST` / `DELETE /sbc/v1/calls/{call_id}/play` |
 | `speak` | `POST /sbc/v1/calls/{call_id}/speak` |
+| `transfer` | `POST /sbc/v1/calls/{call_id}/transfer` - see [Transfer](#transfer) |
 | `record` / `get_recording` | `POST /sbc/v1/calls/{call_id}/record` / `GET .../recording` - see [Recording](/telephony/apis/recording) |
 | `stop_recording` / `pause_recording` / `resume_recording` | `DELETE /sbc/v1/calls/{call_id}/record`, `POST .../record/pause`, `POST .../record/resume` |
 | `download_recording` | `GET /sbc/v1/calls/{call_id}/recording?format=wav`, saved to a file |
@@ -47,12 +48,12 @@ the same name (`from_` is `from`), and `idempotency_key` is the `Idempotency-Key
 | `caller_name` | `str` | Caller name shown where supported |
 | `friendly_name` | `str` | Your label for the leg |
 | `ring_timeout` | `int` 1-120 | Seconds to ring before giving up (default 30) |
-| `dial_music` | `str` | `"none"` for silence, or a public https MP3 or WAV URL to play while the leg rings. See also [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
+| `dial_music` | `str` | `"real"` (default ringback), `"none"` for silence, or a public https MP3 or WAV URL to play while the leg rings. See also [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
 | `status_callback_url` | `str` | Public https URL for this leg's events. Its query string is echoed back |
 | `status_callback_method` | `"POST"` \| `"GET"` | `POST` only today: status callbacks are always POSTed, and `GET` is ignored |
 | `status_callback_format` | `"form"` \| `"json"` | Default `form` (keys such as `CallUUID`); `json` uses snake_case |
 | `recording_callback_url` | `str` | Public https URL for the recording event |
-| `record` | `bool` | Stored, but doesn't override the recording policy (set by the Unpod team) today. See [Recording](/telephony/apis/recording) |
+| `record` | `bool` | `True` records this call even if the recording policy doesn't; `False` hides the policy recording from the API. See [Recording](/telephony/apis/recording) |
 | `record_participant_track` | `bool` | Also send per-leg recording events. Needs `record=True` |
 | `answer_url` / `answer_method` | `str` / `"POST"` \| `"GET"` | Run an answer-URL app on this leg when it connects, instead of bridging it |
 | `metadata` | `dict[str, str]` | Echoed on every event as `ev.metadata` |
@@ -113,6 +114,43 @@ curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/speak" 
 `callee`); omit it to play to everyone on the call. Each leg gets `PlayStarted` / `PlayStopped` events with the same
 `play_id`. `speak` answers `503 tts_unavailable` when speech can't be made (the call
 carries on) and `429 rate_limited` when your org sends too many at once.
+
+## Transfer
+
+`transfer` hands the person on the call to another number and takes your app off the call:
+the person you dialed on a call you started with `create` (`leg="callee"`, the default), or
+the caller on an inbound call (`leg="caller"`). Only a blind transfer works today.
+
+<CodeGroup>
+```python Python
+calls.transfer(call_id, "+919000000004")                 # create call; returns None
+calls.transfer(call_id, "+919000000004", leg="caller")   # inbound call
+```
+
+```bash cURL
+# blind transfer -> 200
+curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls/$CALL_ID/transfer" \
+  -H "Authorization: Token $UNPOD_PLATFORM_TOKEN" -H "Org-Handle: $UNPOD_ORG_HANDLE" \
+  -H "Content-Type: application/json" \
+  -d '{"type": "blind", "target": "+919000000004"}'
+```
+</CodeGroup>
+
+| Method | Notes |
+| --- | --- |
+| `transfer(call_id, target, *, type, leg)` | `target` is an E.164 number. `type` is `"blind"` (default); `"attended"` answers `501 not_implemented`. `leg` is the side to hand over: `"callee"` (default) on a `create` call, `"caller"` on an inbound call |
+
+What happens on the call:
+
+1. Unpod dials `target` as a new leg. Its [events](/telephony/apis/webhooks#events) carry
+   `Role=customer`. There is no separate transfer event. On a `create` call you also get
+   `ParticipantJoin` / `ParticipantExit` for it; on an inbound call only the leg events.
+2. While the target rings, the person hears a ringback tone: their leg gets `PlayStarted`,
+   then `PlayStopped` when the target answers. Then the two are connected.
+3. Whatever ran on the call stops. A [`<Stream>`](/telephony/apis/audio-streaming) ends
+   `stopped` with `completed`, and the verbs after it in your answer XML don't run.
+4. When either side hangs up, Unpod hangs up the other (`HangupBy=system`) and the call ends.
+   When the target hangs up first, the person's leg ends with `HangupCause=End Of XML Instructions`.
 
 ## Hold and mute
 
@@ -238,6 +276,7 @@ reaches the SBC (`call_api_disabled`, `from_not_owned`).
 | 503 `tts_unavailable` | `speak` couldn't make speech; the call carries on |
 | 503 `webhook_secret_unavailable` | The webhook secret can't be made right now; retry later |
 | 503 `sbc_target_not_configured` | Your org's telephony routing isn't set up; ask the Unpod team |
+| 501 `not_implemented` | `transfer` with `type="attended"` |
 
 The SDK raises `ValueError` before sending when `speak` text is over 1000 characters,
 or a `create` / `add_participant` option breaks
@@ -257,5 +296,11 @@ Runnable code for this page in [unpod-ai/sample-apps](https://github.com/unpod-a
   </Card>
   <Card title="sbc/streaming/run_ctrl.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/run_ctrl.py">
     Hold (expect `400` on a `create` call), and `play_audio` with `mix` on and off during a stream.
+  </Card>
+  <Card title="sbc/streaming/run_transfer2.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/run_transfer2.py">
+    Blind transfer of a `create` call to a second phone, with or without a `<Stream>` running.
+  </Card>
+  <Card title="sbc/streaming/run_transfer_inbound.py" icon="file-code" href="https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/streaming/run_transfer_inbound.py">
+    Blind transfer of an inbound call running a `<Stream>` bot, then restores the number's inbound config.
   </Card>
 </CardGroup>

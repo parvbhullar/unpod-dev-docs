@@ -12,7 +12,7 @@ file and you need no server to send the calls. Haven't made a call yet? Start wi
 
 ## 1. Write the message
 
-Say it in a platform voice with `<Speak>`, or play a recording with `<Play>`:
+Say it in Unpod's default voice with `<Speak>`, or play a recording with `<Play>`:
 
 <CodeGroup>
 ```xml Text to speech
@@ -32,10 +32,7 @@ Say it in a platform voice with `<Speak>`, or play a recording with `<Play>`:
 ```
 </CodeGroup>
 
-To pick a platform voice, add `voice` and `language` to `<Speak>` with real values. A
-made-up value can make the speech fail, and the call then ends right after it's answered.
-
-{/* TODO(verify): platform voice ids to list */}
+Leave out `voice` and `language` on `<Speak>`: Unpod has one default voice and uses it.
 
 Save either one as `blast.xml`. The audio file is a public https MP3 or WAV, given as the
 text of `<Play>`. `<Hangup/>` is optional: Unpod hangs up when the last verb finishes. For
@@ -45,14 +42,15 @@ Host `blast.xml` anywhere public over https that serves it without a redirect, s
 object storage or a CDN: Unpod doesn't follow redirects. See
 [Serve a static file](/telephony/apis/answer-url#serve-a-static-file).
 
-{/* TODO(verify): static .xml file with answer_method="GET" - confirm live */}
+{/* TODO(verify): static .xml with answer_method="GET" is supported in code (GET sends fields as query params, body parsed whatever the Content-Type, redirects not followed, empty body continues) - confirm with one live call to a CDN-hosted .xml */}
 
 <Warning>
 If Unpod can't fetch the file within 3 seconds, or it's empty, nothing plays and the call
 stays connected in silence until the person hangs up or you end it. After 5 failed fetches
 in a row, Unpod skips the fetch for 30 s, so calls answered then are silent even after the
-file is back. Calls have no maximum length: end a stuck one with `calls.end` (see
-[Call Control](/telephony/apis/call-control#inspect-and-end-calls)). The script below checks
+file is back. A silent call lasts until `time_limit` (4 hours by default; set a shorter
+[`time_limit`](/telephony/apis/call-control#options) on `create`), so end a stuck one with
+`calls.end` (see [Call Control](/telephony/apis/call-control#inspect-and-end-calls)). The script below checks
 the file once before dialing; also dial your own number first and listen.
 </Warning>
 
@@ -147,9 +145,11 @@ The script dials one number a second, because Unpod accepts at most **60 `create
 other error is listed at the end and the rest are still dialed. `gave up after retries`
 means the `429`s (or network errors) didn't stop: run the script again later to pick those
 numbers up. Fix the list and
-run the script again: thanks to the idempotency key `reminder-nov:<number>`, a
-re-run within 24 h doesn't dial the same number twice, unless Unpod restarts (keys live in
-memory). Use a new campaign name for a new blast.
+run the script again: the idempotency key `reminder-nov:<number>` stops most re-runs
+within 24 h from dialing the same number twice. It's best effort: keys live in memory, so
+a retry that reaches another Unpod server, or comes after Unpod restarts, can dial again.
+De-duplicate on your side too, for example by skipping numbers you already have events
+for. Use a new campaign name for a new blast.
 
 Leave out `status_callback_url` if you don't need step 3.
 
@@ -244,15 +244,16 @@ run step 2 with a new campaign name, such as `reminder-nov-retry`.
   Over it, Unpod returns `429` with `detail` `Request was throttled. Expected available in N
   seconds.` and dials nothing. `PACE` keeps the script under it. Each `create` returns right
   away, so up to 60 new calls can be ringing each minute.
-- Unpod can also cap your org's concurrent calls. At the cap, `create` returns `429` and
-  dials nothing, and the script backs off and retries. A call accepted
-  right at the cap can still end with `Service Unavailable`.
+- Your org also has a concurrent-call cap, equal to your plan's channel count, and a
+  calls-per-second cap, which defaults to 5% of your channels (at least 1). Over either,
+  `create` returns `429` with `code` `too_many_requests` and `Retry-After: 1`, and dials
+  nothing; the script backs off and retries. A call accepted right at the cap can still
+  end with `Service Unavailable`. To raise either cap, add channels to your plan or ask
+  the Unpod team.
 - A reply can be at most 64 KB, with up to 32 verbs and 4096 characters in each
   `<Speak>`.
 
-{/* TODO(verify): org concurrent-call and rate limits */}
-{/* TODO(verify): concurrent-call cap defaults for platform orgs, how to raise the cap */}
-{/* TODO(verify): Idempotency-Key is kept for 24 h in memory on one SBC node - confirm a re-run behind the proxy hits the same node */}
+{/* TODO(verify): org caps are pushed only when SUPERSBC_SYNC_ORG_LIMITS is on (Prod value not read; the 2026-11-23 CPS push implies it is on); an unresolvable entitlement means no cap */}
 
 ## Next
 

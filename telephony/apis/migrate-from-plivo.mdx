@@ -88,6 +88,7 @@ leg = await calls.add_participant(
 
 | Plivo | Unpod SDK |
 | --- | --- |
+| `dialMusic: "real"` (default) | `dial_music="real"`, or leave it out: Unpod plays its own ringback tone |
 | `dialMusic: "NONE"` | `dial_music="none"` |
 | `dialMusic: <url>` | `dial_music="https://…"`, a public https MP3 or WAV. Or play the file with `play_audio(..., loop=True)` after `add_participant` and stop it when the leg answers - see [Multiple Participants](/telephony/apis/multiple-participants#play-a-ringing-sound-while-the-second-person-rings) |
 | No participant limit | **At most two participants** per call. A third raises `409 participant_limit` |
@@ -161,11 +162,11 @@ The secret comes from `client.telephony.webhook_secret.reveal()`. See [Webhooks]
 | `ParticipantRecordingCompleted` | `ev.metadata["recording_url"]` and `ev.metadata["channel"]`: the same 2-channel WAV - split it if you need per-leg audio |
 | `MPCRecordingCompleted` | Same name, but without `metadata`. `ev.recording_url` is a path inside Unpod: fetch with `get_recording(ev.call_id)` |
 
-One **2-channel WAV** per call: agent on the left, customer on the right. Whether a call
-is recorded follows the recording policy (set by the Unpod team): `record=True` doesn't
-override it today. See [Recording](/telephony/apis/recording).
+Each recording is a **2-channel WAV**, one leg on each channel. Whether a call is
+recorded follows the recording policy (set by the Unpod team); `record=True` on `create`
+turns recording on for that call. See [Recording](/telephony/apis/recording).
 
-{/* TODO(verify): channel order on a live two-person call */}
+{/* TODO(verify): channel order on a live two-person call - code suggests the dialled (agent) leg is on the right; confirm on a real file before naming sides */}
 
 ### Incoming Call
 
@@ -175,12 +176,13 @@ from unpod.telephony import InboundConfig
 await client.telephony.inbound.set_did("+919000000001", InboundConfig(
     answer_url="https://your-app.example.com/incoming",
     status_callback_url="https://your-app.example.com/incoming",
-    record=True,  # stored, not applied yet: see Recording
+    record=True,  # not applied yet for inbound: see Recording
 ))
 ```
 
 The `StartApp` / `Hangup` / `RecordStop` events and the reply XML are the same as Plivo's -
-see [Incoming Calls](/telephony/apis/incoming-calls).
+see [Incoming Calls](/telephony/apis/incoming-calls). That includes `<Dial>`: `action`,
+`redirect`, `hangupOnStar` and the `DialStatus` callback work as in Plivo.
 
 ## 6. Hangup causes
 
@@ -212,8 +214,9 @@ See [Audio Streaming](/telephony/apis/audio-streaming) for every attribute and e
 
 ## Known differences
 
-- **Per-participant recordings:** no per-participant files. One 2-channel WAV per call
-  (split it).
+- **Per-participant recordings:** each participant session can produce its own recording
+  and its own `MPCRecordingCompleted` event (with its own `MPCUUID`). There is no split file
+  per person: split the 2-channel WAV yourself.
 - **Two participants** per call at most.
 - **Callback and audio URLs** must be public https.
 - **`speak`** depends on TTS being available for your org.

@@ -88,8 +88,7 @@ Only want to make calls? You don't need a trunk - see the
 
     The SDK doesn't expose the number id yet, so the Python sample reads the list over HTTP.
 
-    {/* TODO(verify): expose Number.id in the SDK */}
-    {/* TODO(verify): how a carrier-owned number first appears in the org's number list */}
+    {/* TODO(verify): expose Number.id in the SDK (still not on unpod.telephony.Number as of 2026-11-24; keep the HTTP lookup until it is) */}
 
     <CodeGroup>
     ```python Python
@@ -143,7 +142,8 @@ Only want to make calls? You don't need a trunk - see the
     ```
     </CodeGroup>
 
-    If your number isn't in the list, it can't be mapped yet - ask the Unpod team.
+    If your number isn't in the list, ask the Unpod team to add it. It then shows as
+    `NOT_ASSIGNED` and you can map it.
 
     The response has the **origin endpoint**: `ingress` is the host your carrier sends
     calls to (a bare host such as `sip-lb1.unpod.tel`, no `sip:` prefix), and
@@ -158,10 +158,11 @@ Only want to make calls? You don't need a trunk - see the
   <Step title="Point your carrier at the origin endpoint">
     In your carrier's console, set the number's inbound destination to the `ingress` value.
     Make sure the carrier sends from an address in `accepted_source_ips` - these are the
-    `source_ips` you gave the trunk. Your carrier may also ask for the SIP port, the
-    transport and the number format to put in the Request-URI; these aren't documented yet.
+    `source_ips` you gave the trunk. Have the carrier put the number in E.164 (`+91...`)
+    in the `To` header: Unpod matches the call to your number by the `To` header. Your
+    carrier may also ask for the SIP port and transport; these aren't documented yet.
 
-    {/* TODO(verify): ingress port and transport, and the number format (E.164 with or without +) the Request-URI must carry */}
+    {/* TODO(verify): ingress port and transport (ops) */}
   </Step>
 
   <Step title="Verify">
