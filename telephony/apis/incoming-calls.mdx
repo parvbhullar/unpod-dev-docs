@@ -96,7 +96,6 @@ keeps retrying it in the background.
 | `status_callback_url` / `_format` | Where call events go, as `form` (default) or `json` |
 | `status_callback_method` | `POST` only: inbound call events are always POSTed |
 | `recording_callback_url` | Where the recording event goes |
-| `record` | Stored, not applied yet |
 | `tts_voice`, `tts_language` | Defaults for the [speak](/telephony/apis/call-control#play-audio-and-speak) endpoint on this number's calls. XML `<Speak>` uses only its own `voice` and `language` |
 
 ## The webhook secret
@@ -241,16 +240,14 @@ with `DialStatus` (`completed`, `busy`, `failed`, `cancel`, `timeout` or `no-ans
 so the server above replies with a `<Dial>` to the next free agent. See
 [Dial a number](/telephony/apis/answer-url#dial-a-number) for every attribute.
 
-{/* TODO(verify): the sample assumes the <Dial> action request is signed and carries MPCUUID like the <GetDigits> action request; confirm on one live inbound call */}
-
 The agent's leg sends `Initiated`, `Ringing`, `Answered` and `Hangup` to the number's
 `status_callback_url`, with `ev.role` set to `customer`. To move a caller who is already
 talking to your app, use [`transfer`](/telephony/apis/call-control#transfer) with
 `leg="caller"`.
 
 <Note>
-Whether inbound calls are recorded follows the recording policy (set by the Unpod team),
-not the number's `record` setting (see [Recording](/telephony/apis/recording)). Don't put
+Whether inbound calls are recorded follows the recording policy (set by the Unpod team;
+see [Recording](/telephony/apis/recording)). Don't put
 `<Record/>` before `<Dial>`: the caller waits in silence for the recording to finish
 (300 s by default) before Unpod dials.
 </Note>

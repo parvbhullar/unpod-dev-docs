@@ -42,8 +42,6 @@ Host `blast.xml` anywhere public over https that serves it without a redirect, s
 object storage or a CDN: Unpod doesn't follow redirects. See
 [Serve a static file](/telephony/apis/answer-url#serve-a-static-file).
 
-{/* TODO(verify): static .xml with answer_method="GET" is supported in code (GET sends fields as query params, body parsed whatever the Content-Type, redirects not followed, empty body continues) - confirm with one live call to a CDN-hosted .xml */}
-
 <Warning>
 If Unpod can't fetch the file within 3 seconds, or it's empty, nothing plays and the call
 stays connected in silence until the person hangs up or you end it. After 5 failed fetches

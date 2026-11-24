@@ -90,15 +90,13 @@ Answer().stream("wss://bot.example.com/ws").to_xml()   # or .to_json()
 | `extraHeaders` | `extra_headers` | - | `key=value,key2=value2` (`,` or `;` between pairs). Keys and values are letters, digits, `_` and `-` only; at most 512 bytes in all. Sent to your bot in the `start`, `media` and `dtmf` frames and in the status callbacks |
 | `statusCallbackUrl` | `status_callback_url` | - | Where [status callbacks](#status-callbacks) go: a public `http` or `https` URL. **Without it there are no stream callbacks** |
 | `statusCallbackMethod` | `status_callback_method` | `POST` | `POST` or `GET` |
-| `noiseCancellation`, `noiseCancellationLevel` | `noise_cancellation`, `noise_cancellation_level` | - | Accepted and checked (level 60-100) but **not applied yet** |
 
 <Tip>
 The SDK's `Answer().stream(url)` is set up for a voice bot: it sends `bidirectional="true"`,
 `keepCallAlive="true"`, `audioTrack="inbound"` and μ-law at 8000 Hz unless you pass
 `bidirectional=`, `keep_call_alive=`, `audio_track=`, `content_type=` / `sample_rate=`.
-It also takes `stream_timeout=`, `status_callback_url=`, `status_callback_method=`,
-`extra_headers=` (a string or a dict), `noise_cancellation=` and `noise_cancellation_level=`,
-and checks them the same way Unpod does.
+It also takes `stream_timeout=`, `status_callback_url=`, `status_callback_method=` and
+`extra_headers=` (a string or a dict), and checks them the same way Unpod does.
 </Tip>
 
 Verbs after `<Stream>` run once the stream ends (with `keepCallAlive="true"`, when your bot
@@ -130,7 +128,7 @@ Every route returns `404` for an unknown call or one that is ending, `503` while
 media is degraded, and `409` for any other refusal.
 
 The `POST` body takes the snake_case keys from the `<Stream>` table, with `service_url` in
-place of `url`. The noise-cancellation keys are not taken over REST.
+place of `url`.
 
 A stream object has `stream_id`, `call_uuid`, `service_url`, `status` (`in-progress`,
 `stopped` or `failed`), `bidirectional`, `audio_track`, `content_type`, `start_time`,
@@ -337,7 +335,6 @@ if ev.event in STREAM_EVENTS:
   successful write, then the stream fails with `slow_connection` at 40 s.
 - About 40 s of `playAudio` can wait to play; more is dropped (`degraded` with
   `buffer_overflow`).
-- Noise cancellation is accepted but not applied yet.
 - An invalid `<Stream>` attribute (for example `bidirectional="true"` with `audioTrack="both"`,
   `streamTimeout="0"`, or an `http://`, empty or over-long URL) fails the whole reply. No
   `failed` callback is sent, and on a call you started with `create` the person stays on a
