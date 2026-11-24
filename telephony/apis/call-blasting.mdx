@@ -143,9 +143,10 @@ The script dials one number a second, because Unpod accepts at most **60 `create
 other error is listed at the end and the rest are still dialed. `gave up after retries`
 means the `429`s (or network errors) didn't stop: run the script again later to pick those
 numbers up. Fix the list and
-run the script again: the idempotency key `reminder-nov:<number>` stops most re-runs
-within 24 h from dialing the same number twice. It's best effort: keys live in memory, so
-a retry that reaches another Unpod server, or comes after Unpod restarts, can dial again.
+run the script again: the idempotency key `reminder-nov:<number>` stops a re-run
+within 24 h from dialing the same number twice when it reaches the same Unpod server. Keys
+are kept in memory on each server, so a retry that reaches another server, or comes after
+a restart, dials again.
 De-duplicate on your side too, for example by skipping numbers you already have events
 for. Use a new campaign name for a new blast.
 

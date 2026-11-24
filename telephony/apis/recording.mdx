@@ -136,8 +136,8 @@ storage rather than handing the URL to a browser.
 | Audio | G.711 μ-law or A-law, whichever the call used, 8-bit, 8000 Hz |
 | Channels | 2: the person on the phone, and Unpod's side (what that person hears) |
 
-A call you start with `create` is recorded in μ-law. An inbound call from the phone network
-is usually A-law. To check a file, read the format code in its WAV header: `7` is μ-law, `6`
+A call you start with `create` is recorded in μ-law. An inbound call to your Unpod number
+is recorded in A-law. To check a file, read the format code in its WAV header: `7` is μ-law, `6`
 is A-law.
 
 | Call | Left channel | Right channel |
