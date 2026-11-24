@@ -108,6 +108,10 @@ closes the socket), for example a `<Dial>` to hand the caller to a person. See
 A `<Stream>` that comes while a background stream is still running stops that stream first.
 It ends `stopped` with `completed`.
 
+A [`transfer`](/telephony/apis/call-control#transfer) stops the stream too: it ends `stopped`
+with `completed`, Unpod closes your bot's socket, and the verbs after `<Stream>` don't run.
+Treat that close, or the `stopped` callback, as the end of the stream, not as an error.
+
 ## REST stream API
 
 Start, list and stop streams on a live call. Same host and headers as the other
