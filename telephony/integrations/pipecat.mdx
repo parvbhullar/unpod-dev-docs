@@ -283,6 +283,11 @@ A fuller example, with outbound calls started from a `POST /start` route protect
 - Hanging up needs `client=` (an `AsyncClient`) or your own `hangup=` coroutine. A call that
   already ended (404, 409, 410) is ignored. Turn it off with
   `params=UnpodFrameSerializer.InputParams(auto_hang_up=False)`.
+- To hand the caller to a person, put a `<Dial>` after `<Stream keepCallAlive="true">` and
+  build the serializer with `auto_hang_up=False`. When the bot ends, it closes the socket
+  and Unpod runs the `<Dial>`; with `auto_hang_up` on, the bot hangs up the whole call
+  instead. See
+  [`conference_call/agent_handoff.py`](https://github.com/unpod-ai/sample-apps/blob/main/conference_call/agent_handoff.py).
 
 
 ## When to pick Pipecat
