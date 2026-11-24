@@ -43,8 +43,8 @@ curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/v1/calls" \
 </CodeGroup>
 
 The answer URL must be public https, or you get `400 invalid_url`. After 5 failures in a
-row, Unpod skips your URL for 30 s and applies the fallback; inbound and outbound share that
-limit.
+row, Unpod skips your URL for 30 s and applies the fallback. Failures are counted per
+answer-URL host for your org, on each Unpod server; inbound and outbound share that limit.
 
 ## What Unpod sends
 
@@ -111,7 +111,7 @@ The first reply as JSON:
 | `<Play>` | `play` | `loop` | Play an https audio URL |
 | `<Wait>` | `wait` | `length` (seconds, default 1) | Pause |
 | `<Record>` | `record` | `maxLength` (seconds), `callbackUrl`, `recordSession`; with `recordSession`, also `action` and `callbackMethod` | Record the call |
-| `<Dial>` | `dial` | `callerId`, `timeout` (ring seconds), `callbackUrl`, `record`, and the `<Number>` inside | Blind transfer to that number |
+| `<Dial>` | `dial` | `action`, `method`, `redirect`, `hangupOnStar`, `callerId`, `timeout` (ring seconds), `callbackUrl`, `record`, and the `<Number>` inside | Dials that number as a second person, connects them on answer, then runs the next verb. See [below](#dial-a-number) |
 | `<GetDigits>` | `get_digits` | `action`, `method`, `timeout`, `digitTimeout`, `finishOnKey`, `numDigits`, `retries`, `validDigits`, `redirect`, and `<Speak>` / `<Play>` prompts inside | Collect keypad digits |
 | `<GetInput>` | `get_input` | `action`, `method`, `inputType`, `executionTimeout`, `digitEndTimeout`, `finishOnKey`, `numDigits`, `redirect`, and prompts inside | Collect keypad digits (DTMF only) |
 | `<Stream>` | `stream` | See [Audio Streaming](/telephony/apis/audio-streaming) | Stream the call's audio to your WebSocket |
@@ -127,31 +127,57 @@ Other attributes are the snake_case form of the XML name (`record_session`, `num
 `loop` on `<Speak>` and `<Play>` is a bool: `true` (or `0`) repeats the audio, `false` (or
 `1`) plays it once. There's no repeat count: any other number makes the whole reply fail.
 
-{/* TODO(verify): platform voice ids; whether <Dial callerId> is applied on an inbound transfer (see number-masking.mdx) */}
-
 Only these verbs are supported. `<Redirect>`, `<PreAnswer>`, `<DTMF>`, `<Conference>`,
 `<MultiPartyCall>`, `<Message>` or any other element makes the whole reply fail and the
 [fallback](#timeouts-and-fallback) applies.
 
 Verbs run in order. When the last one finishes, Unpod hangs up, and the `Hangup` events
-carry the `HangupCause` `End Of XML Instructions` (an explicit `<Hangup>` doesn't). Verbs
-after `<Dial>` don't run. A reply can be at most 64 KB with 32 verbs, and 4096 characters in each
+carry the `HangupCause` `End Of XML Instructions` (an explicit `<Hangup>` doesn't). After
+`<Dial>` ends, the next verb runs. A reply can be at most 64 KB with 32 verbs, and 4096 characters in each
 `<Speak>`. Every audio URL must be public https.
 
-Set the voice and language on `<Speak>` itself:
-
-```xml
-<Response>
-    <Speak voice="VOICE_ID" language="LANGUAGE_CODE">Your order has shipped.</Speak>
-    <Hangup/>
-</Response>
-```
+`<Speak>` uses one default voice, so you can leave out `voice` and `language`.
 
 Whether a call is recorded follows the recording policy (set by the Unpod team);
-`record=True` on `create` doesn't override it today (see
+`record=True` on `create` turns recording on for that call (see
 [Recording](/telephony/apis/recording)). Don't put `<Record/>` before `<Dial>`: it waits
 for the recording to finish (300 s by default) before dialing, and the caller hears
 silence. To record and dial, use [`recordSession`](#record-in-the-background).
+
+### Dial a number
+
+`<Dial>` dials the `<Number>` inside it as a second person on the call. The caller hears
+ringback while it rings, and the two are connected when it answers. If it's busy or doesn't
+answer, the caller stays on the line. When that leg ends, the next verb runs.
+
+```xml
+<Response>
+    <Dial action="https://your-app.example.com/dial-status" timeout="20">
+        <Number>+919000000003</Number>
+    </Dial>
+</Response>
+```
+
+| Attribute | Meaning |
+| --- | --- |
+| `action` | URL Unpod requests when the dialled leg ends |
+| `method` | Method for `action`, default `POST` |
+| `redirect` | `true` (default): the `action` reply replaces the rest of the verbs |
+| `callerId` | The number the dialled person sees. On an inbound call it's used if your org owns that number; otherwise they see the number the caller dialled. On a call started with `create`, a `callerId` your org doesn't own refuses the dial |
+| `timeout` | Seconds to ring |
+
+With `action`, Unpod requests it with:
+
+- `DialStatus`: `completed`, `busy`, `failed`, `cancel`, `timeout` or `no-answer`. A dial
+  that can't be placed reports `failed`
+- `DialRingStatus`: `true` when the dialled person answered
+- `DialHangupCause`, `DialALegUUID` and `DialBLegUUID`
+
+Reply with the next verbs, such as a `<Dial>` to another number. On an inbound call, the
+dialled leg's `Initiated`, `Ringing`, `Answered` and `Hangup` events go to the number's
+`status_callback_url` with `Role=customer`. See
+[Incoming Calls](/telephony/apis/incoming-calls#handle-the-call) for a server that tries the
+next agent.
 
 ### Collect digits
 
@@ -293,7 +319,7 @@ Every call runs the same instructions, which suits
 A GET sends the call's fields as query parameters and is not signed. The URL must not
 redirect: Unpod doesn't follow redirects.
 
-{/* TODO(verify): static .xml file with answer_method="GET" - confirm live */}
+{/* TODO(verify): code supports a static .xml via GET (query params, body sniffed regardless of Content-Type, no redirects, empty body continues); still needs one live call to a CDN-hosted .xml */}
 
 ## Sample code
 

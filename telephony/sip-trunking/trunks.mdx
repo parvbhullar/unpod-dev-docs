@@ -129,7 +129,7 @@ return the id yet - step 3 of the [Quick Start](/telephony/quickstart) shows a P
 lookup. For numbers already on your org, `client.telephony.overview()` returns the same
 id as `number_id` - a pure-SDK way to find the ids to unmap.
 
-{/* TODO(verify): expose Number.id in the SDK */}
+{/* TODO(verify): expose Number.id in the SDK (still not on unpod.telephony.Number as of 2026-11-24; keep the HTTP lookup until it is) */}
 
 <CodeGroup>
 ```python Python
@@ -239,16 +239,21 @@ the sample unmaps, then deletes only once every number has unmapped. Running it 
 the ids that already unmapped: they now report `ok: false`, and if none unmap the request
 fails with `400`.
 
-{/* TODO(verify): no endpoint lists the numbers mapped to a trunk; keep the ids you mapped */}
+The trunk calls don't list a trunk's numbers, but `overview()` does: a number on the trunk
+has `provider_credential_id` equal to the trunk id. The sample finds the ids that way.
 
 <CodeGroup>
 ```python Python
 from unpod import Client
 
-TRUNK_ID = 21        # your trunk id
-NUMBER_IDS = [501]   # every number mapped to the trunk
+TRUNK_ID = 21  # your trunk id
 
 with Client() as client:
+    NUMBER_IDS = [  # every number mapped to the trunk
+        o.number_id
+        for o in client.telephony.overview()
+        if getattr(o, "provider_credential_id", None) == TRUNK_ID
+    ]
     trunks = client.telephony.trunks
     result = trunks.detach_numbers(TRUNK_ID, NUMBER_IDS)
     if all(r.ok for r in result.numbers):

@@ -53,7 +53,7 @@ the same name (`from_` is `from`), and `idempotency_key` is the `Idempotency-Key
 | `status_callback_method` | `"POST"` \| `"GET"` | `POST` only today: status callbacks are always POSTed, and `GET` is ignored |
 | `status_callback_format` | `"form"` \| `"json"` | Default `form` (keys such as `CallUUID`); `json` uses snake_case |
 | `recording_callback_url` | `str` | Public https URL for the recording event |
-| `record` | `bool` | Stored, but doesn't override the recording policy (set by the Unpod team) today. See [Recording](/telephony/apis/recording) |
+| `record` | `bool` | `True` records this call even if the recording policy doesn't; `False` hides the policy recording from the API. See [Recording](/telephony/apis/recording) |
 | `record_participant_track` | `bool` | Also send per-leg recording events. Needs `record=True` |
 | `answer_url` / `answer_method` | `str` / `"POST"` \| `"GET"` | Run an answer-URL app on this leg when it connects, instead of bridging it |
 | `metadata` | `dict[str, str]` | Echoed on every event as `ev.metadata` |

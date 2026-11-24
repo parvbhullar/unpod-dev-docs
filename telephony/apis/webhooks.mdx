@@ -121,8 +121,6 @@ to the last is roughly 27-75 s. Then the event is marked failed and never sent a
   [fallback](/telephony/apis/answer-url#timeouts-and-fallback), and `Hangup` and
   `RecordStop` are sent once.
 
-{/* TODO(verify): leg_delivery.rs DeliveryConfig::default (max_attempts 4, request_timeout 10 s) with processor.rs DEFAULT_BACKOFF_SCHEDULE [1s, 5s, 30s] ±25% jitter; server.rs starts the worker with Default::default() */}
-
 ## Events
 
 | `ev.event` | When |
@@ -136,6 +134,11 @@ to the last is roughly 27-75 s. Then the event is marked failed and never sent a
 | `ParticipantRecordingInitiated`, `ParticipantRecordingCompleted` | Per leg, only with `record_participant_track=True`. Sent together after the call, with the leg's channel in `ev.metadata["channel"]` (`1` left, `2` right). Only `Completed` carries the recording, in `ev.metadata["recording_url"]` |
 | `StartApp`, `Hangup`, `RecordStop` | Answer-URL events, with `ev.call_status`. See [Answer URL & XML](/telephony/apis/answer-url#what-unpod-sends) |
 | `started`, `stopped`, `failed`, `degraded` | Audio-stream lifecycle, sent only to the stream's `statusCallbackUrl`. See [Stream events](#stream-events) |
+
+On an inbound call, the leg that a [`<Dial>`](/telephony/apis/answer-url#reply-with-xml-or-json)
+rings sends `Initiated`, `Ringing`, `Answered` and `Hangup` to the number's
+`status_callback_url`, with `role` `customer`. The target leg of a blind
+[`transfer`](/telephony/apis/call-control#transfer) also has `role` `customer`.
 
 ## `CallEvent` fields
 
@@ -166,7 +169,7 @@ reads only the form field `Metadata`. Keep the form format, or read
 `ev.raw["metadata"]`.
 </Warning>
 
-{/* TODO(verify): SDK 0.7.0 events.py _normalize reads raw.get("Metadata") only, while leg_delivery.rs encode_body sends JSON key "metadata" - drop this warning once the SDK reads both */}
+{/* TODO(verify): SDK 0.7.0 events.py _normalize reads raw.get("Metadata") only, while leg_delivery.rs encode_body sends JSON key "metadata" (re-tested 2026-11-24 with SDK 0.7.0: JSON metadata comes back empty) - drop this warning once the SDK reads both */}
 
 ## Stream events
 
@@ -214,16 +217,16 @@ Every stream event also carries:
 | `"Invalid Destination Address"` | 404, 484 or 604 | The number doesn't exist or is incomplete |
 | `"Forbidden"` | 401, 403 or 407 | The carrier refused the call |
 | `"Service Unavailable"` | Any 5xx | The call couldn't be placed. At your org's cap, `create` and `add_participant` normally return `429` right away; a 503 hangup means a burst passed that check and hit the cap while dialing (see [Call Blasting](/telephony/apis/call-blasting#3-track-results)) |
+| `"Time Limit Reached"` | `None` | An answered `create` call reached its `time_limit` and Unpod hung up (`ev.hangup_by` is `system`) |
 | `"End Of XML Instructions"` | `None` | Your [answer-URL reply](/telephony/apis/answer-url#reply-with-xml-or-json) ran out of verbs and Unpod hung up (`ev.hangup_by` is `system`). An explicit `<Hangup>` doesn't report it |
 | `"Unknown"` | Any other code, or `None` | Anything else |
 
 The strings are exact. Match on `ev.hangup_cause` first. `ev.sip_code` is always set for
 `Busy Line`, `No Answer`, `Invalid Destination Address`, `Forbidden` and
-`Service Unavailable`. It's `None` on an answered leg, and can be `None` for `Rejected`,
+`Service Unavailable`. It's set only on legs that were never answered, so it's `None` on an
+answered leg (`Normal Hangup`, `Time Limit Reached`, `End Of XML Instructions`), and can be `None` for `Rejected`,
 `Cancelled`, `Unknown` and `Ring Timeout Reached`. A ring timeout also reports the 487
 from cancelling the ringing leg, so 487 alone doesn't mean a cancel.
-
-{/* TODO(verify): full list from leg_lifecycle.rs hangup_cause(); sip_code is HangupFacts.sip_code filtered to unanswered legs */}
 
 ## Sample code
 
