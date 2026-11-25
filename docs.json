@@ -64,6 +64,19 @@
             ]
           },
           {
+            "tab": "Text to Speech",
+            "groups": [
+              {
+                "group": "Text to Speech",
+                "icon": "audio-lines",
+                "pages": [
+                  "tts/overview",
+                  "tts/compare"
+                ]
+              }
+            ]
+          },
+          {
             "tab": "Numbers & SIP",
             "groups": [
               {

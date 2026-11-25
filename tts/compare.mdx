@@ -1,0 +1,90 @@
+---
+title: 'Compare Unpod TTS with other text to speech APIs'
+sidebarTitle: 'Compare'
+icon: 'scale'
+mode: 'wide'
+description: 'Hear the same line on Unpod and other text to speech APIs, then see what each one costs and how soon each one starts speaking.'
+---
+
+import { Tts } from "/snippets/tts.jsx";
+import { TTS_DATA } from "/snippets/tts-data.jsx";
+
+Pick a line and a language, then play each provider's take. Unpod is the highlighted card.
+
+<Tts view="compare" data={TTS_DATA} />
+
+<Tts view="eyebrow" n="01" label="Cost" meta={"List prices · " + TTS_DATA.recorded} />
+
+## What each one costs
+
+The price of the same amount of speech on each provider: a minute, an hour, or a month's worth of
+characters.
+
+<Tts view="cost" data={TTS_DATA} />
+
+<Tts view="eyebrow" n="02" label="Time to first audio" meta="Streaming APIs" />
+
+## How soon each one starts speaking
+
+Time to first audio is the wait between sending text and hearing sound. On a call, it is the pause
+before the agent replies.
+
+<Tts view="latency" data={TTS_DATA} />
+
+<Accordion title="How we compared">
+  - **Lines.** Four calls per language, from industries voice agents work in: a hospital
+    appointment, a delivery address, a train ticket and a policy renewal. They were written for this
+    comparison. Numbers are sent as digits, the way an LLM sends them, so each engine's own number
+    reading is part of the test.
+  - **Voices.** Each provider's own native voice for the language where it has one: a female voice
+    for the hospital and policy calls, a male voice for the delivery and train calls. When a provider has no voice of
+    that gender in the language, the card shows the voice that was used instead. Unpod uses Kanika
+    and Bunty in every language.
+  - **One take each, default settings.** No retries and no cherry-picking. Recorded {TTS_DATA.recorded}.
+  - **First audio** is the median time from sending the request to the first audio byte, over all 20
+    lines, on each provider's streaming HTTP API. Every request ran from the same machine in India,
+    one at a time, over a warm connection.
+</Accordion>
+
+<Tts view="eyebrow" n="03" label="What to listen for" meta="4 things" />
+
+## Where most voices slip up
+
+Most voices sound fine on a simple sentence. These four are where they go wrong on a real call, and
+each one is in a line you can play above.
+
+<Tts view="slips" data={TTS_DATA} />
+
+<Tts view="eyebrow" n="04" label="FAQ" meta="Comparison questions" />
+
+## Frequently asked questions
+
+<AccordionGroup>
+  <Accordion title="Are these the real prices?">
+    Yes. They are the pay-as-you-go list prices on each provider's own pricing page on
+    {TTS_DATA.recorded}, with no volume discounts. Unpod's price is not listed on this page.
+  </Accordion>
+  <Accordion title="Why per character and not per minute?">
+    Every provider here bills by the characters you send, not by the length of the audio. To show a
+    price per minute or per hour, a minute of speech is counted as 1,000 characters.
+  </Accordion>
+  <Accordion title="Are the first-audio times measured the same way?">
+    Yes. We measured every other provider ourselves on {TTS_DATA.recorded}: the median time from request to
+    first audio byte over the same 20 lines, on each provider's streaming HTTP API, from one machine
+    in India, one request at a time over a warm connection. Unpod is not timed here: its clips were
+    recorded on a test copy of our server, not the production API, so its time would not be comparable.
+  </Accordion>
+  <Accordion title="How were the recordings made?">
+    One take per line with each provider's default settings, no retries and no editing. Numbers were
+    sent as digits, the way an LLM writes them, so each engine reads them its own way.
+  </Accordion>
+  <Accordion title="Why does a card show a different voice on some lines?">
+    Each provider uses its own native voice for the language: a female voice for the hospital and
+    policy calls and a male voice for the delivery and train calls. When a provider has no voice of that gender in the
+    language, the card shows the voice that was used instead.
+  </Accordion>
+</AccordionGroup>
+
+<Tts view="band" title="Hear every Unpod voice"
+  text="Samples on real calls, all voices, and one voice speaking all five languages."
+  links={[{ label: "Unpod TTS overview", href: "/tts/overview", solid: true }]} />

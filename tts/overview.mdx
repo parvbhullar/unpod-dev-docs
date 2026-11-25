@@ -1,0 +1,60 @@
+---
+title: 'Text to speech that sounds local in every Indian language'
+sidebarTitle: 'Overview'
+icon: 'audio-lines'
+mode: 'wide'
+description: 'Unpod TTS reads PNRs, pincodes, dates, amounts and local names the way callers say them, in English, Hindi, Marathi, Tamil and Telugu.'
+---
+
+import { Tts } from "/snippets/tts.jsx";
+import { TTS_DATA } from "/snippets/tts-data.jsx";
+
+<Tts view="hero" data={TTS_DATA} links={[
+  { label: "Compare with other APIs", href: "/tts/compare", solid: true },
+  { label: "Hear a full call", href: "#hear-one-voice-follow-the-caller" },
+]}>
+  Unpod TTS is our own text to speech model, built for voice agents on Indian phone calls. It reads
+  PNRs, pincodes, dates, rupee amounts and local names the way your callers say them, with English
+  mixed in where people mix it, and one voice can follow a caller from language to language.
+</Tts>
+
+<Tts view="eyebrow" n="01" label="A full call" meta="English → Hindi → Tamil" />
+
+## Hear one voice follow the caller
+
+A delivery call where the caller asks for Hindi, then hands the phone to their mother, who speaks
+Tamil. The agent switches language each time and keeps the same voice. Press **Play the call** to
+hear it from start to end.
+
+<Tts view="call" data={TTS_DATA} />
+
+<Tts view="eyebrow" n="02" label="Samples" meta="6 calls · 5 languages" />
+
+## Hear Unpod on real calls
+
+Train tickets, delivery addresses, doctor appointments and policy renewals: PNRs, pincodes, dates,
+percentages and local names, with English mixed in where people mix it. Each Indian-language line
+has its English translation under it.
+
+<Tts view="samples" data={TTS_DATA} />
+
+<Tts view="eyebrow" n="03" label="Try the lines" meta="5 languages · 4 calls" />
+
+## Pick a line, hear Unpod say it
+
+Choose a language and a call, and the player reads it out. Every Unpod voice is listed on the right.
+
+<Tts view="picker" data={TTS_DATA} />
+
+<Tts view="eyebrow" n="04" label="One voice" meta="Kanika · 5 languages" />
+
+## One voice, every language
+
+Kanika and Bunty speak all five languages in the same voice, so one agent can switch language
+mid-call without changing who the caller hears. Here is Kanika reading the same appointment in each:
+
+<Tts view="one-voice" data={TTS_DATA} />
+
+<Tts view="band" title="See how Unpod compares"
+  text="Hear the same line on Unpod, Plivo, Cartesia, Sarvam and Murf, then see what each one costs and how soon each starts speaking."
+  links={[{ label: "Compare text to speech APIs", href: "/tts/compare", solid: true }]} />
