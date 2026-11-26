@@ -1132,8 +1132,8 @@ export const TTS_DATA = {
    "id": "unpod",
    "name": "Unpod",
    "model": "Unpod TTS",
-   "firstAudio": "352 ms",
-   "firstAudioMs": 352,
+   "firstAudio": "291 ms (server-side)",
+   "firstAudioMs": 291,
    "priceInr": "—",
    "usdPer1k": null,
    "clips": {
@@ -6685,7 +6685,7 @@ export const TTS_DATA = {
   }
  ],
  "costNote": "Pay-as-you-go list prices from each provider's pricing page, 25 Nov 2026. A minute of speech is counted as 1,000 characters. INR at ₹94.25 per US dollar.",
- "latencyNote": "Unpod was recorded and timed on its production API on 26 Nov 2026, the same way as the others.",
+ "latencyNote": "Unpod's time is server-side: from the moment our TTS server receives the text to its first audio, on the production API on 26 Nov 2026. The other providers were timed from a client in India, so their times also include the network.",
  "notes": [
   "One take each",
   "Default settings",

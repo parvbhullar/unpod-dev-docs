@@ -41,9 +41,10 @@ before the agent replies.
     that gender in the language, the card shows the voice that was used instead. Unpod uses Kanika
     and Bunty in every language.
   - **One take each, default settings.** No retries and no cherry-picking. Recorded {TTS_DATA.recorded}.
-  - **First audio** is the median time from sending the request to the first audio byte, over all 20
-    lines, on each provider's streaming HTTP API. Every request ran from the same machine in India,
-    one at a time, over a warm connection.
+  - **First audio** is the median time to the first audio, over all 20 lines, on each provider's
+    streaming HTTP API, one request at a time. For the other providers it is measured from the
+    same machine in India over a warm connection, so it includes the network. For Unpod it is
+    measured server-side, from the moment our TTS server receives the text to its first audio.
 </Accordion>
 
 <Tts view="eyebrow" n="03" label="What to listen for" meta="4 things" />
@@ -69,10 +70,12 @@ each one is in a line you can play above.
     price per minute or per hour, a minute of speech is counted as 1,000 characters.
   </Accordion>
   <Accordion title="Are the first-audio times measured the same way?">
-    Yes. We measured every provider ourselves: the median time from request to first audio byte over
-    the same 20 lines, on each provider's streaming HTTP API, from one machine in India, one request at
-    a time over a warm connection. The other providers were recorded on {TTS_DATA.recorded}. Unpod was
-    recorded and timed on its production API on 26 Nov 2026.
+    Not exactly. We measured every provider ourselves, as the median over the same 20 lines on its
+    streaming HTTP API, one request at a time. The other providers were timed on {TTS_DATA.recorded}
+    from one machine in India over a warm connection, from sending the request to the first audio
+    byte, so their times include the network. Unpod's time is server-side: from the moment our TTS
+    server receives the text to its first audio, on the production API on 26 Nov 2026. It does not
+    include the network between your app and our server.
   </Accordion>
   <Accordion title="How were the recordings made?">
     One take per line with each provider's default settings, no retries and no editing. Numbers were
