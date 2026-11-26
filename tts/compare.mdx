@@ -69,10 +69,10 @@ each one is in a line you can play above.
     price per minute or per hour, a minute of speech is counted as 1,000 characters.
   </Accordion>
   <Accordion title="Are the first-audio times measured the same way?">
-    Yes. We measured every other provider ourselves on {TTS_DATA.recorded}: the median time from request to
-    first audio byte over the same 20 lines, on each provider's streaming HTTP API, from one machine
-    in India, one request at a time over a warm connection. Unpod is not timed here: its clips were
-    recorded on a test copy of our server, not the production API, so its time would not be comparable.
+    Yes. We measured every provider ourselves: the median time from request to first audio byte over
+    the same 20 lines, on each provider's streaming HTTP API, from one machine in India, one request at
+    a time over a warm connection. The other providers were recorded on {TTS_DATA.recorded}. Unpod was
+    recorded and timed on its production API on 26 Nov 2026.
   </Accordion>
   <Accordion title="How were the recordings made?">
     One take per line with each provider's default settings, no retries and no editing. Numbers were
