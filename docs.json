@@ -64,10 +64,11 @@
             ]
           },
           {
-            "tab": "Text to Speech",
+            "tab": "TTS",
             "groups": [
               {
-                "group": "Text to Speech",
+                "group": "TTS",
+                "tag": "NEW",
                 "icon": "audio-lines",
                 "pages": [
                   "tts/overview",
