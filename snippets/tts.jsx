@@ -7,7 +7,7 @@
 // Names and places underlined in each line, keyed by language_line.
 // Amounts, OTPs and times are found by pattern in TtsMarked.
 const TTS_HL = {
-  en_hospital: ["Mr. Raghunathan", "Dr. Meenakshi Sundaram"],
+  en_hospital: ["Mr. Kapoor", "Dr. Meenakshi Sundaram"],
   hi_hospital: ["शर्मा जी", "डॉक्टर अनुराधा सक्सेना"],
   mr_hospital: ["कुलकर्णी साहेब", "डॉक्टर अमृता जोशी"],
   ta_hospital: ["ராமநாதன்", "டாக்டர் மீனாட்சி சுந்தரம்"],
