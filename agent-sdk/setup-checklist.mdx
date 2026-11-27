@@ -159,7 +159,7 @@ AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `UNPOD_PLATFORM_TOKEN` | Yes | Org-scoped platform token from **Settings → Security → API keys**. Used by `AsyncClient`/`Client` (proxy mode) **and required by the `AgentRunner`** to register with the orchestrator |
+| `UNPOD_PLATFORM_TOKEN` | Yes | Your API key (platform token) from **Settings → Access → API keys**. Used by `AsyncClient`/`Client` (proxy mode) **and required by the `AgentRunner`** to register with the orchestrator |
 | `UNPOD_ORG_HANDLE` | Yes | Your org handle, sent with the token. Required by the `AgentRunner` and by org-scoped calls (telephony, analytics, voice profiles) |
 | `UNPOD_BASE_URL` | Yes | Shared host, e.g. `https://unpod.dev`. The SDK derives every endpoint from it, including the runner's `wss://<host>`. The built-in default host does not resolve, so always set it |
 | `UNPOD_SERVICE_BASE_URL` | No | Management REST override only. Leave it unset; the SDK derives it from `UNPOD_BASE_URL` |

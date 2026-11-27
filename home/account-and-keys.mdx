@@ -15,33 +15,40 @@ Create an account at [unpod.dev](https://unpod.dev/auth/signup/) with Google or
 your email.
 
 </Step>
-<Step title="Sign in and create your hub">
+<Step title="Sign in and set up your business identity">
 
-{/* TODO(verify): confirm these fields against the live create-org page once (checked in code, not in the deployed UI) */}
-On first login at [unpod.dev](https://unpod.dev/) you create a hub for your
-organization:
+On first login at [unpod.dev](https://unpod.dev/), Unpod creates your organization
+through a short setup:
 
-| Field | What to enter |
-|---|---|
-| **Hub name** | Your organization's name |
-| **Domain name** | Your org's domain, e.g. `acme.com` |
-| **Privacy type** | **Private** (only people on your domain see it) or **Public** |
-| **Region** | Pick your region from the list. Required |
-| **Type of account** | The option closest to how you use Unpod |
+1. **Which role describes you the best?** Pick **Developer**, **Founder**,
+   **Product Manager** or **Other**.
+2. **What would you like to get started with?** Pick any option; each one leads
+   to the next step.
+3. **Set up your business identity.** Enter your business name or website, and your
+   company domain (for example `acme.com`), then click **Continue**.
+
+If you signed up with a company email, Unpod skips the first two screens: it shows
+**Creating Your Business Identity** and fills in your business from your email
+domain.
+
+Setup then moves on to your first agent. See
+[Create Your AI Identity](/platform/onboarding) for every screen.
 
 </Step>
 <Step title="Generate an API key">
 
-1. Open [Settings → Security → API keys](https://unpod.dev/settings/security/api-keys/).
+1. Open [Settings → Access → API keys](https://unpod.dev/settings/workspace/billing/api-keys/).
 2. Click **Generate New**, then copy the key.
 
-You can hold one key at a time: delete the old key to generate a new one.
+You can hold one key at a time: delete the old key to generate a new one. The
+**Access** section is shown only to the workspace owner.
 
 </Step>
 <Step title="Copy your org handle">
 
 Open [Settings → Workspace → General](https://unpod.dev/settings/workspace/general/) and
-copy the **Domain** value without the leading `@` (for example `acme`, not `@acme`).
+copy the **Domain** value (for example `acme`). The same handle shows as `@acme`
+under your org name; leave out the `@`.
 
 </Step>
 <Step title="Put both in your environment">
