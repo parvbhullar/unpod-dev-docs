@@ -22,13 +22,15 @@ the agent proposes a run and you accept it; it never silently rewrites your work
 
 <Steps>
   <Step title="Trigger it">
-    Use the **Optimize** action in the composer toolbar. The builder agent may
-    also propose a run itself once your playbook looks functionally complete.
+    Use the **Optimize** (✦) action in the composer toolbar - it asks for a run
+    with 3 rounds and 5 personas. The builder agent may also propose a run itself
+    once your playbook looks functionally complete. Either way, approve the
+    **Run optimize_playbook?** prompt to start.
   </Step>
   <Step title="Watch the in-chat card">
-    An **Optimize run** card renders right in the chat thread with a live round
-    indicator (`round 2/3 ●●○`) and a goal score that animates up as rounds
-    complete - e.g. `62% → 81%`.
+    An **Optimize run** card renders right in the chat thread with a round
+    indicator (`round 2/3`) and an objective score that animates from before to
+    after as rounds are revealed - e.g. `62% → 81%`.
   </Step>
   <Step title="Review and apply">
     On finish, the hardened YAML lands in the **Editor** tab ("Applied to editor").
@@ -42,23 +44,29 @@ the agent proposes a run and you accept it; it never silently rewrites your work
 
 ## Reading the card
 
-The card has a `Details | Preview` toggle:
+The card has a `Preview | Details` toggle:
 
 <CardGroup cols={2}>
-  <Card title="Details" icon="list-checks">
-    The round-by-round trace and the **top failures in plain language** - "the
-    agent skipped the callback-number checkpoint when the caller was in a hurry."
-  </Card>
   <Card title="Preview" icon="chart-column">
-    The metric readout for the run (below), so you can see the score behind the
-    animation.
+    The metric readout for the run - **Goal completion**, **Slot accuracy**,
+    **Smoothness**, **Repairs**, **Empathy** (when scored), and **Run time** - so
+    you can see the score behind the animation.
+  </Card>
+  <Card title="Details" icon="list-checks">
+    The round-by-round trace: each round marked **accepted** or **rejected**,
+    with its score before and after and a short note on what changed.
   </Card>
 </CardGroup>
 
+The builder agent also sums up the run in chat - what improved and the top
+failures in plain language.
+
 ## What gets measured
 
-The scorecard shows the engine's four deterministic metrics - computed from the
-transcript without any LLM call - plus one LLM-judged score:
+A **Test run** card (from `simulate_and_score`) shows the engine's four
+deterministic metrics - computed from the transcript without any LLM call - plus
+one LLM-judged score. The Optimize card reports the same scores as Goal
+completion, Slot accuracy, Smoothness, Repairs, and Empathy:
 
 | Metric | Meaning |
 |---|---|
@@ -72,8 +80,7 @@ Latency is not scored by the optimizer - the per-model estimates in the Voice
 LLM picker come from real test calls.
 
 <Note>
-Coverage and knowledge-base-hit metrics on this card are later milestones.
-Guardrail scoring exists today in the
+Guardrail scoring lives in the
 [SuperDialog eval harness](/superdialog/evals), where it is a hard gate. The
 numbers you see here are real engine output, not estimates.
 </Note>
@@ -86,17 +93,12 @@ numbers you see here are real engine output, not estimates.
     re-scoring, and rewriting the checkpoints that failed. The score climbs
     across rounds until it plateaus.
   </Card>
-  <Card title="Manual (propose / accept)" icon="pen">
-    The agent proposes prose edits in normal chat - "I'd tighten the refund
-    checkpoint like this" - and you accept or reject each one.
+  <Card title="Manual (in chat)" icon="pen">
+    Ask for a specific fix in normal chat - "tighten the refund checkpoint" - and
+    the agent edits the YAML. Review the diff with **Changes** in the Editor
+    before you save.
   </Card>
 </CardGroup>
-
-<Tip>
-Give the optimizer a **goal string** to bias the run - e.g. "prioritize
-completing the sale in 8-10 turns." Presets like this let you optimize for the
-outcome you actually care about, not just raw completion.
-</Tip>
 
 ## When to stop
 

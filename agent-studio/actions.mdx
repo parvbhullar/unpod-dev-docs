@@ -18,7 +18,6 @@ after the call.
 | After-call actions | The post-call webhook delivers the transcript and structured outcome to your endpoint | Production - [post-call data](/api/post-call-data) |
 | Google Sheets sync | Two-way: each call's row lands in the sheet, and a new row triggers a call | Production - Agent Studio → Integration → Google Sheet Sync |
 | In-call SMS | A template SMS sent during the call, to Indian numbers | Production, narrow |
-| Ready-made connectors | CRM, payment, booking and helpdesk connectors | Not yet - use an in-call HTTP tool or the post-call webhook |
 
 ```yaml playbook.yaml (excerpt)
 tools:
@@ -46,8 +45,8 @@ carrier routing.
 ## Status
 
 **Production:** HTTP tools, the post-call webhook, two-way Google Sheets
-sync, and in-call SMS. **In build:** a helpdesk connector for messaging
-journeys. **Not yet:** ready-made CRM, payment and booking connectors.
+sync, and in-call SMS. To reach a CRM, payment, booking or helpdesk system,
+call its API with an in-call HTTP tool or receive the post-call webhook.
 
 ## Go deeper
 

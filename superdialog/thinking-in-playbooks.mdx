@@ -140,10 +140,16 @@ playbook:
     purpose: "Charge the deposit."
     say: "Confirm the amount, then take the card."
     collect: [card_token, amount]
-    require: [card_token, amount]   # must be confirmed, not just extracted
-    gate: hard                      # the default; waits for that before the gated line
+    require: [card_token, amount]   # must be filled before done_when can advance
+    gate: hard                      # the default; waits for the Director before the gated line
     done_when: "Deposit charged."
 ```
+
+In the simple format, `collect` keys compile to slots with a slot-level
+`gate: soft`, so `require` keys only need to be filled. To demand a
+**confirmed** value, author the slot in the [full format](/superdialog/playbooks#the-full-format)
+and leave its `gate` unset (it inherits the checkpoint's hard gate) or set
+`gate: hard` on the slot.
 
 ## Why one streaming call, not two
 

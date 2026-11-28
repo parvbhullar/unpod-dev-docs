@@ -7,8 +7,8 @@ description: "Describe the agent you want in plain English - or drop in a PDF or
 ## The idea
 
 You do not start from a blank YAML file. You **talk to a builder agent** in the
-left-hand chat and it authors the playbook live into the **Editor** tab on the
-right - refine it in chat or edit it by hand. Full tour of the screen:
+chat rail on the right and it authors the playbook live into the **Editor** tab
+in the main pane - refine it in chat or edit it by hand. Full tour of the screen:
 [The Playground](/agent-studio/playground).
 
 <a className="pg-cta" href="https://app.unpod.ai/playground" target="_blank" rel="noreferrer">
@@ -45,24 +45,25 @@ works: [Thinking in playbooks](/superdialog/thinking-in-playbooks).
 
 ### Start from a document or a URL
 
-The composer has a `+` **Attach** button and accepts a pasted link:
+The composer has a `+` (**Attach a document**) button and accepts a pasted link:
 
 <CardGroup cols={2}>
   <Card title="Attach a document" icon="paperclip">
-    Upload a PDF, TXT, MD, or DOCX (a returns policy, a product sheet, a script).
+    Upload a PDF, TXT, MD, or CSV (a returns policy, a product sheet, a script).
     The text is extracted and **stored in the session**, so the agent can re-read
     it on any later turn - not injected once and forgotten.
   </Card>
   <Card title="Paste a URL" icon="link">
-    Drop an `https://` link in the composer. The page is fetched, extracted, and
-    stored the same way. Great for "build an agent from our FAQ page."
+    Drop an `https://` link in your message. The builder agent fetches the page
+    (plus the most relevant pages it links to, such as About, Pricing, or FAQ)
+    and reads the text. Great for "build an agent from our FAQ page."
   </Card>
 </CardGroup>
 
 <Note>
-Sources persist for the whole session. The builder agent has `list_sources` and
-`read_source` tools, so you can say "check the returns doc again" three turns
-later and it will.
+Attached documents persist for the whole session. The builder agent has
+`list_sources` and `read_source` tools, so you can say "check the returns doc
+again" three turns later and it will.
 </Note>
 
 ## Step 2 - Pick the build model (optional)
@@ -72,7 +73,7 @@ good playbooks out of the box, and each option is tagged for its strength -
 *best for editing*, *most capable*, *top reasoning*, *fast*:
 
 <Frame caption="The builder model picker - each model is labelled for the job it is best at">
-  <img src="/images/playbook/build-model-picker.png" alt="Builder model dropdown listing Claude Sonnet 5 (best for editing), Claude Opus 4.8 (most capable), Claude Sonnet 4.6 (best for editing, selected), GPT-5.5 (top reasoning), Claude Haiku 4.5 (fast), and Gemini 3.5 Flash (beta)." />
+  <img src="/images/playbook/build-model-picker.png" alt="Builder model dropdown listing Claude Sonnet 5 (best for editing), Claude Opus 4.8 (most capable), Claude Sonnet 4.6 (best for editing, selected), GPT-5.5 (top reasoning), and Claude Haiku 4.5 (fast)." />
 </Frame>
 
 Override it only if you have a preference - it controls the *builder*, not the
@@ -103,14 +104,17 @@ Two ways to refine from here:
 
 ## Step 4 - Save, import & export
 
-The top bar holds the three file actions. The bar also shows a **dirty/draft
-indicator**, so you always know whether the current buffer is saved.
+**Save** sits in the top bar; **Export** and **Import** live in the Editor
+pane's own toolbar (Import is under the **⋯** menu, next to Rename and Delete).
+The playbook picker in the top bar tags each playbook **Draft** or
+**Published**, and the Editor's **Changes** view shows what differs from the
+last saved version.
 
 | Action | What it does |
 |---|---|
-| **Save** | Persists the current playbook as a **draft**, private to you. Preview auto-saves a dirty buffer before a test call, but save explicitly when you pause. |
-| **Import** | Load a playbook YAML from a file into the editor - move an agent between accounts, or start from a version you keep in git. |
-| **Export** | Download the current playbook YAML - back it up, review it, or hand it to a teammate. |
+| **Save** | Persists the current playbook as a **draft**, private to you. Name it on the first save. Preview auto-saves a dirty buffer before a test call, but save explicitly when you pause. |
+| **Import** | Load a playbook YAML from a file (or paste it) into the editor as a new draft - move an agent between accounts, or start from a version you keep in git. |
+| **Export** | Download the playbook YAML - back it up, review it, or hand it to a teammate. Available once the playbook is published. |
 
 <Note>
 Saving keeps the playbook **private to you**. Making it visible to others,

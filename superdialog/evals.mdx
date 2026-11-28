@@ -93,7 +93,7 @@ Useful `eval run` flags:
 The dataset format mirrors the RAGAS single-/multi-turn shape: each case carries
 a persona, `ground_truth_slots`, and a list of probes. A persona may also define
 `afterlife_probes` - utterances sent *after* the session ends, asserted on by the
-suite runner's `silent_afterlife` check (above).
+suite runner's `silent_afterlife` check (see [Gate a suite in CI](#gate-a-suite-in-ci)).
 
 Or run both phases in one shot with `eval bench` - it builds the dataset if
 missing (`--regen` rebuilds, `--personas` seeds), A/Bs every `--models` entry

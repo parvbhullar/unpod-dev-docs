@@ -121,8 +121,7 @@ FastAPIRouter(agent).mount(app, prefix="/dialog")
 For production multi-worker FastAPI:
 
 1. Replace `InMemorySessionStore` with a distributed `SessionStore`
-   (`RedisSessionStore` is planned; implement the `SessionStore` protocol today)
-   so state survives across workers
+   (implement the `SessionStore` protocol) so state survives across workers
 2. Set `max_sessions` on `SessionWorker` to cap memory usage
 3. Use `NullSessionStore` if your sessions are fully stateless (e.g. webhook-per-message pattern)
 

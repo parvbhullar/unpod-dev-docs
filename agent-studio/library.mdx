@@ -2,51 +2,57 @@
 title: "Public & your playbooks"
 icon: 'library'
 sidebarTitle: "Playbook library"
-description: "The playbook gallery has two tabs - Public (agents anyone published, browse and clone) and My Playbook (your private drafts). Open either in the Playground, test it, and make it your own."
+description: "The playbook gallery has three tabs - Public gallery (agents anyone published, browse and clone), My Playbooks (your own), and Shared with me. Open one in the Playground, test it, and make it your own."
 ---
 
-## Two tabs, two libraries
+## Three tabs
 
-The playbook gallery is where every agent lives. It has two tabs:
+The playbook gallery (`/playbooks` in the Playground app) is where every agent
+lives. It opens on the public gallery and has three tabs:
 
-<CardGroup cols={2}>
-  <Card title="Public" icon="globe">
+<CardGroup cols={3}>
+  <Card title="Public gallery" icon="globe">
     Every **public** playbook, from all users. Browse without an account, open one
     in the Playground, talk to it, and **clone** it to start your own.
   </Card>
-  <Card title="My Playbook" icon="user">
-    **Your own** private playbooks and drafts. Requires login. Open one to keep
+  <Card title="My Playbooks" icon="user">
+    **Your own** playbooks and drafts. Requires login. Open one to keep
     editing, testing, or publishing it.
+  </Card>
+  <Card title="Shared with me" icon="users">
+    Playbooks a teammate shared with you, tagged **Editor** or **Viewer** for
+    your role. Requires login.
   </Card>
 </CardGroup>
 
 <Note>
-Only playbooks published as **Public** appear in the Public tab. Ones you keep
-**Private** or **Unlisted** never show up there - see
-[visibility levels](/agent-studio/publish-and-share#step-1-publish-and-set-visibility).
+Only playbooks set to **Public** appear in the Public gallery tab. Ones you keep
+**Private** or **Link only** never show up there - see
+[visibility levels](/agent-studio/publish-and-share#step-1-set-visibility).
 </Note>
 
 ## Public playbooks - browse and reuse
 
-The **Public** tab lists every publicly shared agent. Use it to start from
-someone else's working agent instead of a blank page.
+The **Public gallery** tab lists every publicly shared agent. Use it to start
+from someone else's working agent instead of a blank page.
 
-<Frame caption="The gallery - Public vs My Playbook tabs, search, and a View in Playground action per row">
-  <img src="/images/playbook/gallery.png" alt="Playbook gallery showing Public and My Playbook tabs, a search box, and rows like Booking, Bank Agent Nisha, Airlines Ticket Booking Agent - each with a View in Playground action." />
+<Frame caption="The gallery - tabs, search, and an open action on each card">
+  <img src="/images/playbook/gallery.png" alt="Playbook gallery showing the gallery tabs, a search box, and cards like Booking, Bank Agent Nisha, Airlines Ticket Booking Agent - each with an open action." />
 </Frame>
 
 <Steps>
   <Step title="Find one">
-    Scan the list or use the **search** box to filter by name. No account needed
-    just to browse.
+    Scan the cards or use the **Search playbooks…** box to filter by name or
+    goal. No account needed just to browse.
   </Step>
   <Step title="Open it">
-    Hit **View in Playground**. The agent loads and you can **Press to talk** and
-    hear it, exactly as its author built it.
+    Click a card (**Open & test →**). The agent loads in the Playground, read-only,
+    and you can **Press to talk** and hear it, exactly as its author built it.
   </Step>
   <Step title="Make it yours">
-    Use **Clone & edit** to copy it into your own **private** playbook. Now you
-    can change the persona, checkpoints, and voice without touching the original.
+    Use **Duplicate to edit** in the Editor, then **Clone & edit**, to copy it
+    into **My Playbooks**. Now you can change the persona, checkpoints, and voice
+    without touching the original.
   </Step>
 </Steps>
 
@@ -56,16 +62,16 @@ does something close to your use case, clone it, and reshape it in chat.
 </Tip>
 
 <Note>
-If the Public tab says *"No public playbooks available yet,"* nothing has been
-published publicly in your environment yet - build one and
-[publish it Public](/agent-studio/publish-and-share) to seed the gallery.
+If the Public gallery tab says *"No gallery playbooks yet,"* nothing has been
+shared publicly in your environment yet - build one and
+[set it Public](/agent-studio/publish-and-share) to seed the gallery.
 </Note>
 
-## My Playbook - your own agents
+## My Playbooks - your own agents
 
-The **My Playbook** tab (login required) is your private library: everything you
-have created or cloned. Each row shows its state - a **Draft** tag marks a
-playbook you have saved but not published.
+The **My Playbooks** tab (login required) is your private library: everything you
+have created or cloned. A **Draft** tag marks a playbook you have saved but not
+published, and each card has **Rename** and **Delete** actions.
 
 <Frame caption="My Playbooks tab showing a draft playbook with Open in playground action">
   <img src="/images/playbook/my-playbooks-tab.png" alt="My Playbooks tab in SuperDialog gallery showing a draft playbook card for Parkview Residences Site-Visit Booking with 0 journeys, 0 checkpoints, and an Open in playground link." />
@@ -73,8 +79,8 @@ playbook you have saved but not published.
 
 <Steps>
   <Step title="Open">
-    **View in Playground** loads your playbook into the Editor + chat, right where
-    you left it.
+    Click the card (**Open in playground →**) to load your playbook into the
+    Editor + chat, right where you left it.
   </Step>
   <Step title="Continue">
     Edit it in chat or by hand, test in Preview, and [publish or
@@ -83,26 +89,27 @@ playbook you have saved but not published.
 </Steps>
 
 <Note>
-Empty tab? *"You don't have any private playbooks yet. Create one in the
-Playground."* Head to [Build an agent playbook](/agent-studio/build-an-agent) to make your
-first one.
+Empty tab? *"No playbooks yet."* Head to
+[Build an agent playbook](/agent-studio/build-an-agent) to make your first one.
 </Note>
 
 ## Switching playbooks inside the Playground
 
-You do not need to go back to the gallery to change agents. The top of the chat
-rail has a **playbook picker**:
+You do not need to go back to the gallery to change agents. The top bar has a
+**playbook picker**:
 
-- Click it to open the dropdown, **search** by name, and **Select** any playbook
-  you can access (yours, or a public one, tagged accordingly).
-- **New playbook** starts a fresh, blank agent.
-- A **history** affordance next to it lists your past **Conversations** (threads)
-  for the current playbook, so you can reopen or start a **New chat**.
+- Click it to open the dropdown, **search** by name, and select any of your
+  playbooks (tagged **Draft** or **Published**), a prompt agent from **My Prompt
+  Agents**, or one of the **Defaults**.
+- **Add Playbook** in the top bar starts a fresh agent - choose a playbook or a
+  single-instruction prompt agent.
+- The **Conversations** button in the chat header lists your past threads for
+  the current playbook, so you can reopen one or start a **New chat**.
 
 <Warning>
-Switching the picker changes which agent the Editor and Preview act on. A test
-turn in flight survives the switch, but save your work first so an unsaved buffer
-is not left behind.
+Switching the picker changes which agent the Editor and Preview act on. The
+picker is locked while a voice session is live, so end the call first - and save
+your work so an unsaved buffer is not left behind.
 </Warning>
 
 ## Where each one goes next
@@ -115,7 +122,7 @@ is not left behind.
     Press to talk and confirm it still behaves before you ship changes.
   </Card>
   <Card title="Ready to share yours?" icon="share" href="/agent-studio/publish-and-share">
-    Set it Public so it shows in the gallery, or Unlisted for a private link.
+    Set it Public so it shows in the gallery, or Link only for a private link.
   </Card>
   <Card title="New here?" icon="lightbulb" href="/agent-studio/what-is-a-playbook">
     Start with what a playbook is and why it beats a prompt or a graph.

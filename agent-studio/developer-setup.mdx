@@ -43,7 +43,7 @@ The harness (`harness/api.py`) picks a backend in this order:
 <Note>
 Legacy `SUPERVOICE_URL` still overrides both if set (with a deprecation warning) -
 prefer `UNPOD_BASE_URL`. The harness boots and serves the UI even with no speech
-backend reachable; only clicking **Connect** (which opens an audio call) needs one.
+backend reachable; only pressing **Press to talk** (which opens an audio call) needs one.
 </Note>
 
 ## Run it
@@ -61,7 +61,8 @@ cd playground/web && npm install && npm run build && cd ../..
 uv run --extra playground python -m playground.run
 ```
 
-Open [http://localhost:9100](http://localhost:9100), click **Connect**, allow the mic, and talk.
+Open [http://localhost:9100](http://localhost:9100), open or save a playbook, then
+press **Press to talk** in the Preview tab, allow the mic, and talk.
 
 <CardGroup cols={2}>
   <Card title="One-click Docker" icon="container">

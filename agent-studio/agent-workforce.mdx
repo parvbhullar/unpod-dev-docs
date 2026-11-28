@@ -6,10 +6,9 @@ description: 'Workers that communicate and act, spun up per task - one agent, on
 ---
 
 The Agent Workforce is workers that communicate and act. Each worker is an
-agent - voice, action, chat or browser - that runs against the instructions
+agent - voice, action or chat - that runs against the instructions
 it was given, on one step, for one entity, spun up per task and torn down
-when the task completes. Not every kind ships today - see
-[Status](#status). There is no long-lived agent process holding state
+when the task completes. There is no long-lived agent process holding state
 between customers; state lives on the spine, workers are disposable.
 
 **Tasks are the unit of work.** A task says: run this agent, with this
@@ -17,16 +16,15 @@ instruction set, for this entity, now. Calling already runs this way - every
 outbound call is a task dispatched to a voice agent - through the
 [Task API](/api/execution/task-make-call-overview).
 Human handoff is built in: an agent that hits an escalation condition
-transfers the call to a person instead of improvising. Guardrails today are
-playbook-level - `never_say` lists and hard gates - and a policy layer is in
-build.
+transfers the call to a person instead of improvising. Guardrails are
+playbook-level - `never_say` lists and hard gates.
 
 You build these workers with [SuperDialog](/superdialog/introduction), the
 open-source agent framework, and a
 [playbook](/agent-studio/what-is-a-playbook) is the instruction set a worker
 runs against. SuperDialog's defining rule -
 [the wire carries text, not audio](/superdialog/introduction) - is what lets
-the same playbook drive a phone call, a chat thread, or a browser session.
+the same playbook drive a phone call or a chat thread.
 
 ## The primitives
 
@@ -34,7 +32,7 @@ the same playbook drive a phone call, a chat thread, or a browser session.
 |---|---|---|
 | Agents | A worker built on SuperDialog, spun up per task | [Build an agent](/agent-studio/build-an-agent) |
 | Tools | Actions a worker can take mid-conversation | [SuperDialog tools](/superdialog/tools) |
-| Policies | Guardrails on what a worker may say and do | `never_say` and gates in [playbooks](/superdialog/playbooks); policy layer in build |
+| Policies | Guardrails on what a worker may say and do | `never_say` and gates in [playbooks](/superdialog/playbooks) |
 | Handoffs | Escalation to a human, or to another agent, mid-interaction | [Call lifecycle](/agent-sdk/call-lifecycle) (voice) |
 
 ## On the spine
@@ -57,7 +55,7 @@ them. A provider outage is Unpod's problem, not a change to your agent.
 
 Production. Voice agents carry production traffic today, spun up per task,
 with human handoff. Actions run today as [tools](/superdialog/tools) inside
-voice agents. Browser agents are in build. Chat runs through the same
+voice agents. Chat runs through the same
 workers via the [Chat API](/get-started/chat).
 
 ## Go deeper
