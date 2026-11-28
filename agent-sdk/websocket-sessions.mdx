@@ -90,6 +90,19 @@ async def pipe_id_for(agent_id: str) -> str:
 
 Return the token to your frontend via your own API.
 
+### Listing sessions
+
+`client.sessions.list()` returns your project's sessions as `Session` objects,
+with `session_id`, `status`, `started_at`, `ended_at`, `duration_s` and
+`end_reason`. Read one in full with `client.sessions.get(session_id)`.
+
+```python
+async def recent_sessions() -> None:
+    async with AsyncClient() as client:
+        for s in await client.sessions.list():
+            print(s.session_id, s.status, s.duration_s)
+```
+
 ---
 
 ## Same Agent, Multiple Entry Points

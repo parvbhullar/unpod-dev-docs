@@ -174,3 +174,36 @@ AgentRunner(entrypoint=entrypoint, agent_id="my-agent").start()
 - `base_url=` / `orchestrator_base_url=` in code - one script or test overrides `.env`.
 
 Production values and the `serve`-transport extras: [Deploy](/agent-sdk/deploy).
+
+### Credentials in code, closing the client, logging
+
+Pass credentials directly instead of reading them from the environment with
+`TokenAuth`. It sends `Authorization: Token <token>` and, when set, the
+`Org-Handle` header:
+
+```python
+from unpod import AsyncClient, TokenAuth
+
+client = AsyncClient(
+    auth=TokenAuth(token="your-api-key", org_handle="your-org"),
+    base_url="https://unpod.dev/platform",
+)
+try:
+    profiles = await client.voice_profiles.list()
+finally:
+    await client.close()   # closes the client's HTTP connections
+```
+
+`async with AsyncClient() as client:` closes the client for you; call
+`await client.close()` when you create the client without `async with`.
+
+To see the SDK's own log lines while you develop, call `enable_logging()` once.
+It adds a stream handler to the `unpod` logger only, so your app's logging setup
+is not touched:
+
+```python
+import logging
+from unpod import enable_logging
+
+enable_logging(logging.DEBUG)   # default level is INFO; logs go to stderr
+```

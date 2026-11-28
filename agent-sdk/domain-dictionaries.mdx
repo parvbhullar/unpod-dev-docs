@@ -180,6 +180,8 @@ Send every section back - a section you leave out is cleared.
 | `domain_dictionaries.clone(source, new_domain)` | `DomainDictionary` | `409` if `new_domain` already has rows |
 | `domain_dictionaries.delete(domain)` | `None` | Bundled domain: resets to bundled rows. Custom domain: deleted, and its agents are untagged |
 | `agents.update(agent_id, domain=)` | `Agent` | Tags the agent - the step that makes a dictionary apply |
+| `domain_dictionaries.attach(domain, agent_id)` | `DomainDictionary` | Records the agent under this domain's list of agents and removes it from every other domain's list. It does not change which dictionary the agent uses - tag the agent with `domain=` for that |
+| `domain_dictionaries.detach(domain, agent_id)` | `DomainDictionary` | Removes the agent from this domain's list of agents |
 
 Each section accepts a `dict` (`{"key": "value"}`) or a list of
 `{"key": ..., "value": ...}` rows - the shape `get()` returns.

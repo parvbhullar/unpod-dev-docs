@@ -58,9 +58,6 @@ Why two models, and how the Director steers the Talker without stalling it:
   <Card title="CLI chatbot" icon="terminal" href="/superdialog/cli">
     Zero infrastructure. Best for testing and prompt tuning.
   </Card>
-  <Card title="LiveKit" icon="phone" href="/superdialog/embedding-guides/livekit">
-    Voice agent via `Agent(llm=DialogMachineLLM(...))` plugin. Not yet working on livekit-agents 1.x.
-  </Card>
   <Card title="PipeCat" icon="mic" href="/superdialog/embedding-guides/pipecat">
     Drop-in `FrameProcessor` for PipeCat pipelines.
   </Card>
@@ -80,7 +77,6 @@ Why two models, and how the Director steers the Talker without stalling it:
 | Host | Adapter | Extra LoC |
 |---|---|---|
 | CLI | None - direct `input()`/`print()` or `superdialog chat` | ~5 |
-| LiveKit | `DialogMachineLLM` | ~8 |
 | PipeCat | `make_processor` | ~12 |
 | FastAPI | `FastAPIRouter` or direct route | ~6 |
 | Unpod Voice (SDK) | `unpod.AgentRunner` + `session.dialog_machine` | ~6 |

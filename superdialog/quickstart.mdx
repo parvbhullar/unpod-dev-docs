@@ -17,7 +17,6 @@ Source on GitHub: [unpod-ai/superdialog](https://github.com/unpod-ai/superdialog
 Install only the extras you need:
 
 ```bash
-pip install superdialog[livekit]    # LiveKit adapter
 pip install superdialog[pipecat]    # PipeCat adapter
 pip install superdialog[fastapi]    # FastAPI adapter + uvicorn
 pip install superdialog[ws]         # WebSocket runner
@@ -132,9 +131,6 @@ The same `agent` object drops into every host - the `Agent` protocol is the only
 contract:
 
 <CardGroup cols={2}>
-  <Card title="LiveKit" icon="phone" href="/superdialog/embedding-guides/livekit">
-    `Agent(llm=...)` plugin - not yet working on livekit-agents 1.x
-  </Card>
   <Card title="PipeCat" icon="mic" href="/superdialog/embedding-guides/pipecat">
     Drop in as a `FrameProcessor` in your pipeline
   </Card>
