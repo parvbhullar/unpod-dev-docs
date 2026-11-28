@@ -213,6 +213,25 @@ asyncio.run(main())
 
 ---
 
+## Removing a Number
+
+`client.numbers.delete(number_id)` removes the number from your organization's
+bridge and from every agent. `client.numbers.release(number_id)` does the same
+thing. A number with a live call returns `409`.
+
+```python
+import asyncio
+from unpod import AsyncClient
+
+async def main():
+    async with AsyncClient() as client:  # reads credentials from the environment
+        await client.numbers.delete("num_...")
+
+asyncio.run(main())
+```
+
+---
+
 ## Common Patterns
 
 ### Find the first free number and attach it

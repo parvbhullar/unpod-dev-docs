@@ -51,7 +51,7 @@ and compounding at the bottom:
 | Tier | How you use it today |
 |---|---|
 | Live turn, session memory | Automatic: the runtime carries turn history through the conversation. A bring-your-own brain keeps its own history in its adapter. |
-| Customer context | Pass what you know as call data (below), or as Space People columns. Turn on **Enable Memory** (Agent Studio → Advanced) and the agent recalls past calls with the same number - per agent, per number, voice only. SDK agents attach the built-in `past_calls` tool with `client.tools.attach("past_calls", agent_id=...)`: each outbound call placed with `client.calls.create` then starts with that number's last 3 calls with the agent (when, how each ended, what the caller opened with). Prompt agents only - a playbook agent ignores it. |
+| Customer context | Pass what you know as call data (below), or as Space People columns. Turn on **Enable Memory** (Agent Studio → Advanced) and the agent recalls past calls with the same number - per agent, per number, voice only. |
 | Organisation knowledge | Upload documents to a [knowledge base](/platform/studio-view/knowledge-base) and attach it to the agent; the agent retrieves from it mid-call. |
 | Outcome history | Every completed call produces structured [post-call data](/api/post-call-data), by webhook or API. SDK agents read [analytics blocks](/speech-stack/analytics) with `client.analytics.for_call(call_id)`. |
 
@@ -88,8 +88,8 @@ vectors.
 ## Status
 
 **Production** on voice: live turn, session memory, per-call customer
-context with memory of past calls (Agent Studio **Enable Memory**, or the
-`past_calls` tool on SDK agents), knowledge-base retrieval, and post-call
+context with memory of past calls (Agent Studio **Enable Memory**),
+knowledge-base retrieval, and post-call
 outcomes.
 
 ## Go deeper
