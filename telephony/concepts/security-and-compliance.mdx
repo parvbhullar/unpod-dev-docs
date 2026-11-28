@@ -37,8 +37,8 @@ Unpod is built with enterprise-grade security and compliance as foundational pri
 
 Your org has one webhook secret: Unpod signs answer-URL requests, status callbacks, recording
 events and audio streams with it (see [Webhooks](/telephony/apis/webhooks)). To read the
-current secret, use `webhook_secret.reveal()`. Rotate only in two cases: your org has no
-secret yet, or the secret leaked.
+current secret, use `webhook_secret.reveal()`. Your org has a secret from the moment the Call
+API is switched on, so rotate only when the secret leaked.
 
 <Warning>
 Rotating creates a new secret and invalidates the old one at once. A server still verifying
@@ -69,7 +69,7 @@ curl -s -X POST "https://unpod.dev/api/v2/platform/sbc/webhook-secret/rotate" \
 
 - `pushed_to_sbc` is `true` when the new secret is already used for signing. When it's
   `false`, Unpod keeps retrying in the background; until it lands, requests are still signed
-  with the previous secret (or unsigned, for your first secret). Wait a minute before testing.
+  with the previous secret. Wait a minute before testing.
 - An event queued before the rotation is retried signed with the old secret, so a server
   that already has the new one rejects it.
 - Afterwards, servers read the new secret with `reveal()`, as before.

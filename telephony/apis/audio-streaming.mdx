@@ -235,9 +235,9 @@ bytes, so keep names with multibyte characters well under 256.
 
 ## Verify the stream signature
 
-Once your org has a [webhook secret](/telephony/apis/incoming-calls#the-webhook-secret),
-Unpod signs every stream WebSocket upgrade with it, in one header. Until then the upgrade is
-unsigned, and a verifier such as `verify_stream_request` rejects it.
+Unpod signs every stream WebSocket upgrade with your org's
+[webhook secret](/telephony/apis/incoming-calls#the-webhook-secret), in one header. An
+unsigned upgrade is rejected by a verifier such as `verify_stream_request`.
 
 ```
 X-Unpod-Signature: t=<unix seconds>,n=<nonce>,v1=<hex>
