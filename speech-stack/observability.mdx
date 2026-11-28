@@ -69,7 +69,7 @@ on `call_end`. It is **best-effort**: a no-op when `UNPOD_USAGE_INGEST_URL` is
 unset, and never blocks or fails the call.
 
 ```bash
-UNPOD_USAGE_INGEST_URL="https://.../ingest"   # enables the ledger
+UNPOD_USAGE_INGEST_URL="https://..."          # ingest base URL; enables the ledger
 UNPOD_USAGE_INGEST_TOKEN="..."                # optional auth
 ```
 
@@ -121,12 +121,18 @@ Poll this on a timer for liveness dashboards - see
 
 ## 6. Post-call timing
 
-The SDK defines a per-stage breakdown model (`unpod.models.TurnTiming`:
-`audio_ingress_ms`, `stt_ms`, `bridge_to_dev_ms`, `dev_brain_ms`, `tts_ms`), but
-SDK 0.7.0 has no client method that returns it: `calls.get()` and
-`transcripts.get()` return turns without timing (see
-[Recordings & Transcripts](/agent-sdk/recordings-transcripts)). For stage
-latencies, record the `turn_complete` hook (Layer 1) during the call.
+After the call, `calls.get(call_id)` returns the call's latency and timing
+data:
+
+| Field | Description |
+|---|---|
+| `latency_summary` | Per-call latency roll-up (`dict`) |
+| `latency_metrics` | The per-turn latency rows behind it (`list[dict]`, detail reads) |
+| `call_timings` | Property: `call_dialed_at`, `call_connected_at`, `call_ended_at`, `ring_duration_seconds`, `talk_duration_seconds`; `{}` when not recorded |
+
+These are plain dicts; their keys are not typed by the SDK. For stage
+latencies you can act on during the call, record the `turn_complete` hook
+(Layer 1).
 
 <Tip>
 High `llm_ttft_ms` with healthy `asr_ms`/`tts_ttfb_ms` means the latency is in

@@ -19,7 +19,7 @@ running. It does not swap in a cheaper model behind your back.
 
 | Primitive | What it is | Where it lives today |
 |---|---|---|
-| Voice profiles | A benchmarked STT + TTS pairing for a language, with its measured cost and latency | `client.voice_profiles.list(language=...)` - production |
+| Voice profiles | A benchmarked STT + TTS pairing for a language, with its measured cost and latency | `client.voice_profiles.list()` - production |
 | LLM | The model behind the agent's brain | Prompt or Playbook brain on the hosted runtime; an `Endpoint` brain to bring your own OpenAI-compatible model - production |
 | Failover | A standby per modality, switched in automatically | STT, LLM and TTS, mid-call, on Agent Studio agents; STT and TTS at session start on SDK agents - production |
 | Routing | How LLM traffic reaches the model: gateway, managed host, or direct | Decided per model, internally - production |
@@ -30,9 +30,10 @@ from unpod import AsyncClient
 
 async def main() -> None:
     async with AsyncClient() as client:
-        profiles = await client.voice_profiles.list(language="hi")
-        for p in profiles:
-            print(p.name, p.profile_id)
+        for p in await client.voice_profiles.list():
+            stt_langs = [l["code"] for l in p.transcriber["languages"]]
+            if any(code.startswith("hi") for code in stt_langs):
+                print(p.name, p.profile_id)
 
 asyncio.run(main())
 ```
@@ -58,7 +59,6 @@ turn is Unpod's problem.
 - **Production:** multi-vendor STT, TTS and LLM; voice profiles; automatic
   failover for all three, mid-call, on Agent Studio agents (STT and TTS at
   session start on SDK agents); LLM routing.
-- **In build:** Unpod-served speech and language models.
 - **Not offered:** picking a model per request by cost or latency. Choose the
   profile and model you want; the router keeps them running.
 

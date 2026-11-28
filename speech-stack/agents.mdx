@@ -97,6 +97,7 @@ asyncio.run(main())
 | `background_sound_enabled` | `bool \| None` | `None` | Ambience on/off |
 | `background_sound_volume` | `float \| None` | `None` | Ambience gain, 0.0-1.0 |
 | `noise_cancellation` | `NoiseCancellation \| str \| None` | `None` | Caller-audio canceller - see [Configure an agent](/agent-sdk/agent-settings#noise-cancellation) |
+| `tools` | `ToolsConfig \| dict \| None` | `None` | Platform-tool config (handover, voicemail) - see [Agent tools](/agent-sdk/agent-tools) |
 
 <Note>
 Re-running `create()` with an existing `agent_id` and the **same** brain is
@@ -125,12 +126,12 @@ async def main():
     async with AsyncClient() as client:
         await client.agents.voice.add(
             "support-bot",
-            voice_profile="vp_hi_female_hd",
+            voice_profile="<hindi_profile_id>",   # profile_id or name
             greeting="Namaste! Main aapki kaise madad kar sakta hoon?",
         )
 
         # Remove one voice; the agent keeps the rest
-        await client.agents.voice.remove("support-bot", "vp_hi_female_hd")
+        await client.agents.voice.remove("support-bot", "<hindi_profile_id>")
 
 asyncio.run(main())
 ```
@@ -279,6 +280,8 @@ For the number lifecycle itself - provisioning, syncing, trunks - see
 | `agents.voice.add(agent_id, voice_profile=, greeting=)` | `AgentVoice` | Inherits the brain unchanged |
 | `agents.voice.update(agent_id, voice_profile_id, greeting=, make_default=)` | `AgentVoice` | Edits one voice only |
 | `agents.voice.remove(agent_id, voice_profile_id)` | `None` | Keeps the other voices |
+| `agents.tools.get(agent_id)` | `ToolsConfig` | The agent's handover / voicemail config |
+| `agents.tools.set(agent_id, handover=, voicemail=)` | `Agent` | Merges the sections you pass; keeps the rest |
 | `agents.numbers.attach(agent_id, number, ...)` | `dict` | Routes a number to the agent |
 | `agents.numbers.detach(number_id)` | `dict` | Releases whatever agent holds it |
 | `numbers.agent.change(number, agent_id)` | `dict` | Moves an attached number to another of your agents |
@@ -290,7 +293,7 @@ For the number lifecycle itself - provisioning, syncing, trunks - see
 <CardGroup cols={2}>
   <Card title="AgentRunner & Sessions" icon="code" href="/agent-sdk/agent-runner">
     Run the worker a `Runner()` brain points at, and act on live calls - say,
-    transfer, end, record.
+    transfer, end.
   </Card>
   <Card title="Voice Profiles" icon="audio-waveform" href="/agent-sdk/voice-profiles">
     Browse the catalog and pick the `profile_id` you pass as `voice_profile`.

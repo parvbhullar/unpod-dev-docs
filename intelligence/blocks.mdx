@@ -1,24 +1,18 @@
 ---
 title: 'Own your model'
 icon: 'sparkles'
-description: 'Definable blocks turn every conversation into structure today - and that memory is where your own model comes from.'
+description: 'Definable blocks turn every finished call into structure you can read back.'
 ---
 
 Own your model starts with **definable blocks**: a block takes communication
 in and writes structure out - extraction, qualification & scoring,
 summarization, sentiment & intent, evaluation, or a custom block you define.
-Today blocks run on call outcomes; where the system is headed is placement
-anywhere in the pipeline - attached to a single step, a conversation, or the
-whole stream (in build). Every insight lands back in the Context Engine, where
-the next block - and the next agent - can read it.
-
-That loop is where this goes. Because outcomes accumulate in one durable
-system of record, the memory can become a model - one only you can train,
-because no one else has your conversations. The first two steps run in
-production today; the rest is planned.
+A block is attached to an agent and runs on every session that agent
+finishes; each run is stored as a result against the call, so you can read
+it back or receive it with the call.
 
 <Steps>
-  <Step title="Blocks run on every interaction">
+  <Step title="Blocks run on every finished call">
     Extraction, scoring and summary blocks turn each call into structure.
     <span className="st-chip is-prod">Production</span>
   </Step>
@@ -26,52 +20,37 @@ production today; the rest is planned.
     Every completed call writes a structured outcome you can read back.
     <span className="st-chip is-prod">Production</span>
   </Step>
-  <Step title="A dataset builder turns history into training data">
-    <span className="st-chip is-planned">Planned</span>
-  </Step>
-  <Step title="RL simulation plays the workflow against caller personas">
-    <span className="st-chip is-planned">Planned</span>
-  </Step>
-  <Step title="A per-org SLM (~1B) is trained on your outcomes">
-    <span className="st-chip is-planned">Planned</span>
-  </Step>
 </Steps>
 
 ## The primitives
 
 | Primitive | What it is | Where it lives today |
 |---|---|---|
-| Blocks | A defined unit of analysis (extraction, scoring, summarization, sentiment & intent, evaluation, custom) attached to a step, a conversation, or the stream | Extraction, scoring, and summarization run on call outcomes - see [Post-call data](/api/post-call-data). SDK agents define their own with `client.analytics.create()` - see [Analytics](/speech-stack/analytics) |
-| Datasets | Outcome history, assembled by the dataset builder into training data | Not available yet |
-| Evaluations | Blocks that score whether a conversation did its job, per turn or per outcome | [SuperDialog evals](/superdialog/evals) is the callable surface today |
-| Trained models | A per-org SLM (~1B) trained on your outcomes | Not available yet |
+| Blocks | A defined unit of analysis (extraction, scoring, summarization, sentiment & intent, evaluation, custom): a prompt plus typed fields, attached to an agent | Extraction, scoring, and summarization run on call outcomes - see [Post-call data](/api/post-call-data). SDK agents define their own with `client.analytics.create()` and attach them with `client.analytics.attach()` - see [Analytics](/speech-stack/analytics) |
+| Evaluations | Blocks that score whether a conversation did its job | A block's success evaluation (`success_enabled`, on by default) scores each call; [SuperDialog evals](/superdialog/evals) score conversations against ratified expectations |
 
 ## On the spine
 
-Blocks read interactions, outcomes, and context; they never touch the audio
-path. What a block produces is written back to the spine - onto the
-[outcome](/intelligence/outcomes) it analyzed or into the
-[Context Engine](/intelligence/memory) - so downstream blocks and agents
-read it as ordinary state, not as a side channel. Each insight written emits
-an event, like any other change on the spine.
+Blocks read the finished call's transcript after the call ends; they never
+touch the audio path. What a block produces is stored as a result on the
+[outcome](/intelligence/outcomes) it analyzed - read it with
+`client.analytics.for_call(call_id)` - and the post-call webhook carries
+every attached block's result, so your system receives it as ordinary data,
+not as a side channel.
 
 ## What stays hidden
 
 How a block runs. You write a block's prompt and fields (and can pick its
 model) and ratify evaluations; the pipeline that runs it is not a surface you
-configure. When the
-training pipeline ships, its internals stay hidden the same way.
+configure.
 
 ## Status
 
 - Definable blocks: extraction, scoring, and summarization run on call
-  outcomes in production today via [Post-call data](/api/post-call-data), and
-  SDK agents author them with [`client.analytics`](/speech-stack/analytics);
-  placement on arbitrary steps and streams is in build.
-- Evaluations: conversation-level evals callable today through
-  [SuperDialog evals](/superdialog/evals).
-- Per-org SLM training (dataset builder, RL simulation, trained models):
-  planned - not available yet.
+  outcomes in production via [Post-call data](/api/post-call-data), and
+  SDK agents author them with [`client.analytics`](/speech-stack/analytics).
+- Evaluations: each block's success evaluation, and conversation-level evals
+  through [SuperDialog evals](/superdialog/evals).
 
 ## Go deeper
 
@@ -83,7 +62,7 @@ training pipeline ships, its internals stay hidden the same way.
     The structured records blocks read from and write back to.
   </Card>
   <Card title="Context Engine" icon="waypoints" href="/intelligence/memory">
-    Where insights persist as retrievable memory.
+    Call data, knowledge, and past-call memory the agent reads.
   </Card>
   <Card title="SuperDialog evals" icon="list-checks" href="/superdialog/evals">
     Score conversations against ratified expectations.

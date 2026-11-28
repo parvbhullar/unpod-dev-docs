@@ -22,8 +22,8 @@ analytics - works on threads instead of channel-specific records.
 
 | Primitive | What it is | Where it lives today |
 |---|---|---|
-| Conversations | The channel-neutral thread tying interactions to one entity over time, in order | In build. Today the platform shows a per-person view: [Conversation view](/platform/space-view/conversation) |
-| Interactions | One touch on a thread - a call, a message, an email - with participants and an outcome | In build. Calls exist today: each call produces a transcript, see [Recordings & Transcripts](/agent-sdk/recordings-transcripts) |
+| Conversations | The channel-neutral thread tying interactions to one entity over time, in order | A journey's thread: `client.journeys.conversation(journey_id)` returns its messages, oldest first. The platform shows a per-person view: [Conversation view](/platform/space-view/conversation) |
+| Interactions | One touch on a thread - a call, a message, an email - with participants and an outcome | Calls: each call produces a transcript, see [Recordings & Transcripts](/agent-sdk/recordings-transcripts). Messages on a journey's thread carry `direction`, `text`, and `subject` |
 
 ## On the spine
 
@@ -44,12 +44,12 @@ outcomes; the per-channel record formats stay internal.
 
 ## Status
 
-**In build.** The channel-neutral thread model is shipping in the open.
-Today, each call produces a transcript
-([Recordings & Transcripts](/agent-sdk/recordings-transcripts)) and the
-platform shows a per-person conversation view
-([Conversation view](/platform/space-view/conversation)). There is no
-callable conversations API yet.
+Each call produces a transcript
+([Recordings & Transcripts](/agent-sdk/recordings-transcripts)), each
+journey keeps a message thread you read with
+`client.journeys.conversation(journey_id)`, and the platform shows a
+per-person conversation view
+([Conversation view](/platform/space-view/conversation)).
 
 ## Go deeper
 

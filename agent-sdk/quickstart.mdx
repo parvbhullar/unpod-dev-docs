@@ -24,7 +24,7 @@ SIP - the speech pipeline and the carrier stay on Unpod's side.
   calls `load_dotenv()` to read it. The runner registers with the platform
   token.
 - **A number in your account.** Provision one from the dashboard under
-  **Dev Platform → Numbers**. No carrier account, no SIP trunk - see
+  **Telephony → Numbers**. No carrier account, no SIP trunk - see
   [Numbers](/speech-stack/numbers).
 
 <Note>
@@ -64,7 +64,7 @@ load_dotenv()
 async def setup() -> None:
     async with AsyncClient() as client:
         # 1. Pick a voice profile from the read-only catalog.
-        profiles = await client.voice_profiles.list(language="en")
+        profiles = await client.voice_profiles.list()
         if not profiles:
             print("No voice profiles found.")
             return
@@ -86,7 +86,7 @@ async def setup() -> None:
         numbers = await client.telephony.numbers.list()
         free = [n.number for n in numbers if n.status == "not_assigned"]
         if not free:
-            print("No free numbers - provision one under Dev Platform -> Numbers.")
+            print("No free numbers - provision one under Telephony -> Numbers.")
             return
 
         # 4. Attach it to the agent.

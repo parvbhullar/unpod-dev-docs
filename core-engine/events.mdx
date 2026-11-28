@@ -1,31 +1,27 @@
 ---
 title: 'Events'
 icon: 'zap'
-description: 'Everything that happened, once - every state change emitted as
-  an event your systems can consume.'
+description: 'Everything that happened - call state changes and in-call
+  activity pushed as events your systems can consume.'
 ---
 
-Events are everything that happened, once. Every state change on the spine -
-an interaction recorded, an outcome written, a journey advanced, an entity
-merged - emits exactly one event you can consume. Events are how your
-systems react to conversations without polling, and how the outside world
-reaches back in: an inbound reply arrives as an event, and a running
-journey waiting on it wakes up.
+Events are everything that happened. A call changing status, a call
+finishing with its transcript, a turn inside a live call - each is delivered
+to your systems as an event. Events are how your systems react to
+conversations without polling.
 
 The alternative is what teams build today: cron jobs polling a call-log
 API, glue code diffing CRM records, a queue you run yourself to fan out
 "call ended" to three services. Events replace that with one contract -
-subscribe to what you care about, receive each change once, replay what
-you missed.
+name an endpoint, and every change is pushed to it.
 
 ## The primitives
 
-| Primitive | What it is | Where it lives today |
+| Primitive | What it is | Where you use it |
 |---|---|---|
-| Event stream | The ordered feed of every state change, consumable in realtime | In build - today the equivalent is per-call delivery via [Hooks & Events](/speech-stack/hooks-events) |
-| Webhooks | HTTP delivery of events to your endpoint | Production for post-call: one webhook per completed call carrying [post-call data](/api/post-call-data); request signing in build |
-| Subscriptions | Filters that pick which event types and sources reach a consumer | In build - today you configure the post-call webhook per agent in its [Integration](/platform/studio-view/integration) tab |
-| Replay | Re-delivery of past events from a point in the stream | In build |
+| In-call hooks | Turn, interruption, metric and lifecycle events inside a live call | Your `AgentRunner` - [Hooks & Events](/speech-stack/hooks-events) |
+| Call status callbacks | `call.queued`, `call.ringing`, `call.answered`, `call.ended` for one call, HMAC-signed when you give a secret | A `callback_url` on `calls.create()` - [Outbound Calls](/agent-sdk/outbound-calls#status-callbacks) |
+| Post-call webhook | One webhook per completed call carrying [post-call data](/api/post-call-data) | The agent's [Integration](/platform/studio-view/integration) tab |
 
 ## On the spine
 
@@ -33,30 +29,17 @@ you missed.
 ENTITY -> CONVERSATION -> INTERACTION -> OUTCOME ---> EVENTS
 ```
 
-Events sit at the end of the spine and read all of it: every write to an
-entity, conversation, interaction, or outcome emits an event. They write
-nothing back to the Context Engine - the stream is an append-only record
-of what already happened. In the other direction, events are the input
-side of Execution: an inbound message or reply lands as an event, and
-[Flows & Journeys](/agent-studio/flows-journeys) waiting on that signal
-resume.
+Events sit at the end of the spine and read from it: a call's status,
+transcript and outcome reach you as events. They write nothing back to the
+Context Engine - they are a record of what already happened.
 
 ## What stays hidden
 
-The broker. Which messaging system carries the stream, how partitions and
-ordering are maintained, how delivery is retried and deduplicated - none
-of that is a public surface. You see events with stable schemas and
-once-only semantics; the infrastructure that guarantees them is Unpod's
-to run and swap without breaking your consumers.
-
-## Status
-
-- **Production**: the post-call webhook - every completed call delivers
-  its transcript and structured outcome to your endpoint. Configure it
-  in the agent's [Integration](/platform/studio-view/integration) tab; payload documented at
-  [post-call data](/api/post-call-data).
-- **In build**: the unified event stream, signed webhooks, subscriptions,
-  and replay - one feed across all channels and every spine primitive.
+The delivery machinery. How events are queued, stored until delivered and
+retried is not a public surface. You see events with stable schemas and
+at-least-once delivery - each call status callback carries an `id` to dedupe
+on; the infrastructure behind it is Unpod's to run and swap without
+breaking your consumers.
 
 ## Go deeper
 

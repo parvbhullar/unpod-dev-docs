@@ -43,12 +43,7 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient() as client:  # reads credentials from .env
-        # All profiles
-        profiles = await client.voice_profiles.list()
-
-        # Filter by language
-        en_profiles = await client.voice_profiles.list(language="en")
-        es_profiles = await client.voice_profiles.list(language="es")
+        profiles = await client.voice_profiles.list()   # every active profile
 
         for p in profiles:
             print(
@@ -56,6 +51,7 @@ async def main():
                 p.name,
                 f"gender={p.gender}",
                 f"quality={p.quality}",
+                f"stt_languages={[l['code'] for l in p.transcriber['languages']]}",
             )
 
 asyncio.run(main())
@@ -69,10 +65,15 @@ asyncio.run(main())
 | `name` | `str` | Human-readable name, e.g. `"Riya"` - also accepted as `voice_profile` |
 | `gender` | `str \| None` | As the catalog stores it, e.g. `"F"` |
 | `quality` | `str \| None` | Quality tier as the catalog stores it, e.g. `"good"` |
-| `languages` | `list[str]` | Supported language codes, e.g. `["en", "hi"]` |
+| `transcriber` | `dict` | STT: `name`, `provider`, `model`, and `languages` (a list of `{code, name}`) |
+| `voice` | `dict` | TTS: `name`, `provider`, `voice`, `model`, and `languages` (a list of `{code, name}`) |
 | `description` | `str \| None` | Short description of the voice character |
-| `latency_ms` | `int \| None` | Expected end-to-end latency in milliseconds |
+| `latency` | `str \| None` | Latency figure as the catalog stores it |
 | `greeting_message` | `str \| None` | Default greeting for this profile |
+
+`list()` returns every active profile. To pick by language, filter on
+`transcriber["languages"]` / `voice["languages"]` yourself, as in the example
+below.
 
 ---
 
@@ -84,8 +85,8 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient() as client:  # reads credentials from .env
-        profile = await client.voice_profiles.get("vp_en_female_hd")
-        print(profile.name, profile.quality, profile.languages)
+        profile = await client.voice_profiles.get("<profile_id>")
+        print(profile.name, profile.quality, profile.voice["languages"])
 
 asyncio.run(main())
 ```
@@ -109,7 +110,7 @@ Total call latency has three components: STT transcription + LLM thinking + TTS 
 
 - Compare `quality` across profiles - print the list to see the tier names
   your catalog uses
-- Check `latency_ms` on the profile object for the estimated end-to-end figure,
+- Check `latency` on the profile object for the catalog's latency figure,
   and listen to the voices in the dashboard before you choose
 
 ---
@@ -124,8 +125,11 @@ from unpod import AsyncClient, Prompt
 
 async def main():
     async with AsyncClient() as client:  # reads credentials from .env
-        # List to find the right profile
-        profiles = await client.voice_profiles.list(language="en")
+        # List to find the right profile: English STT, female voice
+        profiles = [
+            p for p in await client.voice_profiles.list()
+            if any(l["code"].startswith("en") for l in p.transcriber["languages"])
+        ]
         # gender values come from the catalog, e.g. "F" - fall back to the first
         female = next(
             (p for p in profiles if (p.gender or "").upper().startswith("F")),
@@ -158,7 +162,7 @@ async def main():
     async with AsyncClient() as client:  # reads credentials from .env
         await client.agents.voice.add(
             "support-bot",
-            voice_profile="vp_es_male_std",     # Spanish male
+            voice_profile="<spanish_profile_id>",  # profile_id or name
             greeting="Hola, gracias por llamar.",
         )
 
@@ -167,7 +171,7 @@ async def main():
             print(v.voice_profile_id, v.voice_profile_name, v.is_default)
 
         # Drop one voice; the agent keeps the rest
-        await client.agents.voice.remove("support-bot", "vp_es_male_std")
+        await client.agents.voice.remove("support-bot", "<spanish_profile_id>")
 
 asyncio.run(main())
 ```

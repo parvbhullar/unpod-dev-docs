@@ -29,12 +29,6 @@ s.duration_s     # int | None
 s.recording_url  # str | None - download / stream URL
 ```
 
-<Note>
-Pause and resume recording during a live call (e.g. around card numbers) with
-`ctx.session.recording.pause(reason=...)` / `.resume()` - see
-[AgentRunner & Sessions](/agent-sdk/agent-runner#recording-control).
-</Note>
-
 ## Transcripts
 
 ```python
@@ -73,7 +67,7 @@ small - it is not a silent call. Check `transcript_turns` first, then call
 </Warning>
 
 ```python
-for row in await client.calls.list(status="completed"):
+for row in await client.calls.list(status="connected"):
     if row.transcript_turns:                       # cheap check, no second read
         full = await client.calls.get(row.call_id)
         for turn in full.transcript or []:
