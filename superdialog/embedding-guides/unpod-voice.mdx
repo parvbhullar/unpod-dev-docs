@@ -230,14 +230,14 @@ See [Playbooks](/superdialog/playbooks).
 
 ---
 
-## vs. LiveKit / PipeCat adapters
+## vs. the PipeCat adapter
 
-| | Unpod Voice (SDK) | LiveKit adapter | PipeCat adapter |
-|---|---|---|---|
-| **Who handles STT/TTS** | Unpod | You (via LiveKit plugins) | You (via PipeCat services) |
-| **Who handles telephony** | Unpod | You / LiveKit SIP | You / Twilio / etc. |
-| **Dialog runs in** | Your AgentRunner process | Your LiveKit agent | Your PipeCat pipeline |
-| **Best for** | Fastest path to production voice | Full media layer control | Existing PipeCat pipelines |
+| | Unpod Voice (SDK) | PipeCat adapter |
+|---|---|---|
+| **Who handles STT/TTS** | Unpod | You (via PipeCat services) |
+| **Who handles telephony** | Unpod | You / Twilio / etc. |
+| **Dialog runs in** | Your AgentRunner process | Your PipeCat pipeline |
+| **Best for** | Fastest path to production voice | Existing PipeCat pipelines |
 
 ---
 

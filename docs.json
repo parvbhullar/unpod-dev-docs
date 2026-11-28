@@ -364,7 +364,6 @@
                     "icon": "puzzle",
                     "pages": [
                       "superdialog/embedding-guides/overview",
-                      "superdialog/embedding-guides/livekit",
                       "superdialog/embedding-guides/pipecat",
                       "superdialog/embedding-guides/fastapi",
                       "superdialog/embedding-guides/unpod-voice"
@@ -445,9 +444,7 @@
                 "icon": "layout-grid",
                 "pages": [
                   "platform/apps/overview",
-                  "platform/apps/contact-center",
-                  "platform/apps/personal-assistant",
-                  "platform/apps/email-first-agent"
+                  "platform/apps/contact-center"
                 ]
               },
               {
@@ -482,22 +479,11 @@
                 "icon": "list",
                 "pages": [
                   {
-                    "group": "Organisation",
-                    "icon": "building-2",
-                    "expanded": false,
-                    "pages": [
-                      "api/space/overview",
-                      "api/space/organizations"
-                    ]
-                  },
-                  {
                     "group": "Spaces",
                     "icon": "layout-grid",
                     "expanded": false,
                     "pages": [
                       "api/space/spaces-overview",
-                      "api/space/get-all-spaces",
-                      "api/space/get-space-by-token",
                       "api/space/get-task-by-space-token"
                     ]
                   },
@@ -834,11 +820,11 @@
     },
     {
       "source": "/apps/personal-assistant",
-      "destination": "/platform/apps/personal-assistant"
+      "destination": "/platform/apps/overview"
     },
     {
       "source": "/apps/email-first-agent",
-      "destination": "/platform/apps/email-first-agent"
+      "destination": "/platform/apps/overview"
     },
     {
       "source": "/platform/dev-platform/introduction",
@@ -943,6 +929,34 @@
     {
       "source": "/api/billing&usage/get-billing",
       "destination": "/api/overview"
+    },
+    {
+      "source": "/api/space/overview",
+      "destination": "/api/get-started/authentication"
+    },
+    {
+      "source": "/api/space/organizations",
+      "destination": "/api/get-started/authentication"
+    },
+    {
+      "source": "/api/space/get-all-spaces",
+      "destination": "/api/space/spaces-overview"
+    },
+    {
+      "source": "/api/space/get-space-by-token",
+      "destination": "/api/space/spaces-overview"
+    },
+    {
+      "source": "/superdialog/embedding-guides/livekit",
+      "destination": "/superdialog/embedding-guides/overview"
+    },
+    {
+      "source": "/platform/apps/personal-assistant",
+      "destination": "/platform/apps/overview"
+    },
+    {
+      "source": "/platform/apps/email-first-agent",
+      "destination": "/platform/apps/overview"
     }
   ]
 }

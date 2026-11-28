@@ -88,7 +88,7 @@ platform composable.
 
 | Audience | Why they care |
 |---|---|
-| **Voice developer using LiveKit / PipeCat** | Drop SuperDialog in as the brain through the PipeCat adapter (the LiveKit adapter does not run on livekit-agents 1.x yet - see [LiveKit](/superdialog/embedding-guides/livekit)) |
+| **Voice developer using PipeCat** | Drop SuperDialog in as the brain through the PipeCat adapter |
 | **Chatbot developer (text-only)** | `superdialog generate` a playbook, chat against it from the CLI, embed it with FastAPI through the `Agent` protocol |
 | **Developer with compliance / scripted flows** | Author the flow graph as the spec - every path enumerable and lintable - and run it compiled on the Playbook engine, or on DialogMachine via `--mode flow` |
 | **Enterprise dev with a custom LLM** | Plug any LLM URI and get the full framework for free |

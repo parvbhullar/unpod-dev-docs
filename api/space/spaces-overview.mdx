@@ -16,9 +16,10 @@ The Spaces API allows you to manage and retrieve spaces (workspaces/groups) in y
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /api/v2/platform/spaces/` | Retrieve all spaces in your organization |
-| `GET /api/v2/platform/spaces/{space_token}/` | Retrieve a specific space by its token |
 | `GET /api/v2/platform/spaces/{space_token}/tasks/` | Retrieve all tasks within a specific space |
+
+Copy a space's token from the dashboard - see
+[How to Get Your Space Token](/api/get-started/authentication#how-to-get-your-space-token).
 
 ## Base URL
 
@@ -46,5 +47,5 @@ Copy your `Org-Handle` from the dashboard - see [How to Get Your Organization Ha
 | 200 | Success - Request completed successfully |
 | 401 | Unauthorized - Invalid or missing API token |
 | 403 | Forbidden - Access denied to the resource |
-| 404 | Not Found - Space or Organization not found |
+| 404 | Not Found - Space not found |
 | 500 | Internal Server Error - Server-side error |
