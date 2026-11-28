@@ -6,13 +6,13 @@ icon: 'settings'
 
 ## Environment Configuration
 
-Copy `.env.example` to `.env` at the repo root. The Docker simple setup passes all variables to containers automatically.
+Copy `.env.example` to `.env` at the repo root. With `docker-compose.simple.yml`, the backend containers do not read `.env` directly (`DJANGO_READ_DOT_ENV_FILE=False`). Only the variables the compose file references as `${VAR}` - for example `POSTGRES_PASSWORD`, `OPENAI_API_KEY`, `SENDGRID_API_KEY`, `DJANGO_DEFAULT_ADMIN_PASSWORD` - are taken from `.env`; the rest are set in the compose file itself.
 
 For local development, each app reads config from:
 
 | App | Config Source |
 |-----|--------------|
-| `backend-core` | `.env` in its own directory (`DJANGO_READ_DOT_ENV_FILE=True`) |
+| `backend-core` | `.env` at the repo root, falling back to `apps/backend-core/.env` (`DJANGO_READ_DOT_ENV_FILE=True`) |
 | `api-services` | `.env` from monorepo root via python-dotenv |
 | `web` | `apps/web/.env.local` (copy from `.env.local.example`) |
 | `super` | `.env` from monorepo root via python-dotenv |
@@ -21,14 +21,14 @@ For local development, each app reads config from:
 
 ### Frontend (`apps/web/.env.local`)
 
-| Variable | Default | Description |
+| Variable | Local value | Description |
 |----------|---------|-------------|
-| `API_URL` | `http://localhost:8000` | Backend API base URL |
-| `PRODUCT_ID` | `unpod` | Product identifier |
-| `IS_DEV_MODE` | `true` | Enable development mode |
-| `CURRENCY` | `USD` | Default currency |
-| `LIVEKIT_URL` | `ws://localhost:7880` | LiveKit WebSocket URL |
-| `CENTRIFUGO_URL` | `ws://localhost:8000/connection/centrifugo` | Centrifugo WebSocket URL |
+| `API_URL` | `http://localhost:8000/api/v1/` | Backend API base URL |
+| `PRODUCT_ID` | `unpod.ai` | Product identifier |
+| `IS_DEV_MODE` | `yes` | Enable development mode |
+| `CURRENCY` | `INR` | Default currency |
+| `LIVEKIT_URL` | Your LiveKit URL | LiveKit WebSocket URL |
+| `CENTRIFUGO_WS_URL` | `ws://localhost:8100/connection/websocket` | Centrifugo WebSocket URL |
 
 ### Backend Core (`.env`)
 
@@ -77,8 +77,6 @@ See `.env.example` for the full list.
 
 | Command | Description |
 |---------|-------------|
-| `make quick-start` | Full setup: env + deps + docker + db + migrate |
-| `make dev` | Start frontend + backend dev servers |
 | `make docker` | Start Docker containers |
 | `make migrate` | Run Django migrations |
 | `make stop` | Stop Docker containers |
@@ -86,11 +84,12 @@ See `.env.example` for the full list.
 | `make logs` | Tail Docker container logs |
 | `make superuser` | Create Django superuser |
 
+`make migrate` and `make superuser` use the `apps/backend-core/.venv` virtualenv from the [manual setup](/platform/self-hosting/quickstart#option-1-manual-setup).
+
 ### NPM
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start web + backend-core (via NX) |
 | `npm run dev:frontend` | Frontend only (port 3000) |
 | `npm run build` | Build frontend |
 | `npm run test` | Run tests |
@@ -122,14 +121,6 @@ docker compose -f docker-compose.simple.yml down -v       # Stop + remove data
 | `unpod-backend-core` | 8000 | Django API |
 | `unpod-api-services` | 9116 | FastAPI |
 | `unpod-web` | 3000 | Next.js |
-
-### Full Infrastructure
-
-Uses `docker-compose.yml` - separate PostgreSQL per service + Kafka (KRaft). For microservices development:
-
-```bash
-docker compose up -d
-```
 
 ---
 
