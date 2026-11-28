@@ -14,7 +14,7 @@ HTTP/1.1 204 No Content
 ```json Error Response (404)
 {
   "status_code": 404,
-  "message": "Provider configuration not found."
+  "message": "No ProviderCredential matches the given query."
 }
 ```
 
@@ -29,7 +29,7 @@ Permanently delete a telephony provider configuration by its ID. Once deleted, t
 </Note>
 
 <Warning>
-Deleting a provider configuration that is actively connected to a bridge may disrupt call routing. Disconnect the provider from all bridges before deleting.
+Deleting a provider configuration also removes every number that uses it from its bridge, and deletes its provider trunks. Calls on those numbers stop routing.
 </Warning>
 
 
@@ -56,9 +56,11 @@ You can get the provider configuration `id` by hitting the [Get All Providers](/
 | Status Code | Description                                        |
 |-------------|----------------------------------------------------|
 | 204         | No Content - Configuration deleted successfully    |
+| 206         | Delete refused (reason in `message`)               |
+| 400         | Bad Request - Delete failed, or `Org-Handle` missing or invalid |
 | 401         | Unauthorized - Invalid or missing API token        |
-| 403         | Forbidden - Invalid organization handle            |
-| 404         | Not Found - Provider configuration not found       |
+| 403         | Forbidden - Not a member of the `Org-Handle` organization |
+| 404         | Not Found - No active configuration with this ID in your organization |
 | 500         | Internal Server Error - Server-side error          |
 
 ## Code Examples
@@ -118,7 +120,7 @@ curl -X DELETE "https://unpod.ai/api/v2/platform/telephony/provider-configuratio
 
 ## Best Practices
 
-1. **Disconnect First**: Always [disconnect the provider from bridges](/api/telephony/disconnect-provider-from-bridge) before deleting a configuration
+1. **Check Usage First**: Numbers using this configuration are removed from their bridges - check [Get Bridge by Slug](/api/telephony/get-bridge-by-slug) before deleting
 2. **Irreversible**: Deletion is permanent - verify the correct `id` before proceeding
 3. **Audit Trail**: Note the deletion in your records for compliance and troubleshooting purposes
 4. **204 Response**: A successful delete returns HTTP 204 with no body - handle this in your code

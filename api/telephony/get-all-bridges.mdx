@@ -9,22 +9,16 @@ openapi: 'GET /api/v2/platform/telephony/bridges/'
 
 ```json Success Response (200)
 {
-  "count": 6,
+  "count": 1,
   "status_code": 200,
-  "message": "Bridges fetched successfully.",
+  "message": "Success",
   "data": [
     {
       "id": 314,
       "name": "Sales Bridge",
       "slug": "sales-bridge-001",
-      "provider": "twilio",
-      "numbers": [
-        {
-          "id": 501,
-          "number": "+1234567890",
-          "status": "active"
-        }
-      ]
+      "status": "ACTIVE",
+      "description": "Production bridge"
     }
   ]
 }
@@ -41,7 +35,7 @@ openapi: 'GET /api/v2/platform/telephony/bridges/'
 
 # Get All Bridges
 
-Retrieve a list of all telephony bridges in your organization, including their IDs, names, slugs, associated providers, and linked phone numbers for monitoring and call-routing management.
+Retrieve the telephony bridges in your organization that belong to the product in the `Product-Id` header. Use [Get Bridge by Slug](/api/telephony/get-bridge-by-slug) for a bridge's numbers.
 
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
@@ -53,11 +47,19 @@ Retrieve a list of all telephony bridges in your organization, including their I
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Org-Handle    | string | Yes      | Organization domain handle      |
+| Product-Id    | string | Yes      | Product the bridges belong to, for example `unpod.ai` |
 
 <Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
+Copy your `Org-Handle` from the dashboard - see [How to Get Your Organization Handle](/api/get-started/authentication#how-to-get-your-organization-handle).
 </Note>
 
+
+### Query Parameters
+
+| Name      | Type    | Required | Description                              |
+|-----------|---------|----------|------------------------------------------|
+| page      | integer | No       | Page number for pagination (default = 1) |
+| page_size | integer | No       | Number of bridges per page (default = 10) |
 
 ### Response Fields
 
@@ -72,19 +74,11 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 
 | Field    | Type    | Description                                  |
 |----------|---------|----------------------------------------------|
-| id       | integer | Bridge unique identifier                     |
-| name     | string  | Bridge display name                          |
-| slug     | string  | Unique bridge slug identifier                |
-| provider | string  | Connected provider slug (null if none)       |
-| numbers  | array   | List of phone numbers assigned to the bridge |
-
-### Number Object Fields
-
-| Field  | Type    | Description              |
-|--------|---------|--------------------------|
-| id     | integer | Number assignment ID     |
-| number | string  | Phone number (E.164 format) |
-| status | string  | Number status: `active`, `inactive` |
+| id          | integer | Bridge unique identifier                |
+| name        | string  | Bridge display name                     |
+| slug        | string  | Unique bridge slug identifier           |
+| status      | string  | `ACTIVE`, `INACTIVE`, or `DRAFT`        |
+| description | string  | Bridge description, or `null`           |
 
 
 ## Common Error Codes
@@ -92,8 +86,9 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - Bridges fetched successfully           |
+| 206         | Missing `Product-Id` or `Org-Handle` header, or organization not found (reason in `message`) |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Invalid organization handle          |
+| 403         | Forbidden - Not a member of the organization     |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples
@@ -105,7 +100,8 @@ const axios = require('axios');
 
 const headers = {
   'Authorization': 'Token your-api-token',
-  'Org-Handle': 'your-org-handle'
+  'Org-Handle': 'your-org-handle',
+  'Product-Id': 'unpod.ai'
 };
 
 // Get all bridges
@@ -116,7 +112,7 @@ const getAllBridges = async () => {
   );
   console.log(`Total bridges: ${response.data.count}`);
   response.data.data.forEach(bridge => {
-    console.log(`${bridge.name} (${bridge.slug}) - Numbers: ${bridge.numbers.length}`);
+    console.log(`${bridge.name} (${bridge.slug}) - ${bridge.status}`);
   });
   return response.data.data;
 };
@@ -130,7 +126,8 @@ import requests
 
 headers = {
     'Authorization': 'Token your-api-token',
-    'Org-Handle': 'your-org-handle'
+    'Org-Handle': 'your-org-handle',
+    'Product-Id': 'unpod.ai'
 }
 
 def get_all_bridges():
@@ -140,7 +137,7 @@ def get_all_bridges():
     data = response.json()
     print(f"Total bridges: {data['count']}")
     for bridge in data['data']:
-        print(f"{bridge['name']} ({bridge['slug']}) - Numbers: {len(bridge['numbers'])}")
+        print(f"{bridge['name']} ({bridge['slug']}) - {bridge['status']}")
     return data['data']
 
 # Example usage
@@ -151,7 +148,8 @@ get_all_bridges()
 # Get all telephony bridges
 curl -X GET "https://unpod.ai/api/v2/platform/telephony/bridges/" \
   -H "Authorization: Token your-api-token" \
-  -H "Org-Handle: your-org-handle"
+  -H "Org-Handle: your-org-handle" \
+  -H "Product-Id: unpod.ai"
 ```
 
 </CodeGroup>
@@ -159,7 +157,7 @@ curl -X GET "https://unpod.ai/api/v2/platform/telephony/bridges/" \
 ## Best Practices
 
 1. **Bridge Slug**: Note each bridge's `slug` - it is used as a path parameter in other bridge endpoints
-2. **Provider Check**: Verify bridges have a connected provider before routing calls through them
-3. **Number Assignment**: Bridges without numbers in the `numbers[]` array cannot receive inbound calls
+2. **Product-Id**: Send the same `Product-Id` the bridge was created with, or it won't be listed
+3. **Numbers**: Bridges without numbers cannot receive inbound calls - check them with [Get Bridge by Slug](/api/telephony/get-bridge-by-slug)
 4. **Error Handling**: Always handle potential errors and edge cases
 5. **Security**: Keep API tokens secure and rotate them regularly

@@ -10,12 +10,24 @@ openapi: 'PATCH /api/v2/platform/telephony/provider-configurations/{id}/'
 ```json Success Response (200)
 {
   "status_code": 200,
-  "message": "Provider configuration updated successfully.",
+  "message": "Success",
   "data": {
     "id": 42,
-    "provider": "twilio",
-    "account_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "created_at": "2026-02-07T10:00:00Z"
+    "name": "My Livekit Configuration",
+    "provider": 2,
+    "provider_details": {
+      "id": 2,
+      "name": "LiveKit",
+      "description": "LiveKit SIP",
+      "icon": "https://example.com/livekit.png"
+    },
+    "org_handle": "acme",
+    "meta_json": {},
+    "active": true,
+    "api_key": null,
+    "api_secret": null,
+    "base_url": "https://api.provider.com",
+    "sip_url": "sip.provider.com"
   }
 }
 ```
@@ -23,7 +35,7 @@ openapi: 'PATCH /api/v2/platform/telephony/provider-configurations/{id}/'
 ```json Error Response (404)
 {
   "status_code": 404,
-  "message": "Provider configuration not found."
+  "message": "No ProviderCredential matches the given query."
 }
 ```
 
@@ -31,7 +43,7 @@ openapi: 'PATCH /api/v2/platform/telephony/provider-configurations/{id}/'
 
 # Update Provider Configuration
 
-Partially update an existing telephony provider configuration. This is useful for rotating credentials such as the `auth_token` without deleting and recreating the entire configuration.
+Partially update an existing telephony provider configuration. This is useful for rotating credentials such as `api_key` and `api_secret` without deleting and recreating the entire configuration.
 
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
@@ -61,8 +73,11 @@ All fields are optional - include only the fields you wish to update.
 
 | Field      | Type   | Required | Description                        |
 |------------|--------|----------|------------------------------------|
-| auth_token | string | No       | Updated Auth Token / Secret key    |
-| account_sid | string | No      | Updated Account SID                |
+| name       | string | No       | Updated configuration name         |
+| api_key    | string | No       | Updated provider API key           |
+| api_secret | string | No       | Updated provider API secret        |
+| base_url   | string | No       | Updated provider API base URL      |
+| sip_url    | string | No       | Updated provider SIP URL           |
 
 
 
@@ -78,10 +93,19 @@ All fields are optional - include only the fields you wish to update.
 
 | Field       | Type    | Description                              |
 |-------------|---------|------------------------------------------|
-| id          | integer | Unique provider configuration identifier |
-| provider    | string  | Provider slug/identifier                 |
-| account_sid | string  | Account SID for the provider             |
-| created_at  | string  | Configuration creation timestamp         |
+| Field            | Type    | Description                                          |
+|------------------|---------|------------------------------------------------------|
+| id               | integer | Unique provider configuration identifier             |
+| name             | string  | Configuration name                                   |
+| provider         | integer | Provider ID (from [Get Telephony Providers](/api/provider/get-telephony-providers)) |
+| provider_details | object  | `{ id, name, description, icon }` of the provider    |
+| org_handle       | string  | Handle of the owning organization                    |
+| meta_json        | object  | Extra provider settings                              |
+| active           | boolean | Whether the configuration is active                  |
+| api_key          | string  | Always `null` - secrets are never returned           |
+| api_secret       | string  | Always `null` - secrets are never returned           |
+| base_url         | string  | Provider API base URL                                |
+| sip_url          | string  | Provider SIP URL                                     |
 
 
 
@@ -90,10 +114,10 @@ All fields are optional - include only the fields you wish to update.
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - Configuration updated successfully     |
-| 400         | Bad Request - Invalid update parameters          |
+| 400         | Bad Request - Invalid update parameters, or `Org-Handle` missing or invalid |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Invalid organization handle          |
-| 404         | Not Found - Provider configuration not found     |
+| 403         | Forbidden - Not a member of the `Org-Handle` organization |
+| 404         | Not Found - No active configuration with this ID in your organization |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples
@@ -120,8 +144,8 @@ const updateProvider = async (id, updates) => {
   return response.data.data;
 };
 
-// Example: rotate auth_token
-updateProvider(42, { auth_token: 'your-new-auth-token-here' });
+// Example: rotate the API secret
+updateProvider(42, { api_secret: 'your-new-api-secret' });
 ```
 
 ```python Python
@@ -141,8 +165,8 @@ def update_provider(config_id: int, updates: dict):
     print(f"Provider #{data['data']['id']} updated successfully")
     return data['data']
 
-# Example: rotate auth_token
-update_provider(42, {'auth_token': 'your-new-auth-token-here'})
+# Example: rotate the API secret
+update_provider(42, {'api_secret': 'your-new-api-secret'})
 ```
 
 ```bash cURL
@@ -152,7 +176,7 @@ curl -X PATCH "https://unpod.ai/api/v2/platform/telephony/provider-configuration
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \
   -d '{
-    "auth_token": "your-new-auth-token-here"
+    "api_secret": "your-new-api-secret"
   }'
 ```
 
@@ -161,7 +185,7 @@ curl -X PATCH "https://unpod.ai/api/v2/platform/telephony/provider-configuration
 ## Best Practices
 
 1. **Partial Updates**: Only include fields you want to change - PATCH supports partial updates
-2. **Credential Rotation**: Regularly rotate `auth_token` values for security without disrupting bridges
-3. **Security**: Never expose `auth_token` values in logs or responses
+2. **Credential Rotation**: Rotate `api_key` and `api_secret` without deleting the configuration
+3. **Security**: Never expose `api_key` or `api_secret` values in logs
 4. **Verify Before Update**: Use [Get Provider by ID](/api/provider/get-provider-by-id) to confirm the configuration exists before patching
 5. **Error Handling**: Handle 404 and 400 errors to catch invalid IDs or credential formats

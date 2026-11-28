@@ -6,15 +6,11 @@ icon: 'key'
 
 ## Overview
 
-The Unpod SDK needs an access token to connect to the server successfully.
+Every REST API request is authenticated with your API token. The token is tied
+to your user, so it can reach every organization you are a member of; the
+`Org-Handle` header picks which one a request acts on.
 
-This token holds the participant's identity, room name, capabilities, and permissions.
-
-Tokens are signed with your API secret to block forgery, and include an expiration time after which the server rejects them.
-
-<Note>
-Expiration time only impacts the initial connection, and not subsequent reconnects.
-</Note>
+The token does not expire. It stays valid until you delete it.
 
 ## Authentication Method
 
@@ -44,34 +40,37 @@ You can hold one key at a time: delete the old key to generate a new one. The
 
 ### 401 - Unauthorized
 
-Returned when authentication credentials are missing or invalid.
+Returned when the `Authorization` header is missing, or the token is wrong.
 
 ```json
 {
   "status_code": 401,
-  "message": "Authentication credentials were not provided."
+  "message": "Invalid token."
 }
 ```
 
+With no `Authorization` header the message is
+`Authentication credentials were not provided.`
+
 ### 403 - Forbidden
 
-Returned when the token is expired or access is denied.
+Returned when you are not a member of the organization named in `Org-Handle`.
 
 ```json
 {
   "status_code": 403,
-  "message": "Token has expired."
+  "message": "You are not a member of this organization"
 }
 ```
 
 ### 400 - Bad Request
 
-Returned when required headers are missing.
+Returned when an endpoint that needs `Org-Handle` doesn't get it.
 
 ```json
 {
   "status_code": 400,
-  "message": "Org-Handle header is required."
+  "message": "Organization handle is required in Org-Handle header"
 }
 ```
 ## How to Get Your Organization Handle
@@ -125,4 +124,4 @@ Each agent has a unique handle. Make sure you're using the correct agent handle 
 2. **HTTPS Only**: Always use HTTPS for all API requests
 3. **Header Validation**: Always include required headers (Org-Handle, Product-ID) where needed
 4. **Error Handling**: Implement proper error handling for authentication failures
-5. **Rotation**: Rotate API tokens periodically for enhanced security
+5. **Rotation**: To rotate, delete the key and generate a new one - requests with the old key fail from then on

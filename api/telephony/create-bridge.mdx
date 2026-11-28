@@ -14,8 +14,13 @@ openapi: 'POST /api/v2/platform/telephony/bridges/'
   "data": {
     "id": 314,
     "name": "Sales Bridge",
+    "description": "Production bridge",
+    "status": "DRAFT",
+    "documents_status": "pending",
     "slug": "sales-bridge-001",
-    "created_at": "2026-02-07T10:00:00Z"
+    "numbers": [],
+    "organization": 101,
+    "region": "IN"
   }
 }
 ```
@@ -23,8 +28,8 @@ openapi: 'POST /api/v2/platform/telephony/bridges/'
 ```json Error Response (400)
 {
   "status_code": 400,
-  "message": "Bridge creation failed.",
-  "errors": "Slug already exists or name is required"
+  "message": "Missing 'Org-Handle' header.",
+  "data": {}
 }
 ```
 
@@ -33,6 +38,8 @@ openapi: 'POST /api/v2/platform/telephony/bridges/'
 # Create Bridge
 
 Create a new telephony bridge for call routing. Bridges are the core routing entities that link telephony providers and phone numbers to your Voice AI agents.
+
+An organization has one bridge. If yours already has one, this call doesn't create a second bridge: it applies `name`, `description`, `region` and `status` to the existing bridge and returns it.
 
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
@@ -46,18 +53,22 @@ Create a new telephony bridge for call routing. Bridges are the core routing ent
 |---------------|--------|----------|---------------------------------|
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 | Org-Handle    | string | Yes      | Organization domain handle      |
+| Product-Id    | string | No       | Product the bridge belongs to, for example `unpod.ai`. [Get All Bridges](/api/telephony/get-all-bridges) lists bridges by this value |
 | Content-Type  | string | Yes      | `application/json`              |
 
 <Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
+Copy your `Org-Handle` from the dashboard - see [How to Get Your Organization Handle](/api/get-started/authentication#how-to-get-your-organization-handle).
 </Note>
 
 ### Request Body
 
 | Field | Type   | Required | Description                                 |
 |-------|--------|----------|---------------------------------------------|
-| name  | string | Yes      | Display name for the bridge                 |
-| slug  | string | Yes      | URL-friendly unique identifier for the bridge |
+| name        | string | Yes      | Display name for the bridge                 |
+| description | string | No       | Bridge description                          |
+| region      | string | No       | `IN` (default), `US`, `EU`, `AUS`, or `UAE` |
+| status      | string | No       | `ACTIVE`, `INACTIVE`, or `DRAFT` (default)  |
+| slug        | string | No       | URL-friendly identifier. Generated from the name when omitted |
 
 
 ### Response Fields
@@ -72,10 +83,16 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 
 | Field      | Type    | Description                         |
 |------------|---------|-------------------------------------|
-| id         | integer | Bridge unique identifier            |
-| name       | string  | Bridge display name                 |
-| slug       | string  | Unique bridge slug identifier       |
-| created_at | string  | Bridge creation timestamp (ISO 8601) |
+| id                   | integer | Bridge unique identifier             |
+| name                 | string  | Bridge display name                  |
+| description          | string  | Bridge description                   |
+| status               | string  | `ACTIVE`, `INACTIVE`, or `DRAFT`     |
+| documents_status     | string  | Document processing status           |
+| slug                 | string  | Unique bridge slug identifier        |
+| numbers              | array   | Numbers on the bridge                |
+| organization         | integer | ID of the owning organization        |
+| region               | string  | Bridge region                        |
+| organization_details | object  | Details of the owning organization (not shown in the example) |
 
 ---
 
@@ -84,10 +101,9 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 201         | Created - Bridge created successfully            |
-| 400         | Bad Request - Invalid or duplicate slug/name     |
+| 400         | Bad Request - Missing `Org-Handle` or invalid body (details in `message`) |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Invalid organization handle          |
-| 409         | Conflict - Bridge with this slug already exists  |
+| 403         | Forbidden - Not a member of the organization     |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples
@@ -157,8 +173,8 @@ curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/" \
 ## Best Practices
 
 1. **Slug Naming**: Use descriptive, lowercase slugs (e.g., `sales-outbound-us`) to easily identify bridges
-2. **Unique Slugs**: Ensure slugs are unique across your organization to avoid conflicts
+2. **One Bridge**: Call [Get All Bridges](/api/telephony/get-all-bridges) first - your organization may already have its bridge
 3. **Post-Creation**: After creating a bridge, use [Connect Provider to Bridge](/api/telephony/connect-provider-to-bridge) to link a telephony provider
 4. **Bridge ID**: Store the returned `id` and `slug` for subsequent bridge management operations
-5. **Error Handling**: Handle 409 Conflict responses for duplicate slugs
+5. **Error Handling**: Handle 400 responses and read the `message` field
 6. **Security**: Keep API tokens secure and rotate them regularly

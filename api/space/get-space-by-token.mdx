@@ -12,11 +12,27 @@ openapi: 'GET /api/v2/platform/spaces/{space_token}/'
   "status_code": 200,
   "message": "Space fetched successfully",
   "data": {
-    "id": "sp_001",
     "name": "Sales Outreach Q1",
+    "slug": "sales-outreach-q1",
     "token": "8KZRTQP7BNW5XEDLORYUHMJC",
-    "agent_handle": "space-agent-8qmk42nslp91wrh3dz7btxc4",
-    "created_at": "2026-01-10T08:00:00Z"
+    "description": "Outbound sales calls",
+    "logo": null,
+    "privacy_type": "private",
+    "space_type": "general",
+    "content_type": "general",
+    "organization": {
+      "name": "Acme Corp",
+      "domain_handle": "acme"
+    },
+    "agents": [
+      {
+        "name": "Sales Agent",
+        "handle": "space-agent-8qmk42nslp91wrh3dz7btxc4",
+        "type": "Voice"
+      }
+    ],
+    "created": "2026-01-10T08:00:00Z",
+    "modified": "2026-01-12T09:30:00Z"
   }
 }
 ```
@@ -24,7 +40,7 @@ openapi: 'GET /api/v2/platform/spaces/{space_token}/'
 ```json Error Response (404)
 {
   "status_code": 404,
-  "message": "Space not found."
+  "message": "Space not found"
 }
 ```
 
@@ -65,11 +81,18 @@ Retrieve configuration and metadata of a specific space identified by its token.
 
 | Field        | Type   | Description                                       |
 |--------------|--------|---------------------------------------------------|
-| id           | string | Unique space identifier                           |
-| name         | string | Space display name                                |
-| token        | string | Public token for API access                       |
-| agent_handle | string | Handle of the agent assigned to this space        |
-| created_at   | string | Space creation timestamp (ISO 8601)               |
+| name         | string | Space display name                                   |
+| slug         | string | Space slug                                           |
+| token        | string | Public token for API access                          |
+| description  | string | Space description                                    |
+| logo         | string | Logo URL, or `null`                                  |
+| privacy_type | string | Space privacy type                                   |
+| space_type   | string | Space type                                           |
+| content_type | string | Space content type                                   |
+| organization | object | `{ name, domain_handle }` of the owning organization |
+| agents       | array  | Agents linked to the space, each `{ name, handle, type }` |
+| created      | string | Space creation timestamp (ISO 8601)                  |
+| modified     | string | Last modified timestamp (ISO 8601)                   |
 
 
 ## Common Error Codes
@@ -77,10 +100,10 @@ Retrieve configuration and metadata of a specific space identified by its token.
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - Request completed successfully         |
-| 400         | Bad Request - Invalid parameters provided        |
+| 400         | Bad Request - `Org-Handle` header missing        |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Access denied to the resource        |
-| 404         | Not Found - Space or Organization not found      |
+| 403         | Forbidden - Not a member of the organization     |
+| 404         | Not Found - No active space with this token in the organization |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples
@@ -102,7 +125,7 @@ const getSpaceByToken = async (spaceToken) => {
     { headers }
   );
   console.log(`Space name: ${response.data.data.name}`);
-  console.log(`Agent handle: ${response.data.data.agent_handle}`);
+  response.data.data.agents.forEach(agent => console.log(`Agent handle: ${agent.handle}`));
   return response.data.data;
 };
 
@@ -124,7 +147,8 @@ def get_space_by_token(space_token: str):
     response = requests.get(url, headers=headers)
     data = response.json()
     print(f"Space name: {data['data']['name']}")
-    print(f"Agent handle: {data['data']['agent_handle']}")
+    for agent in data['data']['agents']:
+        print(f"Agent handle: {agent['handle']}")
     return data['data']
 
 # Example usage

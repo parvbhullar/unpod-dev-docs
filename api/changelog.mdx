@@ -31,7 +31,7 @@ This page tracks changes to the Unpod REST API. The current production API is **
 - Authentication uses the `Token` scheme: `Authorization: Token <token>`.
 - Task creation is space-scoped: `POST /api/v2/platform/spaces/{space_token}/tasks/`, taking a `pilot` handle and a `documents` array of contacts.
 - Call detail records exposed at `/api/v2/platform/cdr/`.
-- Telephony numbers are read-only via the API (`GET /api/v2/platform/telephony/numbers/`); provisioning happens through the connected SIP provider / Dashboard.
+- Telephony numbers are listed with `GET /api/v2/platform/telephony/numbers/`.
 
 See the [Quickstart](/api/get-started/quickstart) and [Authentication](/api/get-started/authentication) for full details.
 
@@ -59,7 +59,7 @@ The legacy `https://api.unpod.ai/api/v1/` host and `Authorization: Bearer` schem
 | Create task | `POST /api/v1/tasks/` (flat `agent_handle`/`phone_number` body) | `POST /api/v2/platform/spaces/{space_token}/tasks/` (`pilot` + `documents[]` body) |
 | List runs | `GET /api/v1/runs/` | `GET /api/v2/platform/spaces/{space_token}/runs/` |
 | Call logs | `GET /api/v1/call-logs/` | `GET /api/v2/platform/cdr/` |
-| Create bridge | `POST /api/v1/bridges/` | `POST /api/v2/platform/telephony/bridges/` (`name` + `slug`) |
+| Create bridge | `POST /api/v1/bridges/` | `POST /api/v2/platform/telephony/bridges/` (`name` required, `slug` optional) |
 | Update bridge | `PATCH /api/v1/bridges/{slug}/` | `PATCH /api/v2/platform/telephony/bridges/{slug}/` |
 
 <Note>

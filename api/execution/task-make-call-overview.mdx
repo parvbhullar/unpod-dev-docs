@@ -44,8 +44,7 @@ Content-Type: application/json
 | Status Code | Description |
 |-------------|-------------|
 | 200 | Success - Task created successfully |
-| 206 | Partial Content - Business logic error occurred |
-| 400 | Bad Request - Invalid input payload |
+| 206 | Partial Content - Validation error, invalid space token, or no access to the space |
 | 401 | Unauthorized - Invalid or missing API token |
-| 404 | Not Found - Space not found |
+| 402 | Payment Required - The organization can't place calls right now |
 | 500 | Internal Server Error - Server-side error |

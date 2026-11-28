@@ -508,8 +508,7 @@
                     "pages": [
                       "api/agent/overview",
                       "api/agent/get-all-agents",
-                      "api/agent/get-tasks-by-agent-handle",
-                      "api/agent/get-agent-executions"
+                      "api/agent/get-tasks-by-agent-handle"
                     ]
                   },
                   {
@@ -537,17 +536,7 @@
                     "expanded": false,
                     "pages": [
                       "api/logs/overview",
-                      "api/logs/get-call-logs",
-                      "api/logs/get-people"
-                    ]
-                  },
-                  {
-                    "group": "Analytics",
-                    "icon": "chart-bar",
-                    "expanded": false,
-                    "pages": [
-                      "api/billing&usage/analytics-overview",
-                      "api/billing&usage/get-analytics"
+                      "api/logs/get-call-logs"
                     ]
                   },
                   {
@@ -578,15 +567,6 @@
                       "api/provider/get-provider-by-id",
                       "api/provider/update-provider",
                       "api/provider/delete-provider"
-                    ]
-                  },
-                  {
-                    "group": "Billing",
-                    "icon": "credit-card",
-                    "expanded": false,
-                    "pages": [
-                      "api/billing&usage/billing-overview",
-                      "api/billing&usage/get-billing"
                     ]
                   }
                 ]
@@ -939,6 +919,30 @@
     {
       "source": "/guides/index",
       "destination": "/home/overview"
+    },
+    {
+      "source": "/api/agent/get-agent-executions",
+      "destination": "/api/agent/overview"
+    },
+    {
+      "source": "/api/logs/get-people",
+      "destination": "/api/logs/overview"
+    },
+    {
+      "source": "/api/billing&usage/analytics-overview",
+      "destination": "/api/overview"
+    },
+    {
+      "source": "/api/billing&usage/get-analytics",
+      "destination": "/api/overview"
+    },
+    {
+      "source": "/api/billing&usage/billing-overview",
+      "destination": "/api/overview"
+    },
+    {
+      "source": "/api/billing&usage/get-billing",
+      "destination": "/api/overview"
     }
   ]
 }

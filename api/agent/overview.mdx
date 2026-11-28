@@ -18,7 +18,6 @@ The Agent API allows you to manage and retrieve AI agents configured in your Unp
 |----------|-------------|
 | `GET /api/v2/platform/agents/` | Retrieve all agents in your organization |
 | `GET /api/v2/platform/agents/{agent_handle}/tasks/` | Retrieve all tasks assigned to a specific agent |
-| `GET /api/v2/platform/agents/{agent_handle}/executions/` | Retrieve all executions for a specific agent |
 
 ## Base URL
 
@@ -28,7 +27,7 @@ https://unpod.ai/api/v2/platform/
 
 ## Authentication
 
-All Agent API requests require a valid API token and Org-Handle in the headers:
+All Agent API requests require a valid API token. Listing agents also needs the `Org-Handle` header:
 
 ```http
 Authorization: Token your-api-token

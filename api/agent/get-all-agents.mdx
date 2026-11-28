@@ -9,7 +9,7 @@ openapi: 'GET /api/v2/platform/agents/'
 
 ```json Success Response (200)
 {
-  "count": 94,
+  "count": 1,
   "status_code": 200,
   "message": "Agents fetched successfully",
   "data": [
@@ -18,6 +18,7 @@ openapi: 'GET /api/v2/platform/agents/'
       "name": "General Agentic",
       "type": "Voice",
       "state": "published",
+      "description": "Outbound sales agent",
       "purpose": "Handle outbound sales calls"
     }
   ]
@@ -35,7 +36,7 @@ openapi: 'GET /api/v2/platform/agents/'
 
 # Get All Agents
 
-Retrieve detailed information for all registered AI agents in your organization, helping you view and manage agent records within the system.
+Retrieve the published AI agents in the organization named by `Org-Handle`. Draft agents are not returned.
 
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
@@ -51,7 +52,7 @@ Retrieve detailed information for all registered AI agents in your organization,
 | Org-Handle    | string | Yes      | Organization domain handle      |
 
 <Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
+Copy your `Org-Handle` from the dashboard - see [How to Get Your Organization Handle](/api/get-started/authentication#how-to-get-your-organization-handle).
 </Note>
 
 
@@ -70,9 +71,10 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 |---------|--------|------------------------------------------------|
 | handle  | string | Unique agent handle/identifier                 |
 | name    | string | Agent display name                             |
-| type    | string | Agent type: `Voice`, `Chat`, etc.              |
-| state   | string | Agent state: `published`, `draft`, `archived`  |
-| purpose | string | Agent purpose/use case description             |
+| type        | string | Agent type, for example `Voice`                |
+| state       | string | Always `published` - only published agents are listed |
+| description | string | Agent description                              |
+| purpose     | string | Agent purpose/use case description             |
 
 
 
@@ -81,9 +83,9 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - Request completed successfully         |
-| 400         | Bad Request - Invalid parameters provided        |
+| 400         | Bad Request - `Org-Handle` header missing        |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Access denied to the resource        |
+| 403         | Forbidden - Not a member of the organization     |
 | 404         | Not Found - Organization not found               |
 | 500         | Internal Server Error - Server-side error        |
 

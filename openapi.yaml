@@ -35,26 +35,22 @@ paths:
       tags: [Organisation]
       security:
         - TokenAuth: []
-      parameters:
-        - $ref: '#/components/parameters/OrgHandle'
       responses:
         '200':
           description: List of organizations
           content:
             application/json:
               example:
-                count: 3
+                count: 1
                 status_code: 200
                 message: "Organizations fetched successfully"
                 data:
-                  - id: 1
-                    name: "Unpod TV"
+                  - name: "Unpod TV"
+                    token: "8KZRTQP7BNW5XEDLORYUHMJC"
+                    domain: "unpod.tv"
                     domain_handle: "unpod.tv"
-                    created_at: "2024-01-15T10:30:00Z"
-                  - id: 2
-                    name: "Recalll"
-                    domain_handle: "recalll.co"
-                    created_at: "2024-03-20T08:00:00Z"
+                    is_private_domain: true
+                    role: "owner"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -74,15 +70,21 @@ paths:
           content:
             application/json:
               example:
-                count: 207
+                count: 1
                 status_code: 200
                 message: "Spaces fetched successfully"
                 data:
-                  - id: "sp_001"
-                    name: "Sales Outreach Q1"
+                  - name: "Sales Outreach Q1"
+                    slug: "sales-outreach-q1"
                     token: "8KZAMRAHSXXXXXXMAYNASMJC"
-                    agent_handle: "space-agent-8qmk42nslp91wrh3dz7btxc4"
-                    created_at: "2026-01-10T08:00:00Z"
+                    description: "Outbound sales calls"
+                    logo: null
+                    privacy_type: "private"
+                    space_type: "general"
+                    content_type: "general"
+                    organization:
+                      name: "Acme Corp"
+                      domain_handle: "acme"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -110,11 +112,23 @@ paths:
                 status_code: 200
                 message: "Space fetched successfully"
                 data:
-                  id: "sp_001"
                   name: "Sales Outreach Q1"
+                  slug: "sales-outreach-q1"
                   token: "8KZRTQP7BNW5XEDLORYUHMJC"
-                  agent_handle: "space-agent-8qmk42nslp91wrh3dz7btxc4"
-                  created_at: "2026-01-10T08:00:00Z"
+                  description: "Outbound sales calls"
+                  logo: null
+                  privacy_type: "private"
+                  space_type: "general"
+                  content_type: "general"
+                  organization:
+                    name: "Acme Corp"
+                    domain_handle: "acme"
+                  agents:
+                    - name: "Sales Agent"
+                      handle: "space-agent-8qmk42nslp91wrh3dz7btxc4"
+                      type: "Voice"
+                  created: "2026-01-10T08:00:00Z"
+                  modified: "2026-01-12T09:30:00Z"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -141,10 +155,35 @@ paths:
             example: 1
         - name: page_size
           in: query
+          description: Tasks per page (default 50)
           schema:
             type: integer
-            example: 20
-        - $ref: '#/components/parameters/OrgHandle'
+            example: 50
+        - name: search
+          in: query
+          description: Case-insensitive match on the contact name or number
+          schema:
+            type: string
+        - name: call_type
+          in: query
+          schema:
+            type: string
+            enum: [inbound, outbound]
+        - name: from_ts
+          in: query
+          description: Only tasks created at or after this Unix timestamp (seconds)
+          schema:
+            type: integer
+        - name: to_ts
+          in: query
+          description: Only tasks created at or before this Unix timestamp (seconds)
+          schema:
+            type: integer
+        - name: status
+          in: query
+          description: Comma-separated values matched against output.post_call_data.summary.status
+          schema:
+            type: string
       responses:
         '200':
           description: List of tasks in the space
@@ -207,7 +246,6 @@ paths:
           schema:
             type: string
             example: "8KZAMRAHSXXXXXXMAYNASMJC"
-        - $ref: '#/components/parameters/OrgHandle'
       requestBody:
         required: true
         content:
@@ -216,6 +254,7 @@ paths:
               type: object
               required:
                 - pilot
+                - context
                 - documents
               properties:
                 pilot:
@@ -271,11 +310,25 @@ paths:
                         example: "6902fb5840a736e125e80ebc"
                 context:
                   type: string
-                  description: Additional context for the task
+                  description: Context/objective for the task
                   example: "Call the lead and discuss the project requirements."
                 schedule:
                   type: object
-                  description: Schedule configuration
+                  description: When to place the calls. Omit, or send type now, to call right away.
+                  required: [type]
+                  properties:
+                    type:
+                      type: string
+                      enum: [now, auto, custom]
+                      description: "now, auto (agent's calling schedule) or custom. Case-insensitive."
+                    calling_date:
+                      type: string
+                      description: Required when type is custom. YYYY-MM-DD.
+                      example: "2026-03-15"
+                    calling_time:
+                      type: string
+                      description: Required when type is custom. ISO time.
+                      example: "20:08:00+05:30"
                   example:
                     type: "now"
             example:
@@ -309,14 +362,26 @@ paths:
                   run_id: "R74802366fe9011f0878d43cd8a99e069"
                   task_ids:
                     - "T74802367fe9011f0878d43cd8a99e069"
-                  status: "pending"
+                  status:
+                    T74802367fe9011f0878d43cd8a99e069: "pending"
         '206':
-          description: Partial Content - Business logic error
+          description: Validation error, invalid space token, or no access to the space
           content:
             application/json:
               example:
-                message: "Task creation failed"
-                errors: "Detailed error description"
+                status_code: 206
+                message: "There is some Validation error"
+                data: {}
+                errors:
+                  context: ["This field is required."]
+        '402':
+          description: The organization can't place calls right now (for example, credits exhausted)
+          content:
+            application/json:
+              example:
+                error: "insufficient_balance"
+                block_reason: "bits_exhausted"
+                message: "You're out of call credits. Please buy credits to resume calls."
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -336,7 +401,7 @@ paths:
           content:
             application/json:
               example:
-                count: 94
+                count: 1
                 status_code: 200
                 message: "Agents fetched successfully"
                 data:
@@ -344,6 +409,7 @@ paths:
                     name: "General Agentic"
                     type: "Voice"
                     state: "published"
+                    description: "Outbound sales agent"
                     purpose: "Handle outbound sales calls"
         '401':
           $ref: '#/components/responses/Unauthorized'
@@ -372,7 +438,18 @@ paths:
           schema:
             type: integer
             example: 20
-        - $ref: '#/components/parameters/OrgHandle'
+        - name: from
+          in: query
+          description: Only tasks created on or after this date, YYYY-MM-DD (IST)
+          schema:
+            type: string
+            example: "2026-02-01"
+        - name: end
+          in: query
+          description: Only tasks created on or before this date, YYYY-MM-DD (IST)
+          schema:
+            type: string
+            example: "2026-02-07"
       responses:
         '200':
           description: List of tasks for the agent
@@ -609,41 +686,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /api/v2/platform/agents/{agent_handle}/executions/:
-    get:
-      operationId: getAgentExecutions
-      summary: Get All Agent Executions
-      tags: [Agents]
-      security:
-        - TokenAuth: []
-      parameters:
-        - name: agent_handle
-          in: path
-          required: true
-          schema:
-            type: string
-            example: "space-agent-8qmk42nslp91wrh3dz7btxc4"
-        - $ref: '#/components/parameters/OrgHandle'
-      responses:
-        '200':
-          description: List of executions for the agent
-          content:
-            application/json:
-              example:
-                count: 12
-                status_code: 200
-                message: "Executions fetched successfully"
-                data:
-                  - run_id: "Recac64fe03e911f1878d43cd8a99e069"
-                    status: "completed"
-                    total_tasks: 25
-                    completed_tasks: 23
-                    created: "2026-02-07T05:57:45Z"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-
   # ─── Runs ─────────────────────────────────────────────────────
   /api/v2/platform/spaces/{space_token}/runs/:
     get:
@@ -659,7 +701,17 @@ paths:
           schema:
             type: string
             example: "8KZAMRAHSXXXXXXMAYNASMJC"
-        - $ref: '#/components/parameters/OrgHandle'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: page_size
+          in: query
+          description: Runs per page (default 50)
+          schema:
+            type: integer
+            example: 50
       responses:
         '200':
           description: List of all runs
@@ -670,10 +722,14 @@ paths:
                 status_code: 200
                 message: "Runs Fetched Successfully"
                 data:
-                  - run_id: "Recac64fe03e911f1878d43cd8a99e069"
+                  - space_id: "42"
+                    user: "17"
+                    thread_id: null
+                    run_id: "Recac64fe03e911f1878d43cd8a99e069"
                     collection_ref: "collection_data_SA2W8R6NZRK6C9PO3JSL1J85"
                     run_mode: "prefect"
                     status: "completed"
+                    batch_count: 1
                     created: "2026-02-07T05:57:45Z"
                     modified: "2026-02-07T05:57:45Z"
         '401':
@@ -699,7 +755,17 @@ paths:
           schema:
             type: string
             example: "Recac64fe03e911f1878d43cd8a99e069"
-        - $ref: '#/components/parameters/OrgHandle'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: page_size
+          in: query
+          description: Tasks per page (default 50)
+          schema:
+            type: integer
+            example: 50
       responses:
         '200':
           description: List of tasks for the run
@@ -766,6 +832,7 @@ paths:
             example: 1
         - name: page_size
           in: query
+          description: Records per page (default 10)
           schema:
             type: integer
             example: 20
@@ -781,6 +848,48 @@ paths:
             type: string
             enum: [completed, notConnected, failed]
             example: completed
+        - name: start_time
+          in: query
+          description: "Calls that started on or after this date. Format DD-MM-YYYY HH:MM:SS; only the date part is used"
+          schema:
+            type: string
+            example: "01-11-2025 00:00:00"
+        - name: end_time
+          in: query
+          description: "Calls that ended on or before this date. Format DD-MM-YYYY HH:MM:SS; only the date part is used"
+          schema:
+            type: string
+            example: "30-11-2025 23:59:59"
+        - name: source_number
+          in: query
+          description: Source number starts with this value
+          schema:
+            type: string
+        - name: destination_number
+          in: query
+          description: Destination number starts with this value
+          schema:
+            type: string
+        - name: bridge
+          in: query
+          description: Bridge name contains this value
+          schema:
+            type: string
+        - name: call_id
+          in: query
+          description: Record id contains this value
+          schema:
+            type: string
+        - name: call_duration
+          in: query
+          description: Calls at most this many seconds long
+          schema:
+            type: integer
+        - name: sort
+          in: query
+          description: 'JSON object with one key (start_time, end_time or call_duration) set to ascend or descend, e.g. {"start_time":"ascend"}'
+          schema:
+            type: string
       responses:
         '200':
           description: List of telephony CDRs
@@ -809,131 +918,7 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /api/v2/platform/knowledge_base/{kb_id}/connector-doc-data/{connector_id}/:
-    get:
-      operationId: getConnectorDocData
-      summary: Get Connector Doc Data
-      tags: [Call Logs]
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: '#/components/parameters/OrgHandle'
-        - name: kb_id
-          in: path
-          required: true
-          schema:
-            type: string
-            example: "8KZAMRAHSXXXXXXMAYNASMJC"
-          description: Knowledge base token.
-        - name: connector_id
-          in: path
-          required: true
-          schema:
-            type: string
-            example: "670f1c2e9b1d4a0012ab34cd"
-          description: Connector document id.
-        - name: domain
-          in: query
-          schema:
-            type: string
-            example: "acme.com"
-          description: Filter connector doc data by domain.
-        - name: page
-          in: query
-          schema:
-            type: integer
-            example: 1
-        - name: page_size
-          in: query
-          schema:
-            type: integer
-            example: 20
-      responses:
-        '200':
-          description: Connector doc data (People profile) for the given knowledge base connector document
-          content:
-            application/json:
-              example:
-                status_code: 200
-                message: "Doc data fetched successfully"
-                data:
-                  name: "John Doe"
-                  contact_number: "+15551234567"
-                  created: "2026-04-28T09:04:12"
-                  labels: ["Interested"]
-                  overview:
-                    summary: "## Profile Overview\nJohn is a professional individual who is actively engaged in resolving a pending payment. They have shown a clear interest in scheduling payment on a specific date..."
-                    analytics:
-                      avg_call_duration: "201.44s"
-                      response_rate: 64.29
-                      preferred_time: "Morning (9AM-12PM)"
-                      total_calls: 14
-                      connected_calls: 9
-                      last_connected: "2026-05-06T11:01:57.922160"
-                      sentiment: "Neutral"
-                    profile_status: "Lost"
-                    recent_conversations:
-                      - date: "2026-07-15 19:17"
-                        summary: "During the call, the agent attempted to engage the user, but the conversation did not progress beyond brief affirmations from the user..."
-                      - date: "2026-05-06 10:17"
-                        summary: "N/A"
-                    profile_summary:
-                      sentiment: "Neutral"
-                      tone: "Professional"
-                      engagement: "High"
-                      interest_level: "Very Interested"
-                      objections: []
-                      questions_asked:
-                        - "Can we speak in Hindi?"
-                        - "Can we speak in English?"
-                      pain_points:
-                        - "Delay in salary credit affecting payment"
-                      outcome: "Connected"
-                      next_action: "Schedule the payment for the 13th of each month"
-                      callback_requested: false
-                      callback_time: null
-                      summary_text: "John is a professional individual who is actively engaged in resolving a pending payment. They have shown a clear interest in scheduling payment on a specific date."
-                  document_id: "670f1c2e9b1d4a0012ab34cd"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
   # ─── Analytics ────────────────────────────────────────────────
-  /api/v2/platform/organisation/analytics/:
-    get:
-      operationId: getAnalytics
-      summary: Get Analytics
-      tags: [Analytics]
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: '#/components/parameters/OrgHandle'
-        - name: space_token
-          in: query
-          schema:
-            type: string
-            example: "8KZAMRAHSXXXXXXMAYNASMJC"
-      responses:
-        '200':
-          description: Analytics data
-          content:
-            application/json:
-              example:
-                status_code: 200
-                message: "Analytics fetched successfully"
-                data:
-                  total_calls: 1250
-                  completed_calls: 987
-                  failed_calls: 143
-                  avg_duration_seconds: 145.3
-                  total_tasks: 1350
-                  task_status_breakdown:
-                    pending: 45
-                    running: 12
-                    completed: 1180
-                    failed: 113
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
   # ─── Providers ────────────────────────────────────────────────
   /api/v2/platform/telephony/providers/:
     get:
@@ -942,8 +927,6 @@ paths:
       tags: [Providers]
       security:
         - TokenAuth: []
-      parameters:
-        - $ref: '#/components/parameters/OrgHandle'
       responses:
         '200':
           description: List of available telephony providers
@@ -954,11 +937,13 @@ paths:
                 message: "Voice infra providers fetched successfully."
                 data:
                   - id: 1
-                    name: "Twilio"
-                    slug: "twilio"
+                    name: "Provider 1"
+                    description: "Desc 1"
+                    icon: "https://example.com/icon1.png"
                   - id: 2
-                    name: "Plivo"
-                    slug: "plivo"
+                    name: "Provider 2"
+                    description: "Desc 2"
+                    icon: "https://example.com/icon2.png"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -971,23 +956,36 @@ paths:
         - TokenAuth: []
       parameters:
         - $ref: '#/components/parameters/OrgHandle'
+        - name: type
+          in: query
+          required: false
+          description: Only configurations whose provider has this type (case-insensitive)
+          schema:
+            type: string
       responses:
         '200':
-          description: List of provider configurations
+          description: List of active provider configurations
           content:
             application/json:
               example:
                 status_code: 200
-                message: "Provider configurations fetched successfully."
+                message: "Success"
                 data:
                   - id: 42
-                    provider: "twilio"
-                    account_sid: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                    created_at: "2026-02-07T10:00:00Z"
-                  - id: 43
-                    provider: "plivo"
-                    account_sid: "MAyyyyyyyyyyyyyyyyyyyyyyy"
-                    created_at: "2026-02-10T09:00:00Z"
+                    name: "My Livekit Configuration"
+                    provider: 2
+                    provider_details:
+                      id: 2
+                      name: "LiveKit"
+                      description: "LiveKit SIP"
+                      icon: "https://example.com/livekit.png"
+                    org_handle: "acme"
+                    meta_json: {}
+                    active: true
+                    api_key: null
+                    api_secret: null
+                    base_url: "https://api.provider.com"
+                    sip_url: "sip.provider.com"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -1007,22 +1005,33 @@ paths:
               type: object
               required:
                 - provider
-                - account_sid
-                - auth_token
               properties:
                 provider:
+                  type: integer
+                  description: Provider ID from GET /api/v2/platform/telephony/providers/
+                  example: 2
+                name:
                   type: string
-                  example: "twilio"
-                account_sid:
+                  example: "My Livekit Configuration"
+                api_key:
                   type: string
-                  example: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                auth_token:
+                  description: Stored, never returned
+                  example: "sk_xxx"
+                api_secret:
                   type: string
-                  example: "your_auth_token_here"
+                  description: Stored, never returned
+                  example: "secret_xxx"
+                base_url:
+                  type: string
+                  example: "https://api.provider.com"
+                sip_url:
+                  type: string
+                  example: "sip.provider.com"
             example:
-              provider: "twilio"
-              account_sid: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-              auth_token: "your_auth_token_here"
+              provider: 2
+              name: "My Livekit Configuration"
+              api_key: "sk_xxx"
+              api_secret: "secret_xxx"
       responses:
         '201':
           description: Provider created
@@ -1030,12 +1039,23 @@ paths:
             application/json:
               example:
                 status_code: 201
-                message: "Provider configuration created successfully."
+                message: "Success"
                 data:
                   id: 42
-                  provider: "twilio"
-                  account_sid: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  created_at: "2026-02-07T10:00:00Z"
+                  name: "My Livekit Configuration"
+                  provider: 2
+                  provider_details:
+                    id: 2
+                    name: "LiveKit"
+                    description: "LiveKit SIP"
+                    icon: "https://example.com/livekit.png"
+                  org_handle: "acme"
+                  meta_json: {}
+                  active: true
+                  api_key: null
+                  api_secret: null
+                  base_url: "https://api.provider.com"
+                  sip_url: "sip.provider.com"
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -1061,12 +1081,23 @@ paths:
             application/json:
               example:
                 status_code: 200
-                message: "Provider configuration fetched successfully."
+                message: "Success"
                 data:
                   id: 42
-                  provider: "twilio"
-                  account_sid: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  created_at: "2026-02-07T10:00:00Z"
+                  name: "My Livekit Configuration"
+                  provider: 2
+                  provider_details:
+                    id: 2
+                    name: "LiveKit"
+                    description: "LiveKit SIP"
+                    icon: "https://example.com/livekit.png"
+                  org_handle: "acme"
+                  meta_json: {}
+                  active: true
+                  api_key: null
+                  api_secret: null
+                  base_url: "https://api.provider.com"
+                  sip_url: "sip.provider.com"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -1093,14 +1124,23 @@ paths:
             schema:
               type: object
               properties:
-                auth_token:
+                name:
                   type: string
-                  example: "your_new_auth_token_here"
-                account_sid:
+                  example: "My Livekit Configuration"
+                api_key:
                   type: string
-                  example: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  example: "sk_new"
+                api_secret:
+                  type: string
+                  example: "secret_new"
+                base_url:
+                  type: string
+                  example: "https://api.provider.com"
+                sip_url:
+                  type: string
+                  example: "sip.provider.com"
             example:
-              auth_token: "your_new_auth_token_here"
+              api_secret: "secret_new"
       responses:
         '200':
           description: Provider updated
@@ -1108,12 +1148,23 @@ paths:
             application/json:
               example:
                 status_code: 200
-                message: "Provider configuration updated successfully."
+                message: "Success"
                 data:
                   id: 42
-                  provider: "twilio"
-                  account_sid: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  created_at: "2026-02-07T10:00:00Z"
+                  name: "My Livekit Configuration"
+                  provider: 2
+                  provider_details:
+                    id: 2
+                    name: "LiveKit"
+                    description: "LiveKit SIP"
+                    icon: "https://example.com/livekit.png"
+                  org_handle: "acme"
+                  meta_json: {}
+                  active: true
+                  api_key: null
+                  api_secret: null
+                  base_url: "https://api.provider.com"
+                  sip_url: "sip.provider.com"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -1482,35 +1533,66 @@ paths:
         - TokenAuth: []
       parameters:
         - $ref: '#/components/parameters/OrgHandle'
+        - name: Product-Id
+          in: header
+          required: true
+          description: Product the bridges belong to; only bridges created with this value are listed
+          schema:
+            type: string
+            example: "unpod.ai"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: page_size
+          in: query
+          description: Bridges per page (default 10)
+          schema:
+            type: integer
+            example: 10
       responses:
         '200':
-          description: List of all bridges
+          description: List of bridges
           content:
             application/json:
               example:
-                count: 6
+                count: 1
                 status_code: 200
-                message: "Bridges fetched successfully."
+                message: "Success"
                 data:
                   - id: 314
                     name: "Sales Bridge"
                     slug: "sales-bridge-001"
-                    provider: "twilio"
-                    numbers:
-                      - id: 501
-                        number: "+1234567890"
-                        status: "active"
+                    status: "ACTIVE"
+                    description: "Production bridge"
+        '206':
+          description: Missing Product-Id or Org-Handle header, or organization not found
+          content:
+            application/json:
+              example:
+                status_code: 206
+                message: "Please provide Product-Id in headers"
+                data: {}
         '401':
           $ref: '#/components/responses/Unauthorized'
 
     post:
       operationId: createBridge
       summary: Create Bridge
+      description: An organization has one bridge. If it already has one, this updates name, description, region and status on that bridge and returns it.
       tags: [Bridges]
       security:
         - TokenAuth: []
       parameters:
         - $ref: '#/components/parameters/OrgHandle'
+        - name: Product-Id
+          in: header
+          required: false
+          description: Product the bridge belongs to (stored on a new bridge)
+          schema:
+            type: string
+            example: "unpod.ai"
       requestBody:
         required: true
         content:
@@ -1519,20 +1601,32 @@ paths:
               type: object
               required:
                 - name
-                - slug
               properties:
                 name:
                   type: string
                   example: "Sales Bridge"
+                description:
+                  type: string
+                  example: "Production bridge"
+                region:
+                  type: string
+                  enum: [IN, US, EU, AUS, UAE]
+                  example: "IN"
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE, DRAFT]
+                  example: "DRAFT"
                 slug:
                   type: string
+                  description: Generated from the name when omitted
                   example: "sales-bridge-001"
             example:
               name: "Sales Bridge"
-              slug: "sales-bridge-001"
+              description: "Production bridge"
+              region: "IN"
       responses:
         '201':
-          description: Bridge created
+          description: Bridge created (or the existing bridge updated)
           content:
             application/json:
               example:
@@ -1541,8 +1635,21 @@ paths:
                 data:
                   id: 314
                   name: "Sales Bridge"
+                  description: "Production bridge"
+                  status: "DRAFT"
+                  documents_status: "pending"
                   slug: "sales-bridge-001"
-                  created_at: "2026-02-07T10:00:00Z"
+                  numbers: []
+                  organization: 101
+                  region: "IN"
+        '400':
+          description: Missing Org-Handle or invalid body
+          content:
+            application/json:
+              example:
+                status_code: 400
+                message: "Missing 'Org-Handle' header."
+                data: {}
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -1568,19 +1675,29 @@ paths:
             application/json:
               example:
                 status_code: 200
-                message: "Bridge fetched successfully."
+                message: "Success"
                 data:
                   id: 314
                   name: "Sales Bridge"
+                  description: "Production bridge"
+                  status: "ACTIVE"
+                  documents_status: "pending"
                   slug: "sales-bridge-001"
                   numbers:
                     - id: 501
                       number_id: 25
                       number: "+1234567890"
-                      state: "ASSIGNED"
-                      active: true
                       channels_count: 2
-                      status: "active"
+                      provider_details:
+                        id: 3
+                        name: "Twilio"
+                        description: "Twilio voice"
+                        icon: "https://example.com/twilio.png"
+                      provider_configuration: null
+                      agent_id: null
+                      config_json: {}
+                  org_handle: "acme"
+                  region: "IN"
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -1610,6 +1727,15 @@ paths:
                 name:
                   type: string
                   example: "Sales Bridge - Updated"
+                description:
+                  type: string
+                  example: "Production bridge"
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE, DRAFT]
+                region:
+                  type: string
+                  enum: [IN, US, EU, AUS, UAE]
             example:
               name: "Sales Bridge - Updated"
       responses:
@@ -1623,7 +1749,10 @@ paths:
                 data:
                   id: 314
                   name: "Sales Bridge - Updated"
+                  description: "Production bridge"
+                  status: "ACTIVE"
                   slug: "sales-bridge-001"
+                  region: "IN"
                   numbers:
                     - id: 501
                       number: "+1234567890"
@@ -1677,30 +1806,52 @@ paths:
             schema:
               type: object
               required:
-                - provider_config_id
-                - phone_number
+                - number_id
+                - provider_credential_id
               properties:
-                provider_config_id:
+                number_id:
                   type: integer
+                  description: ID of a number already on this bridge
+                  example: 25
+                provider_credential_id:
+                  type: integer
+                  description: ID of a provider configuration in the bridge's organization
                   example: 42
-                phone_number:
-                  type: string
-                  example: "+1234567890"
             example:
-              provider_config_id: 42
-              phone_number: "+1234567890"
+              number_id: 25
+              provider_credential_id: 42
       responses:
-        '200':
-          description: Provider connected to bridge
+        '201':
+          description: Provider linked to the number
           content:
             application/json:
               example:
-                status_code: 200
-                message: "Provider connected to bridge successfully."
+                status_code: 201
+                message: "Number linked with provider successfully."
                 data:
-                  message: "Provider connected successfully"
-                  bridge_slug: "sales-bridge-001"
+                  id: 501
+                  number: 25
+                  number_id: 25
                   phone_number: "+1234567890"
+                  bridge: 314
+                  bridge_id: 314
+                  channels_count: 0
+                  status: "active"
+                  agent_id: null
+                  kind: "agent"
+                  is_configured: true
+                  provider_configuration:
+                    id: 42
+                    name: "My Livekit Configuration"
+                    provider: 2
+        '400':
+          description: Missing field, number on another bridge, provider configuration not found, or link failed
+          content:
+            application/json:
+              example:
+                status_code: 400
+                message: "Provided number is already assigned to another bridge."
+                data: {}
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -1726,24 +1877,29 @@ paths:
             schema:
               type: object
               required:
-                - phone_number
+                - number_id
               properties:
-                phone_number:
-                  type: string
-                  example: "+1234567890"
+                number_id:
+                  type: integer
+                  description: ID of a number on this bridge
+                  example: 25
             example:
-              phone_number: "+1234567890"
+              number_id: 25
       responses:
         '200':
-          description: Provider disconnected from bridge
+          description: Number (and its provider link) removed from the bridge
           content:
             application/json:
               example:
                 status_code: 200
-                message: "Provider disconnected from bridge successfully."
-                data:
-                  message: "Provider disconnected successfully"
-                  bridge_slug: "sales-bridge-001"
+                message: "Provider disconnected from number +1234567890."
+                data: {}
+        '404':
+          description: Bridge not found, or the number is not on this bridge
+          content:
+            application/json:
+              example:
+                message: "Number is not assigned to this bridge."
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -2124,43 +2280,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
 
   # ─── Billing ──────────────────────────────────────────────────
-  /api/v2/platform/organisation/billing/:
-    get:
-      operationId: getBilling
-      summary: Get Billing Data
-      tags: [Billing]
-      security:
-        - TokenAuth: []
-      parameters:
-        - $ref: '#/components/parameters/OrgHandle'
-        - name: page
-          in: query
-          schema:
-            type: integer
-            example: 1
-        - name: page_size
-          in: query
-          schema:
-            type: integer
-            example: 20
-      responses:
-        '200':
-          description: Billing data
-          content:
-            application/json:
-              example:
-                count: 12
-                status_code: 200
-                message: "Billing data fetched successfully"
-                results:
-                  - id: 101
-                    amount: "299.00"
-                    currency: "USD"
-                    status: "paid"
-                    invoice_date: "2026-02-01T00:00:00Z"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
 components:
   securitySchemes:
     TokenAuth:

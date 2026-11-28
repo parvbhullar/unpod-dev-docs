@@ -67,8 +67,9 @@ openapi: 'GET /api/v2/platform/spaces/{space_token}/runs/{run_id}/tasks/'
 
 ```json Error Response (206)
 {
-  "message": "Error retrieving run tasks",
-  "errors": "Detailed error description"
+  "status_code": 206,
+  "message": "Invalid Space Token",
+  "data": {}
 }
 ```
 
@@ -93,8 +94,15 @@ Fetch all tasks for a specific run, including complete input, output, call trans
 | run_id      | string | Yes      | The run ID whose tasks to retrieve |
 
 <Note>
-You can get the `space_token` from the [Get All Spaces](/api/space/get-all-spaces) API. The `run_id` can be obtained from the [Get All Runs](/api/execution/get-all-runs) API response.
+Copy the `space_token` from the dashboard - see [How to Get Your Space Token](/api/get-started/authentication#how-to-get-your-space-token). The `run_id` can be obtained from the [Get All Runs](/api/execution/get-all-runs) API response.
 </Note>
+
+### Query Parameters
+
+| Name      | Type    | Required | Description                              |
+|-----------|---------|----------|------------------------------------------|
+| page      | integer | No       | Page number for pagination (default = 1) |
+| page_size | integer | No       | Number of tasks per page (default = 50)  |
 
 ### Headers
 
@@ -152,11 +160,8 @@ You can get the `space_token` from the [Get All Spaces](/api/space/get-all-space
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - Data fetched successfully              |
-| 206         | Partial Content - Business logic error occurred  |
-| 400         | Bad Request - Invalid parameters provided        |
+| 206         | Partial Content - Invalid space token, no access to the space, or the fetch failed (reason in `message`) |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Access denied to the resource        |
-| 404         | Not Found - Space or Run not found               |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples
