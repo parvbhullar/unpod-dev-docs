@@ -24,7 +24,7 @@ secrets - never paste them into shared docs or screenshots.
 
 <Steps>
   <Step title="Open Inbound Trunk Details → Connect on your number">
-    In **Telephony**, select your number. If it shows **Not Linked**, click **Connect to → SIP
+    In **Telephony**, select your number. If it shows **Not linked**, click **Connect to → SIP
     Trunk** first. Then click **Connect** under **Inbound Trunk Details**.
     On the **New trunk** tab, set a **Name** you'll recognise and the SIP host:
     - **SIP URI / address** - your **Daily SIP dial-in** address
@@ -32,12 +32,12 @@ secrets - never paste them into shared docs or screenshots.
     - **Port** `5060` and **Transport** (`TCP` / `UDP` / `TLS`).
     - **Allowed IPs / CIDR** - optional source allow-list.
 
-    Click **Test** to validate, then **Create Trunk**.
+    Click **Create Trunk**.
     <img src="/images/unpod-numbers/06-inbound-configure.png" alt="Unpod - configure a new trunk pointing at Daily" />
   </Step>
 
   <Step title="Copy the outbound trunk credentials">
-    The number now shows **Linked · Daily**. Under **Outbound Trunk Details** copy the
+    The number now shows **Linked** with your trunk name. Under **Outbound Trunk Details** copy the
     values - Daily uses them to reach Unpod:
     - **Address** - e.g. `sip-lb1.unpod.tel`
     - **Port** / **Protocol** - `5060` / `UDP`
@@ -79,7 +79,6 @@ then ready for inbound and outbound calls.
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Trunk **Test** fails in Unpod | Wrong Daily `sip_uri` or transport | Re-copy the room's `sip_uri`; match transport |
 | Daily can't reach the trunk | Wrong outbound trunk address or auth | Re-copy **Address** + **Username/Password** from the Unpod **Outbound Trunk Details** |
 | Call connects, agent silent | No agent bound to the room | Route the SIP dial-in room to an agent |
 | Inbound not arriving | SIP dial-in not enabled | Set `sip_mode: "dial-in"` on the Daily room |

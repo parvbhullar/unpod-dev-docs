@@ -15,10 +15,6 @@ Unpod come from two sources:
 
 Once a number is in your account, you attach it to an `agent_id`. All inbound calls to that number are routed to that agent.
 
-<Note>
-Support for Twilio, Telnyx, and Plivo numbers is coming soon - you will be able to import numbers from these providers directly into Unpod.
-</Note>
-
 ---
 
 ## Number Sources
@@ -27,9 +23,6 @@ Support for Twilio, Telnyx, and Plivo numbers is coming soon - you will be able 
 |---|---|
 | **Unpod** | Provision numbers directly from the Unpod platform |
 | **BYON** | Bring numbers from your existing provider |
-| **Twilio** | Coming soon |
-| **Telnyx** | Coming soon |
-| **Plivo** | Coming soon |
 
 ---
 
@@ -162,7 +155,7 @@ asyncio.run(main())
 | `number_id` | `str` | Unique number ID (`num_...`) |
 | `number` | `str` | E.164 format, e.g. `+14155550100` |
 | `status` | `str` | `available` (default), `assigned`, `in_call` or `disabled` |
-| `trunk_type` | `str` | The trunk the number rides on, e.g. `livekit` (the default) |
+| `trunk_type` | `str` | The type of trunk the number rides on |
 | `pipe_id` | `str \| None` | The agent-voice row this number is attached to, or `None` if free. Still spelled `pipe_id` on the number record |
 | `country` | `str` | ISO 3166-1 alpha-2 country code |
 

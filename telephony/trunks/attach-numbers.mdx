@@ -35,6 +35,7 @@ source IPs.
 | number_ids  | integer[] | Yes      | Numbers to map, up to 100 (duplicates ignored) |
 | bridge_slug | string    | No       | Explicit bridge; auto-resolved when omitted |
 | region      | string    | No       | Region hint (e.g. `IN`)                     |
+| channels_count | integer | No      | Concurrent channels for each mapped number, taken from your plan. At least `1`, default `1` |
 
 ### Origin endpoint
 

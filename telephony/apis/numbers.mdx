@@ -39,10 +39,10 @@ with the Telephony APIs. The steps below connect it to a SIP trunk or an agent.
   </Step>
 
   <Step title="Click Connect to">
-    The number starts **Not Linked**. **Connect to** offers **SIP Trunk** (your own SIP
+    The number starts **Not linked**. **Connect to** offers **SIP Trunk** (your own SIP
     client places and answers calls) and **Agents** (an Unpod AI agent answers).
 
-    <Frame caption="A new number starts Not Linked - Connect to opens the options">
+    <Frame caption="A new number starts Not linked - Connect to opens the options">
       <img src="/images/unpod-numbers/03-connect-to.png" alt="Number Configuration showing Not Linked and the Connect to menu with SIP Trunk and Agents" />
     </Frame>
   </Step>
@@ -115,8 +115,8 @@ with Client() as client:
         result = client.telephony.numbers.attach(NUMBER, attach_type="human_call")
     except httpx.HTTPStatusError as e:  # nothing attached: the body says why
         raise SystemExit(e.response.text)
-    if not result.numbers:  # 206: nothing attached
-        raise SystemExit("Nothing attached: check UNPOD_ORG_HANDLE and your channel quota")
+    if not result.numbers:  # 206: missing or unknown Org-Handle
+        raise SystemExit("Nothing attached: check UNPOD_ORG_HANDLE")
     for r in result.numbers:  # one row per number
         print(r.number, r.ok, r.connection_state, r.error)
 ```
@@ -142,9 +142,10 @@ cURL response). If no number attaches, the whole request fails:
 | `206` | Over your plan's channel quota |
 | `206` | `Org-Handle` is missing (`Please provide Org-Handle in headers`) or names no org (`Organization not found`) |
 
-The SDK raises `httpx.HTTPStatusError` on `400` and `402`, but not on `206`: then
-`result.numbers` is empty, so check for that (the reason is in `message` in the cURL
-response). Otherwise check `ok` on each row.
+The SDK raises `httpx.HTTPStatusError` on `400` and `402`, but not on `206`. For a missing
+or unknown `Org-Handle`, `result.numbers` is empty, so check for that (the reason is in
+`message` in the cURL response). Over your channel quota, each row comes back with `ok`
+false and the reason in `error`. Otherwise check `ok` on each row.
 
 Each attached number takes its channels from your plan. Over HTTP, `channels_count` (on
 `numbers/attach/` and on a trunk's `attach-numbers/`) sets how many: at least 1, default 1.

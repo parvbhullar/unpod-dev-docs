@@ -32,9 +32,9 @@ for calls you receive.
   </Step>
 
   <Step title="Click Connect to → SIP Trunk">
-    The number now shows **Not Linked**. Click **Connect to** and choose **SIP Trunk**.
+    The number now shows **Not linked**. Click **Connect to** and choose **SIP Trunk**.
 
-    <Frame caption="A new number starts Not Linked - Connect to → SIP Trunk">
+    <Frame caption="A new number starts Not linked - Connect to → SIP Trunk">
       <img src="/images/unpod-numbers/03-connect-to.png" alt="Number Configuration showing Not Linked and the Connect to menu with SIP Trunk and Agents" />
     </Frame>
   </Step>
@@ -126,9 +126,8 @@ calls have nowhere to go.
     </Tip>
   </Step>
 
-  <Step title="Test, then click Create Trunk">
-    **Test** checks that Unpod can reach your SIP URI. Then click **Create Trunk**.
-    The number now shows **Inbound Trunk Details** with the values you entered. Call the
+  <Step title="Click Create Trunk">
+    Click **Create Trunk**. The number now shows **Inbound Trunk Details** with the values you entered. Call the
     number to check it.
 
     <Frame caption="Inbound trunk configured - Configure edits it, Unlink removes it">
@@ -142,7 +141,7 @@ calls have nowhere to go.
 | Direction | Symptom | Check |
 |---|---|---|
 | Outbound | Calls are rejected | Your SIP client sends to `sip-lb1.unpod.tel:5060` over `UDP` with the exact username and password from **Outbound Trunk Details**. |
-| Inbound | Calls never arrive | **SIP URI**, **Port** and **Transport** match your SIP host. Run **Test** from the trunk form. |
+| Inbound | Calls never arrive | **SIP URI**, **Port** and **Transport** match your SIP host. |
 | Inbound | Calls stop after you add an allow-list | Your SIP host's IPs are inside **Allowed IPs / CIDR**. Clear the field to test without it. |
 | Inbound | Calls should go somewhere else | Click **Configure** under **Inbound Trunk Details** and change the SIP URI. |
 

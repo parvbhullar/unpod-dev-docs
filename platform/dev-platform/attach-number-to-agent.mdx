@@ -10,7 +10,7 @@ The platform telephony plane (`client.telephony.*`) maps your phone numbers to
 voice **agents** on backend-core's `/api/v2/platform/telephony/*` surface. The
 primary flow is **attach a number to an agent** - what telephony calls the
 **Leg-B** termination (Unpod's SuperSBC routes the inbound call through to your
-agent on LiveKit).
+agent).
 
 You **list** your org's numbers, then **attach** one or many to an agent. The
 underlying voice bridge is resolved for you (hidden) - you work with numbers and
@@ -29,8 +29,8 @@ plane at [`client.numbers`](/speech-stack/numbers). The telephony plane is
 
 | Concept | What it is |
 |---|---|
-| **Leg B (agent attach)** | SuperSBC → agent/LiveKit. The **primary** flow - `numbers.attach(..., agent_id=...)`. |
-| **Leg A (BYO carrier)** | Your own SIP carrier → SuperSBC. The carrier leg is the hardcoded SuperSBC default today; bringing your own carrier (`client.telephony.trunks.*`) is **future/beta**. |
+| **Leg B (agent attach)** | SuperSBC → agent. The **primary** flow - `numbers.attach(..., agent_id=...)`. |
+| **Leg A (BYO carrier)** | Your own SIP carrier → SuperSBC, with `client.telephony.trunks.*`. See [Bring Your Own Carrier](#bring-your-own-carrier-leg-a). |
 | **`agent_id`** | The handle of an agent your org owns. **Optional** - attach without one, then bind an agent with `client.numbers.agent.change` (see below). |
 | **Bridge** | The voice bridge a number rides on. **Auto-resolved and hidden** - one number maps to one bridge. |
 
@@ -220,16 +220,15 @@ for row in overview:
 
 ---
 
-## Bring Your Own Carrier (Leg A) - Future / Beta
+## Bring Your Own Carrier (Leg A)
 
 Bringing your own SIP carrier (`client.telephony.trunks.*`) wires the **Leg-A**
-carrier leg. Today that leg is the hardcoded SuperSBC default, so this surface is
-**future/beta** - prefer the agent attach above for production. When enabled, the
-flow is: create a trunk, attach numbers, and point your carrier at the returned
-origin endpoint.
+carrier leg: create a trunk, attach numbers, and point your carrier at the returned
+origin endpoint. The [SIP Trunking Quick Start](/telephony/quickstart) walks through
+each step.
 
 ```python
-# future / beta - BYO SIP carrier (Leg A)
+# BYO SIP carrier (Leg A)
 trunk = await client.telephony.trunks.create(
     name="My Carrier", sip_url="sip:carrier.net",
     username="u", password="p", source_ips=["203.0.113.10"],
