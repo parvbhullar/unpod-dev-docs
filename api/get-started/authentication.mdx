@@ -79,10 +79,11 @@ Returned when required headers are missing.
 Follow these steps to obtain your Organization Handle from the Unpod Dashboard:
 
 1. **Login** to the [Unpod Dashboard](https://unpod.ai/)
-2. On the **left sidebar**, click on the **Studio View**
-3. On the **right sidebar**, click on the **Setting Icon**
-4. You will see the **Copy Org Handle** option
-5. Click on it to **copy** the Organization Handle
+2. Open [Settings → Workspace → General](https://unpod.ai/settings/workspace/general/)
+3. Copy the **Domain** value (for example `acme`)
+
+Owners and editors can also click the **Settings** (gear) icon at the top of the
+org page and choose **Copy Org Handle**.
 
 <Note>
 The Organization Handle is required in the `Org-Handle` header for many API endpoints.
@@ -93,10 +94,12 @@ The Organization Handle is required in the `Org-Handle` header for many API endp
 Follow these steps to obtain your Space Token from the Unpod Dashboard:
 
 1. **Login** to the [Unpod Dashboard](https://unpod.ai/)
-2. On the **left sidebar**, click on the **Conversation** tab
-3. Click on the **Settings** icon
-4. You'll see the **Space Token** option
-5. Click on it to **copy** the Space Token
+2. Click **Space View** at the bottom of the left sidebar, then pick your space from
+   the space switcher at the top of the sidebar
+3. At the top right of the space page, click the three-dot menu (**⋮**)
+4. Click **Space Token** to copy it
+
+The menu is shown only to users who can edit the space.
 
 <Note>
 Each space has a unique token. Make sure you're using the correct space token for your API requests.
@@ -107,12 +110,10 @@ Each space has a unique token. Make sure you're using the correct space token fo
 Follow these steps to obtain your Agent Handle from the Unpod Dashboard:
 
 1. **Login** to the [Unpod Dashboard](https://unpod.ai/)
-2. On the **left sidebar**, click on the **Studio View**
-3. Click on **Create AI Identity**, you will be redirected to the Agents page
-4. Click on the **agent** for which you want the Agent Handle
-5. On the **right sidebar**, you will see **three dots** behind Publish, click on that
-6. You will see the **Copy Handle** option
-7. Click on it to **copy** the Agent Handle
+2. Open **AI Studio** from the left sidebar
+3. In the **Agents** list, click the agent you want
+4. At the top right of the agent page, click the three-dot menu (**⋮**)
+5. Click **Copy Handle**
 
 <Note>
 Each agent has a unique handle. Make sure you're using the correct agent handle for your API requests.
