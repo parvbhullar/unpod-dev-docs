@@ -10,22 +10,33 @@ openapi: 'GET /api/v2/platform/telephony/bridges/{slug}/'
 ```json Success Response (200)
 {
   "status_code": 200,
-  "message": "Bridge fetched successfully.",
+  "message": "Success",
   "data": {
     "id": 314,
     "name": "Sales Bridge",
+    "description": "Production bridge",
+    "status": "ACTIVE",
+    "documents_status": "pending",
     "slug": "sales-bridge-001",
     "numbers": [
       {
         "id": 501,
         "number_id": 25,
         "number": "+1234567890",
-        "state": "ASSIGNED",
-        "active": true,
         "channels_count": 2,
-        "status": "active"
+        "provider_details": {
+          "id": 3,
+          "name": "Twilio",
+          "description": "Twilio voice",
+          "icon": "https://example.com/twilio.png"
+        },
+        "provider_configuration": null,
+        "agent_id": null,
+        "config_json": {}
       }
-    ]
+    ],
+    "org_handle": "acme",
+    "region": "IN"
   }
 }
 ```
@@ -33,8 +44,7 @@ openapi: 'GET /api/v2/platform/telephony/bridges/{slug}/'
 ```json Error Response (404)
 {
   "status_code": 404,
-  "message": "Bridge not found.",
-  "errors": "No bridge exists with the provided slug"
+  "message": "Bridge not found."
 }
 ```
 
@@ -66,7 +76,7 @@ You can get the bridge `slug` by hitting the [Get All Bridges](/api/telephony/ge
 | Org-Handle    | string | Yes      | Organization domain handle      |
 
 <Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
+Copy your `Org-Handle` from the dashboard - see [How to Get Your Organization Handle](/api/get-started/authentication#how-to-get-your-organization-handle).
 </Note>
 
 
@@ -82,22 +92,28 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 
 | Field   | Type    | Description                     |
 |---------|---------|---------------------------------|
-| id      | integer | Bridge unique identifier        |
-| name    | string  | Bridge display name             |
-| slug    | string  | Unique bridge slug identifier   |
-| numbers | array   | List of assigned phone numbers  |
+| id               | integer | Bridge unique identifier          |
+| name             | string  | Bridge display name               |
+| description      | string  | Bridge description                |
+| status           | string  | `ACTIVE`, `INACTIVE`, or `DRAFT`  |
+| documents_status | string  | Document processing status        |
+| slug             | string  | Unique bridge slug identifier     |
+| numbers          | array   | List of assigned phone numbers    |
+| org_handle       | string  | Handle of the owning organization |
+| region           | string  | Bridge region                     |
 
 ### Number Object Fields
 
-| Field          | Type    | Description                |
-|----------------|---------|----------------------------|
-| id             | integer | Number assignment ID       |
-| number_id      | integer | Phone number ID            |
-| number         | string  | Phone number (E.164 format) |
-| state          | string  | Number state: `ASSIGNED`, `UNASSIGNED` |
-| active         | boolean | Whether number is active   |
-| channels_count | integer | Number of active channels  |
-| status         | string  | Number status: `active`, `inactive` |
+| Field                  | Type    | Description                                   |
+|------------------------|---------|-----------------------------------------------|
+| id                     | integer | Number assignment ID                          |
+| number_id              | integer | Phone number ID                               |
+| number                 | string  | Phone number (E.164 format)                   |
+| channels_count         | integer | Number of channels                            |
+| provider_details       | object  | `{ id, name, description, icon }` of the number's provider |
+| provider_configuration | object  | Connected provider configuration, or `null`. `api_key` and `api_secret` are never returned (always `null`) |
+| agent_id               | string  | Agent the number routes to, or `null`         |
+| config_json            | object  | Number configuration                          |
 
 
 ## Common Error Codes
@@ -105,8 +121,9 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - Bridge fetched successfully            |
+| 206         | Not a member of the bridge's organization        |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Invalid organization handle          |
+| 403         | Forbidden - Not a member of the `Org-Handle` organization |
 | 404         | Not Found - Bridge not found                     |
 | 500         | Internal Server Error - Server-side error        |
 
@@ -173,6 +190,6 @@ curl -X GET "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-001
 
 1. **Slug Validation**: Handle 404 errors when a bridge slug may have been deleted or renamed
 2. **Number Inspection**: Check the `numbers` array to verify active phone numbers before routing calls
-3. **Active Status**: Only numbers with `active: true` and `status: active` are ready to handle calls
+3. **Provider Check**: A number with `provider_configuration: null` has no provider connected yet
 4. **Error Handling**: Always handle potential errors and edge cases
 5. **Security**: Keep API tokens secure and rotate them regularly

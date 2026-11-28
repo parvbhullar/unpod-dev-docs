@@ -9,21 +9,17 @@ openapi: 'GET /api/v2/platform/organizations/'
 
 ```json Success Response (200)
 {
-  "count": 3,
+  "count": 1,
   "status_code": 200,
   "message": "Organizations fetched successfully",
   "data": [
     {
-      "id": 1,
       "name": "Unpod TV",
+      "token": "8KZRTQP7BNW5XEDLORYUHMJC",
+      "domain": "unpod.tv",
       "domain_handle": "unpod.tv",
-      "created_at": "2024-01-15T10:30:00Z"
-    },
-    {
-      "id": 2,
-      "name": "Recalll",
-      "domain_handle": "recalll.co",
-      "created_at": "2024-03-20T08:00:00Z"
+      "is_private_domain": true,
+      "role": "owner"
     }
   ]
 }
@@ -40,7 +36,7 @@ openapi: 'GET /api/v2/platform/organizations/'
 
 ## Organizations API
 
-Retrieve a list of all organizations associated with your API token. The `domain_handle` field in the response is used as the `Org-Handle` header in subsequent API requests.
+Retrieve the active organizations you are a member of. This endpoint doesn't need the `Org-Handle` header. The `domain_handle` field in the response is used as the `Org-Handle` header in subsequent API requests.
 
 ### Response Fields
 
@@ -55,10 +51,12 @@ Retrieve a list of all organizations associated with your API token. The `domain
 
 | Field         | Type    | Description                                          |
 |---------------|---------|------------------------------------------------------|
-| id            | integer | Unique organization identifier                       |
-| name          | string  | Organization display name                            |
-| domain_handle | string  | Domain handle used as `Org-Handle` in API requests   |
-| created_at    | string  | Organization creation timestamp (ISO 8601)           |
+| name              | string  | Organization display name                          |
+| token             | string  | Organization token                                 |
+| domain            | string  | Organization domain                                |
+| domain_handle     | string  | Domain handle used as `Org-Handle` in API requests |
+| is_private_domain | boolean | Whether the domain is private                      |
+| role              | string  | Your role code in the organization                 |
 
 ---
 
@@ -67,10 +65,7 @@ Retrieve a list of all organizations associated with your API token. The `domain
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - Request completed successfully         |
-| 400         | Bad Request - Invalid parameters provided        |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Access denied to the resource        |
-| 404         | Not Found - Organization not found               |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples
@@ -81,8 +76,7 @@ Retrieve a list of all organizations associated with your API token. The `domain
 const axios = require('axios');
 
 const headers = {
-  'Authorization': 'Token your-api-token',
-  'Org-Handle': 'your-org-handle'
+  'Authorization': 'Token your-api-token'
 };
 
 // Get all organizations
@@ -106,8 +100,7 @@ getOrganizations();
 import requests
 
 headers = {
-    'Authorization': 'Token your-api-token',
-    'Org-Handle': 'your-org-handle'
+    'Authorization': 'Token your-api-token'
 }
 
 def get_organizations():
@@ -127,8 +120,7 @@ get_organizations()
 ```bash cURL
 # Get all organizations
 curl -X GET "https://unpod.ai/api/v2/platform/organizations/" \
-  -H "Authorization: Token your-api-token" \
-  -H "Org-Handle: your-org-handle"
+  -H "Authorization: Token your-api-token"
 ```
 
 </CodeGroup>

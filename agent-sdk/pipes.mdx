@@ -36,7 +36,7 @@ and resolves the pipe from the agent instead.
 # ---------- before ----------
 pipe = await client.pipes.create(
     name="Support Bot",
-    voice_profile="vp_en_female_hd",
+    voice_profile="<profile_id>",
     agent_id="my-bot",
     recording=True,
     max_call_duration_s=600,
@@ -50,7 +50,7 @@ voice = await client.agents.voice.create(
     "my-bot",                                # agent_id is the identity now
     brain=Runner(),                          # say the brain out loud
     name="Support Bot",
-    voice_profile="vp_en_female_hd",
+    voice_profile="<profile_id>",
     recording=True,
     max_call_duration_s=600,
 )
@@ -89,7 +89,7 @@ async def main():
     async with AsyncClient() as client:
         pipe = await client.pipes.create(       # DeprecationWarning
             name="Support Bot",
-            voice_profile="vp_en_female_hd",
+            voice_profile="<profile_id>",
             agent_id="my-bot",
             recording=True,
             max_call_duration_s=600,
@@ -151,7 +151,7 @@ from unpod import Endpoint
 await client.agents.voice.create(
     "my-bot",
     brain=Endpoint("https://your-api.example.com/v1/chat/completions", model="my-model"),
-    voice_profile="vp_en_female_hd",
+    voice_profile="<profile_id>",
 )
 ```
 

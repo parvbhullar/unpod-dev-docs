@@ -17,7 +17,7 @@ boundary is text.
 - **An Unpod org** with a platform token and at least one phone number -
   create the token under **Settings → Access → API keys**
   ([unpod.dev/settings/workspace/billing/api-keys](https://unpod.dev/settings/workspace/billing/api-keys/)),
-  and provision a number from the dashboard under **Dev Platform → Numbers**
+  and provision a number from the dashboard under **Telephony → Numbers**
 - **The SDK:**
 
 ```bash
@@ -86,7 +86,7 @@ load_dotenv()   # reads the .env next to this script
 
 async def main() -> None:
     async with AsyncClient() as client:
-        profiles = await client.voice_profiles.list(language="en")
+        profiles = await client.voice_profiles.list()
         for p in profiles:
             print(p)
 
@@ -301,7 +301,7 @@ Each row has two fields, `number` (E.164) and `status`:
 
 `telephony.numbers.list()` takes no filters; filter the list in code as
 above. If nothing is free, provision a number from the dashboard under
-**Dev Platform → Numbers**, or detach one from another agent.
+**Telephony → Numbers**, or detach one from another agent.
 
 </Step>
 <Step title="Attach it to the agent">
@@ -530,7 +530,7 @@ campaign.
 - **`transcript` is `None`** - on a list row it means *not loaded* (use
   `calls.get()`); on a never-connected call there are simply no turns.
 - **No `not_assigned` number in step 3** - provision one from the dashboard
-  under **Dev Platform → Numbers**, or detach one from another agent.
+  under **Telephony → Numbers**, or detach one from another agent.
 
 ## Next
 

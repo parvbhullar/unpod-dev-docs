@@ -38,6 +38,11 @@ await client.agents.update("my-support", tools=tools)
 
 Every example below follows this pattern.
 
+`client.agents.tools.set(agent_id, handover=..., voicemail=...)` does the
+same read-merge-write for you. It takes `HandoverTool(enabled=, numbers=)` and
+`VoicemailTool(message=)` from `unpod.agents`; for `mode` and
+`decision_timeout_s`, use the dict pattern above.
+
 ---
 
 ## Transfer to a human
@@ -82,7 +87,7 @@ numbers = ['+919876543210', '+919876543211']
 | Key | Required | Default | Notes |
 |---|---|---|---|
 | `enabled` | Yes | - | Must be `True`, or the agent never gets the tool |
-| `numbers` | Yes | - | E.164 only (`+` and country code). Dialled **in order**; the first to answer takes the call |
+| `numbers` | Yes | - | E.164 only (`+` and country code). Dialled **in order**; the next number is tried only if the previous one fails |
 | `mode` | No | `"warm"` | `"warm"` or `"cold"` - see below |
 | `decision_timeout_s` | No | `90` | Warm mode only. Seconds the human has to accept, `1`-`120` |
 
@@ -114,6 +119,8 @@ await client.agents.update(AGENT_ID, tools=tools)
   outbound call from it.
 - Tell the brain when to hand over. In a Prompt brain, add a line such as
   *"If the caller asks for a human or a manager, transfer the call."*
+  In a Playbook brain, declare `handover_tool` under `tools` (`type: python`)
+  and list it in the `on_enter` of the checkpoint that should transfer.
 - A number with a wrong format is rejected when you save (`422`), not
   mid-call.
 
@@ -205,6 +212,9 @@ async def main() -> None:
 
 asyncio.run(main())
 ```
+
+Automatic callbacks are placed for **outbound** calls only. On an inbound
+call the block still records the recommendation, but nothing is dialled.
 
 Run this **before** the calls you want covered - analytics blocks run on
 new calls only and never backfill.

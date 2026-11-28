@@ -43,17 +43,24 @@ Three surfaces, three auth stories - do not mix them:
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `model` | string | Yes | Your playbook id, `public:` prefixed - e.g. `public:PB_7ZRMzCA1ojQ9LlcK` |
-| `messages` | array | Yes | `{role, content}` objects, as in the OpenAI API |
-| `user` | string | No | A stable session id. Pass the same value across requests and the agent keeps its state. |
+| `model` | string | Yes | Your playbook id, exactly as the deploy drawer shows it - e.g. `PB_7ZRMzCA1ojQ9LlcK`. Letters, digits, `.`, `_`, `-` only; a prefix such as `public:` is rejected with `400`. |
+| `messages` | array | Yes | `{role, content}` objects, as in the OpenAI API. Send an empty array on the first call to have the agent speak its opening line first. |
+| `user` | string | No | A stable session id. Pass the same value across requests and the agent keeps its state. An `X-Session-Id` header works too. |
+| `stream` | boolean | No | `true` streams `chat.completion.chunk` events over SSE. |
 
 ## Keep a conversation going
 
 Without `user`, each request is independent. With it, the agent remembers the
-thread - the checkpoint it reached, the slots it filled - across requests.
+thread - the checkpoint it reached, the slots it filled - across requests. Every
+response returns the session id as `x_session_id` (and an `X-Session-Id`
+header), so you can reuse the one the server minted.
+
+When the playbook reaches its closing step, the response carries
+`"unpod_session_ended": true`. A later request with the same `user` id returns
+`410 session_ended` - start a new conversation with a new id.
 
 ```bash
--d '{"model":"public:PB_...","messages":[{"role":"user","content":"hi"}],"user":"sess_abc"}'
+-d '{"model":"PB_...","messages":[{"role":"user","content":"hi"}],"user":"sess_abc"}'
 ```
 
 Use one id per caller or per conversation, not one per process.
@@ -67,7 +74,7 @@ Use one id per caller or per conversation, not one per process.
       -H "Authorization: Bearer $UNPOD_ENDPOINT_KEY" \
       -H "Content-Type: application/json" \
       -d '{
-        "model": "public:PB_7ZRMzCA1ojQ9LlcK",
+        "model": "PB_7ZRMzCA1ojQ9LlcK",
         "messages": [{"role": "user", "content": "hi"}],
         "user": "sess_abc"
       }'
@@ -84,7 +91,7 @@ Use one id per caller or per conversation, not one per process.
     )
 
     reply = client.chat.completions.create(
-        model="public:PB_7ZRMzCA1ojQ9LlcK",
+        model="PB_7ZRMzCA1ojQ9LlcK",
         messages=[{"role": "user", "content": "hi"}],
         user="sess_abc",
     )
@@ -101,7 +108,7 @@ Use one id per caller or per conversation, not one per process.
     });
 
     const reply = await client.chat.completions.create({
-      model: "public:PB_7ZRMzCA1ojQ9LlcK",
+      model: "PB_7ZRMzCA1ojQ9LlcK",
       messages: [{ role: "user", content: "hi" }],
       user: "sess_abc",
     });
@@ -115,7 +122,7 @@ Use one id per caller or per conversation, not one per process.
     client := openai.NewClientWithConfig(cfg)
 
     reply, err := client.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
-        Model:    "public:PB_7ZRMzCA1ojQ9LlcK",
+        Model:    "PB_7ZRMzCA1ojQ9LlcK",
         Messages: []openai.ChatCompletionMessage{{Role: "user", Content: "hi"}},
         User:     "sess_abc",
     })
@@ -136,7 +143,7 @@ immediately if one leaks.
   "id": "chatcmpl-abc123",
   "object": "chat.completion",
   "created": 1677858242,
-  "model": "public:PB_7ZRMzCA1ojQ9LlcK",
+  "model": "PB_7ZRMzCA1ojQ9LlcK",
   "choices": [
     {
       "index": 0,
@@ -151,15 +158,17 @@ immediately if one leaks.
     "prompt_tokens": 10,
     "completion_tokens": 20,
     "total_tokens": 30
-  }
+  },
+  "x_session_id": "sess_abc",
+  "unpod_session_ended": false
 }
 ```
 
 ```json 401
 {
   "error": {
-    "message": "Invalid API key",
-    "type": "authentication_error",
+    "message": "could not resolve org for token",
+    "type": "invalid_api_key",
     "code": "invalid_api_key"
   }
 }

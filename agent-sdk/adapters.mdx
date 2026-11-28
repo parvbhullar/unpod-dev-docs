@@ -56,7 +56,7 @@ The `ctx.session.dialog_machine` setter accepts, in order:
 
 All importable from `unpod.adapters`:
 `AnthropicAdapter`, `DialogAdapter`, `HTTPAdapter`, `LangChainAdapter`,
-`MCPAdapter`, `OpenAIAdapter`, `SuperDialogAdapter`.
+`OpenAIAdapter`, `SuperDialogAdapter`.
 
 ### Constructor signatures
 
@@ -66,7 +66,6 @@ All importable from `unpod.adapters`:
 | `AnthropicAdapter` | `(client, model="claude-haiku-4-5-20251001", system_prompt=None, max_tokens=1024)` | `anthropic.AsyncAnthropic` client |
 | `LangChainAdapter` | `(chain, input_key="messages")` | LangChain Runnable with `ainvoke`/`astream` |
 | `HTTPAdapter` | `(url, headers=None, timeout_s=10.0)` | A remote HTTP endpoint, any language |
-| `MCPAdapter` | `(server_url, tools=None, llm="anthropic/claude-haiku-4-5", headers=None)` | An MCP server (preview - see below) |
 | `SuperDialogAdapter` | `(dm)` | superdialog `DialogMachine` or `LLMAgent` |
 
 ### Streaming behavior
@@ -78,7 +77,6 @@ All importable from `unpod.adapters`:
 | `LangChainAdapter` | Real streaming via the chain's `.astream()` |
 | `SuperDialogAdapter` | Delegates to `dm.turn(text, stream=True[, language=…])` - `language` is passed through only when the wrapped machine's `turn()` accepts it |
 | `HTTPAdapter` | **Single chunk** - one POST round-trip, full reply yielded once |
-| `MCPAdapter` | Falls back to `turn()`, which is not implemented yet |
 
 ### `assist()` semantics
 
@@ -87,7 +85,6 @@ All importable from `unpod.adapters`:
 | `OpenAIAdapter` / `LangChainAdapter` | Injects the instruction into the conversation history |
 | `AnthropicAdapter` | Injects as a user/assistant message pair - the Anthropic API does not accept mid-conversation system messages |
 | `HTTPAdapter` | Queues the instruction; sent as `system_instructions` in the next request body |
-| `MCPAdapter` | Queues the instruction (pending full implementation) |
 | `SuperDialogAdapter` | Delegates to the DialogMachine's `assist()` |
 
 ### SuperDialogAdapter extras
@@ -113,7 +110,5 @@ See [SuperDialog](/superdialog/introduction) for the agent itself.
 | Assigning a non-adapter to `dialog_machine` | `TypeError` from the setter, immediately |
 | `HTTPAdapter` endpoint returns non-2xx | `httpx.HTTPStatusError` (the adapter calls `raise_for_status()`) |
 | `HTTPAdapter` endpoint slower than `timeout_s` | `httpx.TimeoutException` |
-| `MCPAdapter` without the `mcp` package | `ImportError` - install with `unpod[mcp]` |
-| `MCPAdapter` with the package | `NotImplementedError` - full MCP orchestration is not implemented yet |
 | `LangChainAdapter` with a chain expecting a different input shape | No error - the chain receives `{input_key: history}` and may silently misbehave; set `input_key` to match your chain |
 | Lazy `stream()` in a custom adapter | No error - choppy, delayed audio on calls |

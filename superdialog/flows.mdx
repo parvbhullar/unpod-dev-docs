@@ -51,7 +51,7 @@ dm = DialogMachine(Flow.load("kyc.json"), llm="anthropic/claude-haiku-4-5", engi
 
 ## Building from a prompt
 
-The fastest way to get started. `create_dialog_flow` makes one LLM call and generates the graph for you.
+The fastest way to get started. `create_dialog_flow` makes two LLM calls - one writes the agent's system prompt, the second generates the graph from it.
 
 ```python
 import asyncio
@@ -125,7 +125,8 @@ flow = Flow.from_yaml_file("flows/kyc.yaml")
 flow = Flow.from_json_string(json_str)
 flow = Flow.from_yaml_string(yaml_str)
 
-# Load from dict
+# Load from an agent config dict (keys such as livekit_flow_json,
+# livekit_flow_yaml, or flows_json; returns None if none are present)
 flow = Flow.from_config(config_dict)
 ```
 

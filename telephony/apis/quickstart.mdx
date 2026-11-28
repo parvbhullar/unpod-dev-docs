@@ -210,8 +210,7 @@ the `PUT` in step 4) returns `403 call_api_disabled`. Ask the Unpod team to swit
     </CodeGroup>
 
     `reveal()` only reads the secret, so every server already verifying with it keeps working.
-    If your org has no secret yet, an org owner or editor creates the first one: see
-    [Rotate the webhook secret](/telephony/concepts/security-and-compliance#rotate-the-webhook-secret).
+    Your org has a secret from the moment the Call API is switched on.
 
     **Sample code:** [`step6_webhook_secret.py`](https://github.com/unpod-ai/sample-apps/blob/feat/sbc-call-tests/sbc/quickstart/step6_webhook_secret.py) checks that your org has a webhook secret.
   </Step>

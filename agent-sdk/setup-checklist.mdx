@@ -42,7 +42,7 @@ async def create_agent():
         "my-agent",                        # agent_id - MUST match AgentRunner(agent_id=...)
         brain=Runner(),                    # this checklist runs its own worker
         name="My Agent",
-        voice_profile="vp_en_female_hd",   # a profile name or profile_id from step 1
+        voice_profile="Riya",              # a profile name or profile_id from step 1
     )
     print(voice.agent_id, voice.voice_profile_name)
     return voice

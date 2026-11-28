@@ -22,7 +22,7 @@ Your agent receives plain text. It returns plain text. The Speech Stack handles 
     Users dial a phone number. Unpod handles SIP, PSTN, number provisioning, and routing. No carrier account or SIP trunk needed.
   </Card>
   <Card title="Browser / App" icon="monitor-smartphone">
-    Users connect from a web app or mobile app - same speech pipeline, no phone number required. Today browser sessions run via the hosted Playground; the embeddable `@unpod/web-sdk` is not yet published on npm.
+    Users connect from a browser - same speech pipeline, no phone number required. Browser sessions run in the hosted Playground.
   </Card>
 </CardGroup>
 
@@ -36,7 +36,7 @@ Both paths run through the same managed speech pipeline (STT, TTS, VAD, barge-in
 
 <Steps>
   <Step title="User connects">
-    Via a phone number (PSTN/SIP), or from a browser/app (via the hosted Playground today; Web SDK not yet published).
+    Via a phone number (PSTN/SIP), or from a browser via the hosted Playground.
   </Step>
   <Step title="Speech pipeline runs">
     Unpod transcribes audio (STT), detects turn end (VAD + endpointing), and handles barge-in interruptions. Your agent gets clean text.
@@ -79,7 +79,7 @@ Both paths run through the same managed speech pipeline (STT, TTS, VAD, barge-in
 |---|---|
 | Place your first call | [Quickstart](/agent-sdk/agent-quickstart) - six SDK calls, a Prompt brain, nothing to deploy |
 | Run my own brain on calls | [Run Your Own Brain](/agent-sdk/quickstart) - an AgentRunner serving inbound and outbound |
-| Add voice to a web app | [Realtime](/agent-sdk/realtime) - browser sessions via the hosted Playground today (Web SDK not yet published) |
+| Talk to an agent in the browser | [Realtime](/agent-sdk/realtime) - browser sessions via the hosted Playground |
 
 ---
 

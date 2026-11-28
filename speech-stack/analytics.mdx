@@ -96,7 +96,7 @@ asyncio.run(main())
 | `analytics.list(include_archived=False)` | Blocks in this project |
 | `analytics.get(block_id)` | One block, including the agents it is attached to |
 | `analytics.update(block_id, ...)` | Same fields as `create`. **Bumps `version`; past results keep the old one** |
-| `analytics.delete(block_id)` | **Archives** the block: it stops running, its results stay readable |
+| `analytics.delete(block_id)` | Deletes the block and its agent attachments. Past results stay readable |
 
 ---
 
@@ -163,13 +163,15 @@ asyncio.run(main())
 | `session_id` | `str` | The session it ran on |
 | `call_id` | `str \| None` | The call, when the session came from one |
 | `agent_id` | `str \| None` | The agent that handled the session |
-| `status` | `str` | Default `"ok"` |
+| `status` | `str` | `ok` (extracted), `failed` (see `error`) or `skipped` (no transcript to analyse) |
 | `summary` | `str` | The extracted summary |
 | `success_evaluation` | `bool \| str \| None` | Promoted out of `data` - the field worth aggregating across blocks |
 | `data` | `dict` | Your declared fields, keyed by `name` |
 | `error` | `str \| None` | Set when extraction failed |
 | `model` | `str \| None` | LLM used |
 | `latency_ms` | `int \| None` | Extraction latency |
+| `block_version` | `int` | Block `version` the result was extracted with |
+| `created` | `datetime \| None` | When the result was written |
 
 ### `AnalyticsBlock` fields
 

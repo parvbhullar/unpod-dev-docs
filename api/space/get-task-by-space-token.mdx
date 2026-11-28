@@ -344,7 +344,7 @@ GET /api/v2/platform/spaces/{space_token}/tasks/
 | space_token | string | Yes      | Public token identifying the workspace  |
 
 <Note>
-You can get the `space_token` by hitting the [Get All Spaces](/api/space/get-all-spaces) API. The `token` field in the response is your Space Token.
+Copy the `space_token` from the dashboard - see [How to Get Your Space Token](/api/get-started/authentication#how-to-get-your-space-token).
 </Note>
 
 ### Query Parameters
@@ -352,7 +352,14 @@ You can get the `space_token` by hitting the [Get All Spaces](/api/space/get-all
 | Name      | Type    | Required | Description                               |
 |-----------|---------|----------|-------------------------------------------|
 | page      | integer | No       | Page number for pagination (default = 1)  |
-| page_size | integer | No       | Number of tasks per page (default = 20)   |
+| page_size | integer | No       | Number of tasks per page (default = 50)   |
+| search    | string  | No       | Case-insensitive match on the contact name or number |
+| call_type | string  | No       | `inbound` or `outbound`                   |
+| from_ts   | integer | No       | Only tasks created at or after this Unix timestamp (seconds) |
+| to_ts     | integer | No       | Only tasks created at or before this Unix timestamp (seconds) |
+| status    | string  | No       | Comma-separated values matched against `output.post_call_data.summary.status` |
+
+Tasks come back newest first.
 
 ### Headers
 
@@ -398,11 +405,8 @@ You can get the `space_token` by hitting the [Get All Spaces](/api/space/get-all
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - Data fetched successfully              |
-| 206         | Partial Content - Business logic error occurred  |
-| 400         | Bad Request - Invalid parameters provided        |
+| 206         | Partial Content - Invalid space token, no access to the space, or the fetch failed (reason in `message`) |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Access denied to the resource        |
-| 404         | Not Found - Space not found                      |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples

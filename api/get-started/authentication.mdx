@@ -6,15 +6,11 @@ icon: 'key'
 
 ## Overview
 
-The Unpod SDK needs an access token to connect to the server successfully.
+Every REST API request is authenticated with your API token. The token is tied
+to your user, so it can reach every organization you are a member of; the
+`Org-Handle` header picks which one a request acts on.
 
-This token holds the participant's identity, room name, capabilities, and permissions.
-
-Tokens are signed with your API secret to block forgery, and include an expiration time after which the server rejects them.
-
-<Note>
-Expiration time only impacts the initial connection, and not subsequent reconnects.
-</Note>
+The token does not expire. It stays valid until you delete it.
 
 ## Authentication Method
 
@@ -28,49 +24,53 @@ The Unpod API uses **API Key Authentication**:
 
 Follow these steps to obtain your API token from the Unpod Dashboard:
 
-1. **Login** to the [Unpod Dashboard](https://unpod.ai/)
-2. After login, you'll be redirected to the **Hub** page
-3. On the **left sidebar**, click on the **Key** icon (Api Keys)
-4. You'll be redirected to the **API Keys** page
-5. Click **Generate New API Key**
-6. Copy and securely store your API token
+1. **Login** to the [Unpod Dashboard](https://unpod.ai/). On your first login, finish
+   the short setup first: pick your role, pick what you'd like to get started with,
+   then set up your business identity.
+2. Open [Settings → Access → API keys](https://unpod.ai/settings/workspace/billing/api-keys/)
+3. Click **Generate New**
+4. Copy and securely store your API token
 
 <Note>
-If you delete an API key, you can always generate a new one from the API Keys page.
+You can hold one key at a time: delete the old key to generate a new one. The
+**Access** section is shown only to the workspace owner.
 </Note>
 
 ## Error Responses
 
 ### 401 - Unauthorized
 
-Returned when authentication credentials are missing or invalid.
+Returned when the `Authorization` header is missing, or the token is wrong.
 
 ```json
 {
   "status_code": 401,
-  "message": "Authentication credentials were not provided."
+  "message": "Invalid token."
 }
 ```
 
+With no `Authorization` header the message is
+`Authentication credentials were not provided.`
+
 ### 403 - Forbidden
 
-Returned when the token is expired or access is denied.
+Returned when you are not a member of the organization named in `Org-Handle`.
 
 ```json
 {
   "status_code": 403,
-  "message": "Token has expired."
+  "message": "You are not a member of this organization"
 }
 ```
 
 ### 400 - Bad Request
 
-Returned when required headers are missing.
+Returned when an endpoint that needs `Org-Handle` doesn't get it.
 
 ```json
 {
   "status_code": 400,
-  "message": "Org-Handle header is required."
+  "message": "Organization handle is required in Org-Handle header"
 }
 ```
 ## How to Get Your Organization Handle
@@ -78,10 +78,11 @@ Returned when required headers are missing.
 Follow these steps to obtain your Organization Handle from the Unpod Dashboard:
 
 1. **Login** to the [Unpod Dashboard](https://unpod.ai/)
-2. On the **left sidebar**, click on the **Studio View**
-3. On the **right sidebar**, click on the **Setting Icon**
-4. You will see the **Copy Org Handle** option
-5. Click on it to **copy** the Organization Handle
+2. Open [Settings → Workspace → General](https://unpod.ai/settings/workspace/general/)
+3. Copy the **Domain** value (for example `acme`)
+
+Owners and editors can also click the **Settings** (gear) icon at the top of the
+org page and choose **Copy Org Handle**.
 
 <Note>
 The Organization Handle is required in the `Org-Handle` header for many API endpoints.
@@ -92,10 +93,12 @@ The Organization Handle is required in the `Org-Handle` header for many API endp
 Follow these steps to obtain your Space Token from the Unpod Dashboard:
 
 1. **Login** to the [Unpod Dashboard](https://unpod.ai/)
-2. On the **left sidebar**, click on the **Conversation** tab
-3. Click on the **Settings** icon
-4. You'll see the **Space Token** option
-5. Click on it to **copy** the Space Token
+2. Click **Space View** at the bottom of the left sidebar, then pick your space from
+   the space switcher at the top of the sidebar
+3. At the top right of the space page, click the three-dot menu (**⋮**)
+4. Click **Space Token** to copy it
+
+The menu is shown only to users who can edit the space.
 
 <Note>
 Each space has a unique token. Make sure you're using the correct space token for your API requests.
@@ -106,12 +109,10 @@ Each space has a unique token. Make sure you're using the correct space token fo
 Follow these steps to obtain your Agent Handle from the Unpod Dashboard:
 
 1. **Login** to the [Unpod Dashboard](https://unpod.ai/)
-2. On the **left sidebar**, click on the **Studio View**
-3. Click on **Create AI Identity**, you will be redirected to the Agents page
-4. Click on the **agent** for which you want the Agent Handle
-5. On the **right sidebar**, you will see **three dots** behind Publish, click on that
-6. You will see the **Copy Handle** option
-7. Click on it to **copy** the Agent Handle
+2. Open **AI Studio** from the left sidebar
+3. In the **Agents** list, click the agent you want
+4. At the top right of the agent page, click the three-dot menu (**⋮**)
+5. Click **Copy Handle**
 
 <Note>
 Each agent has a unique handle. Make sure you're using the correct agent handle for your API requests.
@@ -123,4 +124,4 @@ Each agent has a unique handle. Make sure you're using the correct agent handle 
 2. **HTTPS Only**: Always use HTTPS for all API requests
 3. **Header Validation**: Always include required headers (Org-Handle, Product-ID) where needed
 4. **Error Handling**: Implement proper error handling for authentication failures
-5. **Rotation**: Rotate API tokens periodically for enhanced security
+5. **Rotation**: To rotate, delete the key and generate a new one - requests with the old key fail from then on

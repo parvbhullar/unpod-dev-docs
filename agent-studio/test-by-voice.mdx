@@ -20,29 +20,33 @@ audio is under load.
 
 ## Step 1 - Set the voice and model
 
-The Preview header has the run controls:
+The Preview header shows the current voice (its name and **STT → TTS** route).
+Click it, or **Agent Settings**, to open the settings drawer:
 
 <CardGroup cols={2}>
   <Card title="Voice profile" icon="audio-lines">
     Pick the voice the agent speaks in - the same voice a real caller would hear.
-    Each profile shows its **language**, its **STT + TTS providers**, an estimated
-    **cost per turn**, and a **WER** (word-error-rate) quality hint.
+    Each profile shows its **language**, its **STT + TTS providers**, a **price**,
+    and an estimated **WER** (word-error-rate) quality hint.
   </Card>
-  <Card title="Model" icon="cpu">
-    Choose the LLM the **agent** runs on for this test (separate from the builder
-    model in the chat). The picker shows speed/cost hints like `GPT-4.1 mini · fast`.
-    **BYOK** lets you run on your own provider key.
+  <Card title="LLM" icon="cpu">
+    Choose the model the **agent** runs on (separate from the builder model in
+    the chat). The picker shows speed hints like `GPT-4.1 mini · fast`. The
+    **BYOK** button in the Preview header lets you run on your own provider keys.
   </Card>
 </CardGroup>
+
+The same drawer also has **Transcriber** and **Voice** overrides and a
+**Config** section for memory and the domain dictionary.
 
 <Frame caption="Voice profile picker - language, STT/TTS stack, cost per turn, and WER for each voice">
   <img src="/images/playbook/preview-voice-profiles.png" alt="Preview voice test: a voice profile dropdown listing Anika, Neha, Shagun, Riya, Zara, Pooja - each with a language tag, STT and TTS provider, cost per turn, and WER - next to a large Press to talk mic orb with 'Try saying:' chips." />
 </Frame>
 
 <Tip>
-If **Press to talk** is disabled, the header tells you why - usually a missing
-voice profile or an unsaved playbook. Pick a voice and save, and the control
-unlocks.
+If **Press to talk** is disabled, the button itself tells you why - usually a
+missing voice profile or an unsaved playbook. Pick a voice and save, and the
+control unlocks.
 </Tip>
 
 ## Step 2 - Press to talk
@@ -60,8 +64,9 @@ The center of the Preview is a single **Press to talk** control.
     the agent answers in the voice you chose.
   </Step>
   <Step title="Live">
-    The transcript fills in turn by turn with timestamps, a slim pipeline readout
-    shows the current stage, and level meters confirm audio is flowing.
+    A pipeline readout (STT → your flow → TTS) shows the current stage and the
+    checkpoint the conversation is in. **Mute** and **Stop** sit in the Preview
+    header while the session runs.
   </Step>
 </Steps>
 
@@ -71,13 +76,14 @@ The center of the Preview is a single **Press to talk** control.
 
 ## Step 3 - Read the live signal
 
-While you talk, three things tell you whether the playbook works:
+While you talk, three things tell you whether the playbook works. Open the
+console with **Show** in the Preview header to see the transcript and metrics:
 
 | Surface | What it tells you |
 |---|---|
-| **Transcript** | The exact turns, so you can see where the agent misread you. |
-| **Current checkpoint** | Which checkpoint the conversation is in, and whether it advanced when it should have. |
-| **Metrics row** | A compact `ttfa · turns · cost` readout - time to first audio, turn count, and run cost. |
+| **Transcript** (console **Conversation** tab) | The exact turns, with timestamps, so you can see where the agent misread you. |
+| **Current checkpoint** (pipeline readout) | Which checkpoint the conversation is in, and whether it advanced when it should have. |
+| **Metrics** (console **Stats** tab) | TTFA (time to first audio), STT p95, TTS p95, turn count, and cost so far. |
 
 ### What to actually check
 
@@ -91,9 +97,10 @@ While you talk, three things tell you whether the playbook works:
 
 ## Step 4 - Dig in when something is off
 
-Open the **advanced drawer** below the call for the detailed console: the EVENTS
-log, traces, and per-turn LLM calls. Use it to see *why* a checkpoint did not
-advance - the Director's judgment and any tool calls are all there.
+Open the **console** below the call (**Show** in the Preview header). Its tabs
+are **Conversation**, **Events**, **Traces** (per-turn LLM calls and timings),
+**Stats**, **Traversal**, and **Memory**. Use it to see *why* a checkpoint did
+not advance - the Director's judgment and any tool calls are all there.
 
 <Warning>
 The console shows the engine's own events and never leaks raw provider errors.

@@ -342,6 +342,10 @@ You can get the `agent_handle` by hitting the [Get All Agents](/api/agent/get-al
 |-----------|---------|----------|------------------------------------------------|
 | page      | integer | No       | Page number to fetch, 1-based. Defaults to `1` |
 | page_size | integer | No       | Tasks per page. Defaults to `20`               |
+| from      | string  | No       | Only tasks created on or after this date, `YYYY-MM-DD` (IST) |
+| end       | string  | No       | Only tasks created on or before this date, `YYYY-MM-DD` (IST) |
+
+Tasks come back newest first.
 
 <Note>
 `count` is the **total** number of tasks for the agent, not the size of the current page - `data` holds at most `page_size` items. Page through until you have collected `count` tasks.
@@ -490,10 +494,9 @@ Every numeric value under `post_call_usage` (`call_duration_s`, `raw_counters`, 
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - Data fetched successfully              |
-| 206         | Partial Content - Business logic error occurred  |
-| 400         | Bad Request - Invalid parameters provided        |
+| 206         | Partial Content - No access to the agent's space (reason in `message`) |
+| 400         | Bad Request - `from`/`end` not `YYYY-MM-DD`, or `from` after `end` |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Access denied to the resource        |
 | 404         | Not Found - Agent not found                      |
 | 500         | Internal Server Error - Server-side error        |
 

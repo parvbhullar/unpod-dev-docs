@@ -59,7 +59,7 @@ Retrieve telephony call detail records (CDR) for your organization - only SIP-ba
 | Authorization | string | Yes      | API Key format: `Token <token>` |
 
 <Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
+Copy your `Org-Handle` from the dashboard - see [How to Get Your Organization Handle](/api/get-started/authentication#how-to-get-your-organization-handle).
 </Note>
 
 ### Query Parameters
@@ -67,9 +67,17 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 | Name        | Type   | Required | Description                                          |
 |-------------|--------|----------|------------------------------------------------------|
 | page        | integer | No      | Page number for pagination (default = 1)             |
-| page_size   | integer | No      | Number of records per page (default = 20)            |
+| page_size   | integer | No      | Number of records per page (default = 10)            |
 | call_type   | string  | No      | Filter by call direction: `inbound` or `outbound`    |
 | call_status | string  | No      | Filter by status: `completed`, `notConnected`, or `failed` |
+| start_time  | string  | No      | Calls that started on or after this date. Format `DD-MM-YYYY HH:MM:SS`; only the date part is used |
+| end_time    | string  | No      | Calls that ended on or before this date. Same format as `start_time` |
+| source_number | string | No     | Calls whose source number starts with this value     |
+| destination_number | string | No | Calls whose destination number starts with this value |
+| bridge      | string  | No      | Calls on a bridge whose name contains this value     |
+| call_id     | string  | No      | Records whose `id` contains this value               |
+| call_duration | integer | No    | Calls at most this many seconds long                 |
+| sort        | string  | No      | JSON object with one key - `start_time`, `end_time` or `call_duration` - set to `ascend` or `descend`, for example `{"start_time":"ascend"}`. Default: newest first |
 
 
 
@@ -114,10 +122,9 @@ agent / space / organization attribution (voice-agent call logs live elsewhere).
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - CDRs fetched successfully              |
-| 400         | Bad Request - Invalid filter parameters          |
+| 400         | Bad Request - `Org-Handle` missing or invalid filter value |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Invalid organization handle          |
-| 404         | Not Found - Organization not found               |
+| 403         | Forbidden - Not a member of the organization     |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples

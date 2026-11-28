@@ -14,7 +14,10 @@ openapi: 'PATCH /api/v2/platform/telephony/bridges/{slug}/'
   "data": {
     "id": 314,
     "name": "Sales Bridge - Updated",
+    "description": "Production bridge",
+    "status": "ACTIVE",
     "slug": "sales-bridge-001",
+    "region": "IN",
     "numbers": [
       {
         "id": 501,
@@ -37,7 +40,7 @@ openapi: 'PATCH /api/v2/platform/telephony/bridges/{slug}/'
 
 # Update Bridge
 
-Partially update an existing telephony bridge's configuration. Currently supports updating the bridge's display name.
+Partially update an existing telephony bridge's configuration.
 
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
@@ -65,9 +68,12 @@ You can get the bridge `slug` by hitting the [Get All Bridges](/api/telephony/ge
 
 All fields are optional - include only the fields you wish to update.
 
-| Field | Type   | Required | Description                     |
-|-------|--------|----------|---------------------------------|
-| name  | string | No       | Updated display name for the bridge |
+| Field       | Type   | Required | Description                                 |
+|-------------|--------|----------|---------------------------------------------|
+| name        | string | No       | Updated display name for the bridge         |
+| description | string | No       | Updated bridge description                  |
+| status      | string | No       | `ACTIVE`, `INACTIVE`, or `DRAFT`            |
+| region      | string | No       | `IN`, `US`, `EU`, `AUS`, or `UAE`           |
 
 
 ### Response Fields
@@ -82,10 +88,13 @@ All fields are optional - include only the fields you wish to update.
 
 | Field   | Type    | Description                     |
 |---------|---------|---------------------------------|
-| id      | integer | Bridge unique identifier        |
-| name    | string  | Updated bridge display name     |
-| slug    | string  | Unique bridge slug identifier   |
-| numbers | array   | List of assigned phone numbers  |
+| id          | integer | Bridge unique identifier        |
+| name        | string  | Updated bridge display name     |
+| description | string  | Bridge description              |
+| status      | string  | `ACTIVE`, `INACTIVE`, or `DRAFT` |
+| slug        | string  | Unique bridge slug identifier   |
+| region      | string  | Bridge region                   |
+| numbers     | array   | List of assigned phone numbers  |
 
 
 ## Common Error Codes
@@ -93,9 +102,10 @@ All fields are optional - include only the fields you wish to update.
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - Bridge updated successfully            |
+| 206         | Not a member of the bridge's organization        |
 | 400         | Bad Request - Invalid update parameters          |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Invalid organization handle          |
+| 403         | Forbidden - Not a member of the `Org-Handle` organization |
 | 404         | Not Found - Bridge not found                     |
 | 500         | Internal Server Error - Server-side error        |
 
@@ -164,7 +174,7 @@ curl -X PATCH "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-0
 ## Best Practices
 
 1. **Partial Updates**: Only include fields you want to change - PATCH supports partial updates
-2. **Slug Immutable**: The `slug` cannot be changed after creation - use descriptive slugs from the start
+2. **Stable Slug**: Other bridge calls address the bridge by its `slug` - use a descriptive slug from the start
 3. **Verify Before Update**: Use [Get Bridge by Slug](/api/telephony/get-bridge-by-slug) to confirm the bridge exists before patching
 4. **Error Handling**: Handle 404 errors when the bridge slug is invalid or the bridge has been deleted
 5. **Security**: Keep API tokens secure and rotate them regularly

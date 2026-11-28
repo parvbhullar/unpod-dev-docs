@@ -1,20 +1,33 @@
 ---
 title: 'Connect Provider to Bridge'
 icon: 'link'
-description: 'Connect a provider credential to a telephony bridge to add a number'
+description: 'Connect a provider configuration to a number on a telephony bridge'
 openapi: 'POST /api/v2/platform/telephony/bridges/{slug}/connect-provider/'
 ---
 
 <ResponseExample>
 
-```json Success Response (200)
+```json Success Response (201)
 {
-  "status_code": 200,
-  "message": "Provider connected to bridge successfully.",
+  "status_code": 201,
+  "message": "Number linked with provider successfully.",
   "data": {
-    "message": "Provider connected successfully",
-    "bridge_slug": "sales-bridge-001",
-    "phone_number": "+1234567890"
+    "id": 501,
+    "number": 25,
+    "number_id": 25,
+    "phone_number": "+1234567890",
+    "bridge": 314,
+    "bridge_id": 314,
+    "channels_count": 0,
+    "status": "active",
+    "agent_id": null,
+    "kind": "agent",
+    "is_configured": true,
+    "provider_configuration": {
+      "id": 42,
+      "name": "My Livekit Configuration",
+      "provider": 2
+    }
   }
 }
 ```
@@ -22,8 +35,8 @@ openapi: 'POST /api/v2/platform/telephony/bridges/{slug}/connect-provider/'
 ```json Error Response (400)
 {
   "status_code": 400,
-  "message": "Failed to connect provider.",
-  "errors": "Provider configuration not found or phone number invalid"
+  "message": "Provided number is already assigned to another bridge.",
+  "data": {}
 }
 ```
 
@@ -31,14 +44,14 @@ openapi: 'POST /api/v2/platform/telephony/bridges/{slug}/connect-provider/'
 
 # Connect Provider to Bridge
 
-Connect a telephony provider configuration to a specific bridge, linking a phone number to the bridge for call routing. This enables inbound and outbound calls through the connected provider.
+Connect a provider configuration to a number that is already on this bridge. Calls on that number then route through the connected provider.
 
 <Note>
-**Prerequisites:** Make sure you have your API Token, Org-Handle, a configured Bridge, and a Provider Configuration ready. See [Authentication](/api/get-started/authentication) for details.
+**Prerequisites:** Make sure you have your API Token, a Bridge with the number on it, and a Provider Configuration ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
 
 <Note>
-The `provider_config_id` must be a valid provider configuration already created for your organization. You can only use a `phone_number` that is linked to the provider account.
+The number must already be on this bridge, and the provider configuration must belong to the bridge's organization.
 </Note>
 
 
@@ -61,15 +74,15 @@ You can get the bridge `slug` by hitting the [Get All Bridges](/api/telephony/ge
 | Content-Type  | string | Yes      | `application/json`              |
 
 <Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
+Copy your `Org-Handle` from the dashboard - see [How to Get Your Organization Handle](/api/get-started/authentication#how-to-get-your-organization-handle).
 </Note>
 
 ### Request Body
 
-| Field              | Type    | Required | Description                                               |
-|--------------------|---------|----------|-----------------------------------------------------------|
-| provider_config_id | integer | Yes      | ID of the provider configuration to connect               |
-| phone_number       | string  | Yes      | Phone number (E.164 format) to assign to the bridge       |
+| Field                  | Type    | Required | Description                                                                 |
+|------------------------|---------|----------|-----------------------------------------------------------------------------|
+| number_id              | integer | Yes      | ID of the number on this bridge (`number_id` from [Get Bridge by Slug](/api/telephony/get-bridge-by-slug)) |
+| provider_credential_id | integer | Yes      | ID of the provider configuration (`id` from [Get All Providers](/api/provider/get-all-providers)) |
 
 
 
@@ -79,15 +92,22 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 |-------------|---------|------------------|
 | status_code | integer | HTTP status code |
 | message     | string  | Response message |
-| data        | object  | Connection result |
+| data        | object  | The bridge number, now linked to the provider |
 
 ### Data Object Fields
 
-| Field        | Type   | Description                          |
-|--------------|--------|--------------------------------------|
-| message      | string | Success message                      |
-| bridge_slug  | string | The bridge slug the provider connected to |
-| phone_number | string | The phone number assigned to the bridge |
+| Field                  | Type    | Description                                              |
+|------------------------|---------|----------------------------------------------------------|
+| id                     | integer | Bridge number ID                                         |
+| number_id              | integer | Number ID                                                |
+| phone_number           | string  | Phone number (E.164 format)                              |
+| bridge_id              | integer | Bridge ID                                                |
+| channels_count         | integer | Number of channels                                       |
+| status                 | string  | Bridge number status                                     |
+| agent_id               | string  | Agent the number routes to, or `null`                    |
+| kind                   | string  | Termination kind: `sip` for a SIP provider configuration, otherwise `agent` |
+| is_configured          | boolean | Whether the number is configured                         |
+| provider_configuration | object  | The linked provider configuration. `api_key` and `api_secret` are never returned |
 
 
 
@@ -95,12 +115,12 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
-| 200         | Success - Provider connected successfully        |
-| 400         | Bad Request - Invalid provider ID or phone number |
+| 201         | Created - Provider linked to the number          |
+| 206         | The number is not assigned or doesn't exist, or you are not a member of the bridge's organization |
+| 400         | Bad Request - `number_id` or `provider_credential_id` missing, number on another bridge, provider configuration not found, or the link failed (reason in `message`) |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Invalid organization handle          |
+| 403         | Forbidden - Not a member of the `Org-Handle` organization |
 | 404         | Not Found - Bridge not found                     |
-| 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples
 
@@ -115,20 +135,19 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
-// Connect a provider to a bridge
-const connectProviderToBridge = async (slug, providerConfigId, phoneNumber) => {
+// Connect a provider configuration to a number on a bridge
+const connectProviderToBridge = async (slug, numberId, providerCredentialId) => {
   const response = await axios.post(
     `https://unpod.ai/api/v2/platform/telephony/bridges/${slug}/connect-provider/`,
-    { provider_config_id: providerConfigId, phone_number: phoneNumber },
+    { number_id: numberId, provider_credential_id: providerCredentialId },
     { headers }
   );
-  console.log(`Provider connected to bridge: ${response.data.data.bridge_slug}`);
-  console.log(`Phone number assigned: ${response.data.data.phone_number}`);
+  console.log(`Linked ${response.data.data.phone_number} to provider configuration ${providerCredentialId}`);
   return response.data.data;
 };
 
 // Example usage
-connectProviderToBridge('sales-bridge-001', 42, '+1234567890');
+connectProviderToBridge('sales-bridge-001', 25, 42);
 ```
 
 ```python Python
@@ -140,32 +159,31 @@ headers = {
     'Content-Type': 'application/json'
 }
 
-def connect_provider_to_bridge(slug: str, provider_config_id: int, phone_number: str):
-    """Connect a provider configuration to a bridge"""
+def connect_provider_to_bridge(slug: str, number_id: int, provider_credential_id: int):
+    """Connect a provider configuration to a number on a bridge"""
     url = f'https://unpod.ai/api/v2/platform/telephony/bridges/{slug}/connect-provider/'
     payload = {
-        'provider_config_id': provider_config_id,
-        'phone_number': phone_number
+        'number_id': number_id,
+        'provider_credential_id': provider_credential_id
     }
     response = requests.post(url, headers=headers, json=payload)
     data = response.json()
-    print(f"Provider connected to bridge: {data['data']['bridge_slug']}")
-    print(f"Phone number assigned: {data['data']['phone_number']}")
+    print(f"Linked {data['data']['phone_number']} to provider configuration {provider_credential_id}")
     return data['data']
 
 # Example usage
-connect_provider_to_bridge('sales-bridge-001', 42, '+1234567890')
+connect_provider_to_bridge('sales-bridge-001', 25, 42)
 ```
 
 ```bash cURL
-# Connect a provider to a bridge
+# Connect a provider configuration to a number on a bridge
 curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-001/connect-provider/" \
   -H "Authorization: Token your-api-token" \
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \
   -d '{
-    "provider_config_id": 42,
-    "phone_number": "+1234567890"
+    "number_id": 25,
+    "provider_credential_id": 42
   }'
 ```
 
@@ -173,9 +191,8 @@ curl -X POST "https://unpod.ai/api/v2/platform/telephony/bridges/sales-bridge-00
 
 ## Best Practices
 
-1. **Provider Config ID**: Get the correct `provider_config_id` from [Get All Providers](/api/provider/get-all-providers) before connecting
-2. **Phone Number Format**: Use E.164 format (e.g., `+1234567890`) for phone numbers
-3. **Verify Bridge**: Confirm the bridge exists using [Get Bridge by Slug](/api/telephony/get-bridge-by-slug) before connecting
-4. **One Provider per Bridge**: A bridge typically connects to one provider - verify current state before re-connecting
-5. **Error Handling**: Handle 400 errors that may indicate an invalid phone number or provider config
-6. **Security**: Keep API tokens secure and rotate them regularly
+1. **IDs, not strings**: Send the integer `number_id` and `provider_credential_id`, not a phone number or provider name
+2. **Number on the bridge**: Confirm the number is listed on the bridge with [Get Bridge by Slug](/api/telephony/get-bridge-by-slug) before connecting
+3. **Same organization**: The provider configuration must belong to the bridge's organization
+4. **Error Handling**: Read `message` on 206 and 400 responses - it says which check failed
+5. **Security**: Keep API tokens secure and rotate them regularly

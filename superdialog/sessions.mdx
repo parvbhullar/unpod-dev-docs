@@ -7,7 +7,7 @@ description: "Manage multiple concurrent conversations, persist state across pro
 ## When do you need sessions?
 
 Sessions add a lifecycle and persistence layer on top of **any `Agent`-protocol
-brain** - the default `PlaybookAgent` and the legacy `DialogMachine` alike. A
+brain** - `PlaybookAgent` and `DialogMachine` (either engine) alike. A
 bare agent holds its conversation state in memory for the lifetime of the
 instance. This works perfectly for:
 
@@ -34,7 +34,7 @@ class Agent(Protocol):
     def load_chat_ctx(ctx: ChatContext) -> None
 ```
 
-The Playbook engine's `PlaybookAgent`, the legacy `DialogMachine`, `LLMAgent`,
+The Playbook engine's `PlaybookAgent`, `DialogMachine` (either engine), `LLMAgent`,
 and `LangChainAgent` all implement this.
 
 ## SessionWorker
@@ -103,12 +103,9 @@ async def turn(payload: dict):
 |---|---|---|
 | `InMemorySessionStore` | ✅ v0.2 | Development, single-process |
 | `NullSessionStore` | ✅ v0.2 | Voice (ephemeral, no persistence) |
-| `RedisSessionStore` | 🔜 planned (not in 0.3.0) | Multi-process, distributed |
-| `FileSessionStore` | 🔜 planned (not in 0.3.0) | Lightweight persistence |
-| `SQLiteSessionStore` | 🔜 planned (not in 0.3.0) | Local single-server |
 
 Switch stores by changing one line - the rest of the code stays the same. For
-durable storage today, implement the `SessionStore` protocol yourself:
+durable storage, implement the `SessionStore` protocol yourself:
 
 ```python
 # Development
@@ -123,7 +120,9 @@ store = InMemorySessionStore()
 | Backend | Status | Use case |
 |---|---|---|
 | `AsyncioLockBackend` | ✅ v0.2 | Single-process (default) |
-| `RedisLockBackend` | 🔜 planned (not in 0.3.0) | Multi-process / distributed |
+
+For multi-process locking, implement the `LockBackend` protocol and pass it as
+`SessionWorker(lock_backend=...)`.
 
 ## Other agent brains
 
@@ -179,8 +178,9 @@ Beyond the transcript, each engine carries its own runtime state:
   restore via `load_event_log` for full fidelity. `DialogMachine` does not expose
   `event_log` / `load_event_log`, so use a `PlaybookAgent` factory when you need
   this.
-- **Legacy DialogMachine** - `FlowState` (current node, slot values). Present
-  only when the brain is a `DialogMachine`; `None` otherwise.
+- **Legacy graph engine** - `FlowState` (current node, slot values). Present
+  only when the brain is a `DialogMachine` on the graph engine
+  (`engine="flow"`); `None` otherwise.
 
 <Warning>
 `SessionWorker`'s built-in `SessionRecord` persists `chat_ctx` / `flow_state`

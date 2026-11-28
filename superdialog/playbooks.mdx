@@ -215,7 +215,7 @@ journeys:
         goal: "Have city and date"
         slots:                # typed, flow-scoped declarations
           city:
-            type: str         # str|int|float|bool|date|enum|array|object
+            type: str         # str|int|float|bool|date|time|enum|array|object
             required: true
             invalidates: [hold]      # a city change clears the stale hold result
           date: {type: date, required: true}

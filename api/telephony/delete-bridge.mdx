@@ -14,8 +14,7 @@ HTTP/1.1 204 No Content
 ```json Error Response (404)
 {
   "status_code": 404,
-  "message": "Bridge not found.",
-  "errors": "No bridge exists with the provided slug"
+  "message": "Bridge not found."
 }
 ```
 
@@ -23,7 +22,7 @@ HTTP/1.1 204 No Content
 
 # Delete Bridge
 
-Permanently delete a telephony bridge by its slug. Once deleted, the bridge and all associated configurations are removed. This action cannot be undone.
+Permanently delete a telephony bridge by its slug. The bridge's numbers are released (back to `NOT_ASSIGNED`) and its provider trunks are deleted. This action cannot be undone.
 
 <Note>
 **Prerequisites:** Make sure you have your API Token and Org-Handle ready. See [Authentication](/api/get-started/authentication) for details.
@@ -57,8 +56,10 @@ You can get the bridge `slug` by hitting the [Get All Bridges](/api/telephony/ge
 | Status Code | Description                                     |
 |-------------|-------------------------------------------------|
 | 204         | No Content - Bridge deleted successfully        |
+| 206         | Not a member of the bridge's organization, or the delete was refused (reason in `message`) |
+| 400         | Bad Request - Delete failed (reason in `message`) |
 | 401         | Unauthorized - Invalid or missing API token     |
-| 403         | Forbidden - Invalid organization handle         |
+| 403         | Forbidden - Not a member of the `Org-Handle` organization |
 | 404         | Not Found - Bridge not found                    |
 | 500         | Internal Server Error - Server-side error       |
 

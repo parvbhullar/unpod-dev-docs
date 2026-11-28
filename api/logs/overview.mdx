@@ -45,13 +45,19 @@ Org-Handle: your-org-handle
 | `page_size`  | Number of records per page                          |
 | `call_type`  | Filter by `inbound` or `outbound`                   |
 | `call_status`| Filter by `completed`, `notConnected`, or `failed`  |
+| `start_time` / `end_time` | Date range, `DD-MM-YYYY HH:MM:SS`      |
+| `source_number` / `destination_number` | Numbers starting with this value |
+| `bridge`     | Bridge name contains this value                     |
+| `call_id`    | Record ID contains this value                       |
+| `call_duration` | Calls at most this many seconds long             |
+| `sort`       | JSON object, for example `{"start_time":"ascend"}`  |
 
 ## Common Error Codes
 
 | Status Code | Description |
 |-------------|-------------|
 | 200 | Success - Request completed successfully |
-| 400 | Bad Request - Invalid parameters provided |
+| 400 | Bad Request - `Org-Handle` missing or invalid filter value |
 | 401 | Unauthorized - Invalid or missing API token |
-| 403 | Forbidden - Invalid organization handle |
+| 403 | Forbidden - Not a member of the organization |
 | 500 | Internal Server Error - Server-side error |

@@ -113,7 +113,9 @@ re-registers under the same `worker_id`; in-flight calls ride their own bridge
 sockets and survive a control-socket drop. Still run it under a supervisor with
 restart-on-exit (systemd `Restart=always`, Kubernetes restart policy, Docker
 `--restart`) to recover from process crashes and from a non-retriable transport
-rejection (an orchestrator too old to acknowledge `dial_out`). The legacy
+rejection (an orchestrator too old to acknowledge `dial_out`). A refused
+credential (close code `4001` or `1008`) is not retried either: `run()` raises
+`RunnerAuthError`, so check `UNPOD_PLATFORM_TOKEN` and `UNPOD_ORG_HANDLE`. The legacy
 `transport="serve"` model does **not** auto-reconnect.
 </Note>
 

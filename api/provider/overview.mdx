@@ -36,13 +36,17 @@ Authorization: Token your-api-token
 Org-Handle: your-org-handle
 ```
 
+The provider-configuration endpoints need `Org-Handle`. Listing telephony providers doesn't.
+
 ## Common Error Codes
 
 | Status Code | Description |
 |-------------|-------------|
 | 200 | Success - Request completed successfully |
+| 201 | Created - Configuration created |
 | 204 | No Content - Resource deleted successfully |
+| 400 | Bad Request - Invalid body, or `Org-Handle` missing or invalid |
 | 401 | Unauthorized - Invalid or missing API token |
-| 403 | Forbidden - Access denied |
+| 403 | Forbidden - Not a member of the `Org-Handle` organization |
 | 404 | Not Found - Configuration not found |
 | 500 | Internal Server Error |

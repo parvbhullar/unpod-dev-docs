@@ -103,8 +103,7 @@ async def entrypoint(ctx: JobContext):
 **Advanced / legacy.** Pass a `PlaybookAgent` for explicit Talker/Director LLMs,
 or `DialogMachine(Flow.load("kyc.json"), llm="anthropic/claude-opus-4-7",
 engine="flow")` for the legacy graph engine - same adapter, same wiring.
-Voice-event plumbing (feeding silence timeouts into `agent.runtime.on_external`)
-is roadmap; today the adapter covers the text path.
+The adapter covers the text path only.
 </Note>
 
 ## Mid-call context injection

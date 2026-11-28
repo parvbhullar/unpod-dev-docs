@@ -26,36 +26,43 @@ through, and how it can end.
 
 ## The state machine
 
-<div className="ud" role="img" aria-label="Call states: outbound calls start at pending and move to ringing when dialing starts; inbound calls start at ringing. Ringing becomes active when answered, and active becomes completed on hangup or end(). Ringing goes to failed on no answer, busy, blocked, cancelled or voicemail before connect; active goes to failed on error.">
+<div className="ud" role="img" aria-label="Call states: outbound calls start at pending, move to dispatching once Unpod places the call, then ringing; inbound calls start at dispatching. Ringing becomes active when answered, and active ends as connected on hangup or end(). A call that never converses ends as notConnected (no answer, busy, rejected, blocked, wrong number, cancelled); a system, trunk or configuration fault ends as failed.">
   <div className="ud__title">Call states</div>
   <div className="uf-flow is-compact">
     <div className="uf-node is-ext"><span className="uf-t">pending</span><span className="uf-s">Outbound only, after calls.create()</span></div>
+    <div className="uf-arrow"><span className="uf-lbl">placing</span></div>
+    <div className="uf-node"><span className="uf-t">dispatching</span><span className="uf-s">Inbound calls start here</span></div>
     <div className="uf-arrow"><span className="uf-lbl">dialing</span></div>
-    <div className="uf-node"><span className="uf-t">ringing</span><span className="uf-s">Inbound calls start here</span></div>
+    <div className="uf-node"><span className="uf-t">ringing</span><span className="uf-s">Outbound: the far end is ringing</span></div>
     <div className="uf-arrow"><span className="uf-lbl">answered</span></div>
     <div className="uf-node is-accent"><span className="uf-t">active</span><span className="uf-s">Your agent is talking</span></div>
     <div className="uf-arrow"><span className="uf-lbl">hangup</span></div>
-    <div className="uf-node is-you"><span className="uf-t">completed</span><span className="uf-s">Hangup or end() after being active</span></div>
+    <div className="uf-node is-you"><span className="uf-t">connected</span><span className="uf-s">A conversation happened</span></div>
   </div>
   <div className="ud-box is-ext" style={{"marginTop": "14px"}}>
-    <span className="ud-box__t">failed</span>
-    <span className="ud-box__s">From <code>ringing</code>: no answer, busy, blocked, cancelled, or voicemail before connect. From <code>active</code>: an error.</span>
+    <span className="ud-box__t">notConnected / failed</span>
+    <span className="ud-box__s"><code>notConnected</code>: reached but never conversed - no answer, busy, rejected, blocked, wrong number, or cancelled. <code>failed</code>: a system, trunk or configuration fault.</span>
   </div>
 </div>
 
-| Visible `status` | Internal state | What is happening |
-|---|---|---|
-| `pending` | queued | Enqueued; waiting for a concurrency slot (outbound only). |
-| `ringing` | `dialing` / `ringing` | The SIP leg is originating, or the far end is ringing. |
-| `active` | `active` | Both legs connected; your agent is talking to the caller. |
-| `completed` | `ended` | The conversation finished after being active. |
-| `failed` | `not_connected` / `cancelled` | Never reached a live conversation, or cancelled pre-connect. |
+| `status` | What is happening |
+|---|---|
+| `scheduled` | A follow-up call booked for later (`scheduled_at`); it is queued when that time comes. |
+| `pending` | Queued; waiting for a concurrency slot (outbound only). |
+| `dispatching` | Unpod is placing the call. Inbound calls start here once the dialed number resolves to your agent. |
+| `ringing` | The SIP leg is originating, or the far end is ringing. |
+| `active` | Both legs connected; your agent is talking to the caller. |
+| `connected` | Terminal. A conversation happened - a voicemail pickup counts as connected. |
+| `notConnected` | Terminal. The callee was reached but never conversed: no answer, busy, rejected, blocked, invalid or wrong number, or cancelled. |
+| `failed` | Terminal. A system, trunk or configuration fault. |
 
 <Note>
-Inbound calls skip `pending` and dialing - the caller is already on the line,
-so the call starts at `ringing`/`active`. Only outbound calls pass through the
-full sequence. You never drive these states yourself; you observe them via the
-call `status` and the final `end_reason` on the call record.
+Inbound calls skip `pending` and ringing - the caller is already on the line,
+so the call starts at `dispatching` and moves to `active` when the worker
+answers. You never drive these states yourself; you observe them via the call
+`status`, with the finer cause on `disposition` and `end_reason`. Older call
+rows can still read `completed` / `not_connected`; a `status` filter treats
+them as `connected` / `notConnected`.
 </Note>
 
 ## Outbound: what happens after `calls.create()`
@@ -77,12 +84,12 @@ concurrency limit.
   </Step>
   <Step title="Unpod dials the number">
     Unpod creates a room and originates the SIP call to `to_number`. The call
-    row moves to `ringing`, and you get a `session_id`.
+    row moves to `dispatching`, then `ringing`, and you get a `session_id`.
   </Step>
   <Step title="Your agent joins and talks">
     A Unpod media worker joins the room and bridges the caller's audio;
     transcripts stream to your `AgentRunner` over its text bridge and reply text
-    comes back for TTS. The call row moves to `active`, then `completed` on
+    comes back for TTS. The call row moves to `active`, then `connected` on
     hangup.
   </Step>
 </Steps>
@@ -98,7 +105,7 @@ concurrency limit.
     <li><div className="ud-seq__who"><span className="ud-chip">LiveKit + SIP</span>→<span className="ud-chip is-you">AgentRunner</span></div><div className="ud-seq__t">Caller transcript arrives as text.</div></li>
     <li><div className="ud-seq__who"><span className="ud-chip is-you">AgentRunner</span>→<span className="ud-chip">LiveKit + SIP</span></div><div className="ud-seq__t">Reply text goes back; Unpod synthesizes it to speech.</div></li>
   </ol>
-  <div className="ud__note"><code>status</code>: pending → ringing → active → completed</div>
+  <div className="ud__note"><code>status</code>: pending → dispatching → ringing → active → connected</div>
 </div>
 
 <Tip>
@@ -181,11 +188,16 @@ likely to act on:
 | `IDLE_TIMEOUT` | The call was idle too long and was reaped. |
 | `SIP_FAILED_WRONG_NUMBER` | The number was invalid or unreachable. |
 | `SIP_FAILED_NUMBER_BLOCKED` | The carrier blocked the call. |
+| `AGENT_HUNG_UP_KEYWORD_DETECTED` | The agent ended the call (its end-call tool, or the caller said goodbye). |
+| `AGENT_HUNG_UP_SCRIPT_COMPLETE` | The call was ended from your side, e.g. `calls.hangup()`. |
+| `INTERNAL_SERVER_ERROR` | A platform fault ended the call. |
 
 <Note>
 This is not the full set - additional reasons exist for SIP/trunk
-configuration errors and handover edge cases. Treat unknown reasons as a
-generic failure and log them.
+configuration errors and handover edge cases, and `INDETERMINATE` covers an
+end Unpod could not classify. The code the reason was translated from is kept
+on `traces["supervoice_end_reason"]`. Treat unknown reasons as a generic
+failure and log them.
 </Note>
 
 ## Reacting to outcomes in your agent

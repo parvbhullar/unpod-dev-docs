@@ -62,8 +62,7 @@ The fastest path to a running instance:
 ```bash
 git clone https://github.com/unpod-ai/unpod.git
 cd unpod
-make quick-start    # installs deps, starts Docker, runs migrations
-make dev            # starts all dev servers
+docker compose -f docker-compose.simple.yml up -d --build
 ```
 
 Access points after startup:
@@ -73,9 +72,9 @@ Access points after startup:
 | App | http://localhost:3000 |
 | API | http://localhost:8000/api/v1/ |
 | Admin | http://localhost:8000/unpod-admin/ |
-| API Docs | http://localhost:9116/docs |
+| API Services | http://localhost:9116/docs |
 
-Default credentials: `admin@unpod.ai` / `admin123`
+Default admin email: `admin@unpod.dev`. The password is the `DJANGO_DEFAULT_ADMIN_PASSWORD` value in `docker-compose.simple.yml`.
 
 ---
 
@@ -87,16 +86,17 @@ Copy the example env file and set your values:
 cp .env.example .env
 ```
 
+With `docker-compose.simple.yml`, the backend containers do not read `.env` directly (`DJANGO_READ_DOT_ENV_FILE=False`). Only the variables the compose file references as `${VAR}` - for example `POSTGRES_PASSWORD`, `OPENAI_API_KEY`, `SENDGRID_API_KEY`, `DJANGO_DEFAULT_ADMIN_PASSWORD` - are taken from `.env`; the rest are set in the compose file itself.
+
 Critical variables to configure:
 
 ```bash
 # Django
-SECRET_KEY=your-long-random-secret-key
-DEBUG=False
-ALLOWED_HOSTS=your-domain.com,www.your-domain.com
+DJANGO_SECRET_KEY=your-long-random-secret-key
+DJANGO_DEBUG=False
 
 # Database
-POSTGRES_DB=unpod
+POSTGRES_DB=unpod_db
 POSTGRES_USER=unpod
 POSTGRES_PASSWORD=strong-password-here
 DATABASE_URL=postgresql://unpod:password@postgres:5432/unpod
@@ -105,7 +105,7 @@ DATABASE_URL=postgresql://unpod:password@postgres:5432/unpod
 REDIS_URL=redis://redis:6379/0
 
 # Centrifugo (real-time)
-CENTRIFUGO_SECRET=centrifugo-secret-token
+CENTRIFUGO_TOKEN_HMAC_SECRET_KEY=centrifugo-secret-token
 CENTRIFUGO_API_KEY=centrifugo-api-key
 
 # AI Providers (at least one required)
@@ -115,30 +115,32 @@ GROQ_API_KEY=gsk_...
 # Voice Providers
 LIVEKIT_URL=wss://your-livekit-instance.com
 LIVEKIT_API_KEY=API_KEY
-LIVEKIT_SECRET=SECRET
+LIVEKIT_API_SECRET=SECRET
 ```
 
 ---
 
-## Production Deployment with Docker Compose
+## Deploying with Docker Compose
 
-Use the production compose file:
+`docker-compose.simple.yml` runs the whole stack (frontend, backend, API services, databases, Centrifugo):
 
 ```bash
-docker compose -f docker-compose.yml up -d --build
+docker compose -f docker-compose.simple.yml up -d --build
 ```
 
 ### Run Database Migrations
 
+The `backend-core` container runs migrations and `collectstatic` on every start. To run them by hand:
+
 ```bash
-docker compose exec backend python manage.py migrate --no-input
-docker compose exec backend python manage.py collectstatic --no-input
+docker compose -f docker-compose.simple.yml exec backend-core python manage.py migrate --no-input
+docker compose -f docker-compose.simple.yml exec backend-core python manage.py collectstatic --no-input
 ```
 
 ### Create Admin User
 
 ```bash
-docker compose exec backend python manage.py createsuperuser
+docker compose -f docker-compose.simple.yml exec backend-core python manage.py createsuperuser
 ```
 
 ---
@@ -188,8 +190,7 @@ Use Certbot for free SSL: `certbot --nginx -d your-domain.com`
 Before going live:
 
 - [ ] Change all default passwords and secret keys
-- [ ] Set `DEBUG=False` in all environments
-- [ ] Configure `ALLOWED_HOSTS` to your domain only
+- [ ] Set `DJANGO_DEBUG=False` in all environments
 - [ ] Enable PostgreSQL SSL connections
 - [ ] Set up automated database backups (pg_dump to S3 or equivalent)
 - [ ] Configure log rotation for Django and Nginx logs
@@ -203,8 +204,8 @@ Before going live:
 
 ```bash
 git pull origin main
-docker compose -f docker-compose.yml up -d --build
-docker compose exec backend python manage.py migrate --no-input
+docker compose -f docker-compose.simple.yml up -d --build
+docker compose -f docker-compose.simple.yml exec backend-core python manage.py migrate --no-input
 ```
 
 Check the [GitHub releases](https://github.com/unpod-ai/unpod/releases) for breaking changes before pulling.
@@ -221,7 +222,7 @@ Check the [GitHub releases](https://github.com/unpod-ai/unpod/releases) for brea
     Monorepo structure, service dependencies, and data flow.
   </Card>
   <Card title="Developer Quickstart" icon="rocket" href="/platform/self-hosting/quickstart">
-    Step-by-step local setup with all three setup methods.
+    Step-by-step local setup with both setup methods.
   </Card>
   <Card title="Account & keys" icon="key-round" href="/home/account-and-keys">
     Configure agents and telephony after setup.

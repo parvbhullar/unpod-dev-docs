@@ -11,7 +11,7 @@ import Architecture from '/snippets/architecture.mdx';
 remember and act: voice, messaging, agents and workflows in one SDK, on a
 Context Engine that remembers every customer across every channel. Today,
 voice and the Chat API run in production, and voice agents remember past
-calls; WhatsApp, SMS, email and cross-channel memory are in build.
+calls.
 
 This page defines every Unpod term once. Other pages link here instead of
 redefining things. If a definition seems to conflict elsewhere, this page wins.
@@ -50,24 +50,22 @@ Teams and Policies govern it.
 | Verb | Component | Mental model | Status |
 |---|---|---|---|
 | Talk | [Calling Engine](/telephony/concepts/calling-engine) | Programmable realtime voice runtime | Production |
-| Talk | [Channels](/telephony/concepts/channels) | Every channel writes to the same record | Voice, chat: production · messaging: in build |
+| Talk | [Channels](/telephony/concepts/channels) | Every channel writes to the same record | Voice, chat: production |
 | Talk | [Models & Router](/agent-sdk/models-router) | Real-time STT, TTS and LLM with failover | Production |
-| Remember | [Context Engine](/intelligence/memory) | One memory per customer | Per call: production · cross-channel: in build |
-| Remember | [People & identity](/intelligence/entities) | System-of-record identity | People: production · cross-channel: in build |
-| Remember | [Conversations](/intelligence/conversations) | Channel-neutral threads | In build |
+| Remember | [Context Engine](/intelligence/memory) | One memory per customer | Per call: production |
+| Remember | [People & identity](/intelligence/entities) | System-of-record identity | People: production |
 | Remember | [Outcomes](/intelligence/outcomes) | The structured result of every interaction | Production |
 | Remember | [Permissions & tenancy](/home/teams-and-permissions) | Multi-tenant authorization boundary | Production |
 | Remember | [Own your model](/intelligence/blocks) | Blocks today, your own model later | Blocks: production |
 | Act | [Agents](/agent-studio/agent-workforce) | Workers that communicate and act | Production |
 | Act | [Agent Harness](/agent-studio/agent-harness) | Everything around the brain in production | Production |
-| Act | [Flows & Journeys](/agent-studio/flows-journeys) | Durable communication workflows | Flows: production · journeys: in build |
+| Act | [Flows & Journeys](/agent-studio/flows-journeys) | Durable communication workflows | Flows: production |
 | Act | [Actions](/agent-studio/actions) | Your APIs as the agent's hands | Production |
-| Act | [Events](/core-engine/events) | Everything that happened, once | Post-call webhook: production · stream: in build |
+| Act | [Events](/core-engine/events) | Everything that happened, once | Post-call webhook: production |
 | Act | [Observability](/core-engine/observability) | Logs, recordings, transcripts, traces | Production |
 
-**Production** means it carries production traffic today. **In build** means
-it is being built and is not available to use yet. **Early access** means it
-is open to early partners. Statuses are as of October 2026.
+**Production** means it carries production traffic today. Statuses are as of
+October 2026.
 
 The rest of this page is the speech stack - the Calling Engine's developer
 surface, and the part of Unpod a Python dev builds against first. The rule

@@ -48,13 +48,14 @@ every batch. Built by contact centers, BPOs and BFSI teams.
     profile, and set the calling days and hours.
   </Step>
   <Step title="Turn on handoff">
-    Agent Studio → Advanced → **Enable Handover**, with the numbers of the
-    people who take escalations. It is a warm transfer: the caller hears hold
+    In AI Studio, open the agent → **Advanced** → **Follow-up & Handover**,
+    turn on **Handover Number**, and enter the numbers of the people who take
+    escalations. It is a warm transfer: the caller hears hold
     music while the person hears an announcement.
   </Step>
   <Step title="Load the contacts">
-    Add your leads to a Space. Upload them, or connect a Google Sheet (Agent
-    Studio → Integration) so that new rows trigger calls.
+    Add your leads to a Space. Upload them, or connect a Google Sheet (AI Studio →
+    **Integration** → **Google Sheet Sync**) so that new rows trigger calls.
   </Step>
   <Step title="Launch the batch">
     From the Space, select the contacts and call - or use the
@@ -93,13 +94,3 @@ async def main() -> None:
 
 asyncio.run(main())
 ```
-
-## Not yet
-
-- **Human seats and queues.** Escalations go to a phone number, not an agent
-  desktop; there is no supervisor monitoring.
-- **DND registry scrubbing.** Keep your own suppression list and remove
-  numbers before you dial. Calling-hours windows are enforced automatically.
-- **Ready-made CRM connectors.** Push outcomes with the post-call webhook.
-- **Large campaigns.** Calls run about 10 at a time by default; ask us to
-  raise the limit before a big batch.

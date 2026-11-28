@@ -48,7 +48,7 @@ async def main():
         # status is "pending" - calls.create() enqueues the call and returns
         # immediately. The call is dispatched asynchronously once the account
         # has free concurrency. Poll GET /calls/{id} (or use hooks) to watch
-        # it advance to ringing -> active -> completed. See Call Lifecycle.
+        # it advance to ringing -> active -> connected. See Call Lifecycle.
 
 asyncio.run(main())
 ```
@@ -69,7 +69,7 @@ the full status progression and how to poll for completion.
 | `pipe_id` | `str \| None` | Conditional | The deprecated spelling. Provide `agent_id` **or** `pipe_id` (`agent_id` wins if both are given) |
 | `from_number` | `str` | No | Caller ID. If omitted, Unpod uses a number attached to the agent |
 | `instructions` | `str \| None` | No | Runtime instruction override for this call |
-| `data` | `dict \| None` | No | Arbitrary metadata passed to your entrypoint via `ctx.data` |
+| `data` | `dict \| None` | No | Arbitrary metadata passed to your entrypoint via `ctx.data`. `callback_url` / `callback_secret` are taken out first - see [Status callbacks](#status-callbacks) |
 
 ---
 
@@ -126,9 +126,10 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient() as client:  # reads credentials from .env
-        call = await client.calls.get("cal_...")
+        call = await client.calls.get("SCL_...")
         print(call.call_id, call.status, call.direction)
-        # status: "pending", "ringing", "active", "completed", "failed", "cancelled"
+        # in flight: "scheduled", "pending", "dispatching", "ringing", "active"
+        # terminal:  "connected", "notConnected", "failed"
 
 asyncio.run(main())
 ```
@@ -137,14 +138,51 @@ asyncio.run(main())
 
 | Field | Type | Description |
 |---|---|---|
-| `call_id` | `str` | Unique call ID (`cal_...`) |
-| `status` | `str` | `pending`, `ringing`, `active`, `completed`, `failed`, `cancelled` |
+| `call_id` | `str` | Unique call ID (`SCL_...`) |
+| `status` | `str` | In flight: `scheduled`, `pending`, `dispatching`, `ringing`, `active`. Terminal: `connected`, `notConnected`, `failed` |
 | `direction` | `str` | `inbound` or `outbound` |
 | `to_number` | `str` | Destination number (E.164) |
 | `from_number` | `str \| None` | Caller ID used for the call |
-| `pipe_id` | `str` | The agent-voice row that handled the call |
-| `duration_s` | `float \| None` | Call duration in seconds (set once completed) |
+| `pipe_id` | `str \| None` | The agent-voice row that handled the call |
+| `duration_s` | `float \| None` | Call duration in seconds (set once the call ends) |
 | `end_reason` | `str \| None` | Why the call ended - see [Call Lifecycle](/agent-sdk/call-lifecycle#end-reasons) |
+| `disposition` | `str \| None` | What the callee's leg did: `completed`, `not_answered`, `busy`, `rejected`, `blocked`, `invalid_number`, `wrong_number`, `voicemail`, `failed`, `unknown` |
+
+### Status callbacks
+
+Instead of polling, put a `callback_url` (and optionally a `callback_secret`)
+in `data`. Unpod removes both before the call is stored - they never reach
+`ctx.data`, the call record, or any API response - and POSTs one event to the
+URL per status change:
+
+| Event | Raised when `status` becomes |
+|---|---|
+| `call.queued` | `pending` or `scheduled` |
+| `call.ringing` | `ringing` |
+| `call.answered` | `active` |
+| `call.ended` | `connected`, `notConnected` or `failed` - this one also carries the `transcript` |
+
+```python
+call = await client.calls.create(
+    agent_id="my-agent",
+    to_number="+14155550100",
+    data={
+        "callback_url": "https://example.com/unpod/call-events",
+        "callback_secret": "whsec_...",
+        "metadata": {"ticket_id": "T-1042"},  # echoed on every event
+    },
+)
+```
+
+Each event body has `id`, `type`, `call_id`, `session_id`, `direction`,
+`agent_id`, `from_number`, `to_number`, your `metadata`, and a `data` object
+with `status`, `end_reason`, `disposition`, `duration_s`, timestamps,
+`call_timings` and `recording_url`. Delivery is at least once - dedupe on the
+event `id`. A receiver that is down is retried for about 21 hours. With a
+secret, each request carries `X-Supervoice-Timestamp` and
+`X-Supervoice-Signature: sha256=<hex>`, the HMAC-SHA256 of
+`"<timestamp>.<raw body>"` keyed by your secret; recompute it and reject old
+timestamps.
 
 ---
 
@@ -159,7 +197,7 @@ async def main():
         # All outbound calls for one Speech Pipe row
         calls = await client.calls.list(
             pipe_id="pipe_...",
-            status="completed",
+            status="connected",
         )
         for c in calls:
             print(c.call_id, c.to_number, c.status, c.duration_s)
@@ -171,7 +209,7 @@ asyncio.run(main())
 
 | Parameter | Values | Description |
 |---|---|---|
-| `status` | `pending`, `ringing`, `active`, `completed`, `failed`, `cancelled` | Filter by status |
+| `status` | `scheduled`, `pending`, `dispatching`, `ringing`, `active`, `connected`, `notConnected`, `failed` | Filter by status |
 | `pipe_id` | `pipe_...` | Filter by agent-voice row |
 
 ---
@@ -184,7 +222,7 @@ from unpod import AsyncClient
 
 async def main():
     async with AsyncClient() as client:  # reads credentials from .env
-        await client.calls.hangup("cal_...")
+        await client.calls.hangup("SCL_...")
         print("Call terminated")
 
 asyncio.run(main())

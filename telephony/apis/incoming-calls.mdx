@@ -123,11 +123,11 @@ curl -s "https://unpod.dev/api/v2/platform/sbc/webhook-secret/reveal" \
 ```
 </CodeGroup>
 
-`reveal()` only reads the key. If your org has no key yet, or it leaked, see
+`reveal()` only reads the key. Your org has one from the moment the Call API is switched on.
+If it leaked, see
 [Rotate the webhook secret](/telephony/concepts/security-and-compliance#rotate-the-webhook-secret).
 
-Unpod signs inbound POST requests once your org has a secret, so create it before you point a
-number at a server that verifies. GET requests are not signed. Verify each request with
+Unpod signs inbound POST requests. GET requests are not signed. Verify each request with
 `parse_call_event`, as in the server below. See [Webhooks](/telephony/apis/webhooks) for the
 signature format and every event field.
 

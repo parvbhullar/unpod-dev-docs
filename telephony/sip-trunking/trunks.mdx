@@ -233,11 +233,11 @@ A number that isn't one of your org's returns `404`. For every config field and 
 
 ## Delete a trunk
 
-Delete removes the trunk and its number bindings. Unmap the numbers first if you want them
-returned cleanly to `NOT_ASSIGNED`: unmapping also shows you which number failed and why, so
-the sample unmaps, then deletes only once every number has unmapped. Running it again after a partial failure? Drop
-the ids that already unmapped: they now report `ok: false`, and if none unmap the request
-fails with `400`.
+Delete detaches every number mapped to the trunk (each goes back to `NOT_ASSIGNED`), then
+removes the trunk. Unmapping first is optional, but it shows you which number failed and
+why, so the sample unmaps, then deletes only once every number has unmapped. Running it
+again after a partial failure? Drop the ids that already unmapped: they now report
+`ok: false`, and if none unmap the request fails with `400`.
 
 The trunk calls don't list a trunk's numbers, but `overview()` does: a number on the trunk
 has `provider_credential_id` equal to the trunk id. The sample finds the ids that way.

@@ -337,16 +337,22 @@ for the four brain types.
 
 ## Silence timeout (built in)
 
-If the caller says nothing, the agent checks in and then ends the call:
+If the caller goes quiet, the agent checks in and then ends the call. The
+silence clock starts when the agent stops speaking:
 
-1. After about half of the timeout, the agent says *"Are you still there?"*
-2. It asks once more shortly before the timeout.
-3. At the timeout (60 seconds of silence by default) the call ends with
-   `end_reason="IDLE_TIMEOUT"`.
+1. After 15 seconds of silence the agent says *"Are you still there?"*
+2. After 15 more seconds it asks *"Do you want to continue our conversation?"*
+3. After 15 more seconds it says *"Okay, I'm going to end the call now. Thank
+   you, goodbye."* and hangs up with
+   `end_reason="AGENT_HUNG_UP_SILENCE_DETECTED"`.
 
-The clock pauses during a [handover](/agent-sdk/agent-tools#transfer-to-a-human),
-so a transfer is never cut off. The timeout is not configurable from the
-SDK yet.
+Anything the caller says resets the count to zero. A separate 60-second idle
+limit stays in place as a backstop (for example, when the agent never spoke);
+it ends the call with `end_reason="IDLE_TIMEOUT"`.
+
+The clocks pause during a [handover](/agent-sdk/agent-tools#transfer-to-a-human),
+so a transfer is never cut off. These timings are not configurable from the
+SDK.
 
 ---
 
@@ -372,7 +378,6 @@ SDK yet.
 | `domain` | `str` | [Domain dictionary](/agent-sdk/domain-dictionaries) tag; `""` removes it |
 | `tools` | `dict` | [Handover and voicemail](/agent-sdk/agent-tools) config |
 | `automatic_followup_enabled` | `bool` | [Automatic follow-up calls](/agent-sdk/agent-tools#automatic-follow-up-calls) |
-| `cache_mode` | `"active"` / `"shadow"` / `"off"` | Response cache for this agent |
 
 `voice_profile` and `automatic_followup_enabled` are not named parameters of
 `update()` in SDK 0.7.0. They pass through as extra keyword fields and are sent

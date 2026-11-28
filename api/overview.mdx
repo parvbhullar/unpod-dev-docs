@@ -1,11 +1,11 @@
 ---
 title: 'API Overview'
 icon: 'book-open'
-description: 'Base URL, authentication, rate limiting, and error handling for the Unpod REST API - stated once.'
+description: 'Base URL, authentication, and error handling for the Unpod REST API - stated once.'
 ---
 
 The Unpod REST API manages platform resources: spaces, agents, tasks, runs,
-call logs, telephony (bridges, numbers, providers), and billing. This page
+call logs, and telephony (bridges, numbers, providers). This page
 states the conventions once; the endpoint pages in the sidebar assume them.
 
 <Note>
@@ -32,7 +32,7 @@ Every request carries an API token in the `Authorization` header using the
 Authorization: Token a1b2c3d4e5f6g7h8i9j0...
 ```
 
-Generate tokens from the [Unpod Dashboard](https://unpod.ai/api-keys/) - see
+Generate a token under [Settings → Access → API keys](https://unpod.ai/settings/workspace/billing/api-keys/) - see
 [Authentication](/api/get-started/authentication) for the step-by-step,
 space-token scoping, and error responses.
 
@@ -41,39 +41,27 @@ curl -X GET "https://unpod.ai/api/v2/platform/telephony/bridges/" \
   -H "Authorization: Token $UNPOD_TOKEN"
 ```
 
-## Rate limiting
-
-Responses include rate-limit headers; exceeding your limit returns
-`429 Too Many Requests`:
-
-| Header | Meaning |
-|---|---|
-| `X-RateLimit-Limit` | Max requests in the current window |
-| `X-RateLimit-Remaining` | Requests left in the window |
-| `X-RateLimit-Reset` | Unix timestamp when the window resets |
-| `Retry-After` | Seconds to wait (only on 429) |
-
-Handle 429s with exponential backoff, honoring `Retry-After`. Cache reads and
-batch writes where you can. Current limits depend on your plan - check the
-dashboard.
+Most endpoints also need your organization handle in the `Org-Handle`
+header. Endpoints that take a `space_token` in the path don't need it.
 
 ## Errors
 
-The API uses standard HTTP status codes. Error bodies are JSON with a
-machine-readable code and a human-readable message:
+Response bodies are JSON with a human-readable `message`, and usually `status_code`:
 
 ```json
 {
-  "error": {
-    "code": "rate_limit_exceeded",
-    "message": "Rate limit exceeded. Please try again in 60 seconds."
-  }
+  "status_code": 401,
+  "message": "Invalid token."
 }
 ```
 
-Common cases: `401` - token missing, expired, or access denied (see
-[Authentication](/api/get-started/authentication)); `404` - resource not
-found or outside your space; `429` - rate limited.
+Common cases: `401` - token missing or invalid (see
+[Authentication](/api/get-started/authentication)); `403` - you are not a
+member of the `Org-Handle` organization; `404` - resource not found.
+
+Some business-rule failures (for example a space token you can't access)
+return HTTP `206` with the reason in `message`, so check `status_code` in the
+body, not only for a `2xx` status.
 
 ## Start here
 

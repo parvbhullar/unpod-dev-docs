@@ -50,15 +50,21 @@ curl --request POST \
     "task_ids": [
       "T74802367fe9011f0878d43cd8a99e069"
     ],
-    "status": "pending"
+    "status": {
+      "T74802367fe9011f0878d43cd8a99e069": "pending"
+    }
   }
 }
 ```
 
 ```json Error Response (206)
 {
-  "message": "Task creation failed",
-  "errors": "Detailed error description"
+  "status_code": 206,
+  "message": "There is some Validation error",
+  "data": {},
+  "errors": {
+    "context": ["This field is required."]
+  }
 }
 ```
 
@@ -82,7 +88,7 @@ POST /api/v2/platform/spaces/{space_token}/tasks/
 
 <ParamField path="space_token" type="string" required>
   Public token of the space where the task is created.
-  <Note>Get this from the [Get All Spaces](/api/space/get-all-spaces) API - use the `token` field.</Note>
+  <Note>Copy it from the dashboard - see [How to Get Your Space Token](/api/get-started/authentication#how-to-get-your-space-token).</Note>
 </ParamField>
 
 ### Headers
@@ -102,14 +108,14 @@ POST /api/v2/platform/spaces/{space_token}/tasks/
 </ParamField>
 
 <ParamField body="documents" type="array" required>
-  Array of document/contact objects. Each document represents one contact to call.
+  Array of document/contact objects. Each document represents one contact to call. Documents are free-form key/value objects; the fields below are the common ones.
 
   <Expandable title="Document Object Fields">
-    <ParamField body="name" type="string" required>
-      Contact name
-    </ParamField>
     <ParamField body="contact_number" type="string" required>
-      Primary contact phone number
+      Primary contact phone number - needed to place the call
+    </ParamField>
+    <ParamField body="name" type="string">
+      Contact name
     </ParamField>
     <ParamField body="email" type="string">
       Contact email address
@@ -147,12 +153,24 @@ POST /api/v2/platform/spaces/{space_token}/tasks/
   </Expandable>
 </ParamField>
 
-<ParamField body="context" type="string">
-  Additional context/objective for the task (applies to all contacts).
+<ParamField body="context" type="string" required>
+  Context/objective for the task (applies to all contacts).
 </ParamField>
 
 <ParamField body="schedule" type="object">
-  Schedule configuration. Example: `{"type": "now"}`
+  When to place the calls. Omit it, or send `{"type": "now"}`, to call right away.
+
+  <Expandable title="Schedule Object Fields">
+    <ParamField body="type" type="string" required>
+      `now`, `auto` (use the agent's calling schedule), or `custom`. Case-insensitive.
+    </ParamField>
+    <ParamField body="calling_date" type="string">
+      Required when `type` is `custom`. Format `YYYY-MM-DD`, for example `2026-03-15`.
+    </ParamField>
+    <ParamField body="calling_time" type="string">
+      Required when `type` is `custom`. ISO time, for example `20:08:00+05:30`.
+    </ParamField>
+  </Expandable>
 </ParamField>
 
 ### Response Fields
@@ -175,22 +193,26 @@ POST /api/v2/platform/spaces/{space_token}/tasks/
     <ResponseField name="task_ids" type="array">
       Array of created task identifiers (one per document/contact)
     </ResponseField>
-    <ResponseField name="status" type="string">
-      Task status - initially `pending`
+    <ResponseField name="status" type="object">
+      Map of each task ID to its status - `pending`, or `scheduled` when `schedule.type` is `auto` or `custom`
     </ResponseField>
   </Expandable>
 </ResponseField>
+
+<Note>
+If the agent blocks duplicate tasks and every contact already had a task with
+this agent in the last 24 hours, no task is created: `run_id` is `null`,
+`task_ids` is empty, and `message` says so.
+</Note>
 
 ## Common Error Codes
 
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - Task created successfully              |
-| 206         | Partial Content - Business logic error occurred  |
-| 400         | Bad Request - Invalid parameters provided        |
+| 206         | Partial Content - Validation error, invalid space token, or no access to the space (reason in `message`) |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Access denied to the resource        |
-| 404         | Not Found - Space or Agent not found             |
+| 402         | Payment Required - The organization can't place calls right now (for example, credits exhausted); body has `error`, `block_reason`, `message` |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples

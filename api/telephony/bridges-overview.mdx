@@ -12,6 +12,10 @@ The Bridges API allows you to manage telephony bridges for connecting call parti
 **Prerequisites:** Make sure you have your API Token, Org-Handle, and Product-ID ready. See [Authentication](/api/get-started/authentication) for details.
 </Note>
 
+<Note>
+An organization has one bridge. Creating a bridge when your organization already has one updates and returns the existing bridge.
+</Note>
+
 ## What You Can Do
 
 | Endpoint | Method | Description |
@@ -51,7 +55,10 @@ Product-ID: your-product-id
 |-------------|-------------|
 | 200 | Success |
 | 201 | Created successfully |
+| 204 | Deleted successfully |
+| 206 | Business-rule error, for example a missing header or not a member of the bridge's organization (reason in `message`) |
 | 400 | Bad Request - Invalid parameters |
 | 401 | Unauthorized - Invalid or missing token |
+| 403 | Forbidden - Not a member of the `Org-Handle` organization |
 | 404 | Not Found - Bridge not found |
 | 500 | Internal Server Error |

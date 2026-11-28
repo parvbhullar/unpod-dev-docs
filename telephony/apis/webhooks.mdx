@@ -29,8 +29,7 @@ it as `UNPOD_WEBHOOK_SECRET`. Then verify each request with `parse_call_event`.
 | Any GET answer-URL request | No: there's no body to sign |
 | The audio-stream WebSocket connection | Yes, with a different header, `X-Unpod-Signature`. See [Audio Streaming](/telephony/apis/audio-streaming#verify-the-stream-signature) |
 
-"Yes" applies once your org has a secret: until then every request goes out unsigned, so
-create it ([Rotate the webhook secret](/telephony/concepts/security-and-compliance#rotate-the-webhook-secret)) before you point anything at a server that verifies. `parse_call_event` rejects
+Your org has its secret from the moment the Call API is switched on. `parse_call_event` rejects
 an unsigned request. Parse a GET request with `verify=False` and trust only what the API
 returns.
 
@@ -47,7 +46,7 @@ with Client() as client:
 ```
 
 `reveal()` and `get()` only read the secret; nothing changes for servers already verifying
-with it. To create the first secret or replace a leaked one, see
+with it. To replace a leaked one, see
 [Rotate the webhook secret](/telephony/concepts/security-and-compliance#rotate-the-webhook-secret). For the cURL call, see
 [The webhook secret](/telephony/apis/incoming-calls#the-webhook-secret).
 

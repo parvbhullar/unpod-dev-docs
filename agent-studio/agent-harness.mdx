@@ -17,11 +17,11 @@ after it ends.
 | Primitive | What it is | Where it lives today |
 |---|---|---|
 | Runtime | Runs each turn: your brain, the speech pair, the call | Production - Agent Studio agents ([build one](/agent-studio/build-an-agent)), or SDK agents via `client.agents.voice.create()` |
-| Tools | HTTP calls the agent makes mid-conversation | Production - [playbook tools](/superdialog/tools), or Agent Studio → Persona → Tools. MCP tools in Agent Studio: in build (the SuperDialog framework has `MCPTool` for your own process) |
+| Tools | HTTP calls the agent makes mid-conversation | Production - [playbook tools](/superdialog/tools), or Agent Studio → Persona → Tools. In your own process, the SuperDialog framework also has `MCPTool` |
 | Retries | A capped retry, then a fallback route, when a tool fails | Production - `failed: {retry: N, on_exhaust: ...}` in a playbook pipeline |
-| Guardrails | Hard limits on what the agent may say | Production - `never_say` and hard gates per [playbook](/superdialog/playbooks) checkpoint. A policy layer: in build |
-| Human handoff | Transfer to a person mid-call | Production - Agent Studio → Advanced → **Enable Handover** |
-| Evals | Score a conversation against what good looks like | Production - the Realtime Evaluations toggle (scored after the call), [Playground Optimize](/agent-studio/optimize), [`superdialog eval`](/superdialog/evals) |
+| Guardrails | Hard limits on what the agent may say | Production - `never_say` and hard gates per [playbook](/superdialog/playbooks) checkpoint |
+| Human handoff | Transfer to a person mid-call | Production - Agent Studio → Advanced → turn on **Handover Number** and enter the number |
+| Evals | Score a conversation against what good looks like | Production - the **RealTime Evaluation** toggle in Agent Studio → Advanced, [Playground Optimize](/agent-studio/optimize), [`superdialog eval`](/superdialog/evals) |
 | Observability | What happened on every call | Production - call logs, recordings, transcripts and [analytics](/speech-stack/analytics) |
 
 Most of the harness is declared in the playbook:
@@ -79,8 +79,7 @@ You declare tools, gates and handoff numbers; the harness runs them.
 ## Status
 
 **Production:** the runtime, HTTP tools, retries, `never_say` guardrails,
-human handoff, evals, and call-level observability. **In build:** MCP tools,
-and a policy layer for guardrails beyond the playbook.
+human handoff, evals, and call-level observability.
 
 ## Go deeper
 

@@ -10,12 +10,24 @@ openapi: 'GET /api/v2/platform/telephony/provider-configurations/{id}/'
 ```json Success Response (200)
 {
   "status_code": 200,
-  "message": "Provider configuration fetched successfully.",
+  "message": "Success",
   "data": {
     "id": 42,
-    "provider": "twilio",
-    "account_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "created_at": "2026-02-07T10:00:00Z"
+    "name": "My Livekit Configuration",
+    "provider": 2,
+    "provider_details": {
+      "id": 2,
+      "name": "LiveKit",
+      "description": "LiveKit SIP",
+      "icon": "https://example.com/livekit.png"
+    },
+    "org_handle": "acme",
+    "meta_json": {},
+    "active": true,
+    "api_key": null,
+    "api_secret": null,
+    "base_url": "https://api.provider.com",
+    "sip_url": "sip.provider.com"
   }
 }
 ```
@@ -23,7 +35,7 @@ openapi: 'GET /api/v2/platform/telephony/provider-configurations/{id}/'
 ```json Error Response (404)
 {
   "status_code": 404,
-  "message": "Provider configuration not found."
+  "message": "No ProviderCredential matches the given query."
 }
 ```
 
@@ -56,7 +68,7 @@ You can get the provider configuration `id` by hitting the [Get All Providers](/
 | Org-Handle    | string | Yes      | Organization domain handle      |
 
 <Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
+Copy your `Org-Handle` from the dashboard - see [How to Get Your Organization Handle](/api/get-started/authentication#how-to-get-your-organization-handle).
 </Note>
 
 
@@ -72,10 +84,19 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 
 | Field       | Type    | Description                              |
 |-------------|---------|------------------------------------------|
-| id          | integer | Unique provider configuration identifier |
-| provider    | string  | Provider slug/identifier                 |
-| account_sid | string  | Account SID for the provider             |
-| created_at  | string  | Configuration creation timestamp         |
+| Field            | Type    | Description                                          |
+|------------------|---------|------------------------------------------------------|
+| id               | integer | Unique provider configuration identifier             |
+| name             | string  | Configuration name                                   |
+| provider         | integer | Provider ID (from [Get Telephony Providers](/api/provider/get-telephony-providers)) |
+| provider_details | object  | `{ id, name, description, icon }` of the provider    |
+| org_handle       | string  | Handle of the owning organization                    |
+| meta_json        | object  | Extra provider settings                              |
+| active           | boolean | Whether the configuration is active                  |
+| api_key          | string  | Always `null` - secrets are never returned           |
+| api_secret       | string  | Always `null` - secrets are never returned           |
+| base_url         | string  | Provider API base URL                                |
+| sip_url          | string  | Provider SIP URL                                     |
 
 
 ## Common Error Codes
@@ -83,9 +104,10 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 200         | Success - Configuration fetched successfully     |
+| 400         | Bad Request - `Org-Handle` header missing        |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Invalid organization handle          |
-| 404         | Not Found - Provider configuration not found     |
+| 403         | Forbidden - Not a member of the `Org-Handle` organization |
+| 404         | Not Found - No active configuration with this ID in your organization |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples
@@ -107,8 +129,8 @@ const getProviderById = async (id) => {
     { headers }
   );
   const config = response.data.data;
-  console.log(`Provider: ${config.provider}`);
-  console.log(`Account SID: ${config.account_sid}`);
+  console.log(`Name: ${config.name}`);
+  console.log(`Provider: ${config.provider_details?.name}`);
   return config;
 };
 
@@ -130,8 +152,8 @@ def get_provider_by_id(config_id: int):
     response = requests.get(url, headers=headers)
     data = response.json()
     config = data['data']
-    print(f"Provider: {config['provider']}")
-    print(f"Account SID: {config['account_sid']}")
+    print(f"Name: {config['name']}")
+    print(f"Provider: {(config.get('provider_details') or {}).get('name')}")
     return config
 
 # Example usage
@@ -151,6 +173,6 @@ curl -X GET "https://unpod.ai/api/v2/platform/telephony/provider-configurations/
 
 1. **ID Lookup**: Use [Get All Providers](/api/provider/get-all-providers) to find IDs before fetching individual records
 2. **Error Handling**: Handle 404 responses when a configuration ID is no longer valid
-3. **Security**: `auth_token` is never returned - only `account_sid` is visible for security
+3. **Security**: `api_key` and `api_secret` are never returned - they always come back `null`
 4. **Org-Handle**: Ensure the correct organization handle is used to access configurations within your org
 5. **Validation**: Use this endpoint to verify a provider configuration exists before connecting it to a bridge

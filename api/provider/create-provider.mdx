@@ -10,12 +10,24 @@ openapi: 'POST /api/v2/platform/telephony/provider-configurations/'
 ```json Success Response (201)
 {
   "status_code": 201,
-  "message": "Provider configuration created successfully.",
+  "message": "Success",
   "data": {
     "id": 42,
-    "provider": "twilio",
-    "account_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "created_at": "2026-02-07T10:00:00Z"
+    "name": "My Livekit Configuration",
+    "provider": 2,
+    "provider_details": {
+      "id": 2,
+      "name": "LiveKit",
+      "description": "LiveKit SIP",
+      "icon": "https://example.com/livekit.png"
+    },
+    "org_handle": "acme",
+    "meta_json": {},
+    "active": true,
+    "api_key": null,
+    "api_secret": null,
+    "base_url": "https://api.provider.com",
+    "sip_url": "sip.provider.com"
   }
 }
 ```
@@ -23,8 +35,10 @@ openapi: 'POST /api/v2/platform/telephony/provider-configurations/'
 ```json Error Response (400)
 {
   "status_code": 400,
-  "message": "Provider configuration creation failed.",
-  "errors": "Invalid account_sid or auth_token"
+  "message": "Error",
+  "data": {
+    "provider": ["This field is required."]
+  }
 }
 ```
 
@@ -32,7 +46,7 @@ openapi: 'POST /api/v2/platform/telephony/provider-configurations/'
 
 # Create Provider Configuration
 
-Create a new telephony provider configuration by linking your provider credentials (Account SID and Auth Token) to your organization. These configurations are used to connect telephony providers to bridges.
+Create a new telephony provider configuration by saving your provider credentials to your organization. These configurations are used to connect telephony providers to bridges.
 
 <Note>
 **Prerequisites:** Make sure you have your API Token, Org-Handle, and telephony provider credentials ready. See [Authentication](/api/get-started/authentication) for details.
@@ -47,20 +61,21 @@ Create a new telephony provider configuration by linking your provider credentia
 | Content-Type  | string | Yes      | `application/json`              |
 
 <Note>
-You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/organizations) API. The `domain_handle` field in the response is your Org-Handle.
+Copy your `Org-Handle` from the dashboard - see [How to Get Your Organization Handle](/api/get-started/authentication#how-to-get-your-organization-handle).
 </Note>
 
 ### Request Body
 
 | Field       | Type    | Required | Description                                              |
 |-------------|---------|----------|----------------------------------------------------------|
-| provider    | string  | Yes      | Provider identifier (slug or ID from Get Providers API)  |
-| account_sid | string  | Yes      | Provider Account SID / Account identifier                |
-| auth_token  | string  | Yes      | Provider Auth Token / Secret key                         |
+| provider    | integer | Yes      | Provider ID (`id` from [Get Telephony Providers](/api/provider/get-telephony-providers)) |
+| name        | string  | No       | Configuration name                                       |
+| api_key     | string  | No       | Provider API key                                         |
+| api_secret  | string  | No       | Provider API secret                                      |
+| base_url    | string  | No       | Provider API base URL                                    |
+| sip_url     | string  | No       | Provider SIP URL                                         |
 
-
-```
-```
+`api_key` and `api_secret` are stored but never returned in any response.
 
 ### Response Fields
 
@@ -74,10 +89,19 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 
 | Field       | Type    | Description                              |
 |-------------|---------|------------------------------------------|
-| id          | integer | Unique provider configuration identifier |
-| provider    | string  | Provider slug/identifier                 |
-| account_sid | string  | Account SID (auth_token is not returned) |
-| created_at  | string  | Creation timestamp (ISO 8601)            |
+| Field            | Type    | Description                                          |
+|------------------|---------|------------------------------------------------------|
+| id               | integer | Unique provider configuration identifier             |
+| name             | string  | Configuration name                                   |
+| provider         | integer | Provider ID (from [Get Telephony Providers](/api/provider/get-telephony-providers)) |
+| provider_details | object  | `{ id, name, description, icon }` of the provider    |
+| org_handle       | string  | Handle of the owning organization                    |
+| meta_json        | object  | Extra provider settings                              |
+| active           | boolean | Whether the configuration is active                  |
+| api_key          | string  | Always `null` - secrets are never returned           |
+| api_secret       | string  | Always `null` - secrets are never returned           |
+| base_url         | string  | Provider API base URL                                |
+| sip_url          | string  | Provider SIP URL                                     |
 
 
 
@@ -86,10 +110,9 @@ You can get the `Org-Handle` by hitting the [Get All Organizations](/api/space/o
 | Status Code | Description                                      |
 |-------------|--------------------------------------------------|
 | 201         | Created - Provider configuration created         |
-| 400         | Bad Request - Invalid credentials or parameters  |
+| 400         | Bad Request - Invalid body, or `Org-Handle` missing or invalid |
 | 401         | Unauthorized - Invalid or missing API token      |
-| 403         | Forbidden - Invalid organization handle          |
-| 409         | Conflict - Configuration already exists          |
+| 403         | Forbidden - Not a member of the `Org-Handle` organization |
 | 500         | Internal Server Error - Server-side error        |
 
 ## Code Examples
@@ -106,10 +129,10 @@ const headers = {
 };
 
 // Create a provider configuration
-const createProvider = async (provider, accountSid, authToken) => {
+const createProvider = async (provider, name, apiKey, apiSecret) => {
   const response = await axios.post(
     'https://unpod.ai/api/v2/platform/telephony/provider-configurations/',
-    { provider, account_sid: accountSid, auth_token: authToken },
+    { provider, name, api_key: apiKey, api_secret: apiSecret },
     { headers }
   );
   console.log(`Provider created with ID: ${response.data.data.id}`);
@@ -117,7 +140,7 @@ const createProvider = async (provider, accountSid, authToken) => {
 };
 
 // Example usage
-createProvider('twilio', 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'your-auth-token');
+createProvider(2, 'My Livekit Configuration', 'sk_xxx', 'secret_xxx');
 ```
 
 ```python Python
@@ -129,13 +152,14 @@ headers = {
     'Content-Type': 'application/json'
 }
 
-def create_provider(provider: str, account_sid: str, auth_token: str):
+def create_provider(provider: int, name: str, api_key: str, api_secret: str):
     """Create a new telephony provider configuration"""
     url = 'https://unpod.ai/api/v2/platform/telephony/provider-configurations/'
     payload = {
         'provider': provider,
-        'account_sid': account_sid,
-        'auth_token': auth_token
+        'name': name,
+        'api_key': api_key,
+        'api_secret': api_secret
     }
     response = requests.post(url, headers=headers, json=payload)
     data = response.json()
@@ -143,7 +167,7 @@ def create_provider(provider: str, account_sid: str, auth_token: str):
     return data['data']
 
 # Example usage
-create_provider('twilio', 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'your-auth-token')
+create_provider(2, 'My Livekit Configuration', 'sk_xxx', 'secret_xxx')
 ```
 
 ```bash cURL
@@ -153,9 +177,10 @@ curl -X POST "https://unpod.ai/api/v2/platform/telephony/provider-configurations
   -H "Org-Handle: your-org-handle" \
   -H "Content-Type: application/json" \
   -d '{
-    "provider": "twilio",
-    "account_sid": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    "auth_token": "your-auth-token-here"
+    "provider": 2,
+    "name": "My Livekit Configuration",
+    "api_key": "sk_xxx",
+    "api_secret": "secret_xxx"
   }'
 ```
 
@@ -163,8 +188,8 @@ curl -X POST "https://unpod.ai/api/v2/platform/telephony/provider-configurations
 
 ## Best Practices
 
-1. **Provider Slug**: Use the `slug` from the [Get Telephony Providers](/api/provider/get-telephony-providers) endpoint to identify the provider
-2. **Credential Security**: Never log or expose `auth_token` values - treat them as secrets
+1. **Provider ID**: Use the `id` from the [Get Telephony Providers](/api/provider/get-telephony-providers) endpoint as `provider`
+2. **Credential Security**: Never log or expose `api_key` or `api_secret` values - treat them as secrets
 3. **Credential Rotation**: Use the [Update Provider](/api/provider/update-provider) endpoint to rotate credentials without deleting the configuration
 4. **Configuration ID**: Store the returned `id` to reference this configuration when connecting to bridges
 5. **Error Handling**: Handle 400 errors that indicate invalid credentials before they cause production issues

@@ -14,14 +14,16 @@ Unpod dashboard provides you with two options to see the reports and analyze the
 
 ## Call Logs
 
-This option is available in the Space View. You can access it under the three dots at the top left corner. If you want to download all the details of the calls executed on the space in the form of CSV, you can download it from here.
+This option is available in the Space View. Open the three-dot menu in the space header and choose **Call Logs**. If you want to download all the details of the calls executed on the space in the form of CSV, you can download it from here.
 
-When you click on Call Logs, it will redirect you to the page where you have to fill in the following details:
+When you click on Call Logs, a drawer opens where you can fill in the following filters (all optional):
 
-- **Date range** - Starting and ending date within which you need the report.
-- **Run id** - Wherever you initiate a call, the dashboard will consider this as a task and create a run id for the same. You can choose the run id for which you want the report.
-- **Agent** - If you have multiple agents for your organization, then select the agent for which you want the report.
+- **From** / **To** - Starting and ending date and time within which you need the report.
+- **Run IDs** - Wherever you initiate a call, the dashboard will consider this as a task and create a run id for the same. You can choose one or more run ids for which you want the report.
+- **Agents** - If you have multiple agents for your organization, then select the agents for which you want the report.
 - **User** - If you want the report for a particular user, you can select the name of the user.
+- **Contact Numbers (comma-separated)** - Limit the report to specific phone numbers.
+- **Document ID** - Limit the report to one document in the space.
 
 Once you enter all the details, click on Download to get the CSV file.
 
@@ -31,18 +33,15 @@ The CSV file contains structured data which you have mentioned while setting up 
 
 ## Analytics
 
-This option is available in Space View. You can access this option from the left side bar of the dashboard. The Analytics tab shows insights and performance metrics related to activity within the Space, including engagement, usage trends, and key statistics. It helps users track progress and measure impact across discussions, calls, and content.
+This option is available in Space View. You can access it from **Analytics** in the left sidebar of the dashboard. The Analytics tab shows insights and performance metrics related to activity within the Space, including engagement, usage trends, and key statistics. It helps users track progress and measure impact across discussions, calls, and content.
 
 Once you click on Analytics tab, you will be redirected to the analytics dashboard.
 
 The dashboard shows:
 
-- **Total Calls** - Number of total calls initiated on a particular space.
-- **Interested Calls** - Number of people who are interested in the given information.
-- **Not Connected** - Number of calls who are not connected due to some reasons.
-- **Avg. Success Score** - The success rate according to the number of connected calls.
-
-It also charts the Call Status breakdown.
-
-Calls Analytics Overview is also visible as graphical representation showing detailed metrics and trends.
+- **Volume metrics** - Numbers used, Minutes Consumed (each call is rounded up to the nearest minute), Voicemails, Avg Minutes Consumed, and Total cost / Average cost when calls carry a charge. Filters at the top narrow every number on the page.
+- **Call Status** - Where all calls sit right now: Scheduled, Connected, Not connected and Failed, each with its share of all dialed calls.
+- **Structured Data** - Select an output to see its goal metrics, plus Sentiment and End Call Reason.
+- **Call Activity Peak Times** - Total calls and connected calls by hour, with the busiest window highlighted.
+- **By Agent / By Number** - A table of calls, connected, not connected, failed, billable minutes and cost per agent or per number.
 

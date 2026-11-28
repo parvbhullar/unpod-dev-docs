@@ -451,7 +451,6 @@ Before going live with your integration:
 - [ ] **Error handling** - Retry failed webhook deliveries with exponential backoff
 - [ ] **Persist cursor** - Store the last processed timestamp or task ID so restarts don't reprocess all history
 - [ ] **Secrets** - Store `UNPOD_API_TOKEN` in environment variables, not in code
-- [ ] **Rate limits** - Unpod API has rate limits; add delays between polling requests if processing large backlogs
 - [ ] **Logging** - Log every task ID processed for audit trail
 - [ ] **Alerting** - Alert if the polling service stops delivering (gap in processed timestamps)
 
@@ -486,7 +485,7 @@ Before going live with your integration:
   <Card title="Call Logs API" icon="file-text" href="/api/logs/get-call-logs">
     Query historical call logs.
   </Card>
-  <Card title="Analytics API" icon="chart-bar" href="/api/billing&usage/get-analytics">
-    Aggregate usage and performance metrics.
+  <Card title="Run Tasks API" icon="activity" href="/api/execution/get-run-tasks">
+    Fetch every task in a run with its call output.
   </Card>
 </CardGroup>

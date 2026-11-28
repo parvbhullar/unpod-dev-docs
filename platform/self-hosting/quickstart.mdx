@@ -20,20 +20,7 @@ Before you begin, ensure you have:
 
 ---
 
-### Option 1: One-Command Setup (Recommended)
-
-The fastest way to get everything running:
-
-```bash
-git clone https://github.com/unpod-ai/unpod.git
-cd unpod
-make quick-start    # Install deps, start Docker, run migrations
-make dev            # Start frontend (port 3000) + backend (port 8000)
-```
-
----
-
-### Option 2: Manual Setup
+### Option 1: Manual Setup
 
 If you prefer full control over each step:
 
@@ -49,7 +36,7 @@ Create Python venv for backend:
 ```bash
 python3 -m venv apps/backend-core/.venv
 source apps/backend-core/.venv/bin/activate
-pip install -r apps/backend-core/requirements/local.txt
+pip install -r apps/backend-core/requirements/base.txt
 ```
 
 Start infrastructure (PostgreSQL, MongoDB, Redis, Centrifugo):
@@ -61,15 +48,21 @@ docker compose -f docker-compose.simple.yml up -d postgres mongodb redis centrif
 Run migrations and start dev servers:
 
 ```bash
-cd apps/backend-core && python manage.py migrate --no-input && cd ../..
-npm run dev
+cd apps/backend-core && python manage.py migrate --no-input
+python manage.py runserver    # Backend on port 8000
+```
+
+In a second terminal, from the repo root, start the frontend:
+
+```bash
+npx nx dev web                # Frontend on port 3000
 ```
 
 For detailed environment variable configuration, see the [Configuration](/platform/self-hosting/configuration) page.
 
 ---
 
-### Option 3: Docker Only (No Local Dependencies)
+### Option 2: Docker Only (No Local Dependencies)
 
 Starts everything in containers with working defaults:
 
@@ -79,7 +72,7 @@ cd unpod
 docker compose -f docker-compose.simple.yml up -d --build
 ```
 
-Default admin: `admin@unpod.ai` / `admin123`
+On first start the backend container runs migrations and creates a default admin user. Default admin email: `admin@unpod.dev`. The password is the `DJANGO_DEFAULT_ADMIN_PASSWORD` value in `docker-compose.simple.yml`.
 
 ---
 
